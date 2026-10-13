@@ -888,7 +888,7 @@ function render(){
   document.body.classList.remove('ovpage');R.style.maxWidth='';R.style.padding='';
   if(UI.stage==='welcome'){R.innerHTML=vSplash();return}
   if(!S.user){R.innerHTML=hdrSimple()+vAuth();renderModal();return}
-  const V={home:vHome,matches:vMatches,match:vMatch,score:vScore,players:vPlayers,teams:vTeams,auction:vAuction,dream:vDream,academy:vAcademy,reels:vReels,profile:vProfile,book:vBook,stream:vStream,reports:vReports,settings:vSettings}[UI.view]||vHome;
+  const V={home:vHome,matches:vMatches,match:vMatch,score:vScore,players:vPlayers,teams:vTeams,auction:vAuction,dream:vDream,academy:vAcademy,reels:vReels,profile:vProfile,book:vBook,stream:vStream,reports:vReports,settings:vSettings,...(window.XV||{})}[UI.view]||vHome;
   R.innerHTML=hdr()+`<main>${V()}</main>`+bnav()+drawer()+sheet();
   renderModal()}
 function hdrSimple(){return `<header class="hdr"><a class="hlogo"><img src="${logoSrc()}" alt="Sports Sky High logo"></a></header>`}
@@ -1784,7 +1784,132 @@ document.head.appendChild(cs)}
   ${L?`<div class="cxch"><span>This over</span>${L.b.map(x=>`<span class="ch ${x.cls}">${x.lab}</span>`).join('')}</div>`:''}`}
   <div class="cxq"><span>CRR <b>${s.crr.toFixed(2)}</b></span>${s.rrr!=null&&!done?`<span>RRR <b>${s.rrr.toFixed(2)}</b></span>`:''}<span>Overs left <b>${fmtOv(s.left)}</b></span><span style="flex:1"></span><button class="btn sm ghost" data-a="mnav" data-v="-1" aria-label="Previous match">&#8249;</button><button class="btn sm ghost" data-a="mnav" data-v="1" aria-label="Next match">&#8250;</button><button class="btn sm ghost" data-a="share">Share</button></div></div>`}}
 /* build stamp so the user can see which version is running */
-try{const b=document.createElement('div');b.id='buildstamp';b.textContent='Build 13-Oct-2026 22:05 | Cricex header, live quota fix';b.style.cssText='position:fixed;left:6px;bottom:2px;font-size:10px;color:#8b8ba0;opacity:.7;z-index:5;pointer-events:none';document.body.appendChild(b)}catch(e){}
+try{const b=document.createElement('div');b.id='buildstamp';b.textContent='Build 13-Oct-2026 22:30 | ePaper, Social studio, Marketplace';b.style.cssText='position:fixed;left:6px;bottom:2px;font-size:10px;color:#8b8ba0;opacity:.7;z-index:5;pointer-events:none';document.body.appendChild(b)}catch(e){}
+/* ---------------- SERVICES: ePAPER, SOCIAL STUDIO, MARKET, MORE HUB ---------------- */
+var XV=window.XV={};
+{const st=document.createElement('style');st.textContent=
+'.ep{background:#f6f1e4;color:#1b1b1b;border-radius:6px;padding:14px;font-family:Georgia,"Times New Roman",serif}'+
+'.ep .mast{text-align:center;border-bottom:3px double #1b1b1b;padding-bottom:8px;margin-bottom:8px}'+
+'.ep .mast h1{font-size:30px;margin:0;letter-spacing:1px;font-weight:900;text-transform:uppercase}'+
+'.ep .mast .sub{display:flex;justify-content:space-between;font-size:11px;text-transform:uppercase;letter-spacing:1px;border-top:1px solid #1b1b1b;margin-top:6px;padding-top:4px}'+
+'.ep h2{font-size:22px;line-height:1.15;margin:6px 0}.ep h3{font-size:15px;line-height:1.2;margin:0 0 4px}'+
+'.ep .cols{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:560px){.ep .cols{grid-template-columns:1fr}}'+
+'.ep .col>div{border-top:1px solid #1b1b1b55;padding:8px 0;font-size:13px;line-height:1.35}'+
+'.ep .box{border:2px solid #1b1b1b;padding:8px;margin:10px 0}.ep .box h3{text-transform:uppercase;letter-spacing:1px;font-size:12px;border-bottom:1px solid #1b1b1b;margin-bottom:6px;padding-bottom:3px}'+
+'.ep .r{display:flex;justify-content:space-between;gap:8px;font-size:13px;padding:2px 0}.ep a{color:#7a0b16}.ep .src{font-size:11px;opacity:.7;font-style:italic}'+
+'.pst{width:100%;max-width:420px;border-radius:10px;border:1px solid var(--bd);display:block;margin:10px auto}'+
+'.mk{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:480px){.mk{grid-template-columns:1fr}}'+
+'.mk .it{background:var(--card);border:1px solid var(--bd);border-radius:12px;overflow:hidden}.mk .it img{width:100%;height:140px;object-fit:cover;display:block;background:var(--c2)}.mk .it .bd{padding:10px}'+
+'.mk .pr{font-weight:800;color:var(--ac2,var(--ac));font-size:17px}'+
+'.svg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.svg button{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px 4px;color:var(--tx);display:flex;flex-direction:column;align-items:center;gap:4px;font-size:12px;font-weight:600}.svg button span{font-size:24px}'+
+'@media print{header,.bnav,.drawer,.scrim,.noprint{display:none!important}body{background:#fff}main{padding:0!important}}';
+document.head.appendChild(st)}
+/* ---- shared helpers ---- */
+const svNews=()=>((UI.news&&UI.news.ok?UI.news.items:[])||[]);
+const svReal=()=>{const f=wFilter();return{live:f.live,rec:f.rec.slice(0,12),up:f.up.slice(0,10)}};
+const svScoreTxt=(m,t)=>{const n=String(t.name||'').toLowerCase();const x=(m.score||[]).filter(z=>String(z.inning||'').toLowerCase().replace(/ inning.*/,'')===n);return x.map(z=>z.r+'/'+z.w+' ('+z.o+')').join(' & ')};
+const svLine=m=>{const t=(m.teams||[]).slice(0,2);return t.length?t.map(x=>x.name+' '+(svScoreTxt(m,x)||'')).join(' v '):String(m.name||'')};
+/* ---- ePaper ---- */
+XV.epaper=function(){
+  const d=new Date(),ds=d.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'}),N=svNews(),R=svReal(),ed=Math.floor((d-new Date(d.getFullYear(),0,0))/864e5);
+  const own=S.matches.filter(m=>!isDemo(m)&&m.status==='done').slice(-5).reverse(),lead=N[0],rest=N.slice(1,13),half=Math.ceil(rest.length/2);
+  const nline=n=>`<div><h3>${n.link?`<a href="${esc(n.link)}" target="_blank" rel="noopener">${esc(n.title)}</a>`:esc(n.title)}</h3><span class="src">${esc(n.source||'')}</span></div>`;
+  const row=m=>`<div class="r"><span>${esc(svLine(m))}</span></div><div class="src" style="margin:-2px 0 4px">${esc(m.status||'')}</div>`;
+  return `<div class="bar noprint"><h2>ePaper</h2><div class="grow"></div><button class="btn sm" data-a="epPrint">Print / Save PDF</button><button class="btn sm ghost" data-a="epShare">Share</button></div>
+  <div class="ep"><div class="mast"><h1>${esc(S.settings.appName||'Scoring Heroes')} Daily</h1><div class="sub"><span>${ds}</span><span>Edition ${ed}</span><span>Free</span></div></div>
+  ${lead?`<h2>${lead.link?`<a href="${esc(lead.link)}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">${esc(lead.title)}</a>`:esc(lead.title)}</h2><div class="src">${esc(lead.source||'')}</div>`:'<h2>Today\'s edition is loading</h2><div class="src">News comes from the live server. Open the app from your Render link so the news feed can load.</div>'}
+  ${R.live.length?`<div class="box"><h3>Live now</h3>${R.live.map(row).join('')}</div>`:''}
+  <div class="cols"><div class="col">${rest.slice(0,half).map(nline).join('')}</div><div class="col">${rest.slice(half).map(nline).join('')}</div></div>
+  <div class="cols"><div class="box"><h3>Results</h3>${own.map(m=>`<div class="r"><span>${esc(T(m.a).name)} v ${esc(T(m.b).name)}</span></div><div class="src" style="margin:-2px 0 4px">${esc(m.result||'')}</div>`).join('')}${R.rec.length?R.rec.slice(0,8).map(row).join(''):(own.length?'':'<div class="src">No recent results yet.</div>')}</div>
+  <div class="box"><h3>Fixtures</h3>${R.up.length?R.up.slice(0,8).map(m=>`<div class="r"><span>${esc(m.name||'')}</span><span>${esc(wWhen(m))}</span></div>`).join(''):'<div class="src">No fixtures listed.</div>'}</div></div>
+  ${S.settings.sponsors&&S.settings.sponsors.length?`<div class="box"><h3>Our sponsors</h3><div style="display:flex;gap:10px;flex-wrap:wrap">${S.settings.sponsors.map(x=>`<img src="${x}" alt="" style="height:40px">`).join('')}</div></div>`:''}
+  <div class="src" style="text-align:center;margin-top:8px">Scores and headlines are pulled live from the cricket provider and Google News. ${esc(S.settings.appName||'Scoring Heroes')} ePaper is generated automatically.</div></div>`};
+/* ---- Social studio (canvas posters) ---- */
+UI.soc=UI.soc||{tpl:'result',size:'sq',src:'',cap:''};
+const SZ={sq:[1080,1080,'Square'],st:[1080,1920,'Story / Reel'],ls:[1600,900,'Landscape']};
+const TPL=[['result','\u{1F3C6}','Result'],['live','\u{1F534}','Live score'],['fix','\u{1F4C5}','Fixture'],['toss','\u{1FA99}','Toss'],['pom','⭐','Player of match'],['custom','✍️','Own text']];
+function socMatches(){const R=svReal(),own=S.matches.filter(m=>!isDemo(m)).slice().reverse().map(m=>({id:'o'+m.id,own:1,name:T(m.a).name+' vs '+T(m.b).name,m}));
+  const w=[...R.live,...R.rec,...R.up].map(m=>({id:'w'+m.id,name:m.name,w:m}));return own.concat(w)}
+function socData(){const L=socMatches(),sel=L.find(x=>x.id===UI.soc.src)||L[0];if(!sel)return null;
+  if(sel.w){const m=sel.w,t=(m.teams||[]).slice(0,2);return{a:t[0]?t[0].name:'Team A',b:t[1]?t[1].name:'Team B',as:t[0]?svScoreTxt(m,t[0]):'',bs:t[1]?svScoreTxt(m,t[1]):'',status:m.started?(m.status||''):'Starts '+wWhen(m),series:wSplit(m).series,venue:m.venue||'',when:wWhen(m),live:m.started&&!m.ended}}
+  const m=sel.m,A=T(m.a),B=T(m.b),sc=t=>{const i=m.innings.findIndex(x=>x.bat===t);if(i<0)return'';const q=calc(m,i);return q.runs+'/'+q.wk+' ('+fmtOv(q.lg)+')'};
+  return{a:A.name,b:B.name,as:sc(m.a),bs:sc(m.b),status:m.status==='done'?(m.result||'Match complete'):m.status==='live'?'Live':'Starts soon',series:m.name||'',venue:'',when:m.date||'',live:m.status==='live'}}
+function socDraw(cv){
+  const [W,H]=SZ[UI.soc.size||'sq'],D=socData(),c=cv.getContext('2d');cv.width=W;cv.height=H;
+  const g=c.createLinearGradient(0,0,W,H);g.addColorStop(0,'#0a1f5c');g.addColorStop(.55,'#2a1654');g.addColorStop(1,'#d91f2e');c.fillStyle=g;c.fillRect(0,0,W,H);
+  c.fillStyle='rgba(255,255,255,.06)';c.beginPath();c.arc(W*.9,H*.12,W*.28,0,7);c.fill();
+  const u=Math.min(W,H)/1080,T1=UI.soc.tpl,ctr=(t,y,sz,col,wt)=>{c.fillStyle=col||'#fff';c.font=(wt||'800')+' '+Math.round(sz*u)+'px Inter,Arial,sans-serif';c.textAlign='center';c.fillText(t,W/2,y)};
+  const fit=(t,y,sz,col,wt)=>{let s=sz;c.font=(wt||'800')+' '+Math.round(s*u)+'px Inter,Arial,sans-serif';while(c.measureText(t).width>W*.88&&s>20){s-=4;c.font=(wt||'800')+' '+Math.round(s*u)+'px Inter,Arial,sans-serif'}ctr(t,y,s,col,wt)};
+  const wrap=(t,y,sz,col)=>{c.font='700 '+Math.round(sz*u)+'px Inter,Arial,sans-serif';c.fillStyle=col||'#fff';c.textAlign='center';const w=t.split(' ');let line='',yy=y;w.forEach(x=>{const tt=line?line+' '+x:x;if(c.measureText(tt).width>W*.86&&line){c.fillText(line,W/2,yy);line=x;yy+=sz*1.2*u}else line=tt});c.fillText(line,W/2,yy)};
+  const done=()=>{};
+  const body=()=>{
+    if(T1==='custom'){const t=(UI.soc.cap||'Your headline here').slice(0,140);wrap(t,H*.42,H>W?72:64,'#fff');return}
+    if(!D){fit('No match selected',H*.5,60);return}
+    const top=H>W?H*.26:H*.24;
+    fit(T1==='fix'?'MATCH DAY':T1==='toss'?'TOSS':T1==='pom'?'PLAYER OF THE MATCH':T1==='live'?(D.live?'LIVE SCORE':'SCORE'):'FULL TIME',top,64,'#ffd24a','900');
+    ctr(String(D.series||'').slice(0,46),top+60*u,34,'rgba(255,255,255,.8)','600');
+    const y1=H*.45,y2=H*.62;
+    fit(D.a,y1,H>W?96:84);if(T1!=='fix'&&D.as)fit(D.as,y1+90*u,70,'#ffd24a','800');
+    ctr('VS',(y1+y2)/2+10*u,36,'rgba(255,255,255,.7)','700');
+    fit(D.b,y2,H>W?96:84);if(T1!=='fix'&&D.bs)fit(D.bs,y2+90*u,70,'#ffd24a','800');
+    wrap(T1==='fix'?(D.when+(D.venue?' | '+D.venue:'')):D.status,H*.84,44,'#fff')};
+  body();
+  const im=new Image();im.onload=()=>{const h=96*u,w=im.width*h/im.height;c.drawImage(im,36*u,32*u,w,h);foot()};im.onerror=foot;im.src=logoSrc();
+  function foot(){c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,H-70*u,W,70*u);ctr((S.settings.appName||'Scoring Heroes')+'  |  Free live scoring',H-24*u,30,'#fff','700');UI.soc.ready=1}}
+function socCaption(){const D=socData(),t=UI.soc.tpl;if(t==='custom')return UI.soc.cap||'';if(!D)return'';
+  const tag='#'+(S.settings.appName||'ScoringHeroes').replace(/\W/g,'')+' #Cricket #LiveScore';
+  if(t==='fix')return `\u{1F4C5} ${D.a} vs ${D.b}\n${D.when}${D.venue?' | '+D.venue:''}\n${tag}`;
+  return `${D.live?'\u{1F534} LIVE: ':'\u{1F3CF} '}${D.a} ${D.as||''} vs ${D.b} ${D.bs||''}\n${D.status}\n${tag}`}
+XV.social=function(){
+  const L=socMatches(),sel=UI.soc.src||(L[0]&&L[0].id)||'';
+  setTimeout(()=>{const cv=document.getElementById('socCv');if(cv)socDraw(cv);const ta=document.getElementById('socCap');if(ta&&!UI.soc.capEdited)ta.value=socCaption()},30);
+  return `<div class="bar"><h2>Social studio</h2></div><div class="mu sm" style="margin-bottom:8px">Make posters for WhatsApp, Instagram and Facebook from real matches. Free, no watermark.</div>
+  <div class="svg">${TPL.map(([k,e,l])=>`<button class="${UI.soc.tpl===k?'on':''}" style="${UI.soc.tpl===k?'border-color:var(--ac)':''}" data-a="socTpl" data-v="${k}"><span>${e}</span>${l}</button>`).join('')}</div>
+  <div class="card" style="margin-top:10px"><label>Match<select data-c="socSrc">${L.length?L.map(x=>`<option value="${x.id}" ${x.id===sel?'selected':''}>${esc(x.name).slice(0,70)}</option>`).join(''):'<option>No matches yet</option>'}</select></label>
+  <label>Size<select data-c="socSize">${Object.entries(SZ).map(([k,v])=>`<option value="${k}" ${UI.soc.size===k||(!UI.soc.size&&k==='sq')?'selected':''}>${v[2]} (${v[0]}x${v[1]})</option>`).join('')}</select></label>
+  ${UI.soc.tpl==='custom'?`<label>Your text<textarea data-c="socTxt" rows="3" maxlength="140">${esc(UI.soc.cap||'')}</textarea></label>`:''}</div>
+  <canvas id="socCv" class="pst" aria-label="Poster preview"></canvas>
+  <label>Caption<textarea id="socCap" data-c="socCapEdit" rows="4"></textarea></label>
+  <div class="row"><button class="btn" data-a="socSave">Download image</button><button class="btn ghost" data-a="socShare">Share</button><button class="btn ghost" data-a="socWa">WhatsApp</button><button class="btn ghost" data-a="socCopy">Copy caption</button></div>`};
+/* ---- Marketplace + shops ---- */
+S.market=S.market||[];
+UI.mk=UI.mk||{tab:'sell',q:''};
+const MKC=['Bats','Balls','Kits and clothing','Shoes','Protective gear','Equipment','Coaching','Other'];
+XV.market=function(){
+  const tab=UI.mk.tab,q=(UI.mk.q||'').toLowerCase(),L=S.market.filter(x=>(x.kind||'sell')===tab&&x.status!=='sold'&&(!q||(x.title+' '+x.cat+' '+(x.loc||'')).toLowerCase().includes(q)));
+  const card=x=>{const ph=String(x.phone||'').replace(/\D/g,'');return `<div class="it">${x.img?`<img src="${x.img}" alt="">`:'<img alt="" src="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27300%27 height=%27140%27%3E%3Crect width=%27300%27 height=%27140%27 fill=%27%23142050%27/%3E%3C/svg%3E">'}<div class="bd"><div class="b">${esc(x.title)}</div><div class="pr">${x.price?'Rs '+esc(x.price):''}</div><div class="mu sm">${esc(x.cat)}${x.loc?' | '+esc(x.loc):''}</div><div class="mu sm">${esc(x.by||'')}</div>
+  <div class="row" style="margin-top:8px">${ph?`<a class="btn sm" href="https://wa.me/${ph.length===10?'91'+ph:ph}?text=${encodeURIComponent('Hi, I saw your listing: '+x.title)}" target="_blank" rel="noopener">WhatsApp</a><a class="btn sm ghost" href="tel:${ph}">Call</a>`:''}${S.user&&(x.uid===S.user.id||S.user.role==='admin')?`<button class="btn sm ghost" data-a="mkSold" data-id="${x.id}">Mark sold</button><button class="btn sm ghost" data-a="mkDel" data-id="${x.id}">Delete</button>`:''}</div></div></div>`};
+  return `<div class="bar"><h2>Marketplace</h2></div>
+  <div class="htabs" style="margin-bottom:8px"><button class="btn sm ${tab==='sell'?'':'ghost'}" data-a="mkTab" data-v="sell">Buy and sell</button><button class="btn sm ${tab==='shop'?'':'ghost'}" data-a="mkTab" data-v="shop">Sports shops</button></div>
+  <input data-c="mkQ" placeholder="Search" value="${esc(UI.mk.q||'')}" style="margin-bottom:8px">
+  ${L.length?`<div class="mk">${L.map(card).join('')}</div>`:`<div class="card mu">Nothing listed yet. Be the first to post.</div>`}
+  <div class="card" style="margin-top:12px"><h3>${tab==='shop'?'Add your shop':'Post an item'}</h3><form data-f="mkAdd"><label>${tab==='shop'?'Shop name':'Title'}<input name="title" required maxlength="80"></label>
+  <div class="row"><label style="flex:1">${tab==='shop'?'Speciality':'Category'}<select name="cat">${MKC.map(c=>`<option>${c}</option>`).join('')}</select></label><label style="flex:1">${tab==='shop'?'Starting price':'Price (Rs)'}<input name="price" inputmode="numeric"></label></div>
+  <div class="row"><label style="flex:1">Area / city<input name="loc"></label><label style="flex:1">Phone<input name="phone" inputmode="tel" value="${esc((S.user&&S.user.phone)||'')}"></label></div>
+  <label>Photo<input type="file" accept="image/*" data-c="mkImg"></label><button class="btn wide">Post free</button></form></div>`};
+/* ---- actions ---- */
+Object.assign(A,{
+  epPrint(){try{window.print()}catch(e){toast('Open the app in your browser to print')}},
+  epShare(){const t=(S.settings.appName||'Scoring Heroes')+' Daily ePaper';if(navigator.share)navigator.share({title:t,url:location.href}).catch(()=>{});else{try{navigator.clipboard.writeText(location.href);toast('Link copied')}catch(e){toast(location.href)}}},
+  socTpl(d){UI.soc.tpl=d.v;UI.soc.capEdited=0;render()},
+  socSave(){const cv=document.getElementById('socCv');if(!cv)return;cv.toBlob(b=>{const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='poster.png';document.body.appendChild(a);a.click();setTimeout(()=>a.remove(),500)},'image/png')},
+  socShare(){const cv=document.getElementById('socCv'),cap=(document.getElementById('socCap')||{}).value||'';if(!cv)return;cv.toBlob(async b=>{try{const f=new File([b],'poster.png',{type:'image/png'});if(navigator.canShare&&navigator.canShare({files:[f]}))await navigator.share({files:[f],text:cap});else if(navigator.share)await navigator.share({text:cap});else{A.socSave();toast('Image saved. Attach it in WhatsApp or Instagram.')}}catch(e){}},'image/png')},
+  socWa(){const cap=(document.getElementById('socCap')||{}).value||'';window.open('https://wa.me/?text='+encodeURIComponent(cap),'_blank')},
+  socCopy(){const cap=(document.getElementById('socCap')||{}).value||'';try{navigator.clipboard.writeText(cap);toast('Caption copied')}catch(e){toast('Select the caption and copy')}},
+  mkTab(d){UI.mk.tab=d.v;render()},
+  mkSold(d){const x=S.market.find(z=>z.id===d.id);if(x){x.status='sold';commit()}},
+  mkDel(d){S.market=S.market.filter(z=>z.id!==d.id);commit()}});
+Object.assign(C,{
+  socSrc(v){UI.soc.src=v;UI.soc.capEdited=0;render()},socSize(v){UI.soc.size=v;render()},
+  socTxt(v){UI.soc.cap=v;UI.soc.capEdited=0;const cv=document.getElementById('socCv');if(cv)socDraw(cv);const ta=document.getElementById('socCap');if(ta)ta.value=v},
+  socCapEdit(){UI.soc.capEdited=1},
+  mkQ(v){UI.mk.q=v;render();const i=document.querySelector('input[data-c="mkQ"]');if(i){i.focus();i.setSelectionRange(v.length,v.length)}},
+  mkImg(v,el){if(el.files&&el.files[0])img(el.files[0],600,u=>{UI.mk.img=u;toast('Photo added')})}});
+Object.assign(F,{mkAdd(fd){const t=(fd.get('title')||'').trim();if(!t)return;
+  S.market.push({id:uid(),kind:UI.mk.tab,title:t,cat:fd.get('cat'),price:(fd.get('price')||'').replace(/[^\d.]/g,''),loc:fd.get('loc')||'',phone:fd.get('phone')||'',img:UI.mk.img||'',by:(S.user&&(S.user.nick||S.user.name))||'',uid:S.user&&S.user.id,t:Date.now()});UI.mk.img='';commit();toast('Posted')}});
+/* menu, bottom-nav entry and Home service row */
+MENU.splice(8,0,['epaper','ePaper'],['social','Social studio'],['market','Marketplace']);
+
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});
