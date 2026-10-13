@@ -281,6 +281,9 @@ details.card summary{cursor:pointer;color:var(--ac2)}</style>
 .mcnm{background:#1b2230;border-radius:10px;padding:14px;font-weight:700;margin-bottom:10px}.mcms{margin:14px 0}.mcpb{height:8px;background:var(--c2);border-radius:6px;margin-top:6px}.mcpb i{display:block;height:100%;background:var(--ac2);border-radius:6px}.mcnm2{font-weight:800;letter-spacing:.5px;margin:14px 2px 8px}
 .mcm{background:var(--c2);border:1px solid var(--bd);border-radius:16px;padding:14px;margin:10px 0;cursor:pointer}.mcm.live{border-color:#e55}.mcpill{display:inline-block;background:#fff1;border-radius:8px;padding:6px 12px;font-size:13px}.mcst{border-radius:8px;padding:4px 10px;font-size:12px;font-weight:800}.mcst.LIVE,.mcst.ONGOING{background:#2c7a3a;color:#fff}.mcst.RESULT,.mcst.PAST{background:#667;color:#fff}.mcst.UPCOMING{background:#f5a623;color:#111}
 .mctr{background:var(--c2);border:1px solid var(--bd);border-radius:16px;margin:10px 0;overflow:hidden;cursor:pointer}.mcban{height:110px;background:linear-gradient(135deg,#1c3d63,#0c1a2e);position:relative;display:flex;align-items:flex-end;padding:0 14px}.mcban .mcst{position:absolute;right:10px;top:10px}.mcban .aucc{position:absolute;bottom:-30px;left:14px;border:3px solid #fff}.mcfol{border:1px solid var(--bd);background:none;color:var(--tx);border-radius:16px;padding:6px 14px;font-weight:700}.mcfol.on{background:var(--c2);color:var(--mu)}</style>
+<style>.ppwrap{margin:-12px -12px 0}.ppH{background:#00b386;color:#fff;padding:14px 16px 0}.ppflag{display:inline-flex;gap:6px;align-items:center;background:#0006;border-radius:16px;padding:4px 12px;margin-top:8px}.ppT{display:flex;overflow-x:auto;margin:14px -16px 0}.ppT button{flex:1;background:none;border:0;color:#d3fff1;font-weight:700;padding:14px 10px;white-space:nowrap;border-bottom:3px solid transparent}.ppT button.on{color:#fff;border-bottom-color:#fff}
+.ppbody{background:#f1f1f1;color:#1a1a1a;padding:14px 12px 90px;min-height:70vh}.ppbody .mu{color:#777}.ppS{font-weight:800;margin:12px 4px 8px}.ppkv,.ppcard{background:#fff;border-radius:14px;padding:4px 14px;box-shadow:0 1px 3px #0002}.ppkv div,.pprow2{display:flex;justify-content:space-between;gap:10px;padding:14px 0;border-bottom:1px dashed #ddd}.ppkv div:last-child,.pprow2:last-child{border:0}.ppkv span,.pprow2 span{color:#777}.ppkv b{font-weight:500;text-align:right}
+.ppsub{padding:12px 0 8px}.pprow{display:grid;grid-template-columns:1.1fr .7fr .8fr 1.1fr;gap:6px;padding:14px 0;border-bottom:1px dashed #ddd;cursor:pointer;align-items:center}.pprow.hd{background:#e6f4ec;margin:0 -14px;padding:10px 14px;color:#777;cursor:default}.ppsel{background:#dff3ec;color:#666;padding:14px;border-radius:10px;margin-bottom:10px}.ppbody .empty{color:#777}</style>
 </head>
 <body>
 <div id="app"></div><div id="modal"></div><div id="toast"></div>
@@ -2931,6 +2934,36 @@ Object.assign(A,{mcTab(d){UI.mc.tab=d.v;render()},mcSet(d){UI.mc[d.k]=d.v;render
  mcShare(){const t=location.href;if(navigator.share)navigator.share({title:'Scoring Heroes',url:t}).catch(()=>{});else{try{navigator.clipboard.writeText(t);toast('Link copied')}catch(e){toast(t,6000)}}},
  aucGo(d){UI.au.open=d.id;UI.au.dtab='teams';UI.view='auction';render()}});
 MENU2[0][1].splice(1,0,['mycricket','\u{1F3CF}','My Cricket']);
+
+/* ---- Cricbuzz-style player profile page: Info, Batting, Bowling, Career, News ---- */
+UI.pp=UI.pp||{id:null,tab:'info'};
+function ppLog(id){const L=[];S.matches.forEach(m=>m.innings.forEach((inn,i)=>{const k=calc(m,i),b=k.bat[id],w=k.bowl[id];
+  if(b&&inn.used.includes(id))L.push({m,i,bat:b,date:m.date,opp:inn.bowl,t:'bat'});
+  if(w)L.push({m,i,bowl:w,date:m.date,opp:inn.bat,t:'bowl'})}));return L.sort((a,b)=>String(b.date).localeCompare(String(a.date)))}
+XV.player=function(){
+  const p=P(UI.pp.id);if(!p)return '<div class="empty">Player not found.</div>';
+  const tab=UI.pp.tab,t=T(p.team),cr=career()[p.id]||{m:new Set()},log=ppLog(p.id);
+  const role=p.role==='AR'?'All-rounder':p.role==='BOWL'?'Bowler':p.role==='WK'?'Wicket-keeper':'Batsman';
+  const head=`<div class="ppH"><button class="aucback" style="color:#fff" data-a="go" data-v="players">&larr;</button><div class="row" style="flex-wrap:nowrap;gap:16px;margin-top:30px"><span class="pphoto" style="width:104px;height:104px;border-radius:12px;font-size:44px;flex:none">${av(p)}</span><div><h2 style="margin:0;color:#fff">${esc(p.name)}</h2><span class="ppflag">${t?logo(t,18)+' '+esc(t.name):'Free agent'}</span></div></div>
+  <div class="ppT">${[['info','INFO'],['bat','BATTING'],['bowl','BOWLING'],['career','CAREER'],['news','NEWS']].map(([k,l])=>`<button class="${tab===k?'on':''}" data-a="ppTab" data-v="${k}">${l}</button>`).join('')}</div></div>`;
+  const kv=r=>`<div class="ppkv">${r.filter(x=>x[1]).map(x=>`<div><span>${x[0]}</span><b>${esc(String(x[1]))}</b></div>`).join('')}</div>`;
+  let b='';
+  if(tab==='info'){
+    const bt=log.filter(x=>x.t==='bat').slice(0,5);
+    b=`<div class="ppS">PERSONAL INFORMATION</div>${kv([['Born',p.dob],['Birth Place',p.city],['Full Name',p.name],['Role',role],['Batting Style',p.bat],['Bowling Style',p.bowl],['Jersey',p.jersey?'#'+p.jersey:''],['Team',t?t.name:'']])}
+    <div class="ppS">RECENT FORM</div><div class="ppcard"><div class="ppsub">BATTING</div><div class="pprow hd"><span>SCORE</span><span>OPPN.</span><span>FORMAT</span><span>DATE</span></div>${bt.length?bt.map(x=>`<div class="pprow" data-a="open" data-id="${x.m.id}"><b>${x.bat.r}${x.bat.out?'':'*'}(${x.bat.b})</b><span>${esc(T(x.opp).short)}</span><span class="mu">${x.m.overs}-ov</span><span class="mu">${esc(x.m.date)}</span></div>`).join(''):'<div class="aucmu">No batting innings recorded yet.</div>'}</div>
+    <div class="mu sm" style="margin:8px 4px">Only matches scored in this app are counted. Born / birth place show only if the player's registration has them.</div>${typeof extSection==='function'?extSection(p):''}`}
+  else if(tab==='bat'||tab==='bowl'){
+    const c=cr,inn=c.inn||0,no=c.no||0;
+    const R=tab==='bat'?[['Matches',c.m.size],['Innings',inn],['Runs',c.r||0],['Balls',c.b||0],['Highest',c.hs||0],['Average',inn-no>0?(c.r/(inn-no)).toFixed(2):'0'],['SR',c.b?(c.r*100/c.b).toFixed(2):'0'],['Not Out',no],['Fours',c.f4||0],['Sixes',c.f6||0],['50s',c.f50||0]]:
+      [['Matches',c.m.size],['Balls',c.ob||0],['Runs',c.or||0],['Maidens',c.mdn||0],['Wickets',c.w||0],['Best',c.bbw?c.bbw+'/'+c.bbr:'-'],['Avg',c.w?(c.or/c.w).toFixed(2):'0'],['Eco',c.ob?(c.or*6/c.ob).toFixed(2):'0'],['SR',c.w?(c.ob/c.w).toFixed(1):'0']];
+    b=`<div class="ppsel">Career (Scoring Heroes matches)</div><div class="ppcard">${R.map(([l,v])=>`<div class="pprow2"><span>${l}</span><b>${v}</b></div>`).join('')}</div><div class="mu sm" style="margin:8px 4px">Test / ODI / T20 / IPL columns are not shown because this app does not hold other leagues' records for this player.</div>`}
+  else if(tab==='career'){
+    const f=log[log.length-1],l=log[0],ln=x=>x?`${esc(x.m.date)} | ${esc(T(x.m.a).short)} vs ${esc(T(x.m.b).short)}${x.m.venue?' | '+esc(x.m.venue):''}`:'Not played';
+    b=`<div class="ppS">${'ALL MATCHES'}</div><div class="ppcard"><div class="pprow2"><span>Debut</span><a style="color:#0b6fa8;text-align:right" ${f?`data-a="open" data-id="${f.m.id}"`:''}>${ln(f)}</a></div><div class="pprow2"><span>Last Played</span><a style="color:#0b6fa8;text-align:right" ${l?`data-a="open" data-id="${l.m.id}"`:''}>${ln(l)}</a></div></div>`}
+  else b='<div class="empty" style="padding:50px 10px">No news about this player yet.</div>';
+  return `<div class="ppwrap">${head}<div class="ppbody">${b}</div></div>`};
+Object.assign(A,{ppTab(d){UI.pp.tab=d.v;render()},viewPlayer(d){if(!P(d.id))return;UI.pp={id:d.id,tab:'info'};UI.modal=null;renderModal();UI.view='player';render()}});
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});
