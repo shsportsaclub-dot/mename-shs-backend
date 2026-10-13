@@ -1582,6 +1582,145 @@ F.looks=function(fd){const n={};LOOKS.forEach(([k,l])=>{const v=String(fd.get('n
   const card=`<div class="card"><h3>App look</h3><div class="hscroll" style="margin:8px 0">${LOOKS.map(([k])=>`<button class="tile ${cur===k?'on':''}" data-a="look" data-v="${k}" style="min-width:110px"><div>${esc(lookName(k))}</div></button>`).join('')}</div>
   <form data-f="looks"><div class="mu sm">Give each look any name you like.</div>${LOOKS.map(([k,l])=>`<label>${esc(l)}<input name="n_${k}" maxlength="24" value="${esc(lookName(k))}"></label>`).join('')}<button class="btn sm">Save names</button></form></div>`;
   const o=v0(),i=o.indexOf('<div class="g2">');return i<0?o+card:o.replace('<div class="g2">','<div class="g2">'+card)}}
+
+/* ---------------- START MATCH WIZARD (mode, teams, format, players, venue, officials, broadcast, toss, review, start gate) ---------------- */
+const MODES=[['friendly','Individual / Friendly'],['corporate','Corporate'],['series','Series'],['tournament','Tournament'],['league','League / Franchise'],['academy','Academy match'],['club','Club / Board match'],['practice','Practice / Trial']];
+const WSTEPS=['Match mode','Teams','Format','Players','Venue','Officials','Broadcast','Toss','Review'];
+S.venues=S.venues||[];S.officials=S.officials||[];
+const wzFresh=()=>{const a=S.teams[0],b=S.teams[1]||S.teams[0];return{step:0,mode:'friendly',a:a?a.id:'',b:b?b.id:'',overs:20,date:new Date().toISOString().slice(0,10),name:'',xi:{},subs:{},venueId:'',areaId:'',pitchId:'',off:{u1:'',u2:'',u3:'',ref:'',sc:S.user?S.user.nick||S.user.name||'':'',co:''},bc:'sh',bcUrl:'',toss:a?a.id:'',dec:'bat',vq:'',found:null}};
+function wzDist(a,b,c,d){const R=6371000,r=x=>x*Math.PI/180,dl=r(c-a),dn=r(d-b),h=Math.sin(dl/2)**2+Math.cos(r(a))*Math.cos(r(c))*Math.sin(dn/2)**2;return 2*R*Math.asin(Math.sqrt(h))}
+function wzVenue(){const w=S.wiz;return S.venues.find(v=>v.id===w.venueId)||null}
+function wzPitchHistory(){
+  const w=S.wiz,v=wzVenue();if(!v)return '';
+  const L=S.matches.filter(m=>m.status==='done'&&m.venueId===v.id&&(!w.areaId||m.areaId===w.areaId)&&(!w.pitchId||m.pitchId===w.pitchId));
+  if(!L.length)return '<div class="mu sm">NO VERIFIED PITCH HISTORY YET.</div>';
+  const f=L.map(m=>calc(m,0).runs),avg=Math.round(f.reduce((x,y)=>x+y,0)/f.length),bw=L.filter(m=>m.win&&m.win===m.firstBat).length;
+  return `<div class="mu sm">${L.length} verified match${L.length>1?'es':''} here. Average first innings ${avg}. Team batting first won ${bw} of ${L.length}.</div>`}
+function wzGate(){
+  const w=S.wiz,v=wzVenue(),xa=(w.xi[w.a]||[]).length,xb=(w.xi[w.b]||[]).length,hasAreas=v&&(v.areas||[]).length;
+  return [
+   ['Match mode chosen',!!w.mode],
+   ['Two different teams',!!w.a&&!!w.b&&w.a!==w.b],
+   ['Format and date',+w.overs>0&&!!w.date],
+   ['Playing XI for both teams (at least 2 each)',xa>=2&&xb>=2],
+   ['Venue',!!v],
+   ['Playing area',!!(v&&w.areaId&&(v.areas||[]).some(a=>a.id===w.areaId))],
+   ['Scorer named',!!String(w.off.sc||'').trim()],
+   ['Broadcast mode'+(w.bc==='own'?' (stream link starts with https://)':''),w.bc!=='own'||/^https:\/\//i.test(w.bcUrl||'')],
+   ['Toss winner and decision',!!w.toss&&(w.toss===w.a||w.toss===w.b)&&!!w.dec]]}
+function wzStepHTML(){
+  const w=S.wiz,tm=S.teams.map(t=>[t.id,t.name]);
+  switch(w.step){
+  case 0:return `<p class="mu sm">Choose what kind of match this is. The next steps follow your choice.</p><div class="g2">${MODES.map(([k,l])=>`<button type="button" class="tile ${w.mode===k?'on':''}" data-a="wzMode" data-v="${k}" style="min-width:0"><div>${l}</div></button>`).join('')}</div>
+    ${(w.mode==='series'||w.mode==='tournament')?'<div class="need" style="margin-top:10px">Tournament and series fixtures (groups, points table) are the next update. This match is saved as a '+esc(w.mode)+' match now and can be linked to its fixture later.</div>':''}`;
+  case 1:return `<div class="row"><label style="flex:1">Team A<select data-c="wz" name="a">${opt(tm,w.a)}</select></label><label style="flex:1">Team B<select data-c="wz" name="b">${opt(tm,w.b)}</select></label></div>
+    ${w.a===w.b?'<div class="need">Pick two different teams.</div>':''}
+    <div class="card" style="margin-top:10px"><div class="b">Team not in the list? Register it</div><div class="row"><input id="wz-tn" placeholder="Team name" style="flex:2"><input id="wz-ts" placeholder="Short" maxlength="4" style="flex:1"><button type="button" class="btn sm" data-a="wzTeam">Add team</button></div></div>`;
+  case 2:return `<label>Match name (optional)<input data-c="wz" name="name" value="${esc(w.name)}" placeholder="e.g. Sunday friendly"></label>
+    <div class="row"><label style="flex:1">Format<select data-c="wz" name="overs">${opt([['5','5 overs'],['6','6 overs'],['8','8 overs'],['10','T10'],['15','15 overs'],['20','T20'],['30','30 overs'],['40','40 overs'],['50','ODI 50']],String(w.overs))}</select></label><label style="flex:1">Date<input type="date" data-c="wz" name="date" value="${esc(w.date)}"></label></div>`;
+  case 3:return [w.a,w.b].map(tid=>{const t=T(tid),xi=w.xi[tid]||[],sb=w.subs[tid]||[];
+    return `<div class="card" style="margin:8px 0"><div class="b">${esc(t.name)}: playing XI ${xi.length}/11, substitutes ${sb.length}/4</div>
+    ${t.players.length?t.players.map(id=>{const p=P(id)||{};return `<div class="row" style="justify-content:space-between;padding:4px 0"><span style="display:flex;align-items:center;gap:8px;min-width:0"><span class="pphoto" style="width:30px;height:30px;font-size:13px;flex:none">${typeof av==='function'?av(p):''}</span><span>${esc(p.name||'')} <span class="mu sm">${esc(p.role||'')}</span></span></span><span class="row" style="gap:10px;flex-wrap:nowrap"><label class="ck" style="margin:0"><input type="checkbox" data-c="wzxi" data-k="xi" data-t="${tid}" value="${id}" ${xi.includes(id)?'checked':''}> XI</label><label class="ck" style="margin:0"><input type="checkbox" data-c="wzxi" data-k="subs" data-t="${tid}" value="${id}" ${sb.includes(id)?'checked':''}> Sub</label></span></div>`}).join(''):'<div class="mu sm">No players yet. Add one below.</div>'}
+    <div class="row" style="margin-top:8px"><input id="wz-m-${tid}" inputmode="tel" placeholder="Find player by mobile" style="flex:1"><button type="button" class="btn sm" data-a="wzFind" data-t="${tid}">Find</button></div>
+    ${w.found&&w.found.t===tid?(w.found.p?`<div class="need">Found ${esc(w.found.p.name)}. Added to ${esc(t.name)}.</div>`:`<div class="card" style="margin-top:6px"><div class="mu sm">No profile with ${esc(w.found.phone)}. Create a minimum profile:</div><div class="row"><input id="wz-pn" placeholder="Player name" style="flex:1"><button type="button" class="btn sm" data-a="wzMake" data-t="${tid}">Create and add</button></div></div>`):''}</div>`}).join('');
+  case 4:{const v=wzVenue(),q=String(w.vq||'').toLowerCase(),L=S.venues.filter(x=>!q||(x.name+' '+(x.aliases||[]).join(' ')).toLowerCase().includes(q));
+    return `<label>Search venue<input data-c="wz" name="vq" value="${esc(w.vq||'')}" placeholder="Name or alias"></label>
+    ${L.length?`<label>Registered venues<select data-c="wz" name="venueId"><option value="">Select a venue</option>${opt(L.map(x=>[x.id,x.name+((x.aliases||[]).length?' ('+x.aliases[0]+')':'')]),w.venueId)}</select></label>`:'<div class="mu sm">No registered venue matches. Register it below.</div>'}
+    ${v?`<div class="card" style="margin:8px 0"><div class="b">${esc(v.name)}</div>${(v.aliases||[]).length?`<div class="mu sm">Also known as: ${esc(v.aliases.join(', '))}</div>`:''}
+      <label>Playing area<select data-c="wz" name="areaId"><option value="">Select area</option>${opt((v.areas||[]).map(a=>[a.id,a.name]),w.areaId)}</select></label>
+      <div class="row"><input id="wz-an" placeholder="New playing area (e.g. 90-yard ground, box cricket)" style="flex:1"><button type="button" class="btn sm" data-a="wzArea">Add area</button></div>
+      ${w.areaId?`<label style="margin-top:6px">Pitch / strip<select data-c="wz" name="pitchId"><option value="">Not chosen</option>${opt((((v.areas||[]).find(a=>a.id===w.areaId)||{}).pitches||[]).map(p=>[p.id,p.name]),w.pitchId)}</select></label><div class="row"><input id="wz-pn2" placeholder="New pitch (e.g. Pitch 1)" style="flex:1"><button type="button" class="btn sm" data-a="wzPitch">Add pitch</button></div>${wzPitchHistory()}`:''}</div>`:''}
+    <div class="card" style="margin-top:8px"><div class="b">Register a new venue</div><input id="wz-vn" placeholder="Venue name"><div class="row" style="margin-top:6px"><input id="wz-lat" placeholder="Latitude" inputmode="decimal" style="flex:1" value="${esc(w.vlat||'')}"><input id="wz-lng" placeholder="Longitude" inputmode="decimal" style="flex:1" value="${esc(w.vlng||'')}"></div>
+      <div class="row" style="margin-top:6px"><button type="button" class="btn sm ghost" data-a="wzGps">Use my GPS</button><input id="wz-ls" placeholder="Search a place" style="flex:1"><button type="button" class="btn sm ghost" data-a="wzLoc">Search</button></div>
+      ${(w.locs||[]).length?`<div style="margin-top:6px">${w.locs.map((r,i)=>`<button type="button" class="btn sm ghost" style="display:block;width:100%;text-align:left;margin-top:4px" data-a="wzPick" data-i="${i}">${esc(String(r.display_name).slice(0,70))}</button>`).join('')}</div>`:''}
+      <button type="button" class="btn wide" style="margin-top:8px" data-a="wzVenue">Register venue</button><div class="mu sm" style="margin-top:6px">If a venue is already registered within 10 metres, it is used instead and your name is saved as an alias.</div></div>`}
+  case 5:{const R=r=>S.officials.filter(o=>o.role===r).map(o=>o.name),dl=(id,r)=>`<datalist id="${id}">${R(r).map(n=>`<option value="${esc(n)}">`).join('')}</datalist>`,f=(k,l,r)=>`<label>${l}<input data-c="wzoff" name="${k}" list="dl-${k}" value="${esc(w.off[k]||'')}">${dl('dl-'+k,r)}</label>`;
+    return `<p class="mu sm">Names you type are saved so you can pick them next time.</p><div class="row"><div style="flex:1">${f('u1','Umpire 1','umpire')}</div><div style="flex:1">${f('u2','Umpire 2','umpire')}</div></div>${f('u3','Third umpire','umpire')}${f('ref','Match referee','referee')}<div class="row"><div style="flex:1">${f('sc','Scorer','scorer')}</div><div style="flex:1">${f('co','Co-scorer','scorer')}</div></div>`}
+  case 6:return `<div class="g2">${[['sh','Scoring Heroes Live','Score and watch on the app and OBS overlay'],['own','My own channel','Add your YouTube / Facebook / HLS link'],['none','No broadcast','Scoring only']].map(([k,l,d])=>`<button type="button" class="tile ${w.bc===k?'on':''}" data-a="wzBc" data-v="${k}" style="min-width:0"><div>${l}</div><div class="mu sm">${d}</div></button>`).join('')}</div>
+    ${w.bc==='own'?`<label style="margin-top:8px">Stream link<input data-c="wz" name="bcUrl" inputmode="url" value="${esc(w.bcUrl)}" placeholder="https://www.youtube.com/live/..."></label>`:''}`;
+  case 7:return `<div class="row"><label style="flex:1">Toss won by<select data-c="wz" name="toss">${opt([[w.a,T(w.a).name],[w.b,T(w.b).name]],w.toss)}</select></label><label style="flex:1">Chose to<select data-c="wz" name="dec">${opt([['bat','Bat'],['bowl','Bowl']],w.dec)}</select></label></div>
+    <p class="mu sm">Striker, non-striker and opening bowler are chosen when the first innings starts in the scorer.</p>`;
+  default:{const g=wzGate(),ok=g.every(x=>x[1]),v=wzVenue();
+    return `<div class="card">${g.map(([l,k])=>`<div class="row" style="justify-content:space-between;padding:5px 0"><span>${l}</span><b style="color:${k?'var(--gn)':'var(--rd)'}">${k?'Ready':'Missing'}</b></div>`).join('')}</div>
+    <div class="mu sm" style="margin:8px 0">${esc(T(w.a).name)} vs ${esc(T(w.b).name)} | ${w.overs} overs | ${esc(v?v.name:'No venue')} | toss: ${esc(T(w.toss).name)} chose to ${w.dec}</div>
+    <button type="button" class="btn wide" data-a="wzStart" ${ok?'':'disabled'}>Start match</button>${ok?'':'<div class="need" style="margin-top:8px">Start match opens when every item above is Ready. Tap a step above to fix it.</div>'}`}}}
+function wzHTML(){
+  const w=S.wiz,n=WSTEPS.length;
+  return `<h3>Start match</h3><div class="mu sm">Step ${w.step+1} of ${n}: ${WSTEPS[w.step]}</div>
+  <div style="height:5px;border-radius:3px;background:var(--bd);margin:6px 0 10px"><div style="height:5px;border-radius:3px;width:${Math.round((w.step+1)/n*100)}%;background:var(--grad)"></div></div>
+  <div class="hscroll" style="margin-bottom:8px">${WSTEPS.map((l,i)=>`<button type="button" class="btn sm ${i===w.step?'':'ghost'}" data-a="wzGo" data-v="${i}">${i+1}</button>`).join('')}</div>
+  ${wzStepHTML()}
+  <div class="row" style="margin-top:12px;justify-content:space-between"><button type="button" class="btn ghost" data-a="wzBack" ${w.step?'':'disabled'}>Back</button>${w.step<n-1?'<button type="button" class="btn" data-a="wzNext">Next</button>':''}<button type="button" class="btn ghost sm" data-a="wzDiscard">Discard setup</button></div>
+  <div class="mu sm" style="margin-top:6px">Your setup is saved. Close this and come back any time to continue.</div>`}
+function wzShow(){UI.modal={t:'html',html:wzHTML()};renderModal()}
+function wzCheck(step){const w=S.wiz;
+  if(step===1&&(!w.a||!w.b||w.a===w.b))return 'Pick two different teams';
+  if(step===3&&((w.xi[w.a]||[]).length<2||(w.xi[w.b]||[]).length<2))return 'Select at least 2 playing XI players for each team';
+  if(step===4&&(!wzVenue()||!w.areaId))return 'Choose a venue and a playing area';
+  if(step===5&&!String(w.off.sc||'').trim())return 'Name the scorer';
+  if(step===6&&w.bc==='own'&&!/^https:\/\//i.test(w.bcUrl||''))return 'The stream link must start with https://';
+  return ''}
+C.wz=function(v,el){const w=S.wiz,n=el.name;w[n]=n==='overs'?+v:v;
+  if(n==='venueId'){w.areaId='';w.pitchId=''}if(n==='areaId')w.pitchId='';
+  if(n==='a'||n==='b'){if(w.toss!==w.a&&w.toss!==w.b)w.toss=w.a}
+  save();if(['a','b','venueId','areaId','vq','pitchId','dec','toss'].includes(n))wzShow()};
+C.wzoff=function(v,el){S.wiz.off[el.name]=String(v||'').trim();save()};
+C.wzxi=function(v,el){const w=S.wiz,t=el.dataset.t,k=el.dataset.k,o=k==='xi'?'subs':'xi',L=(w[k][t]=w[k][t]||[]);
+  if(el.checked){const lim=k==='xi'?11:4;if(L.length>=lim){el.checked=false;return toast('Maximum '+lim+' players here')}L.push(v);w[o][t]=(w[o][t]||[]).filter(x=>x!==v)}else w[k][t]=L.filter(x=>x!==v);save();wzShow()};
+Object.assign(A,{
+  newMatch(){if(!can())return toast('Only Admin or Scorer accounts can start matches');if(!S.teams.length)return toast('Register at least two teams first');S.wiz=S.wiz||wzFresh();if(!S.wiz.a||!T(S.wiz.a)){const f=wzFresh();S.wiz.a=f.a;S.wiz.b=f.b;S.wiz.toss=f.toss}UI.view=UI.view==='score'?'score':UI.view;wzShow()},
+  wzMode(d){S.wiz.mode=d.v;save();wzShow()},
+  wzGo(d){const w=S.wiz,t=+d.v;for(let i=w.step;i<t;i++){const e=wzCheck(i);if(e){w.step=i;save();wzShow();return toast(e,2800)}}w.step=t;save();wzShow()},
+  wzNext(){const w=S.wiz,e=wzCheck(w.step);if(e)return toast(e,2800);w.step=Math.min(WSTEPS.length-1,w.step+1);save();wzShow()},
+  wzBack(){const w=S.wiz;w.step=Math.max(0,w.step-1);save();wzShow()},
+  wzDiscard(){S.wiz=null;save();UI.modal=null;renderModal();toast('Setup discarded')},
+  wzTeam(){const n=(document.getElementById('wz-tn')||{}).value||'',s=((document.getElementById('wz-ts')||{}).value||n.slice(0,3)).toUpperCase().slice(0,4);if(n.trim().length<2)return toast('Enter the team name');
+    if(S.teams.some(t=>t.name.toLowerCase()===n.trim().toLowerCase()))return toast('That team is already registered');
+    const t={id:uid(),name:n.trim(),short:s||n.trim().slice(0,3).toUpperCase(),color:'#1d4ed8',preset:null,logo:null,players:[]};S.teams.push(t);const w=S.wiz;if(w.a===w.b||!w.b)w.b=t.id;save();wzShow();toast('Team registered')},
+  wzFind(d){const t=d.t,el=document.getElementById('wz-m-'+t),ph=digits(el&&el.value);if(ph.length<10)return toast('Enter a 10 digit mobile number');
+    const w=S.wiz,p=S.players.find(x=>digits(x.phone)===ph);
+    if(p){const tm=T(t);if(!tm.players.includes(p.id)){const old=p.team&&T(p.team);if(old&&old.id!==t)old.players=old.players.filter(x=>x!==p.id);tm.players.push(p.id);p.team=t}
+      const xi=(w.xi[t]=w.xi[t]||[]);if(!xi.includes(p.id)&&xi.length<11)xi.push(p.id);w.found={t,p,phone:ph}}
+    else w.found={t,p:null,phone:ph};save();wzShow()},
+  wzMake(d){const t=d.t,w=S.wiz,nm2=((document.getElementById('wz-pn')||{}).value||'').trim();if(nm2.length<2)return toast('Enter the player name');
+    if(S.players.some(x=>digits(x.phone)===w.found.phone))return toast('A profile with this number already exists');
+    const p={id:uid(),name:nm2,role:'BAT',team:t,phone:w.found.phone,bat:'Right-hand',bowl:'',jersey:0,photo:null,avatar:null};S.players.push(p);T(t).players.push(p.id);
+    const xi=(w.xi[t]=w.xi[t]||[]);if(xi.length<11)xi.push(p.id);w.found={t,p,phone:w.found.phone};save();wzShow();toast('Player profile created')},
+  wzGps(){if(!navigator.geolocation)return toast('GPS is not available on this device');toast('Getting your location...',1500);
+    navigator.geolocation.getCurrentPosition(pos=>{S.wiz.vlat=pos.coords.latitude.toFixed(6);S.wiz.vlng=pos.coords.longitude.toFixed(6);save();wzShow();toast('Location captured')},()=>toast('Could not get GPS. Allow location or search a place.',3500),{enableHighAccuracy:true,timeout:15000})},
+  async wzLoc(){const q=((document.getElementById('wz-ls')||{}).value||'').trim();if(q.length<3)return toast('Type a place name');
+    try{const r=await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=5&q='+encodeURIComponent(q));S.wiz.locs=await r.json();if(!S.wiz.locs.length)toast('No place found');wzShow()}catch(e){toast('Search is not available right now',3000)}},
+  wzPick(d){const r=(S.wiz.locs||[])[+d.i];if(!r)return;S.wiz.vlat=(+r.lat).toFixed(6);S.wiz.vlng=(+r.lon).toFixed(6);S.wiz.locs=[];save();wzShow()},
+  wzVenue(){const w=S.wiz,name=((document.getElementById('wz-vn')||{}).value||'').trim(),lat=parseFloat((document.getElementById('wz-lat')||{}).value),lng=parseFloat((document.getElementById('wz-lng')||{}).value);
+    if(name.length<2)return toast('Enter the venue name');
+    if(!isNaN(lat)&&!isNaN(lng)){const near=S.venues.find(v=>v.lat!=null&&wzDist(lat,lng,v.lat,v.lng)<=10);
+      if(near){if(near.name.toLowerCase()!==name.toLowerCase()&&!(near.aliases||[]).some(a=>a.toLowerCase()===name.toLowerCase()))(near.aliases=near.aliases||[]).push(name);w.venueId=near.id;w.areaId='';w.pitchId='';save();wzShow();return toast('A venue is already registered here ('+near.name+'). Using it and saving your name as an alias.',5000)}}
+    const dup=S.venues.find(v=>v.name.toLowerCase()===name.toLowerCase()||(v.aliases||[]).some(a=>a.toLowerCase()===name.toLowerCase()));if(dup){w.venueId=dup.id;save();wzShow();return toast('This venue is already registered. Selected.',3000)}
+    const v={id:uid(),name,aliases:[],lat:isNaN(lat)?null:lat,lng:isNaN(lng)?null:lng,areas:[]};S.venues.push(v);w.venueId=v.id;w.areaId='';w.pitchId='';w.vlat='';w.vlng='';save();wzShow();toast('Venue registered. Now add or choose a playing area.',3500)},
+  wzArea(){const v=wzVenue(),n=((document.getElementById('wz-an')||{}).value||'').trim();if(!v||n.length<2)return toast('Enter the playing area name');
+    if((v.areas=v.areas||[]).some(a=>a.name.toLowerCase()===n.toLowerCase()))return toast('That area already exists');const a={id:uid(),name:n,pitches:[]};v.areas.push(a);S.wiz.areaId=a.id;S.wiz.pitchId='';save();wzShow()},
+  wzPitch(){const v=wzVenue(),a=v&&(v.areas||[]).find(x=>x.id===S.wiz.areaId),n=((document.getElementById('wz-pn2')||{}).value||'').trim();if(!a||n.length<1)return toast('Enter the pitch name');
+    if((a.pitches=a.pitches||[]).some(p=>p.name.toLowerCase()===n.toLowerCase()))return toast('That pitch already exists');const p={id:uid(),name:n};a.pitches.push(p);S.wiz.pitchId=p.id;save();wzShow()},
+  wzBc(d){S.wiz.bc=d.v;save();wzShow()},
+  wzStart(){const w=S.wiz,g=wzGate();if(!g.every(x=>x[1])){const i=g.findIndex(x=>!x[1]);return toast('Not ready: '+g[i][0],3000)}
+    const v=wzVenue(),area=(v.areas||[]).find(a=>a.id===w.areaId),pit=area&&(area.pitches||[]).find(p=>p.id===w.pitchId),off=w.off;
+    const m=newMatch({a:w.a,b:w.b,overs:w.overs,venue:v.name+(area?' - '+area.name:'')+(pit?' - '+pit.name:''),date:w.date,toss:w.toss,dec:w.dec,xiA:w.xi[w.a].slice(),xiB:w.xi[w.b].slice(),umpires:[off.u1,off.u2].filter(Boolean).join(', ')});
+    Object.assign(m,{mode:w.mode,name:w.name,venueId:v.id,areaId:w.areaId,pitchId:w.pitchId||'',officials:Object.assign({},off),bc:w.bc,subs:{[w.a]:(w.subs[w.a]||[]).slice(),[w.b]:(w.subs[w.b]||[]).slice()},scorer:off.sc||m.scorer,ready:true,
+      audit:[{t:Date.now(),type:'lineup_locked',by:S.user?S.user.nick||S.user.name:'',xi:{[w.a]:w.xi[w.a].slice(),[w.b]:w.xi[w.b].slice()}}]});
+    [['u1','umpire'],['u2','umpire'],['u3','umpire'],['ref','referee'],['sc','scorer'],['co','scorer']].forEach(([k,r])=>{const n=String(off[k]||'').trim();if(n&&!S.officials.some(o=>o.role===r&&o.name.toLowerCase()===n.toLowerCase()))S.officials.push({id:uid(),name:n,role:r})});
+    if(w.bc==='own'&&w.bcUrl){S.streams=S.streams||{};S.streams['m'+m.id]=w.bcUrl;try{saveStream('m'+m.id,w.bcUrl)}catch(e){}}
+    UI.mid=m.id;UI.sid=m.id;S.stream.mid=m.id;S.wiz=null;UI.modal=null;UI.view='score';commit();toast('Match is ready. Lineup is locked.',3500)}
+});
+{const s0=vScore;vScore=function(){const open=S.matches.filter(x=>x.status!=='done'),m=S.matches.find(x=>x.id===UI.sid)||open[open.length-1];
+  if(!m&&S.wiz&&can())return `<div class="empty">Your match setup is not finished.<br><br><button class="btn" data-a="newMatch">Continue setup (step ${S.wiz.step+1} of ${WSTEPS.length})</button></div>`;return s0()}}
+{const m0=mHead;mHead=function(m){const o=m0(m);const bits=[m.name,m.mode&&(MODES.find(x=>x[0]===m.mode)||[0,m.mode])[1]].filter(Boolean);return bits.length?`<div class="mu sm" style="margin:2px 0 6px">${esc(bits.join(' | '))}</div>`+o:o}}
+
+
+/* ---------------- REELS STRIP on Home (tap opens the full-screen reels at that card) ---------------- */
+{const st=document.createElement('style');st.textContent='.reelc{min-width:132px;max-width:132px;height:176px;border-radius:14px;padding:10px;text-align:left;color:#fff;display:flex;flex-direction:column;justify-content:space-between;border:0;cursor:pointer;background:var(--grad)}.reelc.c1{background:linear-gradient(160deg,#0a1f5c,#e11d2e)}.reelc.c2{background:linear-gradient(160deg,#0b3d2e,#0f8a4f)}.reelc.c3{background:linear-gradient(160deg,#3b1a6b,#e11d6a)}.reelc b{font-size:10px;letter-spacing:.8px;opacity:.9}.reelc span{font-size:13px;line-height:1.25;font-weight:700;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden}';document.head.appendChild(st)}
+function reelStrip(){let R=[];try{R=reelItems()}catch(e){}if(!R.length||R[0].kind==='empty')return '';
+  return `<div class="sec"><h3>Reels</h3><button class="btn sm ghost" data-a="go" data-v="reels">Open reels</button></div><div class="hscroll" style="margin-bottom:6px">${R.slice(0,10).map((r,i)=>`<button type="button" class="reelc c${i%4}" data-a="reelAt" data-i="${i}"><b>${esc(r.tag)}</b><span>${esc(String(r.share||'').replace(/\\s+/g,' ').slice(0,90))}</span></button>`).join('')}</div>`}
+{const h2=vHome;vHome=function(){const o=h2(),mk='<div class="sec"><h3>Cricket</h3>',i=o.indexOf(mk),r=reelStrip();return !r?o:i<0?r+o:o.slice(0,i)+r+o.slice(i)}}
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});
