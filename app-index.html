@@ -1156,6 +1156,7 @@ async function pullLive(){
       const mp=m=>({id:m.id,name:m.name,type:m.matchType,status:m.status,venue:m.venue,date:m.date,time:m.dateTimeGMT||'',started:!!m.matchStarted,ended:!!m.matchEnded,teams:(m.teamInfo&&m.teamInfo.length?m.teamInfo:(m.teams||[]).map(n=>({name:n,shortname:String(n).slice(0,3).toUpperCase()}))).map(t=>({name:t.name,short:t.shortname,img:t.img||''})),score:(m.score||[]).map(x=>({inning:x.inning,r:x.r,w:x.w,o:x.o}))});
       const seen={},all=[];(j.data||[]).concat(j2&&j2.status==='success'?(j2.data||[]):[]).forEach(m=>{if(m&&m.id&&!seen[m.id]){seen[m.id]=1;all.push(mp(m))}});
       UI.live={ok:true,matches:all,updated:new Date().toISOString()}}
+    if(UI.live&&UI.live.ok)wNorm();
   }catch(e){UI.live={ok:false,error:e.message==='Failed to fetch'?'Cannot reach the cricket API from this browser':e.message}}
   if(S.user&&UI.view==='home'&&UI.stage!=='welcome'&&location.hash!=='#overlay')render()}
 function liveFeedCard(){
@@ -1166,7 +1167,7 @@ function liveFeedCard(){
   const F2=wFilter(),sec=(t,n,L,more)=>`<div class="sec"><h3>${t}</h3><span class="mu sm">${n}</span></div>`+(L.length?L.map(wCard).join(''):`<div class="card mu">${more}</div>`);
   return sec('Live now',j.stale?'delayed':'updates every minute',F2.live.slice(0,8),'No live matches right now.')
     +sec('Schedule','upcoming',F2.up.slice(0,8),'No upcoming matches listed.')
-    +sec('Recent results','',F2.rec.slice(0,5),'No recent results.')
+    +sec('Recent results','',F2.rec.filter(m=>Date.now()-wTm(m)<21*864e5).slice(0,5),'No recent results.')
     +`<button class="btn sm ghost wide" data-a="go" data-v="matches">All matches</button>`}
 {const h0=vHome;vHome=function(){const o=h0(),i=o.indexOf('<div class="sec"><h3>Top teams</h3>');return i<0?o+liveFeedCard():o.slice(0,i)+liveFeedCard()+o.slice(i)}}
 pullLive();setInterval(pullLive,60000);
@@ -1331,7 +1332,12 @@ async function pullNews(){
   try{const r=await fetch(apiBase()+'/news');UI.news=await r.json()}catch(e){UI.news={ok:false}}
   if(S.user&&(UI.view==='reels'||UI.view==='home'))render()}
 pullNews();setInterval(pullNews,600000);
-const wFilter=()=>{const j=UI.live;if(!j||!j.ok)return{live:[],up:[],rec:[]};const M=j.matches;const tm=m=>Date.parse((m.time||m.date||'')+(m.time&&!/Z|\+/.test(m.time)?'Z':''))||0;return{live:M.filter(m=>m.started&&!m.ended),up:M.filter(m=>!m.started).sort((a,b)=>tm(a)-tm(b)),rec:M.filter(m=>m.ended).sort((a,b)=>tm(b)-tm(a))}};
+const wTm=m=>Date.parse((m.time||m.date||'')+(m.time&&!/Z|\+/.test(m.time)?'Z':''))||0;
+function wNorm(){/* provider labels like 'A,B Inning 1' mean the second team is batting: show a clean team name */
+  (UI.live&&UI.live.matches||[]).forEach(m=>{let prev='';(m.score||[]).forEach(x=>{let t=String(x.inning||''),tail=(/ Inning.*/.exec(t)||[''])[0],name=t.replace(/ Inning.*/,'');
+    if(name.indexOf(',')>=0){const parts=name.split(',').map(z=>z.trim()),pick=parts.filter(z=>z.toLowerCase()!==prev.toLowerCase());name=pick.length?pick[pick.length-1]:parts[parts.length-1]}
+    name=name.replace(/\b\w/g,c=>c.toUpperCase());x.inning=name+tail;prev=name})})}
+const wFilter=()=>{const j=UI.live;if(!j||!j.ok)return{live:[],up:[],rec:[]};const M=j.matches;const tm=wTm;return{live:M.filter(m=>m.started&&!m.ended),up:M.filter(m=>!m.started).sort((a,b)=>tm(a)-tm(b)),rec:M.filter(m=>m.ended).sort((a,b)=>tm(b)-tm(a))}};
 const wWhen=m=>{try{const t=m.time?new Date(m.time+(/Z|\+/.test(m.time)?'':'Z')):null;return t&&!isNaN(t)?t.toLocaleString('en-IN',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'}):(m.date||'')}catch(e){return m.date||''}};
 function wCard(m){
   const fl=t=>t.img?`<img class="logo" src="${esc(t.img)}" width="26" height="26" alt="">`:'';
