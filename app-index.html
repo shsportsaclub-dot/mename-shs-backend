@@ -1166,7 +1166,7 @@ function liveFeedCard(){
   if(!j.ok)return `<!--wf--><div class="sec"><h3>Live cricket</h3></div><div class="card mu">Live feed unavailable: ${esc(j.error||'')}</div><!--/wf-->`;
   const F2=wFilter(),rec=F2.rec.filter(m=>Date.now()-wTm(m)<21*864e5),tab=UI.htab||(F2.live.length?'live':'up'),
     T3={live:[F2.live,'No live matches right now. Check Upcoming or Recent.'],rec:[rec,'No recent results.'],up:[F2.up,'No upcoming matches listed.']}[tab];
-  return `<!--wf--><div class="sec"><h3>Cricket</h3><span class="mu sm">${j.stale?'delayed':'updates every minute'}</span></div>
+  return `<!--wf--><div class="sec"><h3>Cricket</h3><span class="mu sm">${j.stale?'delayed | ':''}updated ${j.updated?new Date(j.updated).toLocaleTimeString('en-IN',{hour:'numeric',minute:'2-digit'}):''} <button class="btn sm ghost" data-a="refreshLive" style="padding:2px 8px;margin-left:6px">Refresh</button></span></div>
   <div class="htabs">${[['live','Live',F2.live.length],['rec','Recent',rec.length],['up','Upcoming',F2.up.length]].map(([k,l,n])=>`<button class="btn sm ${tab===k?'':'ghost'}" data-a="htab" data-v="${k}">${l} (${n})</button>`).join('')}</div>
   ${T3[0].length?wGroup(T3[0],30):`<div class="card mu">${T3[1]}</div>`}
   <button class="btn sm ghost wide" data-a="go" data-v="matches">All matches</button><!--/wf-->`}
@@ -1425,6 +1425,7 @@ function wPlayerHTML(){
   `}
 {const st=document.createElement('style');st.textContent='.sctb{width:100%;border-collapse:collapse;font-size:13px}.sctb th{text-align:right;color:var(--mu,#94a3b8);font-weight:600;padding:6px 4px;border-bottom:1px solid var(--bd)}.sctb th:first-child,.sctb td:first-child{text-align:left}.sctb td{text-align:right;padding:7px 4px;border-bottom:1px solid var(--bd)}.plink{color:inherit;font-weight:700;text-decoration:none;border-bottom:1px dotted currentColor}';document.head.appendChild(st)}
 Object.assign(A,{
+  async refreshLive(){toast('Refreshing...',1200);await pullLive();render();const n=wFilter().live.length;toast(n?n+' live match'+(n>1?'es':'')+' now':'No live match right now. Updated.',2500)},
   htab(d){UI.htab=d.v;render()},
   wtab(d){UI.wtab=d.v;render()},
   wOpen(d){const m=(UI.live&&UI.live.matches||[]).find(x=>x.id===d.id);if(!m)return;UI.wm={m,tab:'sc',sc:null,err:''};wShow();wLoad('match_scorecard',m.id).then(j=>{if(!UI.wm||UI.wm.m.id!==m.id)return;if(j.ok)UI.wm.sc=j.data;else UI.wm.err=j.error||'Scorecard not available yet';wShow()})},
