@@ -309,6 +309,13 @@ http.createServer(async (req, res) => {
     res.end(code === 204 ? '' : typeof obj === 'string' ? obj : JSON.stringify(obj));
   };
   if (req.method === 'OPTIONS') return out(204);
+  if (req.method === 'GET' && (path === '/' || path === '/index.html')) {   // serve the app itself, same address as the API
+    try {
+      const html = fs.readFileSync(new URL('./app-index.html', import.meta.url));
+      res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache' });
+      return res.end(html);
+    } catch { /* fall through to 404 */ }
+  }
   const pth = path === '/otp/verify-link' ? '/api/otp/link' : (/^\/(otp|live|cric|mo|wa|news|auth)/.test(path) ? '/api' + path : path);
   const h = routes[req.method + ' ' + pth];
   if (!h) return out(404, { ok: false, error: 'Not found' });
