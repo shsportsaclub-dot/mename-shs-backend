@@ -1,0 +1,8 @@
+{
+  "name": "scoring-heroes-api",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "engines": { "node": ">=20.6" },
+  "scripts": { "start": "node --env-file=.env server.js" }
+}
