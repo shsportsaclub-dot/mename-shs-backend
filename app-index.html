@@ -1730,6 +1730,12 @@ function lookBar(){return `<div class="hscroll" style="gap:6px;margin:0 0 10px;a
   if(live&&isDemo(live))o=o.replace(/<span class="pill[^"]*">(LIVE NOW|RESULT|INNINGS BREAK|UPCOMING)<\/span>/,'<span class="pill">DEMO MATCH (sample data, not real)</span>');
   const r=reelStrip(),i=o.indexOf('<!--/wf-->');
   if(r)o=i<0?o+r:o.slice(0,i+10)+r+o.slice(i+10);
+  if(live&&isDemo(live)){
+    const a=o.indexOf('<div class="hero">'),b=o.indexOf('<!--wf-->');
+    if(a>=0&&b>a)o=o.slice(0,a)+'<div class="row" style="margin:6px 0 10px;align-items:center"><span class="mu sm" style="flex:1">A sample match is loaded (not real). Real matches show below.</span><button class="btn sm ghost" data-a="open" data-id="'+live.id+'">View sample</button></div>'+o.slice(b);
+    const n1=o.indexOf('<div class="sec"><h3>Latest news</h3>'),n2=o.indexOf('<div class="sec"><h3>Quick start</h3>');
+    if(n1>=0&&n2>n1)o=o.slice(0,n1)+o.slice(n2);
+  }
   return lookBar()+o}}
 /* ---------------- CRICEX-STYLE MATCH HEADER ---------------- */
 {const cs=document.createElement('style');cs.textContent=
