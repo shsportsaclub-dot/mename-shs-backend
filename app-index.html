@@ -236,6 +236,7 @@ svg text{font-family:var(--ui)}
 .rrow img.flag{height:34px;width:34px;border-radius:50%;object-fit:cover;background:#fff}
 .wtabs{display:flex;gap:8px;margin:6px 0 10px}
 </style>
+<style>.cbscore{background:var(--c2,#14213d);border:1px solid var(--bd,#2a3a66);border-radius:12px;padding:12px 14px;margin:8px 0}.cbs2{display:flex;gap:16px;flex-wrap:wrap;margin:6px 0;font-size:13px}.cbst{background:#f5c518;color:#111;font-weight:700;border-radius:8px;padding:8px 10px;margin-top:6px}.cbov{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:6px 0}</style>
 </head>
 <body>
 <div id="app"></div><div id="modal"></div><div id="toast"></div>
@@ -2537,6 +2538,32 @@ const hashStr=x=>{let h=0;for(let i=0;i<x.length;i++)h=(h*31+x.charCodeAt(i))>>>
 /* ---------------- MAIN ICON: SH helmet + wordmark in the header ---------------- */
 {const h7=hdr;hdr=function(){let o=h7();if(S.settings.appLogo)return o;return o.replace(/(<a class="hlogo"[^>]*>)(<img[^>]*>)(<\/a>)/,'$1$2<span class="hword"><i>SCORING</i> <b>HEROES</b></span>$3')}}
 {const st=document.createElement('style');st.textContent='.slogo img{filter:none!important;clip-path:inset(-20% 100% -20% -20%);animation-name:wipe2,glint}@keyframes wipe2{to{clip-path:inset(-20% -20% -20% -20%)}}.hlogo{display:flex;align-items:center;gap:8px}.hlogo img{height:38px;width:auto;filter:drop-shadow(0 1px 3px #0008)}.hword{font:800 15px/1 var(--ui,system-ui);letter-spacing:.8px;text-transform:uppercase;text-shadow:0 1px 2px #0009}.hword i{font-style:normal;color:#fff}.hword b{color:#9fc0ff}@media(max-width:380px){.hword{font-size:13px}}';document.head.appendChild(st)}
+
+/* ---- Cricbuzz-style Live tab ---- */
+{const old=tLive;tLive=function(m){
+  const s=st(m);if(!s)return old(m);
+  const A=T(s.inn.bat),B=T(s.inn.bowl),c=s.inn.cur,w=winP(m);
+  const lg=s.k.lg,ballsLeft=Math.max(0,s.left);
+  let status='';
+  if(m.status==='done')status=esc(m.result||'Match complete');
+  else if(s.i===1){const n=s.need;status=n>0?`${esc(A.name)} need ${n} run${n===1?'':'s'} in ${ballsLeft} ball${ballsLeft===1?'':'s'}`:`${esc(A.name)} won`}
+  else status=`${esc(A.name)} batting first`;
+  const L=overList(m,s.i),cur=L[L.length-1],prev=L.slice(-3);
+  const bw=c.bl?s.k.bowl[c.bl]||{b:0,r:0,w:0,m:0}:null;
+  const batRow=(id,star)=>{const b=s.k.bat[id]||{r:0,b:0,f4:0,f6:0};return `<tr><td>${esc(nm(id))}${star?' <b>*</b>':''}</td><td><b>${b.r}</b></td><td>${b.b}</td><td>${b.f4}</td><td>${b.f6}</td><td>${b.b?(b.r*100/b.b).toFixed(1):'0.0'}</td></tr>`};
+  const tl=prev.map(q=>`<div class="cbov"><span class="mu sm">${q.n}</span>${q.b.map(x=>`<span class="ch ${x.cls}">${x.lab}</span>`).join('')}<span class="b">= ${q.t}</span></div>`).join('');
+  const last=s.k.fow[s.k.fow.length-1];
+  const ex=m.innings.length?m.innings.map((x,j)=>{const k=calc(m,j);return `${esc(T(x.bat).short)} ${k.runs}-${k.wk}`}).join(' &nbsp;|&nbsp; '):'';
+  const recap=`${esc(A.name)} are ${s.k.runs}/${s.k.wk} after ${fmtOv(lg)} overs at ${s.crr.toFixed(2)} an over.`+(s.i===1&&s.need>0?` Required rate ${s.rrr!=null?s.rrr.toFixed(2):'-'}.`:'')+(s.k.part.b?` Current partnership ${s.k.part.r} off ${s.k.part.b}.`:'')+(last?` Last wicket: ${esc(nm(last.id))} ${s.k.bat[last.id].r}(${s.k.bat[last.id].b}).`:'');
+  return `${ballBanner(m)}
+  ${tl?`<div class="card cbtl"><div class="row" style="justify-content:space-between"><b>Recent overs</b><a class="mu sm" data-a="tab" data-v="comm" style="cursor:pointer">Overs &rsaquo;</a></div>${tl}</div>`:''}
+  <div class="card ai"><div class="b" style="margin-bottom:4px">Recap <span class="mu sm">(from the scored balls)</span></div><div>${recap}</div></div>
+  ${typeof voiceBar==='function'?voiceBar():''}${typeof liveFeed==='function'?liveFeed(m):''}
+  ${m.status==='live'&&c.s!=null?`<div class="card scroll"><table><tr><th>Batter</th><th>R</th><th>B</th><th>4s</th><th>6s</th><th>SR</th></tr>${batRow(c.s,true)}${c.n!=null?batRow(c.n,false):''}</table>
+  <div class="mu sm" style="margin-top:8px">Partnership ${s.k.part.r} (${s.k.part.b})</div>
+  ${bw?`<table style="margin-top:10px"><tr><th>Bowler</th><th>O</th><th>M</th><th>R</th><th>W</th><th>Econ</th></tr><tr><td>${esc(nm(c.bl))} <b>*</b></td><td>${fmtOv(bw.b)}</td><td>${bw.m}</td><td>${bw.r}</td><td><b>${bw.w}</b></td><td>${bw.b?(bw.r*6/bw.b).toFixed(1):'0.0'}</td></tr></table>`:''}</div>`:''}
+  <div class="card"><div class="b" style="margin-bottom:6px">Match prediction</div><div class="pbar"><div style="background:${T(m.a).color};flex:${Math.max(w.a,4)};color:#fff">${esc(T(m.a).short)} ${w.a}%</div><div style="background:${T(m.b).color};flex:${Math.max(w.b,4)};color:#fff">${esc(T(m.b).short)} ${w.b}%</div></div></div>
+  ${ex?`<div class="mu sm" style="margin:6px 2px">${ex}</div>`:''}`}}
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});
