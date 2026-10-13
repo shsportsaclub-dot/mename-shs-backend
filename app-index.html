@@ -2371,7 +2371,7 @@ function tDRS(m){
   const ids=[m.a,m.b],key=t=>t+':'+s.i;
   const left=t=>Math.max(0,D.allow-(D.used[key(t)]||0));
   const here=D.log.filter(x=>x.inn===s.i);
-  return `<div class="card drs"><h3>Decision review (DRS)</h3>
+  return `<div class="card"><h3>Decision review (DRS)</h3>
   <div class="mu sm" style="margin:4px 0 10px">Reviews left this innings. A team loses a review only when the decision is not changed. An Umpire's call keeps the review.</div>
   <div class="row" style="gap:8px;flex-wrap:wrap">${ids.map(t=>`<div class="card" style="flex:1;min-width:130px;margin:0"><div class="b">${esc(T(t).short)}</div><div style="font-size:26px;font-weight:700">${left(t)}</div><div class="mu sm">of ${D.allow} left</div></div>`).join('')}</div>
   ${can()?`<div class="row" style="margin-top:10px"><span class="mu sm">Reviews per innings</span><button class="btn sm ghost" data-a="drsAllow" data-v="-1">-</button><b>${D.allow}</b><button class="btn sm ghost" data-a="drsAllow" data-v="1">+</button></div>
