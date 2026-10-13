@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: scoring-heroes-api
+    runtime: node
+    plan: free
+    startCommand: node server.js
+    healthCheckPath: /health
+    envVars:
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: SMS_PROVIDER
+        value: console
+      - key: ALLOWED_ORIGINS
+        value: "*"
+      - key: CRIC_API_KEY
+        sync: false
