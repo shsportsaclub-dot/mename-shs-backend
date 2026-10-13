@@ -1575,11 +1575,11 @@ const lookName=k=>((S.settings.themeNames||{})[k])||(LOOKS.find(x=>x[0]===k)||[0
 'html[data-theme=mday]{--ac:#009270;--grad:linear-gradient(90deg,#007f61,#009270);--ui:Roboto,"Helvetica Neue",Arial,system-ui,sans-serif}'+'html[data-theme=mday] .wser{background:#e4e8ec;color:#10161c;margin:0;padding:8px 14px;font-size:12px;text-transform:uppercase;letter-spacing:.6px;opacity:1}'+'html[data-theme=mday] .wcard{background:#fff;border:0;border-bottom:1px solid #e3e7ec;border-radius:0;margin:0;padding:12px 14px}'+'html[data-theme=mday] .wst{border:0;margin-top:4px;padding-top:0;font-weight:600}html[data-theme=mday] .wlive{color:#cb2431}html[data-theme=mday] .wres{color:#10161c}html[data-theme=mday] .wup{color:#5d6b78}'+'html[data-theme=mday] .tbadge{background:#dfe4ea;color:#10161c}html[data-theme=mday] .wrow{font-size:15px}'+'html[data-theme=mday] .htabs{gap:0;border-bottom:1px solid #d6dce3;margin:6px -2px 0}html[data-theme=mday] .htabs .btn{background:transparent;border:0;border-bottom:3px solid transparent;border-radius:0;color:#5d6b78;box-shadow:none;font-weight:600}html[data-theme=mday] .htabs .btn:not(.ghost){color:#009270;border-bottom-color:#009270}'+'html[data-theme=mday] .card{border-radius:6px;box-shadow:0 1px 2px rgba(16,22,28,.06)}html[data-theme=mday] .sec h3{text-transform:uppercase;font-size:13px;letter-spacing:.6px}'+
 'html[data-theme=exch] .wsc,html[data-theme=exch] .score{font-variant-numeric:tabular-nums;font-family:ui-monospace,Menlo,Consolas,monospace}html[data-theme=exch] .wcard,html[data-theme=exch] .card{border-radius:6px}html[data-theme=mday] .hero{color:#fff}';
 document.head.appendChild(st)}
-{const r0=render;render=function(){r0.apply(this,arguments);if(location.hash!=='#overlay')document.documentElement.dataset.theme=S.settings.appTheme||'sh';setTimeout(attachHls,0)}}
+{const r0=render;render=function(){r0.apply(this,arguments);if(location.hash!=='#overlay')document.documentElement.dataset.theme=S.settings.appTheme||'mday';setTimeout(attachHls,0)}}
 {const m0=renderModal;renderModal=function(){m0.apply(this,arguments);setTimeout(attachHls,0)}}
 Object.assign(A,{look(d){S.settings.appTheme=d.v;commit()}});
 F.looks=function(fd){const n={};LOOKS.forEach(([k,l])=>{const v=String(fd.get('n_'+k)||'').trim().slice(0,24);if(v&&v!==l)n[k]=v});S.settings.themeNames=n;commit();toast('Look names saved')};
-{const v0=vSettings;vSettings=function(){const cur=S.settings.appTheme||'sh';
+{const v0=vSettings;vSettings=function(){const cur=S.settings.appTheme||'mday';
   const card=`<div class="card"><h3>App look</h3><div class="hscroll" style="margin:8px 0">${LOOKS.map(([k])=>`<button class="tile ${cur===k?'on':''}" data-a="look" data-v="${k}" style="min-width:110px"><div>${esc(lookName(k))}</div></button>`).join('')}</div>
   <form data-f="looks"><div class="mu sm">Give each look any name you like.</div>${LOOKS.map(([k,l])=>`<label>${esc(l)}<input name="n_${k}" maxlength="24" value="${esc(lookName(k))}"></label>`).join('')}<button class="btn sm">Save names</button></form></div>`;
   const o=v0(),i=o.indexOf('<div class="g2">');return i<0?o+card:o.replace('<div class="g2">','<div class="g2">'+card)}}
@@ -1724,7 +1724,7 @@ function reelStrip(){let R=[];try{R=reelItems()}catch(e){}if(!R.length||R[0].kin
 const isDemo=m=>!!m&&(m.demo||m.umpires==='Demo umpires');
 {const d0=demoMatch;demoMatch=function(){const r=d0.apply(this,arguments);const m=S.matches[S.matches.length-1];if(m)m.demo=true;return r}}
 {const r0=reelItems;reelItems=function(){const R=r0.apply(this,arguments),real=S.matches.some(m=>!isDemo(m)&&m.innings.length);return R.filter(x=>!['sh','potm','moments'].includes(x.kind)||real)}}
-function lookBar(){return `<div class="hscroll" style="gap:6px;margin:0 0 10px;align-items:center"><span class="mu sm" style="flex:none">Look</span>${LOOKS.map(([k])=>`<button type="button" class="btn sm ${((S.settings.appTheme||'sh')===k)?'':'ghost'}" data-a="look" data-v="${k}" style="flex:none">${esc(lookName(k))}</button>`).join('')}</div>`}
+function lookBar(){return `<div class="hscroll" style="gap:6px;margin:0 0 10px;align-items:center"><span class="mu sm" style="flex:none">Look</span>${LOOKS.map(([k])=>`<button type="button" class="btn sm ${((S.settings.appTheme||'mday')===k)?'':'ghost'}" data-a="look" data-v="${k}" style="flex:none">${esc(lookName(k))}</button>`).join('')}</div>`}
 {const h2=vHome;vHome=function(){let o=h2();
   const live=S.matches.slice().reverse().find(m=>m.status==='live'||m.status==='break')||S.matches[S.matches.length-1];
   if(live&&isDemo(live))o=o.replace(/<span class="pill[^"]*">(LIVE NOW|RESULT|INNINGS BREAK|UPCOMING)<\/span>/,'<span class="pill">DEMO MATCH (sample data, not real)</span>');
@@ -1785,7 +1785,7 @@ document.head.appendChild(cs)}
   ${L?`<div class="cxch"><span>This over</span>${L.b.map(x=>`<span class="ch ${x.cls}">${x.lab}</span>`).join('')}</div>`:''}`}
   <div class="cxq"><span>CRR <b>${s.crr.toFixed(2)}</b></span>${s.rrr!=null&&!done?`<span>RRR <b>${s.rrr.toFixed(2)}</b></span>`:''}<span>Overs left <b>${fmtOv(s.left)}</b></span><span style="flex:1"></span><button class="btn sm ghost" data-a="mnav" data-v="-1" aria-label="Previous match">&#8249;</button><button class="btn sm ghost" data-a="mnav" data-v="1" aria-label="Next match">&#8250;</button><button class="btn sm ghost" data-a="share">Share</button></div></div>`}}
 /* build stamp so the user can see which version is running */
-try{const b=document.createElement('div');b.id='buildstamp';b.textContent='Build 13-Oct-2026 23:15 | Tournaments, ePaper, Social, no demo news';b.style.cssText='position:fixed;left:6px;bottom:2px;font-size:10px;color:#8b8ba0;opacity:.7;z-index:5;pointer-events:none';document.body.appendChild(b)}catch(e){}
+try{const b=document.createElement('div');b.id='buildstamp';b.textContent='Build 13-Oct-2026 23:40 | Cricbuzz-style Home';b.style.cssText='position:fixed;left:6px;bottom:2px;font-size:10px;color:#8b8ba0;opacity:.7;z-index:5;pointer-events:none';document.body.appendChild(b)}catch(e){}
 /* ---------------- SERVICES: ePAPER, SOCIAL STUDIO, MARKET, MORE HUB ---------------- */
 var XV=window.XV={};
 {const st=document.createElement('style');st.textContent=
@@ -2005,6 +2005,60 @@ Object.assign(F,{tourAdd(fd){if(!can())return;const ids=fd.getAll('teams');if(id
   if(tid&&S.matches.length>n){const m=S.matches[S.matches.length-1];m.tid=tid;m.fid=fid;const t=trObj(tid),f=t&&t.fixtures.find(x=>x.id===fid);if(f)f.mid=m.id;save()}}}
 MENU.splice(3,0,['tours','Tournaments']);
 Object.assign(XV,{});
+
+/* ---------------- CRICBUZZ-STYLE HOME (Match Day look) ---------------- */
+{const st=document.createElement('style');st.textContent=
+'.cbnav{display:flex;gap:2px;overflow-x:auto;background:#009270;margin:-12px -12px 0;padding:0 8px;scrollbar-width:none}.cbnav::-webkit-scrollbar{display:none}'+
+'.cbnav button{flex:none;background:transparent;border:0;color:#fff;font:600 14px var(--ui,system-ui);padding:12px 11px;border-bottom:3px solid transparent;cursor:pointer;white-space:nowrap}.cbnav button.on{border-bottom-color:#fff}'+
+'.cbstrip{display:flex;align-items:stretch;background:#333;color:#fff;margin:0 -12px;font-size:13px}.cbstrip .lb{flex:none;background:#222;font-weight:700;padding:11px 12px;letter-spacing:.4px}'+
+'.cbstrip .ch{flex:1;display:flex;overflow-x:auto;scrollbar-width:none}.cbstrip .ch::-webkit-scrollbar{display:none}.cbstrip .ch span{flex:none;padding:11px 14px;white-space:nowrap;cursor:pointer;border-left:1px solid #444}'+
+'.cbstrip .al{flex:none;background:#333;border:0;color:#fff;padding:0 12px;font-weight:600;cursor:pointer;border-left:1px solid #444}'+
+'.cbcar{display:flex;gap:10px;overflow-x:auto;background:#e4e8ec;margin:0 -12px;padding:10px 12px;scroll-snap-type:x proximity;scrollbar-width:thin}'+
+'.cbc{flex:none;width:272px;background:#fff;border-radius:4px;display:flex;flex-direction:column;scroll-snap-align:start;color:#10161c;box-shadow:0 1px 2px #0002;cursor:pointer}'+
+'.cbc .tp{display:flex;justify-content:space-between;gap:6px;align-items:center;padding:8px 10px 4px;font-size:11px;color:#5d6b78}.cbc .tp span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}'+
+'.cbc .fm{flex:none;color:#fff;font-weight:700;font-size:10px;padding:2px 7px;border-radius:10px}.fm.odi{background:#1d6fe0}.fm.test{background:#cb2431}.fm.t20{background:#444}.fm.o{background:#7a8794}'+
+'.cbc .tr{display:flex;align-items:center;gap:8px;padding:5px 10px;font-size:15px}.cbc .tr b{flex:1;font-weight:600}.cbc .tr .sc{font-weight:700;font-variant-numeric:tabular-nums}.cbc .tr .sc small{font-weight:400;color:#5d6b78}'+
+'.cbc .tr img.logo,.cbc .tr .tbadge{width:24px;height:24px;border-radius:50%;object-fit:cover;flex:none}'+
+'.cbc .stx{padding:4px 10px 10px;font-size:12.5px;min-height:34px}.stx.l{color:#cb2431}.stx.r{color:#1d6fe0}.stx.u{color:#e08a00}'+
+'.cbc .ft{margin-top:auto;display:flex;justify-content:flex-end;gap:12px;background:#d4d8dc;padding:7px 10px;font-size:11px;font-weight:700;color:#444}.cbc .ft button{background:transparent;border:0;font:inherit;color:inherit;cursor:pointer;padding:0}'+
+'.cbqa{display:flex;gap:8px;align-items:center;padding:14px 0 6px;flex-wrap:wrap}.cbqa h3{margin:0 8px 0 0;font-size:18px}.cbqa button{background:#e4e8ec;border:0;border-radius:4px;padding:9px 12px;font:600 13px var(--ui,system-ui);color:#10161c;cursor:pointer}'+
+'.cbgrid{display:grid;grid-template-columns:230px 1fr;gap:0;margin:10px -12px 0;background:#fff;border-top:1px solid #e3e7ec}@media(max-width:640px){.cbgrid{grid-template-columns:1fr}}'+
+'.cbnews{padding:14px}.cbnews h4{margin:0 0 8px;color:#009270;font-size:15px;letter-spacing:.4px}.cbnews .it{padding:10px 0;border-bottom:1px solid #e3e7ec;font-size:14px;line-height:1.35;cursor:pointer;color:#10161c;display:block;text-decoration:none}.cbnews .it small{display:block;color:#7a8794;margin-top:4px;font-size:12px}'+
+'.cbfeat{padding:14px;background:#fff;border-left:1px solid #e3e7ec}@media(max-width:640px){.cbfeat{border-left:0;border-bottom:1px solid #e3e7ec;order:-1}}'+
+'.cbfeat .tag{color:#7a8794;font-size:12px;margin-bottom:8px}.cbfeat .im{height:190px;border-radius:4px;background:linear-gradient(135deg,#009270,#0a1f5c);display:flex;align-items:flex-end;padding:14px;color:#fff;font-weight:700;font-size:20px;line-height:1.2}';
+document.head.appendChild(st)}
+const cbAgo=s=>{const t=Date.parse(s);if(!t)return'';const m=Math.round((Date.now()-t)/6e4);return m<1?'just now':m<60?m+'m ago':m<1440?Math.round(m/60)+'h ago':Math.round(m/1440)+'d ago'};
+const cbFm=m=>{const t=String(m.type||'').toLowerCase();return t==='odi'?['ODI','odi']:t==='test'?['Test','test']:t.startsWith('t20')?[t==='t20i'?'T20I':'T20','t20']:[(t||'Match').toUpperCase().slice(0,5),'o']};
+function cbShortRes(m){const t=(m.teams||[]).map(x=>x.short||x.name).slice(0,2).join(' vs ');const s=String(m.status||'');return t+(m.ended&&s?' - '+s.replace(/\s*\(.*?\)\s*/g,' ').slice(0,28):m.started?' - Live':'')}
+function cbCard(m){
+  const live=m.started&&!m.ended,tm=(m.teams||[]).slice(0,2),sp=wSplit(m),f=cbFm(m);
+  const row=t=>`<div class="tr">${wBadge(t)}<b>${esc(t.short||t.name)}</b><span class="sc">${wTeamScore(m,t)||''}</span></div>`;
+  const status=m.started?(m.status||''):'Starts '+wWhen(m);
+  return `<div class="cbc" data-a="wOpen" data-id="${esc(m.id)}"><div class="tp"><span>${esc((sp.desc?sp.desc+' • ':'')+sp.series)}</span><span class="fm ${f[1]}">${esc(f[0])}</span></div>
+  ${tm.length?tm.map(row).join(''):`<div class="tr"><b>${esc(sp.teams)}</b></div>`}<div class="stx ${live?'l':m.ended?'r':'u'}">${esc(status)}</div>
+  <div class="ft"><button data-a="go" data-v="tours">POINTS TABLE</button><button data-a="htab" data-v="up">SCHEDULE</button></div></div>`}
+function cbHome(){
+  const j=UI.live,F2=wFilter(),f=UI.cbf||'all';
+  let L=[];if(j&&j.ok){const rec=F2.rec.filter(m=>Date.now()-wTm(m)<21*864e5);L=f==='live'?F2.live:f==='rec'?rec:f==='up'?F2.up:[...F2.live,...F2.up.slice(0,6),...rec.slice(0,8)]}
+  const chips=j&&j.ok?[...F2.live,...F2.rec.slice(0,6)].map(m=>`<span data-a="wOpen" data-id="${esc(m.id)}">${esc(cbShortRes(m))}</span>`).join(''):'';
+  const N=(UI.news&&UI.news.ok?UI.news.items:[]);
+  const nav=[['home','Live Scores'],['matches','Schedule'],['reports','Archives'],['news','News'],['tours','Series'],['teams','Teams'],['reels','Videos'],['players','Rankings'],['epaper','ePaper'],['social','Social'],['market','Market']];
+  const lab={all:'ALL',live:'LIVE',rec:'RESULTS',up:'UPCOMING'}[f];
+  const feed=!j?'<div class="card mu" style="margin:10px 0">Loading live scores...</div>':!j.ok?`<div class="card mu" style="margin:10px 0">Live feed unavailable: ${esc(j.error||'')}</div>`:L.length?`<div class="cbcar">${L.map(cbCard).join('')}</div>`:'<div class="card mu" style="margin:10px 0">No matches in this filter right now.</div>';
+  const lead=N[0],rest=N.slice(1,9);
+  return `<div class="cbnav">${nav.map(([k,l])=>`<button class="${(k==='home')?'on':''}" data-a="${k==='news'?'cbNews':'go'}" data-v="${k}">${l}</button>`).join('')}</div>
+  <div class="cbstrip"><span class="lb">MATCHES</span><div class="ch">${chips||'<span>No results yet</span>'}</div><button class="al" data-a="cbf">${lab} &#9662;</button></div>
+  ${feed}
+  <div class="cbqa"><h3>Quick Access</h3>${can()?'<button data-a="newMatch">Start a match</button>':''}<button data-a="go" data-v="tours">Tournaments</button><button data-a="go" data-v="matches">My matches</button><button data-a="go" data-v="teams">My teams</button></div>
+  <div class="cbgrid"><div class="cbnews"><h4>LATEST NEWS</h4>${rest.length||lead?[lead,...rest].filter(Boolean).slice(0,8).map(n=>`<a class="it" ${n.link?`href="${esc(n.link)}" target="_blank" rel="noopener"`:''}>${esc(n.title)}<small>${esc(n.source||'')}${n.date?' • '+cbAgo(n.date):''}</small></a>`).join(''):'<div class="mu sm">News loads from the live server.</div>'}</div>
+  <div class="cbfeat">${lead?`<div class="tag">${esc(lead.source||'Cricket news')}</div><a ${lead.link?`href="${esc(lead.link)}" target="_blank" rel="noopener"`:''} style="text-decoration:none;color:inherit"><div class="im">${esc(lead.title)}</div></a><div class="mu sm" style="margin-top:8px">${lead.date?cbAgo(lead.date):''}</div>`:'<div class="mu">Top story appears here.</div>'}</div></div>`}
+Object.assign(A,{cbf(){const o=['all','live','rec','up'];UI.cbf=o[(o.indexOf(UI.cbf||'all')+1)%4];render()},cbNews(){UI.view='epaper';render()}});
+{const h9=vHome;vHome=function(){
+  if((S.settings.appTheme||'mday')!=='mday')return h9();
+  const demo=S.matches.some(isDemo)&&!S.matches.some(m=>!isDemo(m))?`<div class="row" style="margin:10px 0;align-items:center"><span class="mu sm" style="flex:1">A sample match is loaded (not real).</span><button class="btn sm ghost" data-a="open" data-id="${S.matches.find(isDemo).id}">View sample</button></div>`:'';
+  let pv='';try{const h=location.hostname||'';if(h&&!/onrender\.com$|^localhost$|^127\./.test(h))pv='<div class="card" style="border-color:var(--ac);margin:10px 0"><div class="b">You are viewing a preview copy</div><div class="mu sm" style="margin:4px 0 8px">Live scores and news cannot load here. Open the real app:</div><a class="btn sm" href="https://scoring-heroes-api.onrender.com/" target="_blank" rel="noopener">Open live app</a></div>'}catch(e){}
+  const r=reelStrip();
+  return cbHome()+pv+demo+(r||'')+'<div style="margin-top:14px">'+lookBar()+'</div>'}}
 
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
