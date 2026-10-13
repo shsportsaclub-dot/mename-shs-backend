@@ -250,6 +250,16 @@ svg text{font-family:var(--ui)}
 .cxt table{width:100%}.cxt th{color:var(--mu);font-weight:500;font-size:13px}.cxt td,.cxt th{padding:10px 6px;text-align:right}.cxt td:first-child,.cxt th:first-child{text-align:left}.cxlive{color:var(--ac2)}.cxbat{font-size:13px}.cxps{display:flex;justify-content:space-between;padding:8px 0;font-size:13px}
 .cxtg{display:flex;gap:10px;margin:10px 0}.cxtg button{flex:1;background:none;border:1px solid var(--bd);color:var(--tx);border-radius:10px;padding:12px 8px}.cxtg button.on{background:#0f4570;border-color:#0f4570;color:#fff}.cxdot{display:inline-block;width:10px;height:10px;border-radius:2px}
 details.card summary{cursor:pointer;color:var(--ac2)}</style>
+<style>.chh{background:var(--c2);padding:12px 14px;font-weight:600;margin:10px -2px 0;border-radius:8px 8px 0 0}.chkv{display:grid;grid-template-columns:110px 1fr;gap:14px 10px;border-radius:0 0 12px 12px;margin-top:0}.chnotes{margin-top:0;border-radius:0 0 12px 12px}.chnote{padding:12px 0;border-bottom:1px solid var(--bd)}
+.chban{background:#17394a;border-radius:10px;padding:14px;margin:8px 0;color:#9fd8e8}.chres{margin-top:8px}.chrow{display:flex;justify-content:space-between;align-items:baseline;margin:4px 0;gap:10px}.chpill{background:#111;border:1px solid var(--bd);color:#fff;border-radius:16px;padding:4px 14px;font-weight:600;white-space:nowrap}
+.chhero .chhp{display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#183a3a,#0a1f5c);margin:-14px -14px 10px;padding:18px 14px;border-radius:12px 12px 0 0}.chlab{font-size:20px;font-weight:700}
+.chmv{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid var(--bd)}.chchips{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}.chchip{background:var(--c2);color:var(--tx);border:0;border-radius:20px;padding:8px 16px;font-weight:600}.chchip.on{background:var(--ac);color:#fff}
+.chin{display:grid;grid-template-columns:1fr 1.4fr 1fr;text-align:center;padding:8px 0}.chin b{font-size:20px}
+.chsel{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:8px 0}.chsel select{width:100%;background:none;border:0;border-bottom:1px solid var(--bd);border-radius:0;padding:10px 4px;color:var(--tx)}
+.chb{display:flex;gap:12px;padding:14px 12px;border-bottom:1px solid var(--bd)}.chbl{display:flex;flex-direction:column;align-items:center;gap:8px;width:54px;flex:none;border-right:1px solid var(--bd);padding-right:12px}.chbt{flex:1}.cacirc.f4{border-color:#3f7bff}.cacirc.f6{border-color:#b6cf2a}
+.chov{border-bottom:1px solid var(--bd);border-top:1px solid var(--bd)}.chovh{display:flex;gap:12px;align-items:center;padding:10px 12px}.chovb{background:var(--c2);border-radius:8px;padding:6px 12px;text-align:center;font-weight:800;font-size:18px;display:flex;flex-direction:column;line-height:1.1}.chovb small{font-size:11px;font-weight:500;color:var(--mu)}.chovs{border-left:1px solid var(--bd);padding-left:12px;text-align:left}
+.chovp{display:flex;justify-content:space-between;gap:10px;padding:8px 12px;border-top:1px solid var(--bd);font-size:13px}.chovp span{flex:1}.chovp .chovs{border-left:1px solid var(--bd)}
+.chsqh{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px 0;border-bottom:1px solid var(--bd)}.chsqg{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--bd)}.chsq{display:flex;align-items:center;gap:10px;padding:10px;border-bottom:1px solid var(--bd);border-right:1px solid var(--bd)}.chsq.r{justify-content:flex-end;text-align:right;border-right:0}</style>
 </head>
 <body>
 <div id="app"></div><div id="modal"></div><div id="toast"></div>
@@ -791,7 +801,7 @@ function exportBox(title,text){UI.modal={t:'text',title,text};renderModal()}
 function img(file,px,cb){
   const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,px/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=im.width*k;c.height=im.height*k;c.getContext('2d').drawImage(im,0,0,c.width,c.height);cb(c.toDataURL('image/png'))};im.src=r.result};r.readAsDataURL(file)}
 const A={
-  nav(d){UI.view=d.v;render()},tab(d){UI.tab=d.v;render()},cf(d){UI.cf=d.v;render()},ci(d){UI.ci=+d.v;render()},gi(d){UI.gi=+d.v;render()},
+  nav(d){UI.view=d.v;render()},tab(d){UI.tab=d.v;render()},cf(d){UI.cf=d.v;render()},insph(d){UI.insph=+d.v;render()},insm(d){UI.insm=d.v;render()},ci(d){UI.ci=+d.v;render()},gi(d){UI.gi=+d.v;render()},
   logout(){S.user=null;UI.login={step:1};commit()},
   guest(){S.user={name:'Guest',phone:'',role:'viewer'};commit()},
   otpBack(){UI.login.step=1;render()},
@@ -1013,10 +1023,10 @@ function vHome(){
 /* match centre */
 function vMatch(){
   const m=curM();if(!m)return'<div class="empty">No match selected. Create or load a match from the Matches tab.</div>';
-  const tabs=[['sum','Summary'],['comm','Commentary'],['live','Live'],['card','Scorecard'],['graphs','Graphs'],['pts','Points Table'],['drs','DRS'],['dls','DLS'],['squads','Squads'],['info','Info']];
+  const tabs=[['info','Info'],['sum','Summary'],['live','Live'],['card','Scorecard'],['ins','Insights'],['comm','Comms'],['squads','Squads'],['mvp','MVP'],['graphs','Graphs'],['pts','Points Table'],['gal','Gallery'],['drs','DRS'],['dls','DLS']];
   if(!tabs.some(t=>t[0]===UI.tab))UI.tab='sum';
   const sel=S.matches.length>1?`<select data-c="mid" aria-label="Select match">${opt(S.matches.map(x=>[x.id,T(x.a).short+' vs '+T(x.b).short+' ('+x.date+')']),m.id)}</select>`:'';
-  return sel+mHead(m)+tickerHTML()+`<div class="tabs">${tabs.map(([k,l])=>`<button class="${UI.tab===k?'on':''}" data-a="tab" data-v="${k}">${l}</button>`).join('')}</div>`+({sum:tSum,pts:tPts,live:tLive,comm:tComm,card:tCard,graphs:tGraphs,drs:tDRS,dls:tDLS,squads:tSquads,info:tInfo}[UI.tab])(m)}
+  return sel+mHead(m)+tickerHTML()+`<div class="tabs">${tabs.map(([k,l])=>`<button class="${UI.tab===k?'on':''}" data-a="tab" data-v="${k}">${l}</button>`).join('')}</div>`+({info:tInfo,sum:tSum,ins:tIns,mvp:tMvp,gal:tGal,pts:tPts,live:tLive,comm:tComm,card:tCard,graphs:tGraphs,drs:tDRS,dls:tDLS,squads:tSquads,info:tInfo}[UI.tab])(m)}
 function ballBanner(m){
   const s=st(m);if(!s)return'';const e=s.inn.ev[s.inn.ev.length-1];if(!e)return'';
   const big=e.w?'W':e.x==='wd'?'Wd':e.x==='nb'?'Nb':String(e.r),cls=e.w?'w':(!e.x&&e.r===6)?'s':'';
@@ -2684,6 +2694,94 @@ function tPts(m){
   if(!t)return '<div class="empty">This match is not part of a tournament, so there is no points table. Link a match to a tournament from Series.</div>';
   const L=standings(t);
   return `<div class="card scroll cxt"><div class="b" style="margin-bottom:6px">${esc(t.name||'Points Table')}</div><table class="pt"><tr><th>Team</th><th>P</th><th>W</th><th>L</th><th>NR</th><th>NRR</th><th>Pts</th></tr>${L.map(r=>`<tr class="${r.id===m.a||r.id===m.b?'q':''}"><td>${logo(T(r.id),22)} ${esc(tn(r.id).short||tn(r.id).name)}</td><td>${r.p}</td><td>${r.w}</td><td>${r.l}</td><td>${r.nr}</td><td>${r.nrr>=0?'+':''}${r.nrr.toFixed(3)}</td><td><b>${r.pts}</b></td></tr>`).join('')}</table><div class="mu sm" style="margin-top:6px">Built only from verified completed matches in this tournament.</div></div>`}
+
+/* ---- CricHeroes style match tabs: Info, Summary, Insights, Comms, Squads, MVP, Gallery ---- */
+function chStats(m){ // per-player match stats from the scored balls only
+  const o={};const g=id=>o[id]||(o[id]={id,team:null,r:0,b:0,f4:0,f6:0,w:0,rc:0,bb:0,mdn:0,dots:0});
+  m.innings.forEach((inn,i)=>{const k=calc(m,i);
+    Object.entries(k.bat).forEach(([id,b])=>{const x=g(id);x.team=inn.bat;x.r+=b.r;x.b+=b.b;x.f4+=b.f4;x.f6+=b.f6;x.out=b.out});
+    Object.entries(k.bowl).forEach(([id,w])=>{const x=g(id);x.team=x.team||inn.bowl;x.bt=inn.bowl;x.w+=w.w;x.rc+=w.r;x.bb+=w.b;x.mdn+=w.m||0})});
+  return Object.values(o)}
+const chPts=x=>x.r*.1+x.f4*.05+x.f6*.1+(x.b>=10&&x.r>=20?Math.max(0,(x.r*100/x.b-100))/100:0)+x.w*2+x.mdn*1+(x.bb>=12?Math.max(0,6-x.rc*6/x.bb)*.1:0);
+const chTeam=(m,x)=>{const t=(m.xi[m.a]||[]).includes(x.id)?m.a:(m.xi[m.b]||[]).includes(x.id)?m.b:x.team;return t};
+tInfo=function(m){
+  const tr=m.tid?trObj(m.tid):null;
+  const kv=[['Tournament',tr?tr.name:'Individual match'],['Match type','Limited Overs'],['Overs',m.overs],['Date',m.date],['Venue',m.venue],['Toss',T(m.toss).name+' opt to '+m.dec],['Ball type',m.ball?String(m.ball).toUpperCase():''],['Umpires',m.umpires],['Scorer',m.scorer],['Match ID',m.id]].filter(r=>r[1]!==''&&r[1]!=null);
+  const notes=m.innings.map((inn,i)=>{
+    const t=T(inn.bat),L=[];let runs=0,ex=0,lg=0,nxt=50,pp=false;
+    inn.ev.forEach(e=>{const pen=e.x==='wd'||e.x==='nb'?1:0;runs+=e.r+pen;if(e.x)ex+=e.r+pen;if(!pen)lg++;
+      if(!pp&&lg>=36&&m.overs>=10){pp=true;L.push(`${t.name}: ${runs} runs in 6 overs, Extras ${ex}`)}
+      while(runs>=nxt){L.push(`${t.name}: ${nxt} runs in ${fmtOv(lg)} overs, Extras ${ex}`);nxt+=50}});
+    const k=calc(m,i);
+    L.push(`${inn.done||m.status==='done'?'Innings break':'In progress'}: ${t.name} - ${k.runs}/${k.wk} in ${fmtOv(k.lg)} overs`);
+    return `<div class="chh">${esc(t.name)}</div>${L.map(x=>`<div class="chnote">${esc(x)}</div>`).join('')}`}).join('');
+  return `<div class="chh">Info</div><div class="card chkv">${kv.map(r=>`<div class="mu">${esc(r[0])}</div><div>${esc(String(r[1]))}</div>`).join('')}</div>
+  <div class="chh">Match notes</div><div class="card chnotes"><div class="chnote">Match started${m.date?' on '+esc(m.date):''}.</div>${notes||''}${m.status==='done'?`<div class="chnote"><b>${esc(m.result||'Match complete')}</b></div>`:''}</div>
+  <div class="mu sm" style="margin:6px 2px">Notes are generated from the scored balls. Clock times are not recorded.</div>`};
+tSum=function(m){
+  const res=m.result||(m.status==='live'?liveStatus(m):'Toss: '+T(m.toss).name+' opt to '+m.dec);
+  const bd=m.innings.map(inn=>({id:inn.bat,v:inn.ev.filter(e=>!e.x&&(e.r===4||e.r===6)).reduce((a,e)=>a+e.r,0)}));
+  let ban='';if(bd.length===2&&bd[0].v!==bd[1].v){const hi=bd[0].v>bd[1].v?bd[0]:bd[1],lo=hi===bd[0]?bd[1]:bd[0];ban=`<div class="chban"><b>${esc(T(hi.id).name)}</b> scored <b>${hi.v}</b> runs in boundaries, <b>${hi.v-lo.v}</b> more than <b>${esc(T(lo.id).name)}</b>.</div>`}
+  const rows=m.innings.map((inn,j)=>{const k=calc(m,j);return `<div class="chrow"><span class="${m.win&&m.win!==inn.bat?'mu':'b'}" style="font-size:18px">${esc(T(inn.bat).name)}</span><span><b style="font-size:22px">${k.runs}/${k.wk}</b> <span class="mu sm">(${fmtOv(k.lg)})</span></span></div>`}).join('');
+  const ST=chStats(m).filter(x=>x.b||x.bb).map(x=>({...x,pts:chPts(x)})).sort((a,b)=>b.pts-a.pts),top=ST.slice(0,3);
+  const hero=(x,lab)=>{const pl=P(x.id)||{name:nm(x.id)},t=T(chTeam(m,x));return `<div class="card chhero"><div class="chhp"><span class="pphoto" style="width:72px;height:72px;flex:none">${av(pl)}</span><div class="chlab">${lab}</div></div><div class="row" style="justify-content:space-between;align-items:flex-end"><div><div class="b" style="color:var(--ac2);font-size:18px">${esc(nm(x.id))}</div><div class="mu sm"><i>${esc(t.name)}</i></div><div style="margin-top:6px"><b style="font-size:20px">${x.b?x.r:''}${x.b?`</b><span class="mu sm">(${x.b})</span> <b>${x.f4}</b>4s <b>${x.f6}</b>6s`:''}${x.bb?` &nbsp;<b style="font-size:20px">${x.w}-${x.rc}</b> <span class="mu sm">(${fmtOv(x.bb)})</span>`:''}</div></div><div style="text-align:right"><b style="font-size:20px">${x.pts.toFixed(2)}</b><div class="mu sm">MVP</div></div></div></div>`};
+  const i=Math.max(0,m.innings.length-1),bl=m.innings.length?caBalls(m,i):[],lastB=bl[bl.length-1];
+  return `${ban}<div class="card chres"><div class="row" style="justify-content:space-between"><div style="flex:1">${rows||'<div class="mu">Match has not started.</div>'}</div><span class="chpill">${m.status==='done'?'Result':m.status==='live'?'Live':'Upcoming'}</span></div><div style="color:var(--ac);margin-top:8px">${esc(res)}</div></div>
+  ${top.length?`<div class="chh">Heroes of the match</div>${top.map((x,j)=>hero(x,j===0?(m.status==='done'?'Player of the match':'Leading the match'):['2nd','3rd'][j-1]+' in MVP')).join('')}<div class="mu sm" style="margin:4px 2px"><a data-a="tab" data-v="mvp" style="color:var(--ac2);cursor:pointer">How is MVP calculated?</a></div>`:''}
+  ${lastB?`<div class="card"><div class="cah">LAST BALLS</div>${caOverChart(m,i)}${caBall(lastB,m,i)}</div>`:''}`};
+function tMvp(m){
+  const L=chStats(m).filter(x=>x.b||x.bb).map(x=>({...x,pts:chPts(x)})).sort((a,b)=>b.pts-a.pts);
+  if(!L.length)return'<div class="empty">MVP appears after the first ball.</div>';
+  return `<details class="card"><summary class="b" style="color:var(--ac)">How is MVP calculated?</summary><div class="mu sm" style="margin-top:6px">This is the Scoring Heroes score, built only from scored balls: batting = 0.1 per run + 0.05 per four + 0.1 per six (+ a strike-rate bonus for 10+ balls and 20+ runs); bowling = 2 per wicket + 1 per maiden (+ a small economy bonus for 2+ overs). Fielding is not scored yet. It is our own simple score, not any other app's.</div></details>
+  <div class="card" style="padding:0">${L.map((x,j)=>{const pl=P(x.id)||{name:nm(x.id)};return `<div class="chmv"><span class="mu">${j+1}</span><span class="pphoto" style="width:48px;height:48px;flex:none">${av(pl)}</span><div style="flex:1;min-width:0"><div class="b">${esc(nm(x.id))}</div><div class="mu sm"><i>${esc(T(chTeam(m,x)).name)}</i></div></div><b style="font-size:22px">${x.pts.toFixed(3)}</b></div>`}).join('')}</div>`}
+function chPhases(m){const n=m.overs;if(n>=20&&n<=20)return[[1,6],[7,11],[12,16],[17,20]];const a=Math.ceil(n/3),b=Math.ceil(2*n/3);return[[1,a],[a+1,b],[b+1,n]]}
+function tIns(m){
+  if(!m.innings.length)return'<div class="empty">Insights appear after the first over.</div>';
+  const ph=chPhases(m),pi=UI.insph==null||UI.insph>ph.length?ph.length:UI.insph,mode=UI.insm||'bat';
+  const rng=pi===ph.length?[1,m.overs]:ph[pi],A=T(m.a),B=T(m.b);
+  const calcPh=id=>{const inn=m.innings.find(x=>x.bat===id);if(!inn)return null;let lg=0,r={runs:0,wk:0,dots:0,bnd:0,balls:0};
+    inn.ev.forEach(e=>{const ov=Math.floor(lg/6)+1,pen=e.x==='wd'||e.x==='nb'?1:0;if(ov>=rng[0]&&ov<=rng[1]){r.runs+=e.r+pen;if(e.w)r.wk++;if(!pen){r.balls++;if(e.r===0)r.dots++}if(!e.x&&(e.r===4||e.r===6))r.bnd+=e.r}if(!pen)lg++});r.rr=r.balls?r.runs*6/r.balls:0;return r};
+  const a=calcPh(m.a),b=calcPh(m.b),Z={runs:0,wk:0,dots:0,bnd:0,rr:0};
+  const rowv=(l,k,f)=>`<div class="chin"><b>${f?(a||Z)[k].toFixed(2):(a||Z)[k]}</b><span class="mu">${l}</span><b>${f?(b||Z)[k].toFixed(2):(b||Z)[k]}</b></div>`;
+  let wa=0,wb=0,sh=0;ph.forEach(rg=>{const sv=rng;rng[0]=rg[0];rng[1]=rg[1];const x=calcPh(m.a),y=calcPh(m.b);if(x&&y){if(x.runs>y.runs)wa++;else if(y.runs>x.runs)wb++;else sh++}rng[0]=sv[0];rng[1]=sv[1]});
+  const chips=ph.map((r,j)=>`<button class="chchip ${pi===j?'on':''}" data-a="insph" data-v="${j}">${r[0]}-${r[1]} Ov.</button>`).join('')+`<button class="chchip ${pi===ph.length?'on':''}" data-a="insph" data-v="${ph.length}">All</button>`;
+  // turning point overs
+  const tid=UI.insT&&(UI.insT===m.a||UI.insT===m.b)?UI.insT:m.innings[0].bat,bat=mode==='bat';
+  const ovs=[];m.innings.forEach((inn,j)=>{const who=bat?inn.bat:inn.bowl;if(who!==tid)return;let run=0,wk=0;overList(m,j).forEach(q=>{run+=q.t;wk+=q.b.filter(x=>/^W/.test(x.lab)).length;ovs.push({n:q.n,t:q.t,w:q.b.filter(x=>/^W/.test(x.lab)).length,sc:run+'/'+wk})})});
+  const best=ovs.slice().sort((x,y)=>bat?(y.t-x.t||x.w-y.w):(y.w-x.w||x.t-y.t)).slice(0,3);
+  return `<div class="chh" style="font-size:22px">Phases of play</div><div class="chchips">${chips}</div>
+  <div class="casides" style="margin:10px 0"><div class="casd">${logo(A,64)}<div class="b">${esc(A.name)}</div><div class="mu sm">${m.win===m.a?'Won':''}</div></div><span class="camid mu">VS</span><div class="casd">${logo(B,64)}<div class="b">${esc(B.name)}</div><div class="mu sm">${m.win===m.b?'Won':''}</div></div></div>
+  <div class="card">${rowv('Runs scored','runs')}${rowv('Wickets lost','wk')}${rowv('Dots played','dots')}${rowv('Runs in 4s/6s','bnd')}${rowv('Run rate','rr',1)}</div>
+  <div class="card"><div class="b" style="margin-bottom:6px">Phases of play won <span class="mu sm">(more runs in the phase)</span></div><div class="row" style="justify-content:space-between"><span>${esc(A.short)}</span><span class="mu">Shared</span><span>${esc(B.short)}</span></div><div class="pbar"><div style="background:${A.color};flex:${Math.max(wa,.2)}">${wa}</div><div style="background:var(--bd);flex:${Math.max(sh,.2)}">${sh}</div><div style="background:${B.color};flex:${Math.max(wb,.2)}">${wb}</div></div></div>
+  <div class="chh" style="font-size:22px">Turning point overs</div>
+  <div class="row" style="margin-bottom:8px"><select data-c="insT">${opt([[m.a,A.name],[m.b,B.name]],tid)}</select><button class="chchip ${bat?'on':''}" data-a="insm" data-v="bat">Batting</button><button class="chchip ${bat?'':'on'}" data-a="insm" data-v="bowl">Bowling</button></div>
+  ${best.length?best.map(o=>`<div class="card row" style="justify-content:space-between"><span>Over: <b>${o.n}</b> <span class="mu">|</span> ${bat?'Runs':'Wkts'}: <b>${bat?o.t:o.w}</b>${bat?'':` <span class="mu">| Runs: ${o.t}</span>`}</span><b style="font-size:18px">${o.sc}</b></div>`).join(''):'<div class="mu">No overs yet.</div>'}
+  <div class="card ai" style="margin-top:8px"><div class="b" style="color:var(--ac2)">Key insight</div><div>${esc(insight(m,m.innings.length-1))}</div></div>`}
+tComm=function(m){
+  if(!m.innings.length)return'<div class="empty">Commentary starts with the first ball.</div>';
+  const i=UI.ci>=m.innings.length?m.innings.length-1:UI.ci,inn=m.innings[i],f=UI.cf||'all';
+  const B=caBalls(m,i),groups={};let runs=0,wk=0;
+  B.forEach((b,j)=>{runs+=b.r;if(b.w)wk++;const g=groups[b.ov]||(groups[b.ov]={ov:b.ov,items:[],r:0,w:0,s:''});g.items.push(b);g.r+=b.r;if(b.w)g.w++;g.s+=(b.w?'W':b.e.x==='wd'?'Wd':b.e.x==='nb'?'Nb':b.r)+' ';g.endR=runs;g.endW=wk;b.idx=j});
+  const pass=b=>f==='all'||(f==='W'&&b.w)||(f==='B'&&!b.e.x&&(b.r===4||b.r===6));
+  const sel=`<div class="chsel"><select data-c="ci">${opt(m.innings.map((x,j)=>[j,T(x.bat).name]),i)}</select><select data-c="cf">${opt([['all','Full'],['W','Wickets'],['B','Boundaries'],['O','Overs']],f)}</select></div>`;
+  const body=Object.values(groups).reverse().map(g=>{
+    const sl=inn.ev.slice(0,g.items[g.items.length-1].idx+1),kk=calc({...m,innings:m.innings.map((x,j)=>j===i?{...x,ev:sl}:x)},i),last=g.items[g.items.length-1].e,bl=kk.bowl[last.bl],bt=kk.bat[last.bt];
+    let other=null;for(let q=g.items.length-1;q>=0;q--){const x=g.items[q].e.bt;if(x!==last.bt){other=x;break}}
+    const summ=`<div class="chov"><div class="chovh"><span class="chovb"><small>Over</small>${g.ov}</span><div style="flex:1"><div class="mu" style="letter-spacing:3px">${esc(g.s.trim().split(' ').join('  '))}</div><b>${g.r} Runs | ${g.w} Wkt</b></div><div class="chovs">${g.endR}/${g.endW}</div></div><div class="chovp"><span>${esc(nm(last.bt))}<br><b>${bt?bt.r+'('+bt.b+')':''}</b></span><span>${other&&kk.bat[other]?esc(nm(other))+'<br><b>'+kk.bat[other].r+'('+kk.bat[other].b+')</b>':''}</span><span class="chovs">${esc(nm(last.bl))}<br><b>${bl?fmtOv(bl.b).replace('.','.')+'-'+(bl.m||0)+'-'+bl.r+'-'+bl.w:''}</b></span></div></div>`;
+    if(f==='O')return summ;
+    const its=g.items.filter(pass);if(!its.length)return'';
+    return its.slice().reverse().map(b=>`<div class="chb"><div class="chbl"><div class="mu">${b.lab}</div><span class="cacirc ${b.w?'w':b.r===4?'f4':b.r===6?'f6':''}">${b.r}</span></div><div class="chbt">${esc(cText(b.e))}</div></div>`).join('')+(g.items[g.items.length-1].lastOfOver&&f==='all'?'':'')+(f==='all'?summ:'')}).join('');
+  const win=winP(m);
+  return sel+`<div class="card" style="padding:0">${body||'<div class="empty">No balls match this filter.</div>'}</div><div class="mu sm" style="margin:6px 2px">Commentary is generated from the scored balls.</div>`};
+function tGal(m){return `<div class="empty" style="padding:40px 10px"><div style="font-size:54px">&#128247;</div>No photos or videos for this match yet.</div>`}
+tSquads=function(m){
+  const rows=Math.max((m.xi[m.a]||[]).length,(m.xi[m.b]||[]).length),A=T(m.a),B=T(m.b);
+  const cell=(id,right)=>{if(!id)return '<div></div>';const pl=P(id)||{name:nm(id)};return `<div class="chsq ${right?'r':''}">${right?'':`<span class="pphoto" style="width:42px;height:42px;flex:none">${av(pl)}</span>`}<div style="min-width:0"><div>${esc(nm(id))}</div><div class="mu sm">${esc(pl.role||'')}</div></div>${right?`<span class="pphoto" style="width:42px;height:42px;flex:none">${av(pl)}</span>`:''}</div>`};
+  let h=`<div class="chsqh"><div class="row">${logo(A,34)}<b>${esc(A.name)}</b></div><div class="row" style="justify-content:flex-end">${logo(B,34)}<b>${esc(B.name)}</b></div></div><div class="chh" style="text-align:center">Playing Squad</div><div class="chsqg">`;
+  for(let q=0;q<rows;q++)h+=cell((m.xi[m.a]||[])[q],0)+cell((m.xi[m.b]||[])[q],1);
+  return h+'</div>'};
+C.insT=v=>{UI.insT=v;render()};
+if(!C.ci)C.ci=v=>{UI.ci=+v;render()};
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});
