@@ -1348,7 +1348,7 @@ function wCard(m){
   const stCls=live?'wlive':m.ended?'wres':'wup';
   const status=m.started?(m.status||''):'Starts '+wWhen(m);
   return `<div class="wcard" data-a="wOpen" data-id="${esc(m.id)}">
-  <div class="whead"><span>${esc(sp.desc||m.type||'')}${m.type?' · '+esc(String(m.type).toUpperCase()):''}</span>${live?'<span class="pill live pulse">LIVE</span>':''}</div>
+  <div class="whead"><span>${esc(sp.desc||m.type||'')}${m.type?' · '+esc(String(m.type).toUpperCase()):''}</span>${live?'<span class="pill live pulse">LIVE</span>':''}${getStream('w'+m.id)?'<span class="pill ok">&#9654; WATCH</span>':''}</div>
   ${tm.length?tm.map(t=>`<div class="wrow"><span class="wt">${wBadge(t)}<b>${esc(t.name)}</b></span><span class="wsc">${wTeamScore(m,t)||(m.started?'':'')}</span></div>`).join(''):`<div class="wrow"><b>${esc(sp.teams)}</b></div>`}
   <div class="wst ${stCls}">${esc(status)}</div></div>`}
 {const st=document.createElement('style');st.textContent='.wser{font-weight:700;font-size:13px;margin:14px 2px 6px;opacity:.85;letter-spacing:.2px}.wcard{background:var(--card,#0f1b3d);border:1px solid var(--bd,#1e2c57);border-radius:12px;padding:10px 12px;margin-bottom:8px;cursor:pointer}.whead{display:flex;justify-content:space-between;align-items:center;font-size:11px;opacity:.7;margin-bottom:6px}.wrow{display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:14px}.wt{display:flex;align-items:center;gap:8px;min-width:0}.wsc{font-weight:700;white-space:nowrap}.tbadge{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#1d2f7a,#e11d2e);color:#fff;font-size:9px;font-weight:700}.wst{font-size:12px;margin-top:6px;padding-top:6px;border-top:1px solid var(--bd,#1e2c57)}.wlive{color:#ff5a67}.wres{color:#34d399}.wup{color:#fbbf24}.htabs{display:flex;gap:6px;margin:6px 0 4px}';document.head.appendChild(st)}
@@ -1400,7 +1400,7 @@ function wShow(){UI.modal={t:'html',html:UI.wp?wPlayerHTML():wMatchHTML()};rende
 function wMatchHTML(){
   const W=UI.wm,m=W.m,sc=W.sc,tab=W.tab;
   const head=`<div class="row" style="gap:8px"><span class="pill ${m.started&&!m.ended?'live pulse':m.ended?'ok':''}">${m.started&&!m.ended?'LIVE':m.ended?'RESULT':'UPCOMING'}</span><span class="mu sm">${esc(m.type||'')}</span></div><h3 style="margin:6px 0 2px">${esc(m.name)}</h3><div class="mu sm">${esc(m.venue||'')} | ${esc(m.date||'')}</div>
-  <div style="margin:10px 0">${m.score.map(x=>`<div class="row" style="justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bd)"><span>${esc(String(x.inning).replace(/ Inning.*/,''))}</span><b>${x.r}/${x.w} <span class="mu">(${x.o} ov)</span></b></div>`).join('')}</div><div class="need">${esc(m.status||'')}</div>
+  <div style="margin:10px 0">${m.score.map(x=>`<div class="row" style="justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bd)"><span>${esc(String(x.inning).replace(/ Inning.*/,''))}</span><b>${x.r}/${x.w} <span class="mu">(${x.o} ov)</span></b></div>`).join('')}</div><div class="need">${esc(m.status||'')}</div>${streamCard('w'+m.id,m.started&&!m.ended)}
   <div class="wtabs" style="margin:10px 0">${[['sc','Scorecard'],['info','Info']].map(([k,l])=>`<button class="btn sm ${tab===k?'':'ghost'}" data-a="wmTab" data-v="${k}">${l}</button>`).join('')}</div>`;
   let body='';
   if(tab==='info'){
@@ -1470,7 +1470,7 @@ Object.assign(F,{
     if(apiBase()){const j=await post('/auth/login',{phone,pin});
       if(j.noAccount){UI.authTab='register';UI.login={step:1,phone};render();return toast(j.error,3500)}
       if(!j.ok)return toast(j.error||'Login failed',3500);
-      const p=j.profile;return enter({nick:p.nick,phone,email:p.email,age:p.age,loc:p.loc,kind:p.kind,role:p.role})}
+      S.tok=j.token||'';const p=j.profile;return enter({nick:p.nick,phone,email:p.email,age:p.age,loc:p.loc,kind:p.kind,role:p.role})}
     const u=S.users.find(x=>x.phone===digits(phone));
     if(!u){UI.authTab='register';UI.login={step:1,phone};render();return toast('No account for this number. Please register.',3500)}
     if(!u.ph||u.ph!==await sha(digits(phone)+':'+pin))return toast('Wrong PIN',3000);
@@ -1484,7 +1484,7 @@ Object.assign(F,{
     if(apiBase()){const j=await post('/auth/register',{phone,pin,profile:prof});
       if(j.exists){UI.authTab='login';UI.login={step:1,phone};render();return toast(j.error,3500)}
       if(!j.ok)return toast(j.error||'Could not register',3500);
-      return enter(Object.assign({},prof,{phone,role:j.profile.role}))}
+      S.tok=j.token||'';return enter(Object.assign({},prof,{phone,role:j.profile.role}))}
     if(S.users.some(x=>x.nick.toLowerCase()===nick.toLowerCase()))return toast('That nickname is taken');
     if(S.users.some(x=>x.phone===digits(phone)))return toast('This number is already registered. Please login.',3500);
     const first=S.users.length===0;
@@ -1530,6 +1530,56 @@ if(!S.settings.cricKey){S.settings.cricKey='15f91453-6943-464f-b35b-f2d04fb954f9
     o=o.replace(/<div class="hero"><h2>No match yet<\/h2>[\s\S]*?<\/div><\/div>/,'<div class="row" style="margin:6px 0 2px">'+(can()?'<button class="btn sm" data-a="newMatch">New match</button>':'')+'<button class="btn sm ghost" data-a="demo">Load demo match</button></div>');
     const k=o.indexOf('<div class="row" style="margin:6px 0 2px">');return k<0?m[0]+o:o.slice(0,k)+m[0]+o.slice(k)}
   return o}}
+
+/* ---------------- LIVE STREAM WINDOW (YouTube, Facebook live, HLS .m3u8, mp4, or any https player page) ---------------- */
+const getStream=k=>(UI.streams&&UI.streams[k])||(S.streams&&S.streams[k])||'';
+function swBox(inner){return `<div class="swin">${inner}</div>`}
+function embedHTML(u){
+  u=String(u||'').trim();if(!/^https:\/\//i.test(u))return '';
+  let m=/(?:youtube\.com\/(?:watch\?(?:.*&)?v=|live\/|embed\/|shorts\/)|youtu\.be\/)([\w-]{11})/.exec(u);
+  if(m)return swBox(`<iframe src="https://www.youtube.com/embed/${m[1]}?autoplay=1&mute=1&playsinline=1&rel=0" allow="autoplay; fullscreen; picture-in-picture; encrypted-media" allowfullscreen></iframe>`);
+  if(/facebook\.com|fb\.watch/i.test(u))return swBox(`<iframe src="https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(u)}&show_text=false&autoplay=true&mute=1" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`);
+  if(/\.m3u8(\?|$)/i.test(u))return swBox(`<video data-hls="${esc(u)}" controls playsinline muted autoplay></video>`);
+  if(/\.(mp4|webm|ogg)(\?|$)/i.test(u))return swBox(`<video src="${esc(u)}" controls playsinline muted autoplay></video>`);
+  return swBox(`<iframe src="${esc(u)}" allow="autoplay; fullscreen" allowfullscreen></iframe>`)}
+function streamCard(key,live){
+  const url=getStream(key),ed=can();
+  if(!url&&!ed)return '';
+  return `<div class="card" style="margin:10px 0"><div class="row" style="justify-content:space-between"><b>Live stream</b>${live?'<span class="pill live pulse">LIVE</span>':'<span class="mu sm">opens when the match is live</span>'}</div>
+  ${url&&live?embedHTML(url):url?'<div class="mu sm" style="margin:8px 0">Stream link is saved. The video window opens here as soon as the match goes live.</div>':'<div class="mu sm" style="margin:8px 0">No stream link yet.</div>'}
+  ${ed?`<form data-f="stream" style="margin-top:8px"><input type="hidden" name="key" value="${esc(key)}"><label>Stream link (YouTube, Facebook live, .m3u8)<input name="url" inputmode="url" placeholder="https://www.youtube.com/live/..." value="${esc(url)}"></label><div class="row"><button class="btn sm">Save link</button>${url?`<button type="button" class="btn sm ghost" data-a="stDel" data-k="${esc(key)}">Remove</button>`:''}</div></form>`:''}</div>`}
+async function saveStream(key,url){
+  S.streams=S.streams||{};if(url)S.streams[key]=url;else delete S.streams[key];UI.streams=Object.assign({},UI.streams||{},S.streams);if(!url)delete UI.streams[key];
+  if(apiBase()&&S.tok){try{const r=await fetch(apiBase()+'/streams',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+S.tok},body:JSON.stringify({key,url})});const j=await r.json();if(!j.ok)toast(j.error||'Saved on this phone only',3500)}catch(e){toast('Saved on this phone only',3000)}}
+  else if(apiBase())toast('Login again to share this stream with everyone',3500);
+  commit();if(UI.wm&&!UI.wp)wShow()}
+F.stream=function(fd){const url=String(fd.get('url')||'').trim(),key=String(fd.get('key')||'');
+  if(url&&!/^https:\/\//i.test(url))return toast('The link must start with https://',3000);saveStream(key,url);toast(url?'Stream link saved':'Stream removed')};
+Object.assign(A,{stDel(d){saveStream(d.k,'');toast('Stream removed')}});
+async function pullStreams(){if(!apiBase())return;try{const r=await fetch(apiBase()+'/streams');const j=await r.json();if(j&&j.ok){const o=JSON.stringify(UI.streams||{});UI.streams=j.streams||{};if(o!==JSON.stringify(UI.streams)&&S.user&&UI.stage!=='welcome'&&!document.querySelector('video,iframe'))render()}}catch(e){}}
+pullStreams();setInterval(pullStreams,60000);
+{const st=document.createElement('style');st.textContent='.swin{position:relative;width:100%;aspect-ratio:16/9;background:#000;border-radius:10px;overflow:hidden;margin-top:8px}.swin iframe,.swin video{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000}';document.head.appendChild(st)}
+let hlsP=null;const loadHls=()=>hlsP||(hlsP=new Promise((ok,no)=>{if(window.Hls)return ok(window.Hls);const sc=document.createElement('script');sc.src='https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.8/hls.min.js';sc.onload=()=>ok(window.Hls);sc.onerror=no;document.head.appendChild(sc)}));
+function attachHls(){document.querySelectorAll('video[data-hls]:not([data-on])').forEach(v=>{v.dataset.on='1';const u=v.dataset.hls;if(v.canPlayType('application/vnd.apple.mpegurl')){v.src=u;return}loadHls().then(H=>{if(H&&H.isSupported()){const h=new H();h.loadSource(u);h.attachMedia(v)}}).catch(()=>{})})}
+{const m0=vMatch;vMatch=function(){const o=m0(),m=curM();if(!m)return o;const live=m.status==='live'||m.status==='break',c=streamCard('m'+m.id,live);return c?o.replace('<div class="tabs">',c+'<div class="tabs">'):o}}
+
+/* ---------------- APP LOOKS (themes). Names can be changed in Settings. ---------------- */
+const LOOKS=[['sh','Sky High'],['mday','Match Day'],['sx','Southern Cross'],['exch','Exchange']];
+const lookName=k=>((S.settings.themeNames||{})[k])||(LOOKS.find(x=>x[0]===k)||[0,k])[1];
+{const st=document.createElement('style');st.textContent=
+'html[data-theme=mday]{--bg:#eef1f4;--card:#ffffff;--c2:#f3f5f8;--tx:#10161c;--mu:#5d6b78;--ac:#0b9d58;--ac2:#f5a623;--bd:#d6dce3;--on:#ffffff;--bl:#1d6fe0;--grad:linear-gradient(90deg,#066b3b,#0b9d58 60%,#17b96d)}'+
+'html[data-theme=sx]{--bg:#06100b;--card:#0e1c15;--c2:#16291f;--tx:#f0f5ee;--mu:#9bb0a3;--ac:#ffcd00;--ac2:#2ee6a6;--bd:#23382c;--on:#10200f;--bl:#38bdf8;--grad:linear-gradient(90deg,#0b3d2e,#0f5a3f 55%,#b99400)}'+
+'html[data-theme=exch]{--bg:#000000;--card:#0b0b0f;--c2:#14141b;--tx:#f2f2f5;--mu:#8b8ba0;--ac:#00e676;--ac2:#40c4ff;--bd:#22222d;--on:#00170b;--bl:#40c4ff;--grad:linear-gradient(90deg,#000000,#0a2a4d 60%,#00a152)}'+
+'html[data-theme=exch] .wsc,html[data-theme=exch] .score{font-variant-numeric:tabular-nums;font-family:ui-monospace,Menlo,Consolas,monospace}html[data-theme=exch] .wcard,html[data-theme=exch] .card{border-radius:6px}html[data-theme=mday] .hero{color:#fff}';
+document.head.appendChild(st)}
+{const r0=render;render=function(){r0.apply(this,arguments);if(location.hash!=='#overlay')document.documentElement.dataset.theme=S.settings.appTheme||'sh';setTimeout(attachHls,0)}}
+{const m0=renderModal;renderModal=function(){m0.apply(this,arguments);setTimeout(attachHls,0)}}
+Object.assign(A,{look(d){S.settings.appTheme=d.v;commit()}});
+F.looks=function(fd){const n={};LOOKS.forEach(([k,l])=>{const v=String(fd.get('n_'+k)||'').trim().slice(0,24);if(v&&v!==l)n[k]=v});S.settings.themeNames=n;commit();toast('Look names saved')};
+{const v0=vSettings;vSettings=function(){const cur=S.settings.appTheme||'sh';
+  const card=`<div class="card"><h3>App look</h3><div class="hscroll" style="margin:8px 0">${LOOKS.map(([k])=>`<button class="tile ${cur===k?'on':''}" data-a="look" data-v="${k}" style="min-width:110px"><div>${esc(lookName(k))}</div></button>`).join('')}</div>
+  <form data-f="looks"><div class="mu sm">Give each look any name you like.</div>${LOOKS.map(([k,l])=>`<label>${esc(l)}<input name="n_${k}" maxlength="24" value="${esc(lookName(k))}"></label>`).join('')}<button class="btn sm">Save names</button></form></div>`;
+  const o=v0(),i=o.indexOf('<div class="g2">');return i<0?o+card:o.replace('<div class="g2">','<div class="g2">'+card)}}
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});

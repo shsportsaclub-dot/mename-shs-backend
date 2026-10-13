@@ -236,6 +236,20 @@ routes['POST /api/wa/webhook'] = async (req, body) => {
   } catch {}
   return [200, { ok: true }];   // always 200 so Meta does not retry
 };
+
+// ---- Live stream links: anyone can read, admins and scorers can set ----
+routes['GET /api/streams'] = async () => [200, { ok: true, streams: db.streams || {} }];
+routes['POST /api/streams'] = async (req, body) => {
+  const phone = readSession((req.headers.authorization || '').replace(/^Bearer /, '')), u = phone && db.users[phone];
+  if (!u || !['admin', 'scorer'].includes(u.role)) return [403, { ok: false, error: 'Only admins and scorers can set stream links' }];
+  const key = String(body.key || ''), url = String(body.url || '').trim();
+  if (!/^[mw][\w-]{1,80}$/.test(key)) return [400, { ok: false, error: 'Bad match key' }];
+  if (url && (!/^https:\/\//i.test(url) || url.length > 500)) return [400, { ok: false, error: 'The link must start with https://' }];
+  db.streams = db.streams || {};
+  if (url) db.streams[key] = url; else delete db.streams[key];
+  saveDb();
+  return [200, { ok: true, streams: db.streams }];
+};
 routes['POST /api/mo/inbound'] = moInbound;
 routes['GET /api/mo/inbound'] = moInbound;
 setInterval(() => { const n = Date.now(); for (const [k, v] of moPending) if (v.exp < n) moPending.delete(k); }, 6e4).unref();
@@ -316,7 +330,7 @@ http.createServer(async (req, res) => {
       return res.end(html);
     } catch { /* fall through to 404 */ }
   }
-  const pth = path === '/otp/verify-link' ? '/api/otp/link' : (/^\/(otp|live|cric|mo|wa|news|auth)/.test(path) ? '/api' + path : path);
+  const pth = path === '/otp/verify-link' ? '/api/otp/link' : (/^\/(otp|live|cric|streams|mo|wa|news|auth)/.test(path) ? '/api' + path : path);
   const h = routes[req.method + ' ' + pth];
   if (!h) return out(404, { ok: false, error: 'Not found' });
   let raw = '';
