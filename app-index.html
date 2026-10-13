@@ -293,6 +293,7 @@ details.card summary{cursor:pointer;color:var(--ac2)}</style>
 .cbres{background:#fff;color:#111;padding:14px 4px;font-weight:600}.cbovh{background:#e3dcef;color:#333;padding:10px 14px}.cbov{display:flex;gap:12px;align-items:center;background:#fff;color:#111;padding:12px 8px;border-bottom:1px solid #ddd}.cbov .mu{color:#555}.cbovn{width:36px;text-align:center;font-size:18px;border-right:1px solid #ddd;padding-right:8px}.cbballs{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:6px}.cbballs b{margin-left:4px}.cbsc{background:#efe9fb;border-radius:8px;padding:12px 10px;font-weight:600;flex:none}
 .cbb{width:36px;height:36px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:14px}.cbb.dot{background:#9a9a9a}.cbb.run{background:#3fa745}.cbb.four{background:#2196f3}.cbb.six{background:#9b27b0}.cbb.w{background:#d9232d}.cbb.x{background:#ffc107;color:#111}
 .cbact{padding:12px 4px;border-bottom:1px solid #eee}.cbact .mu{margin-top:4px;color:#666}</style>
+<style>.cbzchips{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 10px;margin:0 -2px}.cbzchips button{flex:none;display:flex;align-items:center;gap:8px;background:var(--c2);border:1px solid var(--bd);color:var(--tx);border-radius:10px;padding:12px 16px;font-weight:600;white-space:nowrap}</style>
 </head>
 <body>
 <div id="app"></div><div id="modal"></div><div id="toast"></div>
@@ -3015,6 +3016,18 @@ function tAct(m){
     if(inn.done||m.status==='done')L.push({h:'Event',t:`Innings ended: ${bt} ${runs}/${wk} in ${fmtOv(lg)} overs.`})});
   if(m.status==='done')L.push({h:'Event',t:m.result||'Match completed.'});
   return `<div class="cbbody" style="padding:6px 0"><div class="b" style="font-size:20px;margin:8px 4px">Activity Log</div>${L.map(x=>`<div class="cbact"><div class="row"><span style="color:#8a4bd6">&#9654;</span><b style="color:#b79cff;font-size:18px">${x.h}</b></div><div class="mu">${esc(x.t)}</div></div>`).join('')}<div class="mu sm" style="margin:8px 4px">Generated from the scored balls. Clock times are not recorded.</div></div>`}
+
+/* ---- Cricbuzz structure: bottom bar Home, Matches, Videos, News, More; Home chips ---- */
+bnav=function(){
+  const v=UI.view==='tour'?'tours':UI.view==='match'?'matches':UI.view;
+  const t=[['home','Home','home'],['matches','Matches','matches'],['reels','Videos','reels'],['epaper','News','news'],['@menu','More','dots']];
+  return `<nav class="bnav">${t.map(x=>x[0]==='@menu'?`<button data-a="menu" aria-label="More">${ic(x[2])}${x[1]}</button>`:`<button class="${v===x[0]?'on':''}" data-a="go" data-v="${x[0]}">${ic(x[2])}${x[1]}</button>`).join('')}</nav>`};
+{const h0=heroHome;heroHome=function(){const o=h0();
+  const ch=[['tours','\u{1F3C6}','Browse Series'],['mycricket','\u{1F3CF}','My Cricket'],['players','\u{1F4CA}','Rankings and stats'],['auction','\u{1F528}','Auction'],['teams','\u{1F6E1}️','Teams'],['directory','\u{1F30D}','Boards and states']];
+  return `<div class="cbzchips">${ch.map(([k,e,l])=>`<button data-a="go" data-v="${k}"><span>${e}</span>${l}</button>`).join('')}</div>`+o}}
+{const c0=hhCard;hhCard=function(m){let o=c0(m);const live=m.started&&!m.ended;
+  if(!live&&!m.ended)o=o.replace(/<div class="ac">[\s\S]*?<\/div><\/div>$/,`<div class="ac"><button data-a="wOpen" data-id="${esc(m.id)}">MATCH FORECAST</button><button data-a="go" data-v="matches">SCHEDULE</button></div></div>`);
+  return o}}
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});
