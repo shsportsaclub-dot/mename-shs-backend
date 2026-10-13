@@ -3,6 +3,7 @@
 import http from 'node:http';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
+import path from 'node:path';
 
 const E = process.env;
 const PORT = +E.PORT || 8080;
@@ -95,15 +96,27 @@ function complete(phone, p) {
   return { ok: true, phone, profile: u ? pub(u) : null, session, token: session };
 }
 
-let live = { t: 0, data: null };
+let live = { t: 0, data: null, ttl: LIVE_TTL, err: '' };
+let sched = { t: 0, rows: [] };            // the "matches" (upcoming) list changes slowly, so fetch it rarely
+const LIVE_FILE = path.join(path.dirname(E.DATA_FILE || './data.json'), 'live-cache.json');
+try { const c = JSON.parse(fs.readFileSync(LIVE_FILE, 'utf8')); if (c && c.data) live = { t: 0, data: c.data, ttl: LIVE_TTL, err: '' }; } catch (e) {}
+// The free cricket plan allows ~100 calls a day, so spread the remaining calls over the rest of the (UTC) day.
+function liveTtl(info) {
+  const lim = +(info && info.hitsLimit) || 100, used = +(info && info.hitsToday) || 0, left = Math.max(1, lim - used - 8);
+  const now = new Date(), end = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1), secs = (end - now) / 1000;
+  return Math.min(60 * 60e3, Math.max(5 * 60e3, secs / left * 1000 * 1.15));
+}
 async function liveMatches() {
   if (!CRIC_KEY) throw Object.assign(new Error('CRIC_API_KEY is not set on the server'), { code: 503 });
-  if (live.data && Date.now() - live.t < LIVE_TTL) return live.data;
+  if (live.data && Date.now() - live.t < live.ttl) return live.data;
   try {
     const get = async ep => (await fetch(`${CRIC_BASE}/${ep}?apikey=${encodeURIComponent(CRIC_KEY)}&offset=0`)).json();
-    const [j, j2] = await Promise.all([get('currentMatches'), get('matches').catch(() => null)]);
+    const j = await get('currentMatches');
     if (j.status !== 'success') throw new Error(j.reason || 'Cricket API error');
-    const seen = new Set(), rows = [...(j.data || []), ...(j2 && j2.status === 'success' ? j2.data || [] : [])].filter(m => m && m.id && !seen.has(m.id) && seen.add(m.id));
+    if (Date.now() - sched.t > 3 * 3600e3) {
+      try { const j2 = await get('matches'); if (j2.status === 'success') sched = { t: Date.now(), rows: j2.data || [] }; else sched.t = Date.now() - 2 * 3600e3; } catch (e) { sched.t = Date.now() - 2 * 3600e3; }
+    }
+    const seen = new Set(), rows = [...(j.data || []), ...sched.rows].filter(m => m && m.id && !seen.has(m.id) && seen.add(m.id));
     const matches = rows.map(m => ({
       id: m.id, name: m.name, type: m.matchType, status: m.status, venue: m.venue, date: m.date, time: m.dateTimeGMT || '',
       started: !!m.matchStarted, ended: !!m.matchEnded,
@@ -111,10 +124,13 @@ async function liveMatches() {
         .map(t => ({ name: t.name, short: t.shortname, img: t.img || '' })),
       score: (m.score || []).map(s => ({ inning: s.inning, r: s.r, w: s.w, o: s.o }))
     }));
-    live = { t: Date.now(), data: { ok: true, matches, info: { hitsToday: j.info && j.info.hitsToday, hitsLimit: j.info && j.info.hitsLimit }, updated: new Date().toISOString() } };
+    const info = { hitsToday: j.info && j.info.hitsToday, hitsLimit: j.info && j.info.hitsLimit };
+    live = { t: Date.now(), ttl: liveTtl(j.info), err: '', data: { ok: true, matches, info, refreshEverySec: Math.round(liveTtl(j.info) / 1000), updated: new Date().toISOString() } };
+    try { fs.writeFileSync(LIVE_FILE, JSON.stringify({ data: live.data })); } catch (e) {}
     return live.data;
   } catch (e) {
-    if (live.data) return { ...live.data, stale: true };   // serve the last good copy if the provider is down
+    live.t = Date.now(); live.ttl = 30 * 60e3; live.err = e.message;   // provider refused (usually the daily limit): back off 30 min
+    if (live.data) return { ...live.data, stale: true, note: e.message };
     throw e;
   }
 }

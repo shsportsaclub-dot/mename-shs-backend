@@ -1150,7 +1150,8 @@ async function pullLive(){
   try{
     let sj=null;if(apiBase()){try{const r=await fetch(apiBase()+'/live');sj=await r.json()}catch(e){sj=null}}
     if(sj&&sj.ok)UI.live=sj;
-    else{const K=encodeURIComponent(S.settings.cricKey),get=async ep=>{const r=await fetch('https://api.cricapi.com/v1/'+ep+'?offset=0&apikey='+K);return r.json()};
+    else if(UI.liveDirectT&&Date.now()-UI.liveDirectT<20*60000){/* save the daily API quota: keep what we have */}
+    else{UI.liveDirectT=Date.now();const K=encodeURIComponent(S.settings.cricKey),get=async ep=>{const r=await fetch('https://api.cricapi.com/v1/'+ep+'?offset=0&apikey='+K);return r.json()};
       const [j,j2]=await Promise.all([get('currentMatches'),get('matches').catch(()=>null)]);
       if(j.status!=='success')throw new Error(j.reason||'Cricket API error');
       const mp=m=>({id:m.id,name:m.name,type:m.matchType,status:m.status,venue:m.venue,date:m.date,time:m.dateTimeGMT||'',started:!!m.matchStarted,ended:!!m.matchEnded,teams:(m.teamInfo&&m.teamInfo.length?m.teamInfo:(m.teams||[]).map(n=>({name:n,shortname:String(n).slice(0,3).toUpperCase()}))).map(t=>({name:t.name,short:t.shortname,img:t.img||''})),score:(m.score||[]).map(x=>({inning:x.inning,r:x.r,w:x.w,o:x.o}))});
@@ -1166,7 +1167,7 @@ function liveFeedCard(){
   if(!j.ok)return `<!--wf--><div class="sec"><h3>Live cricket</h3></div><div class="card mu">Live feed unavailable: ${esc(j.error||'')}</div><!--/wf-->`;
   const F2=wFilter(),rec=F2.rec.filter(m=>Date.now()-wTm(m)<21*864e5),tab=UI.htab||(F2.live.length?'live':'up'),
     T3={live:[F2.live,'No live matches right now. Check Upcoming or Recent.'],rec:[rec,'No recent results.'],up:[F2.up,'No upcoming matches listed.']}[tab];
-  return `<!--wf--><div class="sec"><h3>Cricket</h3><span class="mu sm">${j.stale?'delayed | ':''}updated ${j.updated?new Date(j.updated).toLocaleTimeString('en-IN',{hour:'numeric',minute:'2-digit'}):''} <button class="btn sm ghost" data-a="refreshLive" style="padding:2px 8px;margin-left:6px">Refresh</button></span></div>
+  return `<!--wf--><div class="sec"><h3>Cricket</h3><span class="mu sm">${j.stale?'delayed (provider limit) | ':''}${j.refreshEverySec?'auto-refresh ~'+Math.max(1,Math.round(j.refreshEverySec/60))+' min | ':''}updated ${j.updated?new Date(j.updated).toLocaleTimeString('en-IN',{hour:'numeric',minute:'2-digit'}):''} <button class="btn sm ghost" data-a="refreshLive" style="padding:2px 8px;margin-left:6px">Refresh</button></span></div>
   <div class="htabs">${[['live','Live',F2.live.length],['rec','Recent',rec.length],['up','Upcoming',F2.up.length]].map(([k,l,n])=>`<button class="btn sm ${tab===k?'':'ghost'}" data-a="htab" data-v="${k}">${l} (${n})</button>`).join('')}</div>
   ${T3[0].length?wGroup(T3[0],30):`<div class="card mu">${T3[1]}</div>`}
   <button class="btn sm ghost wide" data-a="go" data-v="matches">All matches</button><!--/wf-->`}
