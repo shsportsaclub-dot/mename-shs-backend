@@ -102,6 +102,7 @@ const LIVE_FILE = path.join(path.dirname(E.DATA_FILE || './data.json'), 'live-ca
 try { const c = JSON.parse(fs.readFileSync(LIVE_FILE, 'utf8')); if (c && c.data) live = { t: 0, data: c.data, ttl: LIVE_TTL, err: '' }; } catch (e) {}
 // The free cricket plan allows ~100 calls a day, so spread the remaining calls over the rest of the (UTC) day.
 function liveTtl(info) {
+  if ((+(info && info.hitsLimit) || 0) > 5000) return LIVE_TTL;   // generous plan: refresh every LIVE_CACHE_SECONDS (default 60 s)
   const lim = +(info && info.hitsLimit) || 100, used = +(info && info.hitsToday) || 0, left = Math.max(1, lim - used - 8);
   const now = new Date(), end = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1), secs = (end - now) / 1000;
   return Math.min(60 * 60e3, Math.max(5 * 60e3, secs / left * 1000 * 1.15));
