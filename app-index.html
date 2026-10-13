@@ -237,6 +237,14 @@ svg text{font-family:var(--ui)}
 .wtabs{display:flex;gap:8px;margin:6px 0 10px}
 </style>
 <style>.cbscore{background:var(--c2,#14213d);border:1px solid var(--bd,#2a3a66);border-radius:12px;padding:12px 14px;margin:8px 0}.cbs2{display:flex;gap:16px;flex-wrap:wrap;margin:6px 0;font-size:13px}.cbst{background:#f5c518;color:#111;font-weight:700;border-radius:8px;padding:8px 10px;margin-top:6px}.cbov{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:6px 0}</style>
+<style>.catabs{display:flex;border-bottom:2px solid var(--bd);margin:8px 0;overflow-x:auto}.catabs button{flex:1;background:none;border:0;color:var(--mu);font-weight:700;padding:12px 8px;white-space:nowrap;border-bottom:3px solid transparent;margin-bottom:-2px}.catabs button.on{color:var(--tx);border-bottom-color:var(--ac)}
+.cah{font-family:inherit;font-weight:900;font-style:italic;letter-spacing:.5px;margin-bottom:8px;font-size:17px}
+.casides{display:flex;align-items:center;justify-content:space-between;gap:6px;margin:14px 0}.casd{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;min-width:0;text-align:center}.casc{display:flex;flex-direction:column;align-items:center}.casc b{font-size:28px}.casd .b{font-size:13px}.camid{flex:none}
+.cab{display:flex;gap:14px;padding:12px;border-bottom:1px dashed var(--bd);align-items:flex-start}.cac{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:44px}.cacirc{width:38px;height:38px;border-radius:50%;border:2px solid var(--bd);display:flex;align-items:center;justify-content:center;font-weight:800}.cacirc.w{border-color:var(--ac);font-size:18px;background:none}.cacom{font-size:26px;color:var(--mu)}
+.caoh{background:var(--c2);color:var(--mu);font-size:12px;font-weight:700;padding:10px 12px;letter-spacing:.4px}
+.cabc{margin:0 12px 8px 70px;border-bottom:1px solid var(--bd);padding-bottom:10px}.canm{display:flex;gap:12px;align-items:center;min-width:0}.cast{display:flex;justify-content:space-between;margin-top:10px;text-align:center}.cast div{display:flex;flex-direction:column}.cast b{font-size:18px}.cast span{font-size:11px;color:var(--mu)}
+.carow{display:grid;grid-template-columns:1fr 46px 46px 62px;gap:4px;align-items:center;padding:10px 12px;text-align:right}.carow .canm{text-align:left;width:100%;justify-content:flex-start}.carow.alt{background:var(--c2)}.cahd{color:var(--mu);font-size:12px;font-weight:700;background:var(--c2)}
+.cafil{position:sticky;bottom:64px;display:flex;gap:8px;justify-content:space-between;background:var(--bg);padding:10px 4px}.cafil button{border:1px solid var(--bd);background:none;color:var(--mu);border-radius:6px;min-width:54px;padding:10px 14px;font-weight:700}.cafil button:first-child{margin-right:auto}.cafil button.on{color:var(--tx);border-color:var(--ac)}</style>
 </head>
 <body>
 <div id="app"></div><div id="modal"></div><div id="toast"></div>
@@ -778,7 +786,7 @@ function exportBox(title,text){UI.modal={t:'text',title,text};renderModal()}
 function img(file,px,cb){
   const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,px/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=im.width*k;c.height=im.height*k;c.getContext('2d').drawImage(im,0,0,c.width,c.height);cb(c.toDataURL('image/png'))};im.src=r.result};r.readAsDataURL(file)}
 const A={
-  nav(d){UI.view=d.v;render()},tab(d){UI.tab=d.v;render()},ci(d){UI.ci=+d.v;render()},gi(d){UI.gi=+d.v;render()},
+  nav(d){UI.view=d.v;render()},tab(d){UI.tab=d.v;render()},cf(d){UI.cf=d.v;render()},ci(d){UI.ci=+d.v;render()},gi(d){UI.gi=+d.v;render()},
   logout(){S.user=null;UI.login={step:1};commit()},
   guest(){S.user={name:'Guest',phone:'',role:'viewer'};commit()},
   otpBack(){UI.login.step=1;render()},
@@ -786,7 +794,7 @@ const A={
   open(d){UI.mid=d.id;UI.view='match';render()},
   scoreIt(d){UI.sid=d.id;UI.view='score';render()},
   delMatch(d){if(confirm('Delete this match?')){S.matches=S.matches.filter(x=>x.id!==d.id);commit()}},
-  demo(){demoMatch();UI.view='match';UI.tab='live';commit();toast('Demo match loaded')},
+  demo(){demoMatch();UI.view='match';UI.tab='sum';commit();toast('Demo match loaded')},
   newMatch(){const a=S.teams[0],b=S.teams[1]||S.teams[0];UI.draft={a:a.id,b:b.id,overs:20,date:new Date().toISOString().slice(0,10),venue:'',umpires:'',toss:a.id,dec:'bat',xi:{[a.id]:a.players.slice(0,11),[b.id]:b.players.slice(0,11)}};UI.modal='newMatch';renderModal()},
   run(d){const m=S.matches.find(x=>x.id===UI.sid)||curM();if(!can()||m.status!=='live')return;const r=+d.v,x=UI.ex;
     ball(m,{r,x,ang:(UI.ang&&r>0&&!x)?{a:UI.ang.a,d:UI.ang.d}:null});UI.ex='';UI.ang=null;commit();if(m.status==='break')toast('Innings complete');if(m.status==='done')toast(m.result,4000)},
@@ -1000,10 +1008,10 @@ function vHome(){
 /* match centre */
 function vMatch(){
   const m=curM();if(!m)return'<div class="empty">No match selected. Create or load a match from the Matches tab.</div>';
-  const tabs=[['live','Live'],['comm','AI Commentary'],['card','Scorecard'],['graphs','Graphs'],['drs','DRS'],['dls','DLS'],['squads','Squads'],['info','Info']];
-  if(!tabs.some(t=>t[0]===UI.tab))UI.tab='live';
+  const tabs=[['sum','Summary'],['card','Scorecard'],['live','Live'],['comm','Commentary'],['graphs','Graphs'],['drs','DRS'],['dls','DLS'],['squads','Squads'],['info','Info']];
+  if(!tabs.some(t=>t[0]===UI.tab))UI.tab='sum';
   const sel=S.matches.length>1?`<select data-c="mid" aria-label="Select match">${opt(S.matches.map(x=>[x.id,T(x.a).short+' vs '+T(x.b).short+' ('+x.date+')']),m.id)}</select>`:'';
-  return sel+mHead(m)+tickerHTML()+`<div class="tabs">${tabs.map(([k,l])=>`<button class="${UI.tab===k?'on':''}" data-a="tab" data-v="${k}">${l}</button>`).join('')}</div>`+({live:tLive,comm:tComm,card:tCard,graphs:tGraphs,drs:tDRS,dls:tDLS,squads:tSquads,info:tInfo}[UI.tab])(m)}
+  return sel+mHead(m)+tickerHTML()+`<div class="tabs">${tabs.map(([k,l])=>`<button class="${UI.tab===k?'on':''}" data-a="tab" data-v="${k}">${l}</button>`).join('')}</div>`+({sum:tSum,live:tLive,comm:tComm,card:tCard,graphs:tGraphs,drs:tDRS,dls:tDLS,squads:tSquads,info:tInfo}[UI.tab])(m)}
 function ballBanner(m){
   const s=st(m);if(!s)return'';const e=s.inn.ev[s.inn.ev.length-1];if(!e)return'';
   const big=e.w?'W':e.x==='wd'?'Wd':e.x==='nb'?'Nb':String(e.r),cls=e.w?'w':(!e.x&&e.r===6)?'s':'';
@@ -2564,6 +2572,56 @@ const hashStr=x=>{let h=0;for(let i=0;i<x.length;i++)h=(h*31+x.charCodeAt(i))>>>
   ${bw?`<table style="margin-top:10px"><tr><th>Bowler</th><th>O</th><th>M</th><th>R</th><th>W</th><th>Econ</th></tr><tr><td>${esc(nm(c.bl))} <b>*</b></td><td>${fmtOv(bw.b)}</td><td>${bw.m}</td><td>${bw.r}</td><td><b>${bw.w}</b></td><td>${bw.b?(bw.r*6/bw.b).toFixed(1):'0.0'}</td></tr></table>`:''}</div>`:''}
   <div class="card"><div class="b" style="margin-bottom:6px">Match prediction</div><div class="pbar"><div style="background:${T(m.a).color};flex:${Math.max(w.a,4)};color:#fff">${esc(T(m.a).short)} ${w.a}%</div><div style="background:${T(m.b).color};flex:${Math.max(w.b,4)};color:#fff">${esc(T(m.b).short)} ${w.b}%</div></div></div>
   ${ex?`<div class="mu sm" style="margin:6px 2px">${ex}</div>`:''}`}}
+
+/* ---- Cricket Australia (CA Live) style match tabs: Summary, Scorecard, Commentary ---- */
+const caLabel=(m,j)=>{const inn=m.innings[j],n=m.innings.filter((x,q)=>q<=j&&x.bat===inn.bat).length;return (['1ST','2ND','3RD','4TH'][n-1]||n+'TH')+' '+T(inn.bat).short};
+const caTabs=(m,i)=>`<div class="catabs">${m.innings.map((x,j)=>`<button class="${i===j?'on':''}" data-a="ci" data-v="${j}">${esc(caLabel(m,j))}</button>`).join('')}</div>`;
+const caScoreOf=(m,id)=>{let r='-',o='';m.innings.forEach((x,j)=>{if(x.bat===id){const k=calc(m,j);r=k.runs+(k.wk>=10?'':'-'+k.wk)+'';o=fmtOv(k.lg)+' ov'}});return{r,o}};
+function caBalls(m,i){const inn=m.innings[i],out=[];let lg=0;inn.ev.forEach(e=>{const legal=e.x!=='wd'&&e.x!=='nb',pen=legal?0:1;out.push({lab:Math.floor(lg/6)+'.'+((lg%6)+(legal?1:0)),r:e.r+pen,w:!!e.w,e,ov:Math.floor(lg/6)+1,lastOfOver:legal&&(lg+1)%6===0});if(legal)lg++});return out}
+function caOverChart(m,i){
+  const B=caBalls(m,i).slice(-12);if(!B.length)return'';const W=360,H=150,bw=W/(B.length+1);let g='';
+  B.forEach((b,j)=>{const x=(j+.8)*bw+8,h=b.r?Math.min(80,12+b.r*11):0;
+    if(b.w)g+=`<circle cx="${x}" cy="108" r="5" fill="#d9232d"/><text x="${x}" y="96" text-anchor="middle" font-size="11" fill="#d9232d" font-weight="700">W</text>`;
+    else if(b.r)g+=`<rect x="${x-6}" y="${108-h}" width="12" height="${h}" rx="6" fill="var(--c2)" stroke="var(--bd)"/><text x="${x}" y="${100-h}" text-anchor="middle" font-size="11" fill="var(--mu)">${b.r}</text>`;
+    else g+=`<circle cx="${x}" cy="108" r="5" fill="var(--bd)"/>`;
+    if(j&&B[j-1].lastOfOver)g+=`<line x1="${x-bw/2}" x2="${x-bw/2}" y1="20" y2="124" stroke="var(--mu)" stroke-dasharray="2 3"/><text x="${x-bw/2}" y="138" text-anchor="middle" font-size="10" fill="var(--mu)">${b.ov-1}</text>`});
+  const l=B[B.length-1];g+=`<rect x="${(B.length-.2)*bw+8-16}" y="118" width="34" height="18" rx="4" fill="#d9232d"/><text x="${(B.length-.2)*bw+8+1}" y="131" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">${l.lab}</text>`;
+  return `<svg viewBox="0 0 ${W+12} ${H}" class="chart" role="img" aria-label="Last overs ball by ball">${g}</svg>`}
+function caBall(b,m,i){const e=b.e;return `<div class="cab"><div class="cac"><span class="cacirc ${b.w?'w':''}">${b.w?'W':b.r}</span><span class="mu sm">${b.lab}</span></div><div>${esc(cText(e))}</div></div>`}
+function tSum(m){
+  const A=T(m.a),B=T(m.b),sa=caScoreOf(m,m.a),sb=caScoreOf(m,m.b);
+  const res=m.result||(m.status==='live'?liveStatus(m):'Toss: '+T(m.toss).name+' chose to '+m.dec);
+  const i=Math.max(0,m.innings.length-1),gi=UI.gi===2||UI.gi>=m.innings.length?i:UI.gi;
+  const hasI=m.innings.length>0,bl=hasI?caBalls(m,i):[],lastB=bl[bl.length-1];
+  const side=(t,sc,r)=>`<div class="casd ${r}"><div>${logo(t,56)}</div><div class="casc"><span class="mu sm">${sc.o}</span><b>${sc.r}</b></div><div class="b">${esc(t.name)}</div></div>`;
+  const info=[['Date',m.date],['Venue',m.venue],['Toss',T(m.toss).name+' won the toss and elected to '+m.dec+'.'],[A.short,(m.xi[m.a]||[]).map(nm).join(', ')],[B.short,(m.xi[m.b]||[]).map(nm).join(', ')],['Umpires',m.umpires],['Scorer',m.scorer],['Format',m.overs+' overs per side']].filter(r=>r[1]);
+  const gk=hasI?calc(m,gi):null;
+  return `<div class="card casum"><div class="mu" style="text-align:center">${esc(res)}</div><div class="casides">${side(A,sa,'l')}<div class="camid">${typeof HELMET!=='undefined'?`<img src="${HELMET}" alt="" width="46">`:''}</div>${side(B,sb,'r')}</div><div class="mu sm" style="text-align:center">${esc(m.name||(m.overs+'-over match'))}<br>${esc(m.venue||'')}</div></div>
+  ${hasI?`<div class="card"><div class="cah">LAST BALLS</div>${caOverChart(m,i)}${lastB?caBall(lastB,m,i):''}</div>
+  <div class="card"><div class="cah">WAGON WHEEL</div>${m.innings.length>1?caTabs(m,gi).replace(/data-a="ci"/g,'data-a="gi"'):''}<div class="b" style="margin:6px 0">${esc(caLabel(m,gi))} | All batters</div><div class="mu">${gk.runs} runs | ${gk.lg} balls</div><div style="display:flex;justify-content:center">${wagonSVG(m,gi)}</div><div class="mu sm">Lines are drawn only for shots whose direction the scorer recorded. 6 red, 4 accent, 2-3 gold, 1 grey.</div></div>`:''}
+  <div class="card"><div class="cah">MATCH INFORMATION</div><div class="kv">${info.map(r=>`<div>${esc(r[0])}</div><div>${esc(r[1])}</div>`).join('')}</div></div>`}
+tCard=function(m){
+  if(!m.innings.length)return'<div class="empty">Scorecard appears once the innings starts.</div>';
+  const i=UI.ci>=m.innings.length?m.innings.length-1:UI.ci,inn=m.innings[i],k=calc(m,i),ex=k.ex,exT=ex.wd+ex.nb+ex.b+ex.lb,c=inn.cur,dnb=(m.xi[inn.bat]||[]).filter(id=>!inn.used.includes(id));
+  return caTabs(m,i)+`<div class="card scroll" style="padding:0"><div class="carow cahd"><span>BATTER</span><span>R</span><span>B</span><span>SR</span></div>${k.ord.map((id,q)=>{const b=k.bat[id],pl=P(id)||{name:nm(id)},live=!inn.done&&(c.s===id||c.n===id);
+    return `<div class="carow ${q%2?'alt':''}"><div class="canm"><span class="pphoto" style="width:40px;height:40px;flex:none">${av(pl)}</span><div style="min-width:0"><div class="b">${esc(nm(id))}${c.s===id&&!inn.done?' *':''}</div><div class="mu sm">${b.out?esc(b.out):(live?'not out':'')}</div></div></div><span>${b.out&&b.r===0&&b.b>0?'&#129414;':b.r}</span><span>${b.b}</span><span>${b.b?(b.r*100/b.b).toFixed(2):'0.00'}</span></div>`}).join('')}
+  <div class="carow"><div class="canm"><div><div class="b">Extras</div><div class="mu sm">b ${ex.b}, lb ${ex.lb}, wd ${ex.wd}, nb ${ex.nb}</div></div></div><span><b>${exT}</b></span><span></span><span></span></div>
+  <div class="carow alt"><div class="canm"><div class="b">Total</div></div><span><b>${k.runs}-${k.wk}</b></span><span>${fmtOv(k.lg)} ov</span><span>${k.lg?(k.runs*6/k.lg).toFixed(2):'0.00'}</span></div></div>
+  ${dnb.length?`<div class="mu sm" style="margin:8px 2px">Did not bat: ${dnb.map(nm).map(esc).join(', ')}</div>`:''}
+  <div class="card scroll"><table><tr><th>Bowler</th><th>O</th><th>M</th><th>R</th><th>W</th><th>Wd</th><th>Nb</th><th>Econ</th></tr>${Object.entries(k.bowl).map(([id,w])=>`<tr><td>${esc(nm(id))}</td><td>${fmtOv(w.b)}</td><td>${w.m}</td><td>${w.r}</td><td><b>${w.w}</b></td><td>${w.wd}</td><td>${w.nb!=null?w.nb:(w.n||0)}</td><td>${w.b?(w.r*6/w.b).toFixed(1):'0.0'}</td></tr>`).join('')}</table>
+  <div class="mu sm" style="margin-top:10px"><b>Fall of wickets:</b> ${k.fow.map(f=>`${f.r}-${f.w} (${esc(nm(f.id))}, ${f.ov})`).join(', ')||'none'}</div></div>`};
+tBBB=function(m){
+  if(!m.innings.length)return'<div class="empty">Commentary starts with the first ball.</div>';
+  const i=UI.ci>=m.innings.length?m.innings.length-1:UI.ci,inn=m.innings[i],f=UI.cf||'all',bat=T(inn.bat).short;
+  const B=caBalls(m,i);let runs=0,wk=0,groups={};
+  B.forEach((b,j)=>{runs+=b.r;if(b.w)wk++;const g=groups[b.ov]||(groups[b.ov]={ov:b.ov,items:[],r:0,w:0});g.items.push(b);g.r+=b.r;if(b.w)g.w++;g.endR=runs;g.endW=wk;b.idx=j});
+  const pass=b=>f==='all'||(f==='W'&&b.w)||(f==='4'&&!b.e.x&&b.r===4)||(f==='6'&&!b.e.x&&b.r===6);
+  const body=Object.values(groups).reverse().map(g=>{const its=g.items.filter(pass);if(!its.length)return'';
+    const done=g.items.length&&g.items[g.items.length-1].lastOfOver,bl=g.items[0].e.bl;
+    return `<div class="caoh">OVER ${g.ov} &nbsp;${esc(bat)} ${g.endW>=10?'10':g.endR+'-'+g.endW} &nbsp;RUNS ${g.r} &nbsp;WICKETS ${g.w}</div>`+(done&&f==='all'?`<div class="cab"><div class="cac"><span class="cacom">&#9776;</span></div><div>Over ${g.ov}. ${g.r} run${g.r===1?'':'s'}. Bowler: ${esc(nm(bl))}. ${esc(bat)}: ${g.endR}-${g.endW}</div></div>`:'')+its.slice().reverse().map(b=>{
+      let card='';if(b.w&&b.e.out){const kk=calc({...m,innings:m.innings.map((x,j)=>j===i?{...x,ev:inn.ev.slice(0,b.idx+1)}:x)},i),bb=kk.bat[b.e.out];if(bb){const pl=P(b.e.out)||{name:nm(b.e.out)};card=`<div class="cabc"><div class="canm"><span class="pphoto" style="width:56px;height:56px;flex:none">${av(pl)}</span><div><div class="b" style="font-size:17px">${esc(nm(b.e.out))}</div><div class="mu sm">${esc(bb.out||'')}</div></div></div><div class="cast"><div><b>${bb.r}</b><span>Runs</span></div><div><b>${bb.b}</b><span>Balls</span></div><div><b>${bb.f4}</b><span>4s</span></div><div><b>${bb.f6}</b><span>6s</span></div><div><b>${bb.b?(bb.r*100/bb.b).toFixed(2):'0.00'}</b><span>SR</span></div></div></div>`}}
+      return caBall(b,m,i)+card}).join('')}).join('');
+  return caTabs(m,i)+`<div class="card" style="padding:0">${body||'<div class="empty">No balls match this filter.</div>'}</div><div class="cafil">${[['all','ALL'],['4','4'],['6','6'],['W','W']].map(([k,l])=>`<button class="${f===k?'on':''}" data-a="cf" data-v="${k}">${l}</button>`).join('')}</div>`};
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});
