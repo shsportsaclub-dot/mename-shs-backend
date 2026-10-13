@@ -1730,6 +1730,52 @@ function lookBar(){return `<div class="hscroll" style="gap:6px;margin:0 0 10px;a
   const r=reelStrip(),i=o.indexOf('<!--/wf-->');
   if(r)o=i<0?o+r:o.slice(0,i+10)+r+o.slice(i+10);
   return lookBar()+o}}
+/* ---------------- CRICEX-STYLE MATCH HEADER ---------------- */
+{const cs=document.createElement('style');cs.textContent=
+'.cx{background:linear-gradient(180deg,var(--c2),var(--card));border:1px solid var(--bd);border-radius:12px;padding:12px 14px;margin-bottom:12px}'+
+'.cxt{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12px;color:var(--mu);margin-bottom:10px}'+
+'.cxt b{color:var(--tx)}'+
+'.cxm{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center}'+
+'.cxs{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;min-width:0}'+
+'.cxs .n{font-weight:800;font-size:15px;letter-spacing:.3px}'+
+'.cxs .sc{font-size:26px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.1}'+
+'.cxs .sc small{display:block;font-size:12px;font-weight:600;color:var(--mu)}'+
+'.cxs .p{font-size:13px;color:var(--mu);font-variant-numeric:tabular-nums}'+
+'.cxs.bt .n:after{content:" \\25CF";color:var(--ac);font-size:10px}'+
+'.cxs.dim .sc{opacity:.55}'+
+'.cxc{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:12px;color:var(--mu)}'+
+'.cxst{margin-top:10px;text-align:center;font-weight:700;color:var(--ac);font-size:14px}'+
+'.cxll{margin-top:10px;border-top:1px solid var(--bd);padding-top:10px}'+
+'.cxll .h{display:flex;justify-content:space-between;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--mu);margin-bottom:6px}'+
+'.cxll .bar2{display:flex;height:26px;border-radius:6px;overflow:hidden;font-size:12px;font-weight:700;color:#fff}'+
+'.cxll .bar2 div{display:flex;align-items:center;padding:0 8px;white-space:nowrap}'+
+'.cxbb{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}'+
+'.cxbb div{background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:8px 10px;font-size:13px;display:flex;justify-content:space-between;gap:6px}'+
+'.cxbb div.on{border-color:var(--ac)}'+
+'.cxch{display:flex;gap:6px;align-items:center;margin-top:10px;flex-wrap:wrap;font-size:12px;color:var(--mu)}'+
+'.cxq{display:flex;gap:14px;margin-top:10px;font-size:12px;color:var(--mu);flex-wrap:wrap;align-items:center}.cxq b{color:var(--tx)}'+
+'.cxn{display:flex;gap:6px;align-items:center}';
+document.head.appendChild(cs)}
+{const h2=mHead;mHead=function(m){
+  const s=st(m);if(!s)return h2(m);
+  const A=T(m.a),B=T(m.b),w=winP(m),k=s.k,c=s.inn.cur,done=m.status==='done';
+  const sc=t=>{const ix=[];m.innings.forEach((inn,i)=>{if(inn.bat===t.id)ix.push(i)});
+    if(!ix.length)return'<div class="sc"><small>Yet to bat</small></div>';
+    return '<div class="sc">'+ix.map((i,j)=>{const q=calc(m,i);return (j?'<small>& </small>':'')+q.runs+'/'+q.wk+'<small>('+fmtOv(q.lg)+' ov)</small>'}).join('')+'</div>'};
+  const side=t=>`<div class="cxs ${s.bat.id===t.id&&!done?'bt':'dim'}">${logo(t,48)}<div class="n">${esc(t.short)}</div>${sc(t)}</div>`;
+  const bt1=c.s!=null?(k.bat[c.s]||{r:0,b:0}):null,bt2=c.n!=null?(k.bat[c.n]||{r:0,b:0}):null,bw=c.bl?(k.bowl[c.bl]||{b:0,r:0,w:0}):null;
+  const st1=m.status==='live'?'LIVE':done?'RESULT':'BREAK';
+  const need=done?m.result:m.status==='break'?'Innings break':s.i===1?`${s.bat.name} need ${Math.max(0,s.need)} run${s.need===1?'':'s'} from ${s.left} balls`:`Projected score ${Math.round(k.runs+s.left/6*s.crr)} at current rate`;
+  const L=overList(m,s.i).slice(-1)[0];
+  const demo=typeof isDemo==='function'&&isDemo(m)?'<span class="pill">DEMO (sample data)</span>':'';
+  return `<div class="cx"><div class="cxt"><span><b>${m.overs>=40?'ODI':m.overs>=20?'T20':'Match'}</b> | ${esc(m.date||'')}${m.venue?' | '+esc(m.venue):''}</span><span class="cxn">${demo}<span class="pill ${m.status==='live'?'live pulse':''}">${st1}</span></span></div>
+  <div class="cxm">${side(A)}<div class="cxc"><b>VS</b>${s.i===1?'<span>Target '+m.target+'</span>':''}</div>${side(B)}</div>
+  <div class="cxst">${esc(need)}</div>
+  ${done?'':`<div class="cxll"><div class="h"><span>Live Line</span><span>Win probability</span></div><div class="bar2"><div style="background:${A.color};flex:${Math.max(w.a,6)}">${esc(A.short)} ${w.a}%</div><div style="background:${B.color};flex:${Math.max(w.b,6)};justify-content:flex-end">${w.b}% ${esc(B.short)}</div></div></div>
+  <div class="cxbb"><div class="on"><span>${bt1?esc(sh(c.s))+' *':'-'}</span><b>${bt1?bt1.r+' ('+bt1.b+')':''}</b></div><div><span>${bt2?esc(sh(c.n)):'-'}</span><b>${bt2?bt2.r+' ('+bt2.b+')':''}</b></div></div>
+  <div class="cxbb" style="margin-top:8px"><div><span>${bw?esc(sh(c.bl)):'-'}</span><b>${bw?bw.w+'/'+bw.r+' ('+fmtOv(bw.b)+')':''}</b></div><div><span>Partnership</span><b>${k.part.r} (${k.part.b})</b></div></div>
+  ${L?`<div class="cxch"><span>This over</span>${L.b.map(x=>`<span class="ch ${x.cls}">${x.lab}</span>`).join('')}</div>`:''}`}
+  <div class="cxq"><span>CRR <b>${s.crr.toFixed(2)}</b></span>${s.rrr!=null&&!done?`<span>RRR <b>${s.rrr.toFixed(2)}</b></span>`:''}<span>Overs left <b>${fmtOv(s.left)}</b></span><span style="flex:1"></span><button class="btn sm ghost" data-a="mnav" data-v="-1" aria-label="Previous match">&#8249;</button><button class="btn sm ghost" data-a="mnav" data-v="1" aria-label="Next match">&#8250;</button><button class="btn sm ghost" data-a="share">Share</button></div></div>`}}
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});
