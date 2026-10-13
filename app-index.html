@@ -1162,13 +1162,14 @@ async function pullLive(){
 function liveFeedCard(){
   if(!apiBase()&&!S.settings.cricKey)return'';
   const j=UI.live;
-  if(!j)return `<div class="sec"><h3>Live cricket</h3></div><div class="card mu">Loading live scores...</div>`;
-  if(!j.ok)return `<div class="sec"><h3>Live cricket</h3></div><div class="card mu">Live feed unavailable: ${esc(j.error||'')}</div>`;
-  const F2=wFilter(),sec=(t,n,L,more)=>`<div class="sec"><h3>${t}</h3><span class="mu sm">${n}</span></div>`+(L.length?L.map(wCard).join(''):`<div class="card mu">${more}</div>`);
-  return sec('Live now',j.stale?'delayed':'updates every minute',F2.live.slice(0,8),'No live matches right now.')
-    +sec('Schedule','upcoming',F2.up.slice(0,8),'No upcoming matches listed.')
-    +sec('Recent results','',F2.rec.filter(m=>Date.now()-wTm(m)<21*864e5).slice(0,5),'No recent results.')
-    +`<button class="btn sm ghost wide" data-a="go" data-v="matches">All matches</button>`}
+  if(!j)return `<!--wf--><div class="sec"><h3>Live cricket</h3></div><div class="card mu">Loading live scores...</div><!--/wf-->`;
+  if(!j.ok)return `<!--wf--><div class="sec"><h3>Live cricket</h3></div><div class="card mu">Live feed unavailable: ${esc(j.error||'')}</div><!--/wf-->`;
+  const F2=wFilter(),rec=F2.rec.filter(m=>Date.now()-wTm(m)<21*864e5),tab=UI.htab||(F2.live.length?'live':'up'),
+    T3={live:[F2.live,'No live matches right now. Check Upcoming or Recent.'],rec:[rec,'No recent results.'],up:[F2.up,'No upcoming matches listed.']}[tab];
+  return `<!--wf--><div class="sec"><h3>Cricket</h3><span class="mu sm">${j.stale?'delayed':'updates every minute'}</span></div>
+  <div class="htabs">${[['live','Live',F2.live.length],['rec','Recent',rec.length],['up','Upcoming',F2.up.length]].map(([k,l,n])=>`<button class="btn sm ${tab===k?'':'ghost'}" data-a="htab" data-v="${k}">${l} (${n})</button>`).join('')}</div>
+  ${T3[0].length?wGroup(T3[0],30):`<div class="card mu">${T3[1]}</div>`}
+  <button class="btn sm ghost wide" data-a="go" data-v="matches">All matches</button><!--/wf-->`}
 {const h0=vHome;vHome=function(){const o=h0(),i=o.indexOf('<div class="sec"><h3>Top teams</h3>');return i<0?o+liveFeedCard():o.slice(0,i)+liveFeedCard()+o.slice(i)}}
 pullLive();setInterval(pullLive,60000);
 
@@ -1339,10 +1340,19 @@ function wNorm(){/* provider labels like 'A,B Inning 1' mean the second team is 
     name=name.replace(/\b\w/g,c=>c.toUpperCase());x.inning=name+tail;prev=name})})}
 const wFilter=()=>{const j=UI.live;if(!j||!j.ok)return{live:[],up:[],rec:[]};const M=j.matches;const tm=wTm;return{live:M.filter(m=>m.started&&!m.ended),up:M.filter(m=>!m.started).sort((a,b)=>tm(a)-tm(b)),rec:M.filter(m=>m.ended).sort((a,b)=>tm(b)-tm(a))}};
 const wWhen=m=>{try{const t=m.time?new Date(m.time+(/Z|\+/.test(m.time)?'':'Z')):null;return t&&!isNaN(t)?t.toLocaleString('en-IN',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'}):(m.date||'')}catch(e){return m.date||''}};
+function wSplit(m){const p=String(m.name||'').split(',').map(x=>x.trim());return{teams:p[0]||m.name,desc:p.slice(1,-1).join(', '),series:p.length>2?p[p.length-1]:(p[1]||m.type||'')}}
+function wTeamScore(m,t){const n=String(t.name||'').toLowerCase();const x=(m.score||[]).filter(z=>String(z.inning||'').toLowerCase().replace(/ inning.*/,'')===n);return x.length?x.map(z=>z.r+'/'+z.w+' <span class="mu">('+z.o+')</span>').join(' &amp; '):''}
+function wBadge(t){const i=String(t.short||t.name||'?').slice(0,3).toUpperCase();return t.img?`<img class="logo" src="${esc(t.img)}" width="26" height="26" alt="">`:`<span class="tbadge">${esc(i)}</span>`}
 function wCard(m){
-  const fl=t=>t.img?`<img class="logo" src="${esc(t.img)}" width="26" height="26" alt="">`:'';
-  return `<div class="card" data-a="wOpen" data-id="${esc(m.id)}" style="cursor:pointer"><div class="row"><span class="pill ${m.started&&!m.ended?'live pulse':m.ended?'ok':''}">${m.started&&!m.ended?'LIVE':m.ended?'RESULT':'UPCOMING'}</span><span class="mu sm">${esc(m.type||'')} | ${esc(m.venue||'')}</span></div>
-  <div class="b" style="margin:6px 0">${esc(m.name)}</div>${m.score.length?m.score.map(x=>`<div class="row" style="justify-content:space-between"><span>${esc(String(x.inning).replace(/ Inning.*/,''))}</span><b>${x.r}/${x.w} <span class="mu">(${x.o})</span></b></div>`).join(''):'<div class="mu sm">Starts '+esc(wWhen(m))+'</div>'}<div class="need" style="margin-bottom:0">${esc(m.status||'')}</div></div>`}
+  const sp=wSplit(m),live=m.started&&!m.ended,tm=(m.teams||[]).slice(0,2);
+  const stCls=live?'wlive':m.ended?'wres':'wup';
+  const status=m.started?(m.status||''):'Starts '+wWhen(m);
+  return `<div class="wcard" data-a="wOpen" data-id="${esc(m.id)}">
+  <div class="whead"><span>${esc(sp.desc||m.type||'')}${m.type?' · '+esc(String(m.type).toUpperCase()):''}</span>${live?'<span class="pill live pulse">LIVE</span>':''}</div>
+  ${tm.length?tm.map(t=>`<div class="wrow"><span class="wt">${wBadge(t)}<b>${esc(t.name)}</b></span><span class="wsc">${wTeamScore(m,t)||(m.started?'':'')}</span></div>`).join(''):`<div class="wrow"><b>${esc(sp.teams)}</b></div>`}
+  <div class="wst ${stCls}">${esc(status)}</div></div>`}
+{const st=document.createElement('style');st.textContent='.wser{font-weight:700;font-size:13px;margin:14px 2px 6px;opacity:.85;letter-spacing:.2px}.wcard{background:var(--card,#0f1b3d);border:1px solid var(--bd,#1e2c57);border-radius:12px;padding:10px 12px;margin-bottom:8px;cursor:pointer}.whead{display:flex;justify-content:space-between;align-items:center;font-size:11px;opacity:.7;margin-bottom:6px}.wrow{display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:14px}.wt{display:flex;align-items:center;gap:8px;min-width:0}.wsc{font-weight:700;white-space:nowrap}.tbadge{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#1d2f7a,#e11d2e);color:#fff;font-size:9px;font-weight:700}.wst{font-size:12px;margin-top:6px;padding-top:6px;border-top:1px solid var(--bd,#1e2c57)}.wlive{color:#ff5a67}.wres{color:#34d399}.wup{color:#fbbf24}.htabs{display:flex;gap:6px;margin:6px 0 4px}';document.head.appendChild(st)}
+function wGroup(L,max){const out=[],seen={};L.slice(0,max).forEach(m=>{const k=wSplit(m).series;(seen[k]=seen[k]||(out.push({k,L:[]}),out[out.length-1])).L.push(m)});return out.map(g=>`<div class="wser">${esc(g.k)}</div>`+g.L.map(wCard).join('')).join('')}
 function worldSection(){
   const has=apiBase()||S.settings.cricKey,j=UI.live,tab=UI.wtab||'all';
   if(!has)return `<div class="card ai"><h3>World cricket (live)</h3><p class="mu">Live scores from the cricket API appear here like Cricbuzz. Connect it: Settings, then "Cricket API key" (quick test) or "OTP server URL" (recommended).</p><button class="btn sm" data-a="go" data-v="settings">Open Settings</button></div>`;
@@ -1415,6 +1425,7 @@ function wPlayerHTML(){
   `}
 {const st=document.createElement('style');st.textContent='.sctb{width:100%;border-collapse:collapse;font-size:13px}.sctb th{text-align:right;color:var(--mu,#94a3b8);font-weight:600;padding:6px 4px;border-bottom:1px solid var(--bd)}.sctb th:first-child,.sctb td:first-child{text-align:left}.sctb td{text-align:right;padding:7px 4px;border-bottom:1px solid var(--bd)}.plink{color:inherit;font-weight:700;text-decoration:none;border-bottom:1px dotted currentColor}';document.head.appendChild(st)}
 Object.assign(A,{
+  htab(d){UI.htab=d.v;render()},
   wtab(d){UI.wtab=d.v;render()},
   wOpen(d){const m=(UI.live&&UI.live.matches||[]).find(x=>x.id===d.id);if(!m)return;UI.wm={m,tab:'sc',sc:null,err:''};wShow();wLoad('match_scorecard',m.id).then(j=>{if(!UI.wm||UI.wm.m.id!==m.id)return;if(j.ok)UI.wm.sc=j.data;else UI.wm.err=j.error||'Scorecard not available yet';wShow()})},
   wmTab(d){if(UI.wm){UI.wm.tab=d.v;wShow()}},
@@ -1512,6 +1523,13 @@ async function detectCountry(){
 setTimeout(detectCountry,300);
 /* Default cricket data key (direct mode). Remove this line and use the backend /api/live once the server is live. */
 if(!S.settings.cricKey){S.settings.cricKey='15f91453-6943-464f-b35b-f2d04fb954f9';try{save()}catch(e){}try{pullLive()}catch(e){}}
+
+{const hv=vHome;vHome=function(){let o=hv();const m=/<!--wf-->[\s\S]*?<!--\/wf-->/.exec(o);if(!m)return o;
+  const noLocal=o.indexOf('<h2>No match yet</h2>')>=0;
+  if(noLocal){o=o.replace(m[0],'');
+    o=o.replace(/<div class="hero"><h2>No match yet<\/h2>[\s\S]*?<\/div><\/div>/,'<div class="row" style="margin:6px 0 2px">'+(can()?'<button class="btn sm" data-a="newMatch">New match</button>':'')+'<button class="btn sm ghost" data-a="demo">Load demo match</button></div>');
+    const k=o.indexOf('<div class="row" style="margin:6px 0 2px">');return k<0?m[0]+o:o.slice(0,k)+m[0]+o.slice(k)}
+  return o}}
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});
