@@ -1785,7 +1785,7 @@ document.head.appendChild(cs)}
   ${L?`<div class="cxch"><span>This over</span>${L.b.map(x=>`<span class="ch ${x.cls}">${x.lab}</span>`).join('')}</div>`:''}`}
   <div class="cxq"><span>CRR <b>${s.crr.toFixed(2)}</b></span>${s.rrr!=null&&!done?`<span>RRR <b>${s.rrr.toFixed(2)}</b></span>`:''}<span>Overs left <b>${fmtOv(s.left)}</b></span><span style="flex:1"></span><button class="btn sm ghost" data-a="mnav" data-v="-1" aria-label="Previous match">&#8249;</button><button class="btn sm ghost" data-a="mnav" data-v="1" aria-label="Next match">&#8250;</button><button class="btn sm ghost" data-a="share">Share</button></div></div>`}}
 /* build stamp so the user can see which version is running */
-try{const b=document.createElement('div');b.id='buildstamp';b.textContent='Build 14-Oct-2026 01:00 | Import players, outside records';b.style.cssText='position:fixed;left:6px;bottom:2px;font-size:10px;color:#8b8ba0;opacity:.7;z-index:5;pointer-events:none';document.body.appendChild(b)}catch(e){}
+try{const b=document.createElement('div');b.id='buildstamp';b.textContent='Build 14-Oct-2026 02:00 | Left menu, 7-item bottom bar, branded player';b.style.cssText='position:fixed;left:6px;bottom:2px;font-size:10px;color:#8b8ba0;opacity:.7;z-index:5;pointer-events:none';document.body.appendChild(b)}catch(e){}
 /* ---------------- SERVICES: ePAPER, SOCIAL STUDIO, MARKET, MORE HUB ---------------- */
 var XV=window.XV={};
 {const st=document.createElement('style');st.textContent=
@@ -2135,6 +2135,100 @@ Object.assign(C,{
   pextFile(v,el){const f=el.files&&el.files[0];if(f)img(f,900,u=>{UI.pextImg={pid:el.dataset.pid,u};toast('Screenshot attached. Press Save outside record.')})}});
 /* import button on the Players page */
 {const v3=vPlayers;vPlayers=function(){let o=v3();return o.replace('<div class="grow"></div>','<div class="grow"></div>'+(can()?'<button class="btn sm" data-a="pimport" style="margin-right:6px">Import</button>':''))}}
+
+/* ---------------- BRANDED STREAM PLAYER, VIEWER vs STREAMER, COUNTRY RULES, DEFAULT CHANNEL ---------------- */
+const canStream=()=>S.user&&(S.user.role==='admin'||S.user.role==='scorer'||S.user.role==='streamer');
+const parseStream=raw=>{const s=String(raw||''),i=s.indexOf('#geo=');return i<0?{url:s,geo:[]}:{url:s.slice(0,i),geo:s.slice(i+5).split(',').map(x=>x.trim().toUpperCase()).filter(Boolean)}};
+const isoStore={get(){try{return localStorage.getItem('sh.iso')}catch(e){return null}},set(v){try{localStorage.setItem('sh.iso',v)}catch(e){}}};
+const viewerISO=()=>UI.iso||isoStore.get()||'';
+async function detectISO(){if(viewerISO())return;const t=async(u,f)=>{const c=new AbortController(),to=setTimeout(()=>c.abort(),4000);try{return f(await (await fetch(u,{signal:c.signal})).json())}finally{clearTimeout(to)}};
+  let c='';try{c=await t('https://ipapi.co/json/',j=>String(j.country_code||''))}catch(e){}
+  if(!c)try{c=await t('https://ipwho.is/',j=>String(j.country_code||''))}catch(e){}
+  if(c){UI.iso=c.toUpperCase();isoStore.set(UI.iso);if(S.user&&UI.view==='match')render()}}
+setTimeout(detectISO,500);
+{const st=document.createElement('style');st.textContent=
+'.swin.br{border-radius:10px;overflow:hidden;background:#000}.swin.br.th{position:fixed;left:0;right:0;top:env(safe-area-inset-top,0px);z-index:60;border-radius:0;margin:0}.swin.br:fullscreen{border-radius:0}'+
+'.swbar{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;gap:6px;padding:6px 8px;background:linear-gradient(0deg,rgba(0,0,0,.75),transparent);z-index:3}.swbar button{background:rgba(255,255,255,.14);border:0;color:#fff;border-radius:6px;padding:5px 9px;font:600 12px system-ui;cursor:pointer}.swbar .sp{flex:1}'+
+'.swbug{position:absolute;left:8px;top:8px;z-index:3;display:flex;align-items:center;gap:8px;background:linear-gradient(90deg,#0a1f5c,#e11d2e);color:#fff;border-radius:6px;padding:5px 10px;font:700 13px system-ui;box-shadow:0 2px 8px #0006}.swbug i{font-style:normal;background:#fff;color:#e11d2e;border-radius:4px;padding:1px 5px;font-size:10px}'+
+'.swin.br iframe{pointer-events:none}.swin.br.pi iframe{pointer-events:auto}';document.head.appendChild(st)}
+function swBug(key){let t='';
+  if(key[0]==='m'){const m=S.matches.find(x=>x.id===key.slice(1));if(m){const s=st(m);if(s)t=`${s.bat.short} ${s.k.runs}/${s.k.wk} (${fmtOv(s.k.lg)})${s.i===1?' | Target '+m.target:''}`}}
+  else{const m=(UI.live&&UI.live.matches||[]).find(x=>x.id===key.slice(1));if(m&&m.score&&m.score.length)t=m.score.slice(-1).map(x=>`${String(x.inning).replace(/ Inning.*/,'')} ${x.r}/${x.w} (${x.o})`).join('')}
+  return t?`<div class="swbug"><i>LIVE</i>${esc(t)}</div>`:''}
+function brandBar(kind){return `<div class="swbar"><button data-sw="play">Pause</button><button data-sw="mute">Unmute</button><span class="sp"></span><button data-sw="th">Theatre</button><button data-sw="fs">Full screen</button></div>`}
+embedHTML=function(u,key){
+  const P2=parseStream(u);u=String(P2.url||'').trim();if(!/^https:\/\//i.test(u))return '';const bug=swBug(key||'');
+  let m=/(?:youtube\.com\/(?:watch\?(?:.*&)?v=|live\/|embed\/|shorts\/)|youtu\.be\/)([\w-]{11})/.exec(u);
+  if(m){let o='';try{o='&origin='+encodeURIComponent(location.origin)}catch(e){}
+    return `<div class="swin br" data-k="yt">${bug}<iframe src="https://www.youtube-nocookie.com/embed/${m[1]}?autoplay=1&mute=1&playsinline=1&rel=0&controls=0&modestbranding=1&iv_load_policy=3&fs=0&disablekb=1&enablejsapi=1${o}" allow="autoplay; encrypted-media; picture-in-picture" title="Live match"></iframe>${brandBar()}</div>`}
+  if(/\.m3u8(\?|$)/i.test(u))return `<div class="swin br" data-k="v">${bug}<video data-hls="${esc(u)}" playsinline muted autoplay></video>${brandBar()}</div>`;
+  if(/\.(mp4|webm|ogg)(\?|$)/i.test(u))return `<div class="swin br" data-k="v">${bug}<video src="${esc(u)}" playsinline muted autoplay></video>${brandBar()}</div>`;
+  const fb=/facebook\.com|fb\.watch/i.test(u)?`https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(u)}&show_text=false&autoplay=true&mute=1`:esc(u);
+  return `<div class="swin br pi" data-k="x">${bug}<iframe src="${fb}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe><div class="swbar"><span class="sp"></span><button data-sw="th">Theatre</button><button data-sw="fs">Full screen</button></div></div>`};
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('button[data-sw]');if(!b)return;const w=b.closest('.swin');if(!w)return;e.stopPropagation();
+  const k=b.dataset.sw,yt=w.dataset.k==='yt',ifr=w.querySelector('iframe'),vid=w.querySelector('video');
+  const cmd=f=>{try{ifr.contentWindow.postMessage(JSON.stringify({event:'command',func:f,args:[]}),'*')}catch(x){}};
+  if(k==='play'){const paused=b.textContent==='Play';if(yt)cmd(paused?'playVideo':'pauseVideo');else if(vid)paused?vid.play():vid.pause();b.textContent=paused?'Pause':'Play'}
+  else if(k==='mute'){const um=b.textContent==='Unmute';if(yt)cmd(um?'unMute':'mute');else if(vid)vid.muted=!um;b.textContent=um?'Mute':'Unmute'}
+  else if(k==='th'){w.classList.toggle('th');b.textContent=w.classList.contains('th')?'Normal':'Theatre'}
+  else if(k==='fs'){const d=document;if(d.fullscreenElement||d.webkitFullscreenElement){(d.exitFullscreen||d.webkitExitFullscreen).call(d)}else{const f=w.requestFullscreen||w.webkitRequestFullscreen;if(f)f.call(w);else{w.classList.add('th');b.textContent='Full screen'}}}},true);
+streamCard=function(key,live){
+  const own=parseStream(getStream(key)),def=parseStream(S.settings.channelUrl||''),ed=canStream();
+  const useDef=!own.url&&def.url&&live,src=own.url?own:useDef?def:{url:'',geo:[]};
+  const iso=viewerISO(),blocked=src.url&&src.geo.length&&iso&&!src.geo.includes(iso);
+  let view='';
+  if(src.url&&live){view=blocked?`<div class="mu sm" style="margin:8px 0">This stream is not available in your country${iso?' ('+esc(iso)+')':''}. Live score is shown above.</div>`:(useDef?`<div class="mu sm" style="margin-top:6px">${esc(S.settings.appName||'Scoring Heroes')} channel</div>`:'')+embedHTML(src.url,key)}
+  const mgr=ed?`<details style="margin-top:10px"><summary class="mu sm" style="cursor:pointer">Manage stream (only scorers and streamers see this)</summary><form data-f="stream" style="margin-top:8px"><input type="hidden" name="key" value="${esc(key)}"><label>Stream link (YouTube, Facebook live, .m3u8)<input name="url" inputmode="url" placeholder="https://www.youtube.com/live/..." value="${esc(own.url)}"></label><label>Show only in these countries (codes like IN, AE, GB. Empty = everywhere)<input name="geo" value="${esc(own.geo.join(', '))}" placeholder="IN"></label><div class="row"><button class="btn sm">Save</button>${own.url?`<button type="button" class="btn sm ghost" data-a="stDel" data-k="${esc(key)}">Remove</button>`:''}</div>${!own.url&&def.url?'<div class="mu sm" style="margin-top:6px">No match link set: the default channel is used when the match is live.</div>':''}</form></details>`:'';
+  if(!view&&!mgr)return '';
+  return `<div class="card" style="margin:10px 0"><div class="row" style="justify-content:space-between"><b>Watch live</b>${live?'<span class="pill live pulse">LIVE</span>':'<span class="mu sm">opens when the match is live</span>'}</div>${view}${mgr}</div>`};
+F.stream=function(fd){let url=String(fd.get('url')||'').trim(),key=String(fd.get('key')||''),geo=String(fd.get('geo')||'').split(/[ ,;]+/).map(x=>x.trim().toUpperCase()).filter(x=>/^[A-Z]{2}$/.test(x));
+  if(url&&!/^https:\/\//i.test(url))return toast('The link must start with https://',3000);
+  url=parseStream(url).url;if(url&&geo.length)url+='#geo='+geo.join(',');saveStream(key,url);toast(url?'Stream saved':'Stream removed')};
+/* default channel in Settings (admin only) */
+F.channel=function(fd){if(!(S.user&&S.user.role==='admin'))return toast('Only the admin can set the channel');let u=String(fd.get('url')||'').trim(),geo=String(fd.get('geo')||'').split(/[ ,;]+/).map(x=>x.trim().toUpperCase()).filter(x=>/^[A-Z]{2}$/.test(x));
+  if(u&&!/^https:\/\//i.test(u))return toast('The link must start with https://',3000);u=parseStream(u).url;if(u&&geo.length)u+='#geo='+geo.join(',');S.settings.channelUrl=u;commit();toast(u?'Default channel saved':'Default channel removed')};
+{const v5=vSettings;vSettings=function(){const o=v5();if(!(S.user&&S.user.role==='admin'))return o;const c=parseStream(S.settings.channelUrl||'');
+  const card=`<div class="card"><h3>Default live channel</h3><div class="mu sm" style="margin:4px 0 8px">Shown to everyone on any live match that has no stream of its own. Viewers only watch, they never see the link box.</div><form data-f="channel"><label>Channel link (YouTube live, Facebook, .m3u8)<input name="url" value="${esc(c.url)}" placeholder="https://www.youtube.com/@yourchannel/live"></label><label>Show only in these countries (empty = everywhere)<input name="geo" value="${esc(c.geo.join(', '))}" placeholder="IN, AE"></label><button class="btn sm">Save channel</button></form></div>`;
+  return card+o}}
+/* world match sheet: one row per team, friendly scorecard message */
+{const w5=wMatchHTML;wMatchHTML=function(){let o=w5(),W=UI.wm,m=W&&W.m;
+  if(m&&m.score&&m.score.length){let first=true;const by={};m.score.forEach(x=>{const n=String(x.inning).replace(/ Inning.*/,'');(by[n]=by[n]||[]).push(`${x.r}/${x.w} <span class="mu">(${x.o} ov)</span>`)});
+    const comb=Object.entries(by).map(([n,L])=>`<div class="row" style="justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bd)"><span>${esc(n)}</span><b>${L.join(' &amp; ')}</b></div>`).join('');
+    o=o.replace(/<div class="row" style="justify-content:space-between;padding:6px 0;border-bottom:1px solid var\(--bd\)"><span>[^<]*<\/span><b>[^<]*<span class="mu">[^<]*<\/span><\/b><\/div>/g,()=>{if(first){first=false;return comb}return ''})}
+  o=o.replace(/ERR: [^<]*not found/,'Detailed ball-by-ball scorecard is not available from the data provider for this match. The score summary above is complete.');
+  return o}}
+
+/* ---------------- NAVIGATION: left hamburger menu with every module, 7-item bottom bar ---------------- */
+IC.trophy='<path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H4v1a4 4 0 0 0 4 4M16 6h4v1a4 4 0 0 1-4 4M12 13v4M8 20h8M10 17h4"/>';
+IC.news='<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8M8 13h8M8 17h5"/>';
+IC.dots='<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>';
+{const st=document.createElement('style');st.textContent=
+'.bnav{grid-template-columns:repeat(7,1fr)!important}.bnav button{font-size:10px;padding:2px 0;min-width:0;white-space:nowrap}.bnav .fab{transform:scale(.9)}'+
+'.drawer .grp{padding:14px 16px 4px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--mu)}'+
+'.drawer button.mi{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:11px 16px;background:none;border:0;color:var(--tx);font:600 15px var(--ui,inherit);cursor:pointer}'+
+'.drawer button.mi .e{width:26px;text-align:center;font-size:18px}.drawer button.mi.on{background:color-mix(in srgb,var(--ac) 14%,transparent);border-left:3px solid var(--ac);padding-left:13px}.drawer button.mi small{margin-left:auto;color:var(--mu);font-weight:500;font-size:11px}'+
+'.drawer .looks{display:flex;gap:6px;flex-wrap:wrap;padding:6px 16px 10px}.drawer .dfoot{padding:12px 16px;color:var(--mu);font-size:11px}'+
+'.hdr .menul{margin-right:2px}';document.head.appendChild(st)}
+const MENU2=[
+ ['Cricket',[['home','\u{1F3CF}','Live scores and home'],['matches','\u{1F4C5}','Matches and schedule'],['match','\u{1F4FA}','Match centre'],['score','\u{1F3AF}','Scorer'],['@newMatch','➕','Start a match'],['tours','\u{1F3C6}','Tournaments and series'],['teams','\u{1F6E1}️','Teams'],['players','\u{1F464}','Players and rankings'],['dream','\u{1F451}','Team 11'],['auction','\u{1F528}','Auction']]],
+ ['Media',[['epaper','\u{1F4F0}','ePaper and news'],['reels','\u{1F3AC}','Reels'],['social','\u{1F4F8}','Social studio'],['stream','\u{1F4E1}','Stream and OBS']]],
+ ['Community and business',[['market','\u{1F6D2}','Marketplace and shops'],['academy','\u{1F393}','Academy'],['book','\u{1F3DF}️','Ground bookings'],['reports','\u{1F4CA}','Reports']]],
+ ['Account',[['profile','\u{1F9D1}','My profile'],['settings','⚙️','Settings'],['@pimport','\u{1F4E5}','Import players'],['@lookpick','\u{1F3A8}','App look']]]];
+drawer=function(){
+  if(!UI.drawer)return'';
+  const cur=UI.view==='tour'?'tours':UI.view,adm=S.user&&(S.user.role==='admin'||S.user.role==='scorer');
+  const item=([k,e,l])=>{if(k==='@lookpick')return `<div class="grp" style="padding-top:6px">${e} ${l}</div><div class="looks">${LOOKS.map(([lk])=>`<button type="button" class="btn sm ${((S.settings.appTheme||'mday')===lk)?'':'ghost'}" data-a="look" data-v="${lk}">${esc(lookName(lk))}</button>`).join('')}</div>`;
+    if(k[0]==='@'){if((k==='@newMatch'||k==='@pimport')&&!adm)return '';return `<button class="mi" data-a="dact" data-v="${k.slice(1)}"><span class="e">${e}</span>${l}</button>`}
+    return `<button class="mi ${cur===k?'on':''}" data-a="go" data-v="${k}"><span class="e">${e}</span>${l}</button>`};
+  return `<div class="scrim" data-a="menu"></div><aside class="drawer"><div class="dh"><img src="${logoSrc()}" alt="" style="height:42px"><div class="mu sm" style="margin-top:6px">${esc(S.user.nick||S.user.name)} (${esc(S.user.kind||S.user.role)})${viewerISO()?' | '+esc(viewerISO()):''}</div></div>
+  ${MENU2.map(([g,L])=>`<div class="grp">${g}</div>${L.map(item).join('')}`).join('')}<button class="mi" data-a="logout" style="margin-top:8px"><span class="e">\u{1F6AA}</span>Sign out</button><div class="dfoot">${esc(S.settings.appName||'Scoring Heroes')} | free for everyone</div></aside>`};
+bnav=function(){
+  const v=UI.view==='tour'?'tours':UI.view;
+  const t=[['home','Home','home'],['matches','Matches','matches'],['tours','Series','trophy'],null,['epaper','News','news'],['reels','Reels','reels'],['@menu','More','dots']];
+  return `<nav class="bnav">${t.map(x=>x?(x[0]==='@menu'?`<button data-a="menu" aria-label="More">${ic(x[2])}${x[1]}</button>`:`<button class="${v===x[0]?'on':''}" data-a="go" data-v="${x[0]}">${ic(x[2])}${x[1]}</button>`):`<button data-a="plus" aria-label="Quick actions"><span class="fab">${ic('plus')}</span></button>`).join('')}</nav>`};
+{const h5=hdr;hdr=function(){let o=h5();const btn='<button class="iconbtn" data-a="menu" aria-label="Menu">'+ic('menu')+'</button>';
+  if(o.indexOf(btn)<0)return o;return o.replace(btn,'').replace('<header class="hdr">','<header class="hdr"><button class="iconbtn menul" data-a="menu" aria-label="Menu">'+ic('menu')+'</button>')}}
+Object.assign(A,{dact(d){UI.drawer=false;const f=A[d.v];if(f)f({});else render()}});
 
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
