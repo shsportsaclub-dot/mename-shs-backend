@@ -1574,11 +1574,11 @@ const lookName=k=>((S.settings.themeNames||{})[k])||(LOOKS.find(x=>x[0]===k)||[0
 'html[data-theme=mday]{--ac:#e11d2e;--grad:linear-gradient(90deg,#0a1f5c,#e11d2e);--ui:Roboto,"Helvetica Neue",Arial,system-ui,sans-serif}'+'html[data-theme=mday] .wser{background:#e4e8ec;color:#10161c;margin:0;padding:8px 14px;font-size:12px;text-transform:uppercase;letter-spacing:.6px;opacity:1}'+'html[data-theme=mday] .wcard{background:#fff;border:0;border-bottom:1px solid #e3e7ec;border-radius:0;margin:0;padding:12px 14px}'+'html[data-theme=mday] .wst{border:0;margin-top:4px;padding-top:0;font-weight:600}html[data-theme=mday] .wlive{color:#cb2431}html[data-theme=mday] .wres{color:#10161c}html[data-theme=mday] .wup{color:#5d6b78}'+'html[data-theme=mday] .tbadge{background:#dfe4ea;color:#10161c}html[data-theme=mday] .wrow{font-size:15px}'+'html[data-theme=mday] .htabs{gap:0;border-bottom:1px solid #d6dce3;margin:6px -2px 0}html[data-theme=mday] .htabs .btn{background:transparent;border:0;border-bottom:3px solid transparent;border-radius:0;color:#5d6b78;box-shadow:none;font-weight:600}html[data-theme=mday] .htabs .btn:not(.ghost){color:#e11d2e;border-bottom-color:#e11d2e}'+'html[data-theme=mday] .card{border-radius:6px;box-shadow:0 1px 2px rgba(16,22,28,.06)}html[data-theme=mday] .sec h3{text-transform:uppercase;font-size:13px;letter-spacing:.6px}'+
 'html[data-theme=exch] .wsc,html[data-theme=exch] .score{font-variant-numeric:tabular-nums;font-family:ui-monospace,Menlo,Consolas,monospace}html[data-theme=exch] .wcard,html[data-theme=exch] .card{border-radius:6px}html[data-theme=mday] .hero{color:#fff}';
 document.head.appendChild(st)}
-{const r0=render;render=function(){r0.apply(this,arguments);if(location.hash!=='#overlay')document.documentElement.dataset.theme=S.settings.appTheme||'mday';setTimeout(attachHls,0)}}
+{const r0=render;render=function(){r0.apply(this,arguments);if(location.hash!=='#overlay')document.documentElement.dataset.theme=S.settings.appTheme||'hero';setTimeout(attachHls,0)}}
 {const m0=renderModal;renderModal=function(){m0.apply(this,arguments);setTimeout(attachHls,0)}}
 Object.assign(A,{look(d){S.settings.appTheme=d.v;commit()}});
 F.looks=function(fd){const n={};LOOKS.forEach(([k,l])=>{const v=String(fd.get('n_'+k)||'').trim().slice(0,24);if(v&&v!==l)n[k]=v});S.settings.themeNames=n;commit();toast('Look names saved')};
-{const v0=vSettings;vSettings=function(){const cur=S.settings.appTheme||'mday';
+{const v0=vSettings;vSettings=function(){const cur=S.settings.appTheme||'hero';
   const card=`<div class="card"><h3>App look</h3><div class="hscroll" style="margin:8px 0">${LOOKS.map(([k])=>`<button class="tile ${cur===k?'on':''}" data-a="look" data-v="${k}" style="min-width:110px"><div>${esc(lookName(k))}</div></button>`).join('')}</div>
   <form data-f="looks"><div class="mu sm">Give each look any name you like.</div>${LOOKS.map(([k,l])=>`<label>${esc(l)}<input name="n_${k}" maxlength="24" value="${esc(lookName(k))}"></label>`).join('')}<button class="btn sm">Save names</button></form></div>`;
   const o=v0(),i=o.indexOf('<div class="g2">');return i<0?o+card:o.replace('<div class="g2">','<div class="g2">'+card)}}
@@ -1723,7 +1723,7 @@ function reelStrip(){let R=[];try{R=reelItems()}catch(e){}if(!R.length||R[0].kin
 const isDemo=m=>!!m&&(m.demo||m.umpires==='Demo umpires');
 {const d0=demoMatch;demoMatch=function(){const r=d0.apply(this,arguments);const m=S.matches[S.matches.length-1];if(m)m.demo=true;return r}}
 {const r0=reelItems;reelItems=function(){const R=r0.apply(this,arguments),real=S.matches.some(m=>!isDemo(m)&&m.innings.length);return R.filter(x=>!['sh','potm','moments'].includes(x.kind)||real)}}
-function lookBar(){return `<div class="hscroll" style="gap:6px;margin:0 0 10px;align-items:center"><span class="mu sm" style="flex:none">Look</span>${LOOKS.map(([k])=>`<button type="button" class="btn sm ${((S.settings.appTheme||'mday')===k)?'':'ghost'}" data-a="look" data-v="${k}" style="flex:none">${esc(lookName(k))}</button>`).join('')}</div>`}
+function lookBar(){return `<div class="hscroll" style="gap:6px;margin:0 0 10px;align-items:center"><span class="mu sm" style="flex:none">Look</span>${LOOKS.map(([k])=>`<button type="button" class="btn sm ${((S.settings.appTheme||'hero')===k)?'':'ghost'}" data-a="look" data-v="${k}" style="flex:none">${esc(lookName(k))}</button>`).join('')}</div>`}
 {const h2=vHome;vHome=function(){let o=h2();
   const live=S.matches.slice().reverse().find(m=>m.status==='live'||m.status==='break')||S.matches[S.matches.length-1];
   if(live&&isDemo(live))o=o.replace(/<span class="pill[^"]*">(LIVE NOW|RESULT|INNINGS BREAK|UPCOMING)<\/span>/,'<span class="pill">DEMO MATCH (sample data, not real)</span>');
@@ -1784,7 +1784,7 @@ document.head.appendChild(cs)}
   ${L?`<div class="cxch"><span>This over</span>${L.b.map(x=>`<span class="ch ${x.cls}">${x.lab}</span>`).join('')}</div>`:''}`}
   <div class="cxq"><span>CRR <b>${s.crr.toFixed(2)}</b></span>${s.rrr!=null&&!done?`<span>RRR <b>${s.rrr.toFixed(2)}</b></span>`:''}<span>Overs left <b>${fmtOv(s.left)}</b></span><span style="flex:1"></span><button class="btn sm ghost" data-a="mnav" data-v="-1" aria-label="Previous match">&#8249;</button><button class="btn sm ghost" data-a="mnav" data-v="1" aria-label="Next match">&#8250;</button><button class="btn sm ghost" data-a="share">Share</button></div></div>`}}
 /* build stamp so the user can see which version is running */
-try{const b=document.createElement('div');b.id='buildstamp';b.textContent='Build 14-Oct-2026 05:15 | DRS log, DLS record, match groups, boards and states';b.style.cssText='position:fixed;left:6px;bottom:2px;font-size:10px;color:#8b8ba0;opacity:.7;z-index:5;pointer-events:none';document.body.appendChild(b)}catch(e){}
+try{const b=document.createElement('div');b.id='buildstamp';b.textContent='Build 14-Oct-2026 06:10 | Heroes dark Home, DRS, DLS, boards and states';b.style.cssText='position:fixed;left:6px;bottom:2px;font-size:10px;color:#8b8ba0;opacity:.7;z-index:5;pointer-events:none';document.body.appendChild(b)}catch(e){}
 /* ---------------- SERVICES: ePAPER, SOCIAL STUDIO, MARKET, MORE HUB ---------------- */
 var XV=window.XV={};
 {const st=document.createElement('style');st.textContent=
@@ -2053,7 +2053,7 @@ function cbHome(){
   <div class="cbfeat">${lead?`<div class="tag">${esc(lead.source||'Cricket news')}</div><a ${lead.link?`href="${esc(lead.link)}" target="_blank" rel="noopener"`:''} style="text-decoration:none;color:inherit"><div class="im">${esc(lead.title)}</div></a><div class="mu sm" style="margin-top:8px">${lead.date?cbAgo(lead.date):''}</div>`:'<div class="mu">Top story appears here.</div>'}</div></div>`}
 Object.assign(A,{cbf(){const o=['all','live','rec','up'];UI.cbf=o[(o.indexOf(UI.cbf||'all')+1)%4];render()},cbNews(){UI.view='epaper';render()}});
 {const h9=vHome;vHome=function(){
-  if((S.settings.appTheme||'mday')!=='mday')return h9();
+  if((S.settings.appTheme||'hero')!=='mday')return h9();
   const demo=S.matches.some(isDemo)&&!S.matches.some(m=>!isDemo(m))?`<div class="row" style="margin:10px 0;align-items:center"><span class="mu sm" style="flex:1">A sample match is loaded (not real).</span><button class="btn sm ghost" data-a="open" data-id="${S.matches.find(isDemo).id}">View sample</button></div>`:'';
   let pv='';try{const h=location.hostname||'';if(h&&!/onrender\.com$|^localhost$|^127\./.test(h))pv='<div class="card" style="border-color:var(--ac);margin:10px 0"><div class="b">You are viewing a preview copy</div><div class="mu sm" style="margin:4px 0 8px">Live scores and news cannot load here. Open the real app:</div><a class="btn sm" href="https://scoring-heroes-api.onrender.com/" target="_blank" rel="noopener">Open live app</a></div>'}catch(e){}
   const r=reelStrip();
@@ -2216,7 +2216,7 @@ const MENU2=[
 drawer=function(){
   if(!UI.drawer)return'';
   const cur=UI.view==='tour'?'tours':UI.view,adm=S.user&&(S.user.role==='admin'||S.user.role==='scorer');
-  const item=([k,e,l])=>{if(k==='@lookpick')return `<div class="grp" style="padding-top:6px">${e} ${l}</div><div class="looks">${LOOKS.map(([lk])=>`<button type="button" class="btn sm ${((S.settings.appTheme||'mday')===lk)?'':'ghost'}" data-a="look" data-v="${lk}">${esc(lookName(lk))}</button>`).join('')}</div>`;
+  const item=([k,e,l])=>{if(k==='@lookpick')return `<div class="grp" style="padding-top:6px">${e} ${l}</div><div class="looks">${LOOKS.map(([lk])=>`<button type="button" class="btn sm ${((S.settings.appTheme||'hero')===lk)?'':'ghost'}" data-a="look" data-v="${lk}">${esc(lookName(lk))}</button>`).join('')}</div>`;
     if(k[0]==='@'){if((k==='@newMatch'||k==='@pimport')&&!adm)return '';return `<button class="mi" data-a="dact" data-v="${k.slice(1)}"><span class="e">${e}</span>${l}</button>`}
     return `<button class="mi ${cur===k?'on':''}" data-a="go" data-v="${k}"><span class="e">${e}</span>${l}</button>`};
   return `<div class="scrim" data-a="menu"></div><aside class="drawer"><div class="dh"><img src="${logoSrc()}" alt="" style="height:42px"><div class="mu sm" style="margin-top:6px">${esc(S.user.nick||S.user.name)} (${esc(S.user.kind||S.user.role)})${viewerISO()?' | '+esc(viewerISO()):''}</div></div>
@@ -2403,6 +2403,85 @@ function tDLS(m){
   <div class="mu sm">SH does not calculate DLS targets. A DLS result needs the ICC's validated tables and the rules of the competition, so the umpires' official figure is recorded here.</div>`}
 Object.assign(F,{
  dlsRec(fd){const m=curM();if(!can()||!m)return;(m.dlsRec=m.dlsRec||[]).push({id:uid(),target:+fd.get('target'),overs:fd.get('overs'),note:fd.get('note')||'',t:Date.now()});commit();toast('DLS saved')}});
+
+/* ---------------- SH HEROES LOOK (dark, per master mock) ---------------- */
+LOOKS.unshift(['hero','Heroes Dark']);
+{const st=document.createElement('style');st.textContent='html[data-theme=hero]{--bg:#060a1d;--card:#0c1333;--c2:#121b45;--tx:#f2f5ff;--mu:#9aa6d0;--ac:#e11d2e;--ac2:#f5b335;--bd:#26326b;--on:#ffffff;--bl:#3b82f6;--grad:linear-gradient(90deg,#0a1f5c,#e11d2e);--ui:Inter,system-ui,sans-serif}'+
+'html[data-theme=hero] body{background:radial-gradient(1200px 500px at 85% -10%,#3a0d28 0,transparent 60%),radial-gradient(900px 500px at 0 0,#10246b 0,transparent 55%),#060a1d}'+
+'.hh-nav{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;padding:8px;border:1px solid var(--bd);border-radius:14px;background:var(--card);margin-bottom:10px}.hh-nav::-webkit-scrollbar{display:none}'+
+'.hh-nav button{flex:none;min-width:62px;display:flex;flex-direction:column;align-items:center;gap:3px;background:transparent;border:1px solid transparent;border-radius:10px;color:var(--tx);padding:6px 6px;font:600 10.5px var(--ui);letter-spacing:.3px;cursor:pointer;text-transform:uppercase}.hh-nav button i{font-style:normal;font-size:21px;line-height:1}.hh-nav button.on{border-color:var(--ac2);box-shadow:0 0 0 1px var(--ac2) inset,0 0 14px #f5b33540}'+
+'.hh-sports{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:8px;border:1px solid var(--bd);border-radius:14px;background:var(--card);margin-bottom:10px}.hh-sports::-webkit-scrollbar{display:none}'+
+'.hh-sports button{flex:none;min-width:74px;display:flex;flex-direction:column;align-items:center;gap:4px;background:transparent;border:1px solid transparent;border-radius:10px;color:var(--tx);padding:8px 6px;font:600 10.5px var(--ui);letter-spacing:.4px;text-transform:uppercase;cursor:pointer}.hh-sports button i{font-style:normal;font-size:26px;line-height:1}.hh-sports button.on{border-color:var(--ac2);background:linear-gradient(180deg,#f5b33522,transparent)}'+
+'.hh-fil{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:8px}.hh-fil label{display:block;font:600 10px var(--ui);letter-spacing:.8px;color:var(--mu);text-transform:uppercase;border:1px solid var(--bd);border-radius:10px;background:var(--card);padding:6px 10px}.hh-fil select{display:block;width:100%;margin-top:3px;background:transparent;border:0;color:var(--tx);font:600 14px var(--ui);padding:0;outline:0}.hh-fil select option{background:#0c1333;color:#fff}'+
+'.hh-tabs{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid var(--bd);margin-bottom:12px}.hh-tabs::-webkit-scrollbar{display:none}.hh-tabs button{flex:none;background:transparent;border:0;border-bottom:3px solid transparent;color:var(--mu);padding:10px 12px;font:700 11.5px var(--ui);letter-spacing:.6px;text-transform:uppercase;cursor:pointer}.hh-tabs button.on{color:var(--tx);border-bottom-color:var(--ac)}'+
+'.hh-grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:12px}@media(max-width:900px){.hh-grid{grid-template-columns:1fr}}'+
+'.hh-box{border:1px solid var(--bd);border-radius:14px;background:var(--card);padding:12px;margin-bottom:12px}.hh-box h3{margin:0 0 10px;font:700 15px var(--ui);display:flex;align-items:center;gap:8px}.hh-box h3 .n{margin-left:auto;font-size:11px;color:var(--mu);font-weight:600}'+
+'.hh-live{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:4px}.hh-lc{flex:0 0 min(300px,86%);scroll-snap-align:start;border:1px solid var(--bd);border-radius:14px;background:linear-gradient(160deg,#121b45,#0a1030);padding:12px;position:relative}'+
+'.hh-lc .tp{font-size:11px;color:var(--mu);margin-bottom:8px;padding-right:46px}.hh-lc .lv{position:absolute;right:10px;top:10px;background:var(--ac);color:#fff;font:700 10px var(--ui);padding:3px 8px;border-radius:10px}.hh-lc .lv.u{background:#8a5a00}.hh-lc .lv.r{background:#1d4ed8}'+
+'.hh-lc .tm{display:flex;align-items:center;gap:10px;padding:4px 0}.hh-lc .tm .tbadge,.hh-lc .tm img.logo{width:34px;height:34px;border-radius:50%;object-fit:cover;flex:none;border:2px solid #f5b33566}.hh-lc .tm b{flex:1;font-size:14px}.hh-lc .tm .sc{font-weight:700;font-variant-numeric:tabular-nums;font-size:16px}.hh-lc .st{font-size:12px;color:#ffb3ba;margin:8px 0 2px;min-height:30px}.hh-lc .vn{font-size:11px;color:var(--mu)}'+
+'.hh-lc .ac{display:flex;justify-content:space-between;border-top:1px solid var(--bd);margin-top:8px;padding-top:8px}.hh-lc .ac button{background:transparent;border:0;color:var(--tx);font:600 11.5px var(--ui);cursor:pointer;padding:2px 4px}'+
+'.hh-tb{width:100%;border-collapse:collapse;font-size:13px}.hh-tb th{text-align:left;color:var(--mu);font:700 10px var(--ui);letter-spacing:.8px;padding:6px 6px;text-transform:uppercase}.hh-tb td{padding:9px 6px;border-top:1px solid var(--bd)}.hh-tb tr{cursor:pointer}.hh-tb .lv{color:#ff6b78;font-weight:700}.hh-tb .up{color:#f5b335}.hh-tb .re{color:#6ea8ff}@media(max-width:640px){.hh-tb .hide{display:none}}'+
+'.hh-ser{display:grid;grid-template-columns:1fr 1fr;gap:8px}.hh-ser button{background:#0a1030;border:1px solid var(--bd);border-radius:10px;color:var(--tx);padding:12px 8px;font:700 12px var(--ui);cursor:pointer;min-height:54px}'+
+'.hh-ts a,.hh-ts div.it{display:block;color:var(--tx);text-decoration:none;padding:9px 0;border-top:1px solid var(--bd);font-size:13px;line-height:1.35}.hh-ts a:first-of-type{border-top:0}.hh-ts small{display:block;color:var(--mu);margin-top:3px;font-size:11px}'+
+'.hh-sr{display:flex;gap:8px;margin-bottom:10px}.hh-sr input{flex:1;background:var(--card);border:1px solid var(--bd);border-radius:24px;color:var(--tx);padding:11px 16px;font:500 14px var(--ui)}'+
+'.hh-reg{background:linear-gradient(90deg,#c1121f,#ff2d3d);border:2px solid #ffb3ba;color:#fff;border-radius:24px;padding:0 16px;font:800 12px var(--ui);letter-spacing:.6px;cursor:pointer;text-transform:uppercase}'+
+'.hh-pl .it{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--bd);font-size:13px}.hh-pl .it b.v{margin-left:auto;font-size:15px}';document.head.appendChild(st)}
+const HSPORTS=[['cricket','\u{1F3CF}','Cricket'],['football','⚽','Football'],['tennis','\u{1F3BE}','Tennis'],['hockey','\u{1F3D1}','Hockey'],['badminton','\u{1F3F8}','Badminton'],['volleyball','\u{1F3D0}','Volleyball'],['kabaddi','\u{1F93C}','Kabaddi'],['basketball','\u{1F3C0}','Basketball'],['baseball','⚾','Baseball'],['rugby','\u{1F3C9}','Rugby']];
+const HNAV=[['home','\u{1F3E0}','Home'],['@cricket','\u{1F3CF}','Cricket'],['@live','\u{1F4E1}','Live'],['matches','\u{1F4C5}','Schedule'],['@results','\u{1F3C1}','Results'],['players','\u{1F9D1}','Players'],['tours','\u{1F3C6}','Series'],['auction','\u{1F528}','Auction'],['players','\u{1F4CA}','Stats'],['epaper','\u{1F4F0}','News'],['reels','\u{1F3AC}','Video'],['epaper','\u{1F5DE}','ePaper'],['book','\u{1F3DF}','Grounds'],['book','\u{1F39F}','Bookings'],['@more','⋯','More']];
+UI.hf=UI.hf||{cat:'all',g:'all',f:'all',y:'all',mo:'all',loc:'all',ser:'all',tab:'all',q:''};
+function hhMatches(){const j=UI.live;if(!j||!j.ok)return null;const F2=wFilter(),h=UI.hf;
+ let L=h.tab==='live'?F2.live:h.tab==='up'?F2.up:h.tab==='rec'?F2.rec:[...F2.live,...F2.up,...F2.rec];
+ const q=(h.q||'').toLowerCase();
+ return L.filter(m=>{const k=clsMatch(m),d=new Date(wTm(m)||0);
+  if(h.cat!=='all'&&k.cat!==h.cat)return false;if(h.g!=='all'&&k.g!==h.g)return false;if(h.f!=='all'&&k.f!==h.f)return false;
+  if(h.y!=='all'&&String(d.getFullYear())!==h.y)return false;if(h.mo!=='all'&&String(d.getMonth())!==h.mo)return false;
+  if(h.loc!=='all'&&hhLoc(m)!==h.loc)return false;if(h.ser!=='all'&&wSplit(m).series!==h.ser)return false;
+  if(q&&!(String(m.name||'')+' '+String(m.venue||'')).toLowerCase().includes(q))return false;return true})}
+const hhLoc=m=>{const v=String(m.venue||'').split(',');return (v[v.length-1]||'').trim()};
+function hhCard(m){const live=m.started&&!m.ended,tm=(m.teams||[]).slice(0,2),sp=wSplit(m),f=cbFm(m);
+ const tag=live?'<span class="lv">LIVE</span>':m.ended?'<span class="lv r">RESULT</span>':'<span class="lv u">UPCOMING</span>';
+ return `<div class="hh-lc" data-a="wOpen" data-id="${esc(m.id)}">${tag}<div class="tp">${esc((sp.desc?sp.desc+' • ':'')+sp.series)} • ${esc(f[0])}</div>
+ ${tm.map(t=>`<div class="tm">${wBadge(t)}<b>${esc(t.name||t.short)}</b><span class="sc">${wTeamScore(m,t)||''}</span></div>`).join('')}
+ <div class="st">${esc(m.started?(m.status||''):'Starts '+wWhen(m))}</div><div class="vn">${esc(m.venue||'')}</div>
+ <div class="ac"><button data-a="wOpen" data-id="${esc(m.id)}">Scorecard</button><button data-a="wOpen" data-id="${esc(m.id)}">Commentary</button><button data-a="wOpen" data-id="${esc(m.id)}">${live?'Watch Live':'Details'}</button></div></div>`}
+function heroHome(){
+ const h=UI.hf,j=UI.live,L=hhMatches(),all=j&&j.ok?j.matches:[],sp=UI.sport||'cricket',N=(UI.news&&UI.news.ok?UI.news.items:[]);
+ const yrs=[...new Set(all.map(m=>new Date(wTm(m)||0).getFullYear()).filter(y=>y>2000))].sort((a,b)=>b-a);
+ const mos=['January','February','March','April','May','June','July','August','September','October','November','December'];
+ const locs=[...new Set(all.map(hhLoc).filter(Boolean))].sort();
+ const sers=[...new Set(all.map(m=>wSplit(m).series).filter(Boolean))].sort();
+ const sel=(k,lab,opts)=>`<label>${lab}<select data-c="hf" data-k="${k}">${opts.map(([v,l])=>`<option value="${esc(String(v))}"${String(h[k])===String(v)?' selected':''}>${esc(l)}</option>`).join('')}</select></label>`;
+ const live=(L||[]).filter(m=>m.started&&!m.ended),today=(L||[]).filter(m=>{const d=new Date(wTm(m)||0),n=new Date();return d.toDateString()===n.toDateString()});
+ const tabs=[['all','Fixtures'],['live','Live'],['up','Upcoming'],['rec','Results'],['cat:int','International'],['cat:lg','Leagues'],['cat:dom','Domestic'],['@tours','SH Tournaments'],['cat:all','Universal']];
+ const tabOn=t=>t.startsWith('cat:')?(t==='cat:all'?false:h.cat===t.slice(4)):t===h.tab;
+ const ser={};all.forEach(m=>{const k=wSplit(m).series;if(k)ser[k]=(ser[k]||0)+1});const feat=Object.entries(ser).sort((a,b)=>b[1]-a[1]).slice(0,6);
+ let pl='';const real=S.matches.some(m=>!isDemo(m));
+ if(real){try{const C=career();const top=Object.entries(C).filter(([id,c])=>c.r>0).sort((a,b)=>b[1].r-a[1].r).slice(0,5);pl=top.length?top.map(([id,c],i)=>`<div class="it"><span>${i+1}</span><span>${esc(nm(id))}</span><b class="v">${c.r}</b></div>`).join(''):''}catch(e){}}
+ const reg=S.user?'':'<button class="hh-reg" data-a="go" data-v="login">Register now</button>';
+ const feed=!j?'<div class="mu">Loading live scores...</div>':!j.ok?`<div class="mu">Live feed unavailable: ${esc(j.error||'')}</div>`:'';
+ const body=sp!=='cricket'?`<div class="hh-box"><h3>${esc((HSPORTS.find(x=>x[0]===sp)||[0,0,sp])[2])}</h3><div class="mu">The ${esc(sp)} scoring pack is not built yet. SH supports cricket today. Other sports show here once their own rules and scorer are ready.</div><button class="btn sm" style="margin-top:10px" data-a="hsport" data-v="cricket">Back to Cricket</button></div>`:`
+ ${feed}
+ <div class="hh-grid"><div>
+  <div class="hh-box"><h3>Live matches <span class="n">${live.length}</span></h3>${live.length?`<div class="hh-live">${live.map(hhCard).join('')}</div>`:'<div class="mu">No live matches in this filter right now.</div>'}</div>
+  <div class="hh-box"><h3>${h.tab==='live'?'Live':h.tab==='rec'?'Results':h.tab==='up'?'Upcoming':'Today\'s matches'} <span class="n">${(h.tab==='all'?today:L||[]).length}</span></h3>
+   ${(h.tab==='all'?today:L||[]).length?`<div style="overflow-x:auto"><table class="hh-tb"><tr><th>Time</th><th class="hide">Series</th><th>Match</th><th class="hide">Venue</th><th>Status</th></tr>${(h.tab==='all'?today:L).slice(0,40).map(m=>{const x=wSplit(m),lv=m.started&&!m.ended;return `<tr data-a="wOpen" data-id="${esc(m.id)}"><td>${esc(wWhen(m))}</td><td class="hide">${esc(x.series)}</td><td>${esc((m.teams||[]).map(t=>t.short||t.name).join(' vs '))}</td><td class="hide">${esc(m.venue||'')}</td><td class="${lv?'lv':m.ended?'re':'up'}">${esc(lv?'Live':m.ended?(m.status||'Result'):'Upcoming')}</td></tr>`}).join('')}</table></div>`:'<div class="mu">No matches here. Try the Upcoming or Results tab.</div>'}</div>
+ </div><div>
+  <div class="hh-box"><h3>Featured series</h3>${feat.length?`<div class="hh-ser">${feat.map(([k,n])=>`<button data-a="hser" data-v="${esc(k)}">${esc(k)}<br><small style="font-weight:500;color:var(--mu)">${n} matches</small></button>`).join('')}</div>`:'<div class="mu">Series appear when the live feed loads.</div>'}</div>
+  <div class="hh-box hh-ts"><h3>Top stories</h3>${N.length?N.slice(0,5).map(n=>`<a ${n.link?`href="${esc(n.link)}" target="_blank" rel="noopener"`:''}>${esc(n.title)}<small>${esc(n.source||'')}${n.date?' • '+cbAgo(n.date):''}</small></a>`).join(''):'<div class="mu">News loads from the live server.</div>'}</div>
+  <div class="hh-box hh-pl"><h3>Top players <span class="n">Runs</span></h3>${pl||'<div class="mu">Not enough verified SH match data yet. Rankings use only scored, verified matches.</div>'}</div>
+ </div></div>`;
+ return `<div class="hh-sr"><input data-c="hq" placeholder="Search teams, venues, series..." value="${esc(h.q||'')}">${reg}</div>
+ <div class="hh-nav">${HNAV.map(([k,e,l])=>`<button class="${k==='home'?'on':''}" data-a="hnav" data-v="${k}"><i>${e}</i>${l}</button>`).join('')}</div>
+ <div class="hh-sports">${HSPORTS.map(([k,e,l])=>`<button class="${sp===k?'on':''}" data-a="hsport" data-v="${k}"><i>${e}</i>${l}</button>`).join('')}</div>
+ <div class="hh-fil">${sel('cat','Category',[['all','All matches'],['int','International'],['lg','League'],['dom','Domestic']])}${sel('g','Gender',[['all','Both'],['men','Men'],['women','Women']])}${sel('f','Format',[['all','All formats'],['t20','T20'],['odi','ODI'],['test','Test']])}${sel('y','Year',[['all','All years'],...yrs.map(y=>[y,y])])}${sel('mo','Month',[['all','All months'],...mos.map((m,i)=>[i,m])])}${sel('loc','Location',[['all','All locations'],...locs.map(x=>[x,x])])}${sel('ser','Series',[['all','All series'],...sers.map(x=>[x,x])])}</div>
+ <div class="hh-tabs">${tabs.map(([k,l])=>`<button class="${tabOn(k)?'on':''}" data-a="htab2" data-v="${k}">${l}</button>`).join('')}</div>${body}`}
+Object.assign(A,{
+ hsport(d){UI.sport=d.v;render()},
+ hser(d){UI.hf.ser=d.v;UI.hf.tab='all';render()},
+ htab2(d){const v=d.v;if(v==='@tours'){UI.view='tours';render();return}if(v.startsWith('cat:')){UI.hf.cat=v.slice(4);render();return}UI.hf.tab=v;render()},
+ hnav(d){const v=d.v;if(v==='@live'){UI.hf.tab='live';UI.view='home';render()}else if(v==='@results'){UI.hf.tab='rec';UI.view='home';render()}else if(v==='@cricket'){UI.sport='cricket';UI.view='home';render()}else if(v==='@more'){A.menu&&A.menu()}else{UI.view=v;render()}}});
+Object.assign(C,{hf(v,el){const k=el&&el.dataset?el.dataset.k:null;if(k){UI.hf[k]=v;render()}},hq(v){UI.hf.q=v;render();const i=document.querySelector('input[data-c="hq"]');if(i){i.focus();i.setSelectionRange(v.length,v.length)}}});
+{const h8=vHome;vHome=function(){if((S.settings.appTheme||'hero')==='hero'){let pv='';try{const h=location.hostname||'';if(h&&!/onrender\.com$|^localhost$|^127\./.test(h))pv='<div class="hh-box" style="border-color:var(--ac)"><div class="b">You are viewing a preview copy</div><div class="mu sm">Live scores, news and streams cannot load here. Open your Render link to see real data.</div></div>'}catch(e){}return pv+heroHome()}return h8()}}
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});
