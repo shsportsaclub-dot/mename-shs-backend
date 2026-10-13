@@ -1720,7 +1720,16 @@ Object.assign(A,{
 {const st=document.createElement('style');st.textContent='.reelc{min-width:132px;max-width:132px;height:176px;border-radius:14px;padding:10px;text-align:left;color:#fff;display:flex;flex-direction:column;justify-content:space-between;border:0;cursor:pointer;background:var(--grad)}.reelc.c1{background:linear-gradient(160deg,#0a1f5c,#e11d2e)}.reelc.c2{background:linear-gradient(160deg,#0b3d2e,#0f8a4f)}.reelc.c3{background:linear-gradient(160deg,#3b1a6b,#e11d6a)}.reelc b{font-size:10px;letter-spacing:.8px;opacity:.9}.reelc span{font-size:13px;line-height:1.25;font-weight:700;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden}';document.head.appendChild(st)}
 function reelStrip(){let R=[];try{R=reelItems()}catch(e){}if(!R.length||R[0].kind==='empty')return '';
   return `<div class="sec"><h3>Reels</h3><button class="btn sm ghost" data-a="go" data-v="reels">Open reels</button></div><div class="hscroll" style="margin-bottom:6px">${R.slice(0,10).map((r,i)=>`<button type="button" class="reelc c${i%4}" data-a="reelAt" data-i="${i}"><b>${esc(r.tag)}</b><span>${esc(String(r.share||'').replace(/\\s+/g,' ').slice(0,90))}</span></button>`).join('')}</div>`}
-{const h2=vHome;vHome=function(){const o=h2(),mk='<div class="sec"><h3>Cricket</h3>',i=o.indexOf(mk),r=reelStrip();return !r?o:i<0?r+o:o.slice(0,i)+r+o.slice(i)}}
+const isDemo=m=>!!m&&(m.demo||m.umpires==='Demo umpires');
+{const d0=demoMatch;demoMatch=function(){const r=d0.apply(this,arguments);const m=S.matches[S.matches.length-1];if(m)m.demo=true;return r}}
+{const r0=reelItems;reelItems=function(){const R=r0.apply(this,arguments),real=S.matches.some(m=>!isDemo(m)&&m.innings.length);return R.filter(x=>!['sh','potm','moments'].includes(x.kind)||real)}}
+function lookBar(){return `<div class="hscroll" style="gap:6px;margin:0 0 10px;align-items:center"><span class="mu sm" style="flex:none">Look</span>${LOOKS.map(([k])=>`<button type="button" class="btn sm ${((S.settings.appTheme||'sh')===k)?'':'ghost'}" data-a="look" data-v="${k}" style="flex:none">${esc(lookName(k))}</button>`).join('')}</div>`}
+{const h2=vHome;vHome=function(){let o=h2();
+  const live=S.matches.slice().reverse().find(m=>m.status==='live'||m.status==='break')||S.matches[S.matches.length-1];
+  if(live&&isDemo(live))o=o.replace(/<span class="pill[^"]*">(LIVE NOW|RESULT|INNINGS BREAK|UPCOMING)<\/span>/,'<span class="pill">DEMO MATCH (sample data, not real)</span>');
+  const r=reelStrip(),i=o.indexOf('<!--/wf-->');
+  if(r)o=i<0?o+r:o.slice(0,i+10)+r+o.slice(i+10);
+  return lookBar()+o}}
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});
