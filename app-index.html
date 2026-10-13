@@ -997,10 +997,10 @@ function vHome(){
 /* match centre */
 function vMatch(){
   const m=curM();if(!m)return'<div class="empty">No match selected. Create or load a match from the Matches tab.</div>';
-  const tabs=[['live','Live'],['comm','AI Commentary'],['card','Scorecard'],['graphs','Graphs'],['drs','DRS'],['squads','Squads'],['info','Info']];
+  const tabs=[['live','Live'],['comm','AI Commentary'],['card','Scorecard'],['graphs','Graphs'],['drs','DRS'],['dls','DLS'],['squads','Squads'],['info','Info']];
   if(!tabs.some(t=>t[0]===UI.tab))UI.tab='live';
   const sel=S.matches.length>1?`<select data-c="mid" aria-label="Select match">${opt(S.matches.map(x=>[x.id,T(x.a).short+' vs '+T(x.b).short+' ('+x.date+')']),m.id)}</select>`:'';
-  return sel+mHead(m)+tickerHTML()+`<div class="tabs">${tabs.map(([k,l])=>`<button class="${UI.tab===k?'on':''}" data-a="tab" data-v="${k}">${l}</button>`).join('')}</div>`+({live:tLive,comm:tComm,card:tCard,graphs:tGraphs,drs:tDRS,squads:tSquads,info:tInfo}[UI.tab])(m)}
+  return sel+mHead(m)+tickerHTML()+`<div class="tabs">${tabs.map(([k,l])=>`<button class="${UI.tab===k?'on':''}" data-a="tab" data-v="${k}">${l}</button>`).join('')}</div>`+({live:tLive,comm:tComm,card:tCard,graphs:tGraphs,drs:tDRS,dls:tDLS,squads:tSquads,info:tInfo}[UI.tab])(m)}
 function ballBanner(m){
   const s=st(m);if(!s)return'';const e=s.inn.ev[s.inn.ev.length-1];if(!e)return'';
   const big=e.w?'W':e.x==='wd'?'Wd':e.x==='nb'?'Nb':String(e.r),cls=e.w?'w':(!e.x&&e.r===6)?'s':'';
@@ -1784,7 +1784,7 @@ document.head.appendChild(cs)}
   ${L?`<div class="cxch"><span>This over</span>${L.b.map(x=>`<span class="ch ${x.cls}">${x.lab}</span>`).join('')}</div>`:''}`}
   <div class="cxq"><span>CRR <b>${s.crr.toFixed(2)}</b></span>${s.rrr!=null&&!done?`<span>RRR <b>${s.rrr.toFixed(2)}</b></span>`:''}<span>Overs left <b>${fmtOv(s.left)}</b></span><span style="flex:1"></span><button class="btn sm ghost" data-a="mnav" data-v="-1" aria-label="Previous match">&#8249;</button><button class="btn sm ghost" data-a="mnav" data-v="1" aria-label="Next match">&#8250;</button><button class="btn sm ghost" data-a="share">Share</button></div></div>`}}
 /* build stamp so the user can see which version is running */
-try{const b=document.createElement('div');b.id='buildstamp';b.textContent='Build 14-Oct-2026 03:30 | match groups, boards and states, marketplace, officials';b.style.cssText='position:fixed;left:6px;bottom:2px;font-size:10px;color:#8b8ba0;opacity:.7;z-index:5;pointer-events:none';document.body.appendChild(b)}catch(e){}
+try{const b=document.createElement('div');b.id='buildstamp';b.textContent='Build 14-Oct-2026 04:10 | DRS review log, DLS, match groups, boards and states';b.style.cssText='position:fixed;left:6px;bottom:2px;font-size:10px;color:#8b8ba0;opacity:.7;z-index:5;pointer-events:none';document.body.appendChild(b)}catch(e){}
 /* ---------------- SERVICES: ePAPER, SOCIAL STUDIO, MARKET, MORE HUB ---------------- */
 var XV=window.XV={};
 {const st=document.createElement('style');st.textContent=
@@ -2362,6 +2362,67 @@ XV.directory=function(){const q=(UI.dq||'').toLowerCase();
  <div class="mu sm">Use these names in the Level, State and Board fields when you create a team.</div>`};
 C.dirQ=function(v){UI.dq=v;render()};
 MENU2[0][1].splice(7,0,['directory','\u{1F30D}','Boards and states']);
+
+/* ---------------- DRS (review log) + DLS (record and estimate) ---------------- */
+function drsInit(m){if(!m.drs)m.drs={allow:1,used:{},log:[]};return m.drs}
+function ovTxt(e){const b=e&&e.bn!=null?e.bn:null;return b==null?'':''}
+function tDRS(m){
+  const D=drsInit(m),s=st(m);if(!s)return'<div class="empty">Reviews can be recorded once the match has started.</div>';
+  const ids=[m.a,m.b],key=t=>t+':'+s.i;
+  const left=t=>Math.max(0,D.allow-(D.used[key(t)]||0));
+  const here=D.log.filter(x=>x.inn===s.i);
+  return `<div class="card drs"><h3>Decision review (DRS)</h3>
+  <div class="mu sm" style="margin:4px 0 10px">Reviews left this innings. A team loses a review only when the decision is not changed. An Umpire's call keeps the review.</div>
+  <div class="row" style="gap:8px;flex-wrap:wrap">${ids.map(t=>`<div class="card" style="flex:1;min-width:130px;margin:0"><div class="b">${esc(T(t).short)}</div><div style="font-size:26px;font-weight:700">${left(t)}</div><div class="mu sm">of ${D.allow} left</div></div>`).join('')}</div>
+  ${can()?`<div class="row" style="margin-top:10px"><span class="mu sm">Reviews per innings</span><button class="btn sm ghost" data-a="drsAllow" data-v="-1">-</button><b>${D.allow}</b><button class="btn sm ghost" data-a="drsAllow" data-v="1">+</button></div>
+  <form data-f="drsRec" style="margin-top:12px"><div class="b">Record a review</div>
+  <div class="row"><label style="flex:1">Asked by<select name="team">${ids.map(t=>`<option value="${t}">${esc(T(t).name)}</option>`).join('')}</select></label><label style="flex:1">Type<select name="kind"><option>LBW</option><option>Caught behind</option><option>Caught</option><option>Run out</option><option>Stumped</option><option>Other</option></select></label></div>
+  <div class="row"><label style="flex:1">On-field decision<select name="onf"><option>Out</option><option>Not out</option></select></label><label style="flex:1">Third umpire result<select name="res"><option value="over">Decision changed</option><option value="stay">Decision stays</option><option value="call">Umpire's call (stays)</option></select></label></div>
+  <label>Note (optional)<input name="note" placeholder="e.g. ball pitched outside leg"></label>
+  <button class="btn wide" style="margin-top:8px">Save review</button></form>`:'<div class="mu sm" style="margin-top:8px">Only the scorer or organiser records reviews.</div>'}</div>
+  <div class="card"><h3>Review log</h3>${here.length?here.map(x=>`<div class="item"><div style="flex:1"><div class="b">${esc(T(x.team).short)} - ${esc(x.kind)} <span class="pill">${esc(x.out)}</span></div><div class="mu sm">On-field: ${esc(x.onf)}${x.note?' | '+esc(x.note):''} | ${esc(x.at)}</div></div></div>`).join(''):'<div class="mu">No reviews in this innings.</div>'}</div>
+  <div class="mu sm">This is the umpires' record. Ball tracking is not simulated here. The third umpire's result comes from the match officials and is entered by the scorer.</div>`}
+Object.assign(A,{drsAllow(d){const m=curM();if(!can())return;const D=drsInit(m);D.allow=Math.max(0,Math.min(5,D.allow+(+d.v)));commit()}});
+Object.assign(F,{drsRec(fd){const m=curM();if(!can()||!m)return;const D=drsInit(m),s=st(m),t=fd.get('team'),res=fd.get('res');
+ const lost=res==='stay';const k=t+':'+s.i;if(lost)D.used[k]=(D.used[k]||0)+1;
+ const out={over:'Overturned - review kept',stay:'Not changed - review lost',call:"Umpire's call - review kept"}[res];
+ const at=Math.floor(s.k.lg/6)+'.'+(s.k.lg%6)+' ov';
+ D.log.push({id:uid(),inn:s.i,team:t,kind:fd.get('kind'),onf:fd.get('onf'),res,out,note:fd.get('note')||'',at,t:Date.now()});
+ S.messages.push({id:uid(),text:'DRS: '+T(t).short+' reviewed '+fd.get('kind')+' - '+out,kind:'alert',t:Date.now(),off:false});commit();toast('Review saved')}});
+/* DLS */
+const DLSB=0.0275,DLSW=[1,.934,.851,.749,.627,.49,.349,.22,.119,.047,0];
+function dlsR(overs,w){const u=Math.max(0,Math.min(50,overs));const r0=100*(1-Math.exp(-DLSB*u))/(1-Math.exp(-DLSB*50));return r0*DLSW[Math.max(0,Math.min(10,Math.round(w)))]}
+function dlsCalc(x){
+ const S1=x.s1,full=x.full,o1=x.o1,o2=x.o2;
+ const R1=dlsR(o1,0)-dlsR(0,0),R2start=dlsR(o2,0);
+ let R2=R2start;
+ if(x.stopW!=null&&x.stopLeft!=null&&x.resLeft!=null){R2=R2start-(dlsR(x.stopLeft,x.stopW)-dlsR(x.resLeft,x.stopW))}
+ let target;if(R2<R1)target=Math.floor(S1*R2/R1)+1;else if(R2>R1)target=Math.floor(S1+245*(R2-R1)/100)+1;else target=S1+1;
+ return{R1,R2,target,par:target-1}}
+function tDLS(m){
+  const s=st(m),k0=m.innings[0]?calc(m,0):null;
+  const U=UI.dls||{s1:k0?k0.runs:'',full:m.overs,o1:m.overs,o2:m.overs};
+  const recs=m.dlsRec||[];
+  let res='';if(UI.dlsR){const r=UI.dlsR;res=`<div class="card" style="border-color:var(--ac)"><div class="b" style="font-size:18px">Estimated revised target: ${r.target} in ${esc(String(U.o2))} overs</div><div class="mu sm" style="margin-top:6px">Par score (to tie): ${r.par} | Team 1 resources ${r.R1.toFixed(1)}% | Team 2 resources ${r.R2.toFixed(1)}%</div></div>`}
+  return `<div class="card"><h3>DLS (rain-affected matches)</h3>
+  <div class="mu sm" style="margin:4px 0 8px">Official targets come from the umpires using the ICC Duckworth-Lewis-Stern software. Enter that official figure in <b>Record official DLS</b>. The calculator below is only a helper and is <b>not the official ICC result</b>.</div>
+  ${can()?`<form data-f="dlsRec"><div class="b">Record official DLS</div>
+  <div class="row"><label style="flex:1">Revised target<input name="target" type="number" min="1" required></label><label style="flex:1">In overs<input name="overs" type="number" step="0.1" min="1" required></label></div>
+  <label>Reason / note<input name="note" placeholder="e.g. rain stopped play at 14.2 overs"></label>
+  <button class="btn wide" style="margin-top:8px">Save official DLS</button></form>`:''}
+  ${recs.length?recs.map(r=>`<div class="item"><div style="flex:1"><div class="b">Target ${r.target} from ${esc(String(r.overs))} overs <span class="pill">Official, entered by scorer</span></div><div class="mu sm">${esc(r.note||'')}</div></div></div>`).join(''):''}</div>
+  <div class="card"><h3>DLS estimate helper</h3><form data-f="dlsCalc">
+  <div class="row"><label style="flex:1">Team 1 score<input name="s1" type="number" min="0" value="${esc(U.s1)}" required></label><label style="flex:1">Team 1 overs played/allowed<input name="o1" type="number" step="0.1" min="1" value="${esc(U.o1)}" required></label></div>
+  <div class="row"><label style="flex:1">Team 2 overs allowed<input name="o2" type="number" step="0.1" min="1" value="${esc(U.o2)}" required></label></div>
+  <div class="mu sm" style="margin:6px 0">If play stopped during the chase (optional):</div>
+  <div class="row"><label style="flex:1">Wickets lost<input name="sw" type="number" min="0" max="9" value="${esc(U.sw??'')}"></label><label style="flex:1">Overs left at stop<input name="sl" type="number" step="0.1" value="${esc(U.sl??'')}"></label><label style="flex:1">Overs left on restart<input name="rl" type="number" step="0.1" value="${esc(U.rl??'')}"></label></div>
+  <button class="btn wide" style="margin-top:8px">Estimate target</button></form></div>${res}
+  <div class="mu sm">Estimate uses a simplified resource table and G50 = 245. Real DLS uses the ICC's own tables, so figures can differ by a few runs.</div>`}
+Object.assign(F,{
+ dlsRec(fd){const m=curM();if(!can()||!m)return;(m.dlsRec=m.dlsRec||[]).push({id:uid(),target:+fd.get('target'),overs:fd.get('overs'),note:fd.get('note')||'',t:Date.now()});commit();toast('DLS saved')},
+ dlsCalc(fd){const g=k=>fd.get(k)===''||fd.get(k)==null?null:+fd.get(k);
+  const U={s1:g('s1'),full:null,o1:g('o1'),o2:g('o2'),sw:g('sw'),sl:g('sl'),rl:g('rl')};UI.dls=U;
+  UI.dlsR=dlsCalc({s1:U.s1,full:U.o1,o1:U.o1,o2:U.o2,stopW:U.sw,stopLeft:U.sl,resLeft:U.rl});render()}});
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});
