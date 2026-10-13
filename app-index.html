@@ -967,7 +967,7 @@ function newPlayer(u){const p={id:uid(),name:u.nick,role:'BAT',team:null,phone:u
 function newsItems(){
   const L=[];
   S.messages.slice(-3).reverse().forEach(x=>L.push({t:x.text,s:'Broadcast'}));
-  S.matches.slice().reverse().slice(0,4).forEach(m=>{
+  S.matches.filter(m=>!isDemo(m)).reverse().slice(0,4).forEach(m=>{
     if(m.status==='done')L.push({t:m.result,s:T(m.a).short+' vs '+T(m.b).short});
     m.innings.forEach((inn,i)=>{const k=calc(m,i),top=Object.entries(k.bat).filter(([id])=>inn.used.includes(id)).sort((a,b)=>b[1].r-a[1].r)[0];
       if(top&&top[1].r>=20)L.push({t:`${nm(top[0])} scores ${top[1].r} (${top[1].b}) for ${T(inn.bat).short}`,s:T(m.a).short+' vs '+T(m.b).short})})});
@@ -1736,7 +1736,8 @@ function lookBar(){return `<div class="hscroll" style="gap:6px;margin:0 0 10px;a
     const n1=o.indexOf('<div class="sec"><h3>Latest news</h3>'),n2=o.indexOf('<div class="sec"><h3>Quick start</h3>');
     if(n1>=0&&n2>n1)o=o.slice(0,n1)+o.slice(n2);
   }
-  return lookBar()+o}}
+  let pv='';try{const h=location.hostname||'';if(h&&!/onrender\.com$|^localhost$|^127\./.test(h))pv='<div class="card" style="border-color:var(--ac);margin:0 0 10px"><div class="b">You are viewing a preview copy</div><div class="mu sm" style="margin:4px 0 8px">Live scores, news and streams cannot load here. Open the real app:</div><a class="btn sm" href="https://scoring-heroes-api.onrender.com/" target="_blank" rel="noopener">Open live app</a></div>'}catch(e){}
+  return pv+lookBar()+o}}
 /* ---------------- CRICEX-STYLE MATCH HEADER ---------------- */
 {const cs=document.createElement('style');cs.textContent=
 '.cx{background:linear-gradient(180deg,var(--c2),var(--card));border:1px solid var(--bd);border-radius:12px;padding:12px 14px;margin-bottom:12px}'+
@@ -1784,7 +1785,7 @@ document.head.appendChild(cs)}
   ${L?`<div class="cxch"><span>This over</span>${L.b.map(x=>`<span class="ch ${x.cls}">${x.lab}</span>`).join('')}</div>`:''}`}
   <div class="cxq"><span>CRR <b>${s.crr.toFixed(2)}</b></span>${s.rrr!=null&&!done?`<span>RRR <b>${s.rrr.toFixed(2)}</b></span>`:''}<span>Overs left <b>${fmtOv(s.left)}</b></span><span style="flex:1"></span><button class="btn sm ghost" data-a="mnav" data-v="-1" aria-label="Previous match">&#8249;</button><button class="btn sm ghost" data-a="mnav" data-v="1" aria-label="Next match">&#8250;</button><button class="btn sm ghost" data-a="share">Share</button></div></div>`}}
 /* build stamp so the user can see which version is running */
-try{const b=document.createElement('div');b.id='buildstamp';b.textContent='Build 13-Oct-2026 23:00 | Tournaments, points table, ePaper, Social';b.style.cssText='position:fixed;left:6px;bottom:2px;font-size:10px;color:#8b8ba0;opacity:.7;z-index:5;pointer-events:none';document.body.appendChild(b)}catch(e){}
+try{const b=document.createElement('div');b.id='buildstamp';b.textContent='Build 13-Oct-2026 23:15 | Tournaments, ePaper, Social, no demo news';b.style.cssText='position:fixed;left:6px;bottom:2px;font-size:10px;color:#8b8ba0;opacity:.7;z-index:5;pointer-events:none';document.body.appendChild(b)}catch(e){}
 /* ---------------- SERVICES: ePAPER, SOCIAL STUDIO, MARKET, MORE HUB ---------------- */
 var XV=window.XV={};
 {const st=document.createElement('style');st.textContent=
