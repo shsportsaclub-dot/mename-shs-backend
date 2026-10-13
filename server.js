@@ -340,6 +340,10 @@ http.createServer(async (req, res) => {
     res.end(code === 204 ? '' : typeof obj === 'string' ? obj : JSON.stringify(obj));
   };
   if (req.method === 'OPTIONS') return out(204);
+  const STATIC = { '/manifest.webmanifest': 'application/manifest+json', '/sw.js': 'application/javascript', '/icon-192.png': 'image/png', '/icon-512.png': 'image/png', '/icon-maskable.png': 'image/png', '/apple-touch-icon.png': 'image/png' };
+  if (req.method === 'GET' && STATIC[path]) {   // installable-app files (PWA)
+    try { const f = fs.readFileSync(new URL('./public' + path, import.meta.url)); res.writeHead(200, { 'content-type': STATIC[path], 'cache-control': path === '/sw.js' ? 'no-cache' : 'public, max-age=86400' }); return res.end(f); } catch { /* fall through */ }
+  }
   if (req.method === 'GET' && (path === '/' || path === '/index.html')) {   // serve the app itself, same address as the API
     try {
       const html = fs.readFileSync(new URL('./app-index.html', import.meta.url));

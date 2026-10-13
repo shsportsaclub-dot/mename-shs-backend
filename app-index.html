@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#0a1f5c"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="SH Heroes">
 <title>Scoring Heroes – Sports Sky High</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -1784,7 +1785,7 @@ document.head.appendChild(cs)}
   ${L?`<div class="cxch"><span>This over</span>${L.b.map(x=>`<span class="ch ${x.cls}">${x.lab}</span>`).join('')}</div>`:''}`}
   <div class="cxq"><span>CRR <b>${s.crr.toFixed(2)}</b></span>${s.rrr!=null&&!done?`<span>RRR <b>${s.rrr.toFixed(2)}</b></span>`:''}<span>Overs left <b>${fmtOv(s.left)}</b></span><span style="flex:1"></span><button class="btn sm ghost" data-a="mnav" data-v="-1" aria-label="Previous match">&#8249;</button><button class="btn sm ghost" data-a="mnav" data-v="1" aria-label="Next match">&#8250;</button><button class="btn sm ghost" data-a="share">Share</button></div></div>`}}
 /* build stamp so the user can see which version is running */
-try{const b=document.createElement('div');b.id='buildstamp';b.textContent='Build 14-Oct-2026 06:10 | Heroes dark Home, DRS, DLS, boards and states';b.style.cssText='position:fixed;left:6px;bottom:2px;font-size:10px;color:#8b8ba0;opacity:.7;z-index:5;pointer-events:none';document.body.appendChild(b)}catch(e){}
+try{const b=document.createElement('div');b.id='buildstamp';b.textContent='Build 14-Oct-2026 07:25 | per-device layouts, installable app, default crests and avatars';b.style.cssText='position:fixed;left:6px;bottom:2px;font-size:10px;color:#8b8ba0;opacity:.7;z-index:5;pointer-events:none';document.body.appendChild(b)}catch(e){}
 /* ---------------- SERVICES: ePAPER, SOCIAL STUDIO, MARKET, MORE HUB ---------------- */
 var XV=window.XV={};
 {const st=document.createElement('style');st.textContent=
@@ -2481,7 +2482,53 @@ Object.assign(A,{
  htab2(d){const v=d.v;if(v==='@tours'){UI.view='tours';render();return}if(v.startsWith('cat:')){UI.hf.cat=v.slice(4);render();return}UI.hf.tab=v;render()},
  hnav(d){const v=d.v;if(v==='@live'){UI.hf.tab='live';UI.view='home';render()}else if(v==='@results'){UI.hf.tab='rec';UI.view='home';render()}else if(v==='@cricket'){UI.sport='cricket';UI.view='home';render()}else if(v==='@more'){A.menu&&A.menu()}else{UI.view=v;render()}}});
 Object.assign(C,{hf(v,el){const k=el&&el.dataset?el.dataset.k:null;if(k){UI.hf[k]=v;render()}},hq(v){UI.hf.q=v;render();const i=document.querySelector('input[data-c="hq"]');if(i){i.focus();i.setSelectionRange(v.length,v.length)}}});
-{const h8=vHome;vHome=function(){if((S.settings.appTheme||'hero')==='hero'){let pv='';try{const h=location.hostname||'';if(h&&!/onrender\.com$|^localhost$|^127\./.test(h))pv='<div class="hh-box" style="border-color:var(--ac)"><div class="b">You are viewing a preview copy</div><div class="mu sm">Live scores, news and streams cannot load here. Open your Render link to see real data.</div></div>'}catch(e){}return pv+heroHome()}return h8()}}
+{const h8=vHome;vHome=function(){if((S.settings.appTheme||'hero')==='hero'){let pv='';try{const h=location.hostname||'';if(h&&!/onrender\.com$|^localhost$|^127\./.test(h))pv='<div class="hh-box" style="border-color:var(--ac)"><div class="b">You are viewing a preview copy</div><div class="mu sm">Live scores, news and streams cannot load here. Open your Render link to see real data.</div></div>'}catch(e){}let o=heroHome();if(platKind()==='phone'){o=o.replace('<div class="hh-fil">','<details class="hh-box" style="padding:8px 12px"><summary style="font-weight:700;cursor:pointer">Filters</summary><div class="hh-fil" style="margin-top:8px">').replace('</div>\n <div class="hh-tabs">','</div></details>\n <div class="hh-tabs">')}return pv+o}return h8()}}
+
+/* ---------------- PER-DEVICE EXPERIENCE: phone, tablet, desktop (Windows/Mac), TV; installable app ---------------- */
+function platKind(){const ua=navigator.userAgent||'',w=window.innerWidth||390;
+ if(/smart-?tv|tizen|web0s|webos|android tv|googletv|hbbtv|crkey|aft[a-z]+ build|bravia|netcast/i.test(ua)||/[?&]tv=1/.test(location.search))return'tv';
+ return w>=1100?'desktop':w>=700?'tablet':'phone'}
+function osKind(){const ua=navigator.userAgent||'';return /iphone|ipad|ipod/i.test(ua)||(/Macintosh/.test(ua)&&navigator.maxTouchPoints>1)?'ios':/android/i.test(ua)?'android':/windows/i.test(ua)?'windows':/mac os/i.test(ua)?'mac':'other'}
+function applyPlat(){try{const d=document.documentElement;d.dataset.plat=platKind();d.dataset.os=osKind()}catch(e){}}
+applyPlat();try{window.addEventListener('resize',()=>{const o=document.documentElement.dataset.plat;applyPlat();if(o!==document.documentElement.dataset.plat)render()})}catch(e){}
+{const st=document.createElement('style');st.textContent=
+'html[data-os=ios] body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif}html[data-os=android] body{font-family:Roboto,system-ui,sans-serif}html[data-os=windows] body{font-family:"Segoe UI",system-ui,sans-serif}html[data-os=mac] body{font-family:-apple-system,BlinkMacSystemFont,system-ui,sans-serif}'+
+'html[data-os=ios] .bnav{backdrop-filter:saturate(1.6) blur(14px);padding-bottom:calc(env(safe-area-inset-bottom,0px) + 2px)}html[data-os=ios] .card,html[data-os=ios] .hh-box{border-radius:18px}html[data-os=android] .btn{border-radius:22px}'+
+'html[data-plat=tablet] #app{max-width:920px}'+
+'html[data-plat=desktop] #app,html[data-plat=tv] #app{max-width:none;margin-left:264px;margin-right:0;padding:0 28px 40px}'+
+'html[data-plat=desktop] .bnav,html[data-plat=tv] .bnav{display:none}html[data-plat=desktop] .scrim,html[data-plat=tv] .scrim{display:none}'+
+'html[data-plat=desktop] .drawer,html[data-plat=tv] .drawer{animation:none;width:264px;z-index:30}html[data-plat=desktop] .hdr [data-a=menu],html[data-plat=tv] .hdr [data-a=menu]{display:none}'+
+'html[data-plat=desktop] .hh-grid{grid-template-columns:minmax(0,1fr) 340px}html[data-plat=desktop] .hh-lc{flex-basis:300px}'+
+'html[data-plat=tv] body{zoom:1.45}html[data-plat=tv] .hh-lc{flex-basis:340px}html[data-plat=tv] .hh-sr,html[data-plat=tv] .hh-fil{display:none}'+
+'html[data-plat=tv] :focus,html[data-plat=tv] :focus-visible{outline:4px solid #f5b335!important;outline-offset:2px;border-radius:10px}'+
+'@media(display-mode:standalone){body{overscroll-behavior-y:contain}}';document.head.appendChild(st)}
+{const d0=drawer;drawer=function(){const p=document.documentElement.dataset.plat;if((p==='desktop'||p==='tv')&&S.user){const w=UI.drawer;UI.drawer=true;try{return d0()}finally{UI.drawer=w}}return d0()}}
+{const r1=render;render=function(){applyPlat();r1.apply(this,arguments);if(document.documentElement.dataset.plat==='tv'){try{document.querySelectorAll('[data-a]:not(button):not(a):not(input):not(select)').forEach(e=>{if(!e.hasAttribute('tabindex'))e.setAttribute('tabindex','0')});if(!document.activeElement||document.activeElement===document.body){const f=document.querySelector('.hh-nav button.on')||document.querySelector('button');f&&f.focus&&f.focus()}}catch(e){}}}}
+document.addEventListener('keydown',e=>{if(document.documentElement.dataset.plat!=='tv')return;
+ const k=e.key;if(k==='Enter'){const t=document.activeElement;if(t&&t.hasAttribute&&t.hasAttribute('data-a')&&!/^(BUTTON|A|INPUT|SELECT)$/.test(t.tagName)){t.click();e.preventDefault()}return}
+ const dir={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]}[k];if(!dir)return;
+ const els=[...document.querySelectorAll('button,a[href],[data-a][tabindex],input,select')].filter(x=>x.offsetParent!==null);const cur=document.activeElement;if(!cur||!els.includes(cur)){els[0]&&els[0].focus();e.preventDefault();return}
+ const c=cur.getBoundingClientRect(),cx=c.left+c.width/2,cy=c.top+c.height/2;let best=null,bs=1e9;
+ els.forEach(x=>{if(x===cur)return;const r=x.getBoundingClientRect(),dx=r.left+r.width/2-cx,dy=r.top+r.height/2-cy;const along=dx*dir[0]+dy*dir[1];if(along<=4)return;const side=Math.abs(dx*dir[1])+Math.abs(dy*dir[0]);const sc=along+side*2.2;if(sc<bs){bs=sc;best=x}});
+ if(best){best.focus();best.scrollIntoView({block:'center',inline:'center'});e.preventDefault()}});
+/* installable app */
+try{window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();UI.inst=e;if(S.user)render()});window.addEventListener('appinstalled',()=>{UI.inst=null;toast('App installed')})}catch(e){}
+try{if('serviceWorker' in navigator&&/^https:/.test(location.protocol)&&/onrender\.com$|^[a-z0-9.-]+$/.test(location.hostname)&&location.hostname!=='localhost')navigator.serviceWorker.register('/sw.js').catch(()=>{})}catch(e){}
+A.install=function(){if(UI.inst){UI.inst.prompt();UI.inst.userChoice&&UI.inst.userChoice.finally(()=>{UI.inst=null});return}
+ const o=osKind(),m={ios:'On iPhone or iPad: tap the Share button, then Add to Home Screen.',android:'On Android Chrome: tap the menu (three dots), then Install app or Add to Home screen.',windows:'On Windows Chrome or Edge: click the install icon at the right end of the address bar, or menu, then Install Scoring Heroes.',mac:'On Mac Chrome or Edge: click the install icon in the address bar. On Safari: File, then Add to Dock.',other:'Open the browser menu and choose Install app or Add to Home Screen.'}[o];
+ toast(location.hostname&&!/^https:/.test(location.protocol)?'Installing needs the secure (https) Render address.':m,7000)};
+{const g=MENU2.find(x=>x[0]==='Account');if(g)g[1].push(['@install','\u{1F4F2}','Install app'])}
+
+/* ---------------- DEFAULT TEAM CRESTS AND PROFILE AVATAR ---------------- */
+const CRCOL=['#1d4ed8','#c1121f','#0f766e','#7c3aed','#b45309','#0e7490','#be185d','#15803d','#334155','#9a3412'];
+const hashStr=x=>{let h=0;for(let i=0;i<x.length;i++)h=(h*31+x.charCodeAt(i))>>>0;return h};
+{const w1=wBadge;wBadge=function(t){const o=w1(t);if(o.indexOf('class="tbadge"')<0)return o;
+ const nm=String((t&&(t.name||t.short))||'?'),h=hashStr(nm.toLowerCase()),sh=String(t.short||nm).replace(/[^A-Za-z0-9]/g,'').slice(0,3).toUpperCase()||'?';
+ return `<span class="dcrest" title="Default emblem (not an official logo)">${crest(h%6,CRCOL[(h>>3)%CRCOL.length],sh,34)}</span>`}}
+{const h6=hdr;hdr=function(){let o=h6();const u=S.user;if(!u)return o;
+ const pl=u.pid?S.players.find(x=>x.id===u.pid):null;const a=av(pl||{name:u.nick||u.name,jersey:0,team:null});
+ return o.replace(/(aria-label="Profile">)[^<]*(<\/button>)/,'$1<span class="avatar" style="width:100%;height:100%;background:transparent">'+a+'</span>$2')}}
+{const st=document.createElement('style');st.textContent='.dcrest{display:inline-flex;flex:none}.dcrest svg{width:30px;height:30px;filter:drop-shadow(0 1px 2px #0006)}.hh-lc .tm .dcrest svg{width:38px;height:38px}.hdr .iconbtn.me{overflow:hidden;padding:0}.hdr .iconbtn.me .avatar svg,.hdr .iconbtn.me .avatar img{width:100%;height:100%;object-fit:cover}';document.head.appendChild(st)}
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});
