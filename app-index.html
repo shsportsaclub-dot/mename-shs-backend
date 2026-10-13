@@ -1785,7 +1785,7 @@ document.head.appendChild(cs)}
   ${L?`<div class="cxch"><span>This over</span>${L.b.map(x=>`<span class="ch ${x.cls}">${x.lab}</span>`).join('')}</div>`:''}`}
   <div class="cxq"><span>CRR <b>${s.crr.toFixed(2)}</b></span>${s.rrr!=null&&!done?`<span>RRR <b>${s.rrr.toFixed(2)}</b></span>`:''}<span>Overs left <b>${fmtOv(s.left)}</b></span><span style="flex:1"></span><button class="btn sm ghost" data-a="mnav" data-v="-1" aria-label="Previous match">&#8249;</button><button class="btn sm ghost" data-a="mnav" data-v="1" aria-label="Next match">&#8250;</button><button class="btn sm ghost" data-a="share">Share</button></div></div>`}}
 /* build stamp so the user can see which version is running */
-try{const b=document.createElement('div');b.id='buildstamp';b.textContent='Build 14-Oct-2026 00:20 | Cricbuzz layout, SH navy-red, flags';b.style.cssText='position:fixed;left:6px;bottom:2px;font-size:10px;color:#8b8ba0;opacity:.7;z-index:5;pointer-events:none';document.body.appendChild(b)}catch(e){}
+try{const b=document.createElement('div');b.id='buildstamp';b.textContent='Build 14-Oct-2026 01:00 | Import players, outside records';b.style.cssText='position:fixed;left:6px;bottom:2px;font-size:10px;color:#8b8ba0;opacity:.7;z-index:5;pointer-events:none';document.body.appendChild(b)}catch(e){}
 /* ---------------- SERVICES: ePAPER, SOCIAL STUDIO, MARKET, MORE HUB ---------------- */
 var XV=window.XV={};
 {const st=document.createElement('style');st.textContent=
@@ -2063,6 +2063,79 @@ Object.assign(A,{cbf(){const o=['all','live','rec','up'];UI.cbf=o[(o.indexOf(UI.
 /* country flags for national teams when the provider sends no logo (flagcdn.com, loaded as plain images) */
 const FLAGS={india:'in',australia:'au','south africa':'za',england:'gb-eng',pakistan:'pk','new zealand':'nz','sri lanka':'lk',bangladesh:'bd',afghanistan:'af','west indies':'',ireland:'ie',zimbabwe:'zw',scotland:'gb-sct',netherlands:'nl',nepal:'np',oman:'om',uae:'ae','united arab emirates':'ae',usa:'us','united states':'us','united states of america':'us',canada:'ca',namibia:'na',png:'pg','papua new guinea':'pg',qatar:'qa',kuwait:'kw','saudi arabia':'sa',bahrain:'bh',malaysia:'my',singapore:'sg','hong kong':'hk',thailand:'th',japan:'jp',italy:'it',germany:'de',denmark:'dk',jersey:'je',guernsey:'gg',uganda:'ug',kenya:'ke',nigeria:'ng',tanzania:'tz',mongolia:'mn',myanmar:'mm',china:'cn',indonesia:'id',philippines:'ph',bhutan:'bt',maldives:'mv',spain:'es',france:'fr',austria:'at',belgium:'be',portugal:'pt',romania:'ro',bulgaria:'bg',greece:'gr',cyprus:'cy',malta:'mt',sweden:'se',norway:'no',finland:'fi'};
 {const w0=wBadge;wBadge=function(t){if(t&&!t.img){const n=String(t.name||'').toLowerCase().replace(/\s*(women|men|u19|a|xi|under.*)$/,'').trim(),c=FLAGS[n];if(c)return `<img class="logo" src="https://flagcdn.com/w40/${c}.png" width="26" height="26" alt="" style="border-radius:50%;object-fit:cover">`}return w0(t)}}
+/* ---------------- IMPORT PLAYERS/TEAMS + OUTSIDE RECORDS ---------------- */
+const SAMPLE_NAMES=new Set(['Aiden Markram','Ryan Rickelton','Wiaan Mulder','Temba Bavuma','Tristan Stubbs','David Bedingham','Kyle Verreynne','Marco Jansen','Keshav Maharaj','Kagiso Rabada','Lungi Ngidi','Dewald Brevis','Corbin Bosch','Usman Khawaja','Travis Head','Marnus Labuschagne','Steve Smith','Cameron Green','Alex Carey','Mitchell Marsh','Pat Cummins','Mitchell Starc','Nathan Lyon','Josh Hazlewood','Josh Inglis','Scott Boland','Aarav Mehta','Kabir Rao','Rohan Iyer','Vihaan Reddy','Arjun Nair','Dev Kapoor','Ishaan Verma','Sai Teja','Karthik Goud','Nikhil Varma','Harsha Vardhan','Pranav Chary']);
+const ROLEMAP={bat:'BAT',batter:'BAT',batsman:'BAT',bowl:'BOWL',bowler:'BOWL',ar:'AR','all-rounder':'AR',allrounder:'AR','all rounder':'AR',wk:'WK','wicket-keeper':'WK',wicketkeeper:'WK','wicket keeper':'WK',keeper:'WK'};
+const PAL=['#2563eb','#e11d2e','#0a7c4a','#b07d00','#7c3aed','#0891b2','#c2410c','#be185d'];
+function csvRows(txt){const rows=[];let row=[],cur='',q=false;const t=String(txt).replace(/\r/g,'');const sep=t.indexOf('\t')>=0&&t.split('\n')[0].indexOf('\t')>=0?'\t':',';
+  for(let i=0;i<t.length;i++){const c=t[i];if(q){if(c==='"'&&t[i+1]==='"'){cur+='"';i++}else if(c==='"')q=false;else cur+=c}else if(c==='"')q=true;else if(c===sep){row.push(cur);cur=''}else if(c==='\n'){row.push(cur);rows.push(row);row=[];cur=''}else cur+=c}
+  row.push(cur);rows.push(row);return rows.map(r=>r.map(x=>x.trim())).filter(r=>r.some(Boolean))}
+function importPlayers(txt){
+  const R=csvRows(txt);if(!R.length)return{err:'Nothing to import'};
+  const H=R[0].map(h=>h.toLowerCase()),hasH=H.some(h=>/^(name|player|phone|mobile|team|role)/.test(h));
+  const idx=(...k)=>H.findIndex(h=>k.some(x=>h.includes(x)));
+  const col=hasH?{name:idx('name','player'),phone:idx('phone','mobile','number'),role:idx('role'),team:idx('team'),jersey:idx('jersey','no'),bat:idx('bat'),bowl:idx('bowl')}:{name:0,phone:1,role:2,team:3,jersey:4,bat:5,bowl:6};
+  if(hasH&&col.name<0)col.name=0;
+  const body=hasH?R.slice(1):R;let add=0,upd=0,skip=0,nt=0;
+  body.forEach(r=>{const g=k=>col[k]>=0?(r[col[k]]||'').trim():'',name=g('name');if(!name){skip++;return}
+    const ph=g('phone').replace(/\D/g,'').slice(-10),tn=g('team');let t=null;
+    if(tn){t=S.teams.find(x=>x.name.toLowerCase()===tn.toLowerCase()||(x.short||'').toLowerCase()===tn.toLowerCase());
+      if(!t){t={id:uid(),name:tn,short:tn.replace(/[^A-Za-z0-9 ]/g,'').split(' ').map(w=>w[0]).join('').slice(0,3).toUpperCase()||tn.slice(0,3).toUpperCase(),color:PAL[S.teams.length%PAL.length],preset:null,logo:null,players:[]};S.teams.push(t);nt++}}
+    let p=(ph.length===10&&S.players.find(x=>String(x.phone||'').replace(/\D/g,'').slice(-10)===ph))||S.players.find(x=>x.name.toLowerCase()===name.toLowerCase()&&(!t||x.team===t.id));
+    const role=ROLEMAP[g('role').toLowerCase()]||(['BAT','BOWL','AR','WK'].includes(g('role').toUpperCase())?g('role').toUpperCase():'BAT');
+    if(p){if(t&&p.team!==t.id){if(p.team&&T(p.team))T(p.team).players=T(p.team).players.filter(x=>x!==p.id);p.team=t.id;t.players.push(p.id)}if(ph&&!p.phone)p.phone=ph;upd++}
+    else{p={id:uid(),name,role,team:t?t.id:null,phone:ph,bat:g('bat')||'Right-hand',bowl:g('bowl')||'',jersey:+g('jersey')||0,photo:null,imported:true};S.players.push(p);if(t)t.players.push(p.id);add++}});
+  return{add,upd,skip,nt}}
+function clearSample(){
+  const ids=new Set(S.players.filter(p=>SAMPLE_NAMES.has(p.name)&&!(p.phone&&String(p.phone).replace(/\D/g,'').length>=10)).map(p=>p.id));
+  S.players=S.players.filter(p=>!ids.has(p.id));S.teams.forEach(t=>{t.players=t.players.filter(x=>!ids.has(x))});
+  const gone=S.teams.filter(t=>(t.name==='South Africa'||t.name==='Australia')&&!t.players.length).map(t=>t.id);
+  S.teams=S.teams.filter(t=>!gone.includes(t.id));
+  const dm=S.matches.filter(m=>isDemo(m)||gone.includes(m.a)||gone.includes(m.b)).length;
+  S.matches=S.matches.filter(m=>!(isDemo(m)||gone.includes(m.a)||gone.includes(m.b)));
+  return{players:ids.size,teams:gone.length,matches:dm}}
+function impModal(){return `<h3>Import players and teams</h3>
+  <div class="mu sm" style="margin:6px 0">Paste rows from Excel, Google Sheets, or any app's export (or choose a CSV file). One player per row:<br><b>name, mobile, role, team, jersey, batting, bowling</b>. A header row is optional. Players are matched by mobile number first, so nobody is added twice. New teams are created automatically.</div>
+  <form data-f="pimport"><label>CSV file<input type="file" accept=".csv,.txt,.tsv,text/csv,text/plain" data-c="pimpFile"></label>
+  <label>Rows<textarea name="rows" id="pimpRows" rows="8" placeholder="Ravi Kumar, 9876543210, BAT, Kakinada Kings, 7, Right-hand, &#10;Sai Teja, 9123456780, BOWL, Kakinada Kings, 11, , Right-arm fast"></textarea></label>
+  <button class="btn wide">Import</button></form>
+  <div class="row" style="margin-top:10px"><button class="btn sm ghost" data-a="pexport">Export all players (CSV)</button><button class="btn sm ghost" data-a="pclear">Remove sample teams and players</button></div>`}
+/* outside records on a player */
+const hostOf=u=>{try{return new URL(u).hostname.replace(/^www\./,'')}catch(e){return''}};
+function extSection(p){
+  const ex=p.ext||{links:[],files:[],stats:[]},mine=can()||(S.user&&S.user.pid===p.id);
+  return `<div class="card" style="margin-top:10px"><h3>Outside records</h3><div class="mu sm" style="margin:4px 0 8px">Records from other apps (CricHeroes, Cricbuzz, club sheets). They are kept apart from verified Scoring Heroes stats and never mixed into them.</div>
+  ${ex.stats.map((s,i)=>`<div class="item"><div style="flex:1"><div class="b">${esc(s.src||'Outside app')} <span class="pill">NOT VERIFIED BY SH</span></div><div class="mu sm">${[['Matches',s.m],['Runs',s.r],['Wkts',s.w],['HS',s.hs],['Avg',s.avg],['SR',s.sr]].filter(x=>x[1]!==''&&x[1]!=null).map(x=>x[0]+' '+esc(x[1])).join(' | ')||'No numbers'}</div></div>${mine?`<button class="btn sm ghost" data-a="pextDel" data-id="${p.id}" data-k="stats" data-i="${i}">Remove</button>`:''}</div>`).join('')}
+  ${ex.links.map((l,i)=>`<div class="item"><a href="${esc(l.url)}" target="_blank" rel="noopener" style="flex:1;color:var(--ac2,var(--ac))">${esc(l.label||hostOf(l.url))} <span class="mu sm">${esc(hostOf(l.url))}</span></a>${mine?`<button class="btn sm ghost" data-a="pextDel" data-id="${p.id}" data-k="links" data-i="${i}">Remove</button>`:''}</div>`).join('')}
+  ${ex.files.length?`<div class="row" style="margin:8px 0">${ex.files.map((f,i)=>`<div style="position:relative"><img src="${f}" alt="attachment" style="height:90px;border-radius:8px;border:1px solid var(--bd)">${mine?`<button class="btn sm ghost" style="position:absolute;top:2px;right:2px;padding:0 6px" data-a="pextDel" data-id="${p.id}" data-k="files" data-i="${i}">x</button>`:''}</div>`).join('')}</div>`:''}
+  ${!ex.stats.length&&!ex.links.length&&!ex.files.length?'<div class="mu sm">No outside records added yet.</div>':''}
+  ${mine?`<form data-f="pext" style="margin-top:8px"><input type="hidden" name="pid" value="${p.id}"><label>Profile link (https://...)<input name="url" placeholder="https://cricheroes.com/player-profile/..."></label>
+  <div class="row"><label style="flex:2">Source name<input name="src" placeholder="e.g. CricHeroes"></label><label style="flex:1">Matches<input name="m" inputmode="numeric"></label><label style="flex:1">Runs<input name="r" inputmode="numeric"></label><label style="flex:1">Wkts<input name="w" inputmode="numeric"></label></div>
+  <div class="row"><label style="flex:1">High score<input name="hs"></label><label style="flex:1">Average<input name="avg"></label><label style="flex:1">Strike rate<input name="sr"></label></div>
+  <label>Screenshot or proof (optional)<input type="file" accept="image/*" data-c="pextFile" data-pid="${p.id}"></label><button class="btn sm">Save outside record</button></form>`:''}</div>`}
+{const pc0=playerCard;playerCard=function(p){return pc0(p)+extSection(p)}}
+Object.assign(A,{
+  pimport(){if(!can())return toast('Only Admin or Scorer accounts can import');UI.modal={t:'html',html:impModal()};renderModal()},
+  pexport(){const rows=[['name','mobile','role','team','jersey','batting','bowling']].concat(S.players.map(p=>[p.name,p.phone||'',p.role,(T(p.team)||{}).name||'',p.jersey||'',p.bat||'',p.bowl||'']));
+    const csv=rows.map(r=>r.map(x=>'"'+String(x).replace(/"/g,'""')+'"').join(',')).join('\n');try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='players.csv';document.body.appendChild(a);a.click();setTimeout(()=>a.remove(),500)}catch(e){toast('Open the live app in your browser to download')}},
+  pclear(){if(!confirm('Remove the sample South Africa / Australia teams, sample players and sample matches? Your own data stays.'))return;const r=clearSample();commit();UI.modal=null;renderModal();toast(`Removed ${r.players} sample players, ${r.teams} teams, ${r.matches} matches`,3500)},
+  pextDel(d){const p=P(d.id);if(!p||!p.ext)return;p.ext[d.k].splice(+d.i,1);save();UI.modal={t:'html',html:playerCard(p)};renderModal()}});
+Object.assign(F,{
+  pimport(fd){const r=importPlayers(fd.get('rows')||'');if(r.err)return toast(r.err);commit();UI.modal={t:'html',html:`<h3>Import done</h3><div class="card"><div class="item"><span>Players added</span><span class="grow"></span><b>${r.add}</b></div><div class="item"><span>Existing players linked/updated</span><span class="grow"></span><b>${r.upd}</b></div><div class="item"><span>New teams created</span><span class="grow"></span><b>${r.nt}</b></div><div class="item"><span>Rows skipped (no name)</span><span class="grow"></span><b>${r.skip}</b></div></div>`};renderModal()},
+  pext(fd){const p=P(fd.get('pid'));if(!p)return;p.ext=p.ext||{links:[],files:[],stats:[]};
+    let url=(fd.get('url')||'').trim();if(url&&!/^https:\/\//i.test(url))url='https://'+url.replace(/^http:\/\//i,'');
+    if(url&&hostOf(url)){p.ext.links.push({url,label:(fd.get('src')||'').trim()||hostOf(url)})}
+    const n=k=>(fd.get(k)||'').trim(),has=['m','r','w','hs','avg','sr'].some(k=>n(k)!=='');
+    if(has)p.ext.stats.push({src:n('src')||hostOf(url)||'Outside app',m:n('m'),r:n('r'),w:n('w'),hs:n('hs'),avg:n('avg'),sr:n('sr')});
+    if(UI.pextImg&&UI.pextImg.pid===p.id){p.ext.files.push(UI.pextImg.u);UI.pextImg=null}
+    if(!url&&!has&&!(p.ext.files.length))return toast('Add a link, numbers or a screenshot');
+    save();UI.modal={t:'html',html:playerCard(p)};renderModal();toast('Outside record saved')}});
+Object.assign(C,{
+  pimpFile(v,el){const f=el.files&&el.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const ta=document.getElementById('pimpRows');if(ta)ta.value=String(r.result||'')};r.readAsText(f)},
+  pextFile(v,el){const f=el.files&&el.files[0];if(f)img(f,900,u=>{UI.pextImg={pid:el.dataset.pid,u};toast('Screenshot attached. Press Save outside record.')})}});
+/* import button on the Players page */
+{const v3=vPlayers;vPlayers=function(){let o=v3();return o.replace('<div class="grow"></div>','<div class="grow"></div>'+(can()?'<button class="btn sm" data-a="pimport" style="margin-right:6px">Import</button>':''))}}
+
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});
