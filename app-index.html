@@ -1784,7 +1784,7 @@ document.head.appendChild(cs)}
   ${L?`<div class="cxch"><span>This over</span>${L.b.map(x=>`<span class="ch ${x.cls}">${x.lab}</span>`).join('')}</div>`:''}`}
   <div class="cxq"><span>CRR <b>${s.crr.toFixed(2)}</b></span>${s.rrr!=null&&!done?`<span>RRR <b>${s.rrr.toFixed(2)}</b></span>`:''}<span>Overs left <b>${fmtOv(s.left)}</b></span><span style="flex:1"></span><button class="btn sm ghost" data-a="mnav" data-v="-1" aria-label="Previous match">&#8249;</button><button class="btn sm ghost" data-a="mnav" data-v="1" aria-label="Next match">&#8250;</button><button class="btn sm ghost" data-a="share">Share</button></div></div>`}}
 /* build stamp so the user can see which version is running */
-try{const b=document.createElement('div');b.id='buildstamp';b.textContent='Build 14-Oct-2026 04:40 | DRS log, DLS record, match groups, boards and states';b.style.cssText='position:fixed;left:6px;bottom:2px;font-size:10px;color:#8b8ba0;opacity:.7;z-index:5;pointer-events:none';document.body.appendChild(b)}catch(e){}
+try{const b=document.createElement('div');b.id='buildstamp';b.textContent='Build 14-Oct-2026 04:55 | DRS log, DLS record, match groups, boards and states';b.style.cssText='position:fixed;left:6px;bottom:2px;font-size:10px;color:#8b8ba0;opacity:.7;z-index:5;pointer-events:none';document.body.appendChild(b)}catch(e){}
 /* ---------------- SERVICES: ePAPER, SOCIAL STUDIO, MARKET, MORE HUB ---------------- */
 var XV=window.XV={};
 {const st=document.createElement('style');st.textContent=
@@ -2010,7 +2010,7 @@ Object.assign(XV,{});
 '.cbnav{display:flex;gap:2px;overflow-x:auto;background:linear-gradient(90deg,#0a1f5c,#e11d2e);margin:-12px -12px 0;padding:0 8px;scrollbar-width:none}.cbnav::-webkit-scrollbar{display:none}'+
 '.cbnav button{flex:none;background:transparent;border:0;color:#fff;font:600 14px var(--ui,system-ui);padding:12px 11px;border-bottom:3px solid transparent;cursor:pointer;white-space:nowrap}.cbnav button.on{border-bottom-color:#fff}'+
 '.cbstrip{display:flex;align-items:stretch;background:#333;color:#fff;margin:0 -12px;font-size:13px}.cbstrip .lb{flex:none;background:#222;font-weight:700;padding:11px 12px;letter-spacing:.4px}'+
-'.cbstrip .ch{flex:1;display:flex;overflow-x:auto;scrollbar-width:none}.cbstrip .ch::-webkit-scrollbar{display:none}.cbstrip .ch span{flex:none;padding:11px 14px;white-space:nowrap;cursor:pointer;border-left:1px solid #444}'+
+'.cbstrip .cbch{flex:1;display:flex;overflow-x:auto;scrollbar-width:none}.cbstrip .cbch::-webkit-scrollbar{display:none}.cbstrip .cbch span{flex:none;padding:11px 14px;white-space:nowrap;cursor:pointer;border-left:1px solid #444}'+
 '.cbstrip .al{flex:none;background:#333;border:0;color:#fff;padding:0 12px;font-weight:600;cursor:pointer;border-left:1px solid #444}'+
 '.cbcar{display:flex;gap:10px;overflow-x:auto;background:#e4e8ec;margin:0 -12px;padding:10px 12px;scroll-snap-type:x proximity;scrollbar-width:thin}'+
 '.cbc{flex:none;width:272px;background:#fff;border-radius:4px;display:flex;flex-direction:column;scroll-snap-align:start;color:#10161c;box-shadow:0 1px 2px #0002;cursor:pointer}'+
@@ -2046,7 +2046,7 @@ function cbHome(){
   const feed=!j?'<div class="card mu" style="margin:10px 0">Loading live scores...</div>':!j.ok?`<div class="card mu" style="margin:10px 0">Live feed unavailable: ${esc(j.error||'')}</div>`:L.length?`<div class="cbcar">${L.map(cbCard).join('')}</div>`:'<div class="card mu" style="margin:10px 0">No matches in this filter right now.</div>';
   const lead=N[0],rest=N.slice(1,9);
   return `<div class="cbnav">${nav.map(([k,l])=>`<button class="${(k==='home')?'on':''}" data-a="${k==='news'?'cbNews':'go'}" data-v="${k}">${l}</button>`).join('')}</div>
-  <div class="cbstrip"><span class="lb">MATCHES</span><div class="ch">${chips||'<span>No results yet</span>'}</div><button class="al" data-a="cbf">${lab} &#9662;</button></div>
+  <div class="cbstrip"><span class="lb">MATCHES</span><div class="cbch">${chips||'<span>No results yet</span>'}</div><button class="al" data-a="cbf">${lab} &#9662;</button></div>
   ${feed}
   <div class="cbqa"><h3>Quick Access</h3>${can()?'<button data-a="newMatch">Start a match</button>':''}<button data-a="go" data-v="tours">Tournaments</button><button data-a="go" data-v="matches">My matches</button><button data-a="go" data-v="teams">My teams</button></div>
   <div class="cbgrid"><div class="cbnews"><h4>LATEST NEWS</h4>${rest.length||lead?[lead,...rest].filter(Boolean).slice(0,8).map(n=>`<a class="it" ${n.link?`href="${esc(n.link)}" target="_blank" rel="noopener"`:''}>${esc(n.title)}<small>${esc(n.source||'')}${n.date?' • '+cbAgo(n.date):''}</small></a>`).join(''):'<div class="mu sm">News loads from the live server.</div>'}</div>
