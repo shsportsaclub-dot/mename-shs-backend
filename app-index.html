@@ -1784,7 +1784,7 @@ document.head.appendChild(cs)}
   ${L?`<div class="cxch"><span>This over</span>${L.b.map(x=>`<span class="ch ${x.cls}">${x.lab}</span>`).join('')}</div>`:''}`}
   <div class="cxq"><span>CRR <b>${s.crr.toFixed(2)}</b></span>${s.rrr!=null&&!done?`<span>RRR <b>${s.rrr.toFixed(2)}</b></span>`:''}<span>Overs left <b>${fmtOv(s.left)}</b></span><span style="flex:1"></span><button class="btn sm ghost" data-a="mnav" data-v="-1" aria-label="Previous match">&#8249;</button><button class="btn sm ghost" data-a="mnav" data-v="1" aria-label="Next match">&#8250;</button><button class="btn sm ghost" data-a="share">Share</button></div></div>`}}
 /* build stamp so the user can see which version is running */
-try{const b=document.createElement('div');b.id='buildstamp';b.textContent='Build 13-Oct-2026 22:40 | ePaper, Social, Market, Avatars';b.style.cssText='position:fixed;left:6px;bottom:2px;font-size:10px;color:#8b8ba0;opacity:.7;z-index:5;pointer-events:none';document.body.appendChild(b)}catch(e){}
+try{const b=document.createElement('div');b.id='buildstamp';b.textContent='Build 13-Oct-2026 23:00 | Tournaments, points table, ePaper, Social';b.style.cssText='position:fixed;left:6px;bottom:2px;font-size:10px;color:#8b8ba0;opacity:.7;z-index:5;pointer-events:none';document.body.appendChild(b)}catch(e){}
 /* ---------------- SERVICES: ePAPER, SOCIAL STUDIO, MARKET, MORE HUB ---------------- */
 var XV=window.XV={};
 {const st=document.createElement('style');st.textContent=
@@ -1913,6 +1913,98 @@ MENU.splice(8,0,['epaper','ePaper'],['social','Social studio'],['market','Market
 /* approved Scoring Heroes helmet avatar (clearly not a real photo), tinted with the team's colours */
 {const a0=av;av=function(pl){if(pl.photo)return a0(pl);const t=pl.team?T(pl.team):null,c=(t&&t.color)||'#2563eb',n=pl.jersey?String(pl.jersey):'';
   return `<svg viewBox="0 0 100 100" role="img" aria-label="${esc(pl.name)} avatar" style="width:100%;height:100%"><defs><linearGradient id="hg${esc(pl.id||'x')}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${c}"/><stop offset="1" stop-color="#0a1f5c"/></linearGradient></defs><rect width="100" height="100" fill="#0d1a45"/><path d="M0 70h100v30H0z" fill="${c}" opacity=".35"/><path d="M0 78h100" stroke="#fff" stroke-opacity=".12"/><path d="M22 62c0-24 12-38 30-38 20 0 30 14 30 34v10H22z" fill="url(#hg${esc(pl.id||'x')})" stroke="#fff" stroke-opacity=".55" stroke-width="2"/><path d="M52 24c8 0 14 6 16 16" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="2"/><path d="M30 64h46v10c0 4-3 7-7 7H40c-5 0-10-3-10-8z" fill="#111a3a" stroke="#fff" stroke-opacity=".5" stroke-width="2"/><path d="M36 66v12M46 66v14M56 66v14M66 66v10" stroke="#fff" stroke-opacity=".6" stroke-width="2"/>${n?`<text x="50" y="52" text-anchor="middle" font-size="18" font-weight="800" fill="#fff" font-family="Arial">${esc(n)}</text>`:''}</svg>`}}
+/* ---------------- TOURNAMENTS / SERIES ENGINE ---------------- */
+S.tours=S.tours||[];UI.ttab=UI.ttab||'fix';
+{const st=document.createElement('style');st.textContent='.pt{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}.pt th,.pt td{padding:7px 6px;text-align:center;border-bottom:1px solid var(--bd)}.pt td:first-child,.pt th:first-child{text-align:left}.pt tr.q td{background:color-mix(in srgb,var(--ac) 10%,transparent)}.fx{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--bd);flex-wrap:wrap}.fx .t{flex:1;min-width:160px}';document.head.appendChild(st)}
+const trObj=id=>S.tours.find(x=>x.id===id);
+const ptsRule=t=>Object.assign({win:2,tie:1,nr:1,loss:0},t.rules||{});
+function tourMatches(t){return S.matches.filter(m=>m.tid===t.id&&m.status==='done'&&!isDemo(m))}
+function oversFaced(m,i){const k=calc(m,i),inn=m.innings[i];const allOut=k.wk>=maxWk(m,i);return (allOut||(i===1&&k.runs>=m.target&&false)?mx(m):k.lg)}
+function standings(t,grp){
+  const R=ptsRule(t),row={};const tm=grp?grp.teams:t.teams;
+  tm.forEach(id=>row[id]={id,p:0,w:0,l:0,t:0,nr:0,pts:0,rf:0,bf:0,ra:0,bb:0,form:[]});
+  tourMatches(t).forEach(m=>{const A=row[m.a],B=row[m.b];if(!A||!B)return;
+    A.p++;B.p++;
+    if(m.win){const W=row[m.win],L=row[m.win===m.a?m.b:m.a];W.w++;L.l++;W.pts+=R.win;L.pts+=R.loss;W.form.push('W');L.form.push('L')}
+    else if(/tied/i.test(m.result)){A.t++;B.t++;A.pts+=R.tie;B.pts+=R.tie;A.form.push('T');B.form.push('T')}
+    else{A.nr++;B.nr++;A.pts+=R.nr;B.pts+=R.nr;A.form.push('N');B.form.push('N');return}
+    m.innings.forEach((inn,i)=>{const k=calc(m,i),bat=row[inn.bat],bow=row[inn.bowl];if(!bat||!bow)return;const ov=oversFaced(m,i);bat.rf+=k.runs;bat.bf+=ov;bow.ra+=k.runs;bow.bb+=ov})});
+  const L=Object.values(row);L.forEach(r=>{r.nrr=(r.bf?r.rf/(r.bf/6):0)-(r.bb?r.ra/(r.bb/6):0)});
+  return L.sort((x,y)=>y.pts-x.pts||y.nrr-x.nrr||y.w-x.w)}
+function roundRobin(ids,dbl){const L=ids.slice(),out=[];if(L.length%2)L.push(null);const n=L.length;
+  for(let r=0;r<n-1;r++){for(let i=0;i<n/2;i++){const a=L[i],b=L[n-1-i];if(a&&b)out.push([a,b,r+1])}L.splice(1,0,L.pop())}
+  if(dbl)out.slice().forEach(([a,b,r])=>out.push([b,a,r+n-1]));return out}
+function mkFixtures(t,start){let d=new Date(start||Date.now()),fx=[];
+  (t.groups&&t.groups.length?t.groups:[{name:'',teams:t.teams}]).forEach(g=>roundRobin(g.teams,t.dbl).forEach(([a,b,r])=>fx.push({id:uid(),a,b,stage:'League',group:g.name,round:r,mid:null})));
+  fx.sort((x,y)=>x.round-y.round);fx.forEach(f=>{f.date=d.toISOString().slice(0,10);d=new Date(d.getTime()+864e5)});return fx}
+function fxLabel(t,f){return (f.stage==='League'?(f.group?f.group+' | ':'')+'Match '+(t.fixtures.indexOf(f)+1):f.stage)}
+function fxResult(f){const m=f.mid&&S.matches.find(x=>x.id===f.mid);return m?m:null}
+function tourStats(t){const M=tourMatches(t),by={};
+  M.forEach(m=>{m.innings.forEach((inn,i)=>{const k=calc(m,i);
+    Object.entries(k.bat).forEach(([id,b])=>{const o=by[id]||(by[id]={id,r:0,b:0,w:0,f4:0,f6:0,hs:0,pts:0,m:new Set()});o.r+=b.r;o.b+=b.b;o.f4+=b.f4;o.f6+=b.f6;o.hs=Math.max(o.hs,b.r);o.m.add(m.id)});
+    Object.entries(k.bowl).forEach(([id,w])=>{const o=by[id]||(by[id]={id,r:0,b:0,w:0,f4:0,f6:0,hs:0,pts:0,m:new Set(),bb:0,br:0});o.w+=w.w;o.bb=(o.bb||0)+w.b;o.br=(o.br||0)+w.r;o.m.add(m.id)})});
+    [...(m.xi[m.a]||[]),...(m.xi[m.b]||[])].forEach(id=>{const o=by[id]||(by[id]={id,r:0,b:0,w:0,f4:0,f6:0,hs:0,pts:0,m:new Set()});o.pts+=dreamPts(m,id)})});
+  return Object.values(by).filter(x=>P(x.id))}
+function tourAwards(t){const S2=tourStats(t);if(!S2.length)return null;
+  const top=(f,key)=>S2.slice().sort((a,b)=>f(b)-f(a))[0];
+  return{orange:top(x=>x.r),purple:top(x=>x.w),mvp:top(x=>x.pts),xi:S2.slice().sort((a,b)=>b.pts-a.pts).slice(0,11)}}
+XV.tours=function(){
+  const can2=can();
+  return `<div class="bar"><h2>Tournaments and series</h2></div>
+  ${S.tours.length?S.tours.map(t=>{const done=tourMatches(t).length,tot=t.fixtures.length;return `<div class="card" data-a="tourOpen" data-id="${t.id}" style="cursor:pointer"><div class="row" style="justify-content:space-between"><b>${esc(t.name)}</b><span class="pill">${esc(t.kind==='series'?'Series':'Tournament')}</span></div><div class="mu sm">${t.teams.length} teams | ${t.overs} overs | ${done} of ${tot} matches done</div></div>`}).join(''):'<div class="card mu">No tournament yet.</div>'}
+  ${can2?(S.teams.length>=2?`<div class="card"><h3>Create tournament or series</h3><form data-f="tourAdd"><label>Name<input name="name" required maxlength="60" placeholder="Name of your tournament"></label>
+  <div class="row"><label style="flex:1">Type<select name="kind"><option value="tournament">Tournament</option><option value="series">Series</option></select></label><label style="flex:1">Overs per match<input name="overs" type="number" value="20" min="1" max="50"></label></div>
+  <div class="row"><label style="flex:1">Groups<select name="groups"><option value="1">One group</option><option value="2">2 groups</option><option value="4">4 groups</option></select></label><label style="flex:1">Rounds<select name="dbl"><option value="">Single round robin</option><option value="1">Home and away</option></select></label><label style="flex:1">Start date<input name="start" type="date" value="${new Date().toISOString().slice(0,10)}"></label></div>
+  <div class="b" style="margin:8px 0 4px">Teams</div><div class="row">${S.teams.map(x=>`<label class="ck" style="min-width:140px"><input type="checkbox" name="teams" value="${x.id}" checked> ${esc(x.name)}</label>`).join('')}</div>
+  <div class="row"><label style="flex:1">Win<input name="pw" type="number" value="2"></label><label style="flex:1">Tie<input name="pt" type="number" value="1"></label><label style="flex:1">No result<input name="pn" type="number" value="1"></label></div>
+  <button class="btn wide">Create and make fixtures</button></form></div>`:'<div class="card mu">Register at least two teams first (Teams tab).</div>'):'<div class="mu sm">Only Admin or Scorer accounts can create tournaments.</div>'}`};
+XV.tour=function(){
+  const t=trObj(UI.tid);if(!t){UI.view='tours';return XV.tours()}
+  const tabs=[['fix','Fixtures'],['pts','Points table'],['lead','Leaders'],['awd','Awards and XI'],['info','Rules']],tab=UI.ttab;let body='';
+  const tn=id=>(T(id)||{name:'?'});
+  if(tab==='fix')body=(t.fixtures.length?t.fixtures.map(f=>{const m=fxResult(f);return `<div class="fx"><div class="t"><div class="mu sm">${esc(fxLabel(t,f))} | ${esc(f.date||'')}</div><div class="b">${esc(tn(f.a).name)} vs ${esc(tn(f.b).name)}</div>${m&&m.status==='done'?`<div class="mu sm">${esc(m.result)}</div>`:m?`<div class="mu sm">${m.status==='live'?'Live':'Ready'}</div>`:''}</div>
+    ${m?`<button class="btn sm ${m.status==='done'?'ghost':''}" data-a="open" data-id="${m.id}">${m.status==='done'?'Scorecard':'Open'}</button>`:(can()?`<button class="btn sm" data-a="tStart" data-id="${f.id}" data-t="${t.id}">Start match</button>`:'')}</div>`}).join(''):'<div class="mu">No fixtures.</div>')+
+    (can()?`<div class="row" style="margin-top:10px"><button class="btn sm ghost" data-a="tKo" data-id="${t.id}">Make knockout fixtures</button></div>`:'');
+  else if(tab==='pts'){const G=t.groups&&t.groups.length?t.groups:[{name:'',teams:t.teams}];
+    body=G.map(g=>{const L=standings(t,g);return `<div class="card scroll">${g.name?`<h3>${esc(g.name)}</h3>`:''}<table class="pt"><tr><th>Team</th><th>P</th><th>W</th><th>L</th><th>T</th><th>NR</th><th>NRR</th><th>Pts</th></tr>${L.map((r,i)=>`<tr class="${i<(t.groups&&t.groups.length>1?2:4)&&r.p?'q':''}"><td>${logo(T(r.id),22)} ${esc(tn(r.id).short||tn(r.id).name)}</td><td>${r.p}</td><td>${r.w}</td><td>${r.l}</td><td>${r.t}</td><td>${r.nr}</td><td>${r.nrr>=0?'+':''}${r.nrr.toFixed(3)}</td><td><b>${r.pts}</b></td></tr>`).join('')}</table><div class="mu sm" style="margin-top:6px">Table updates only from verified completed matches. NRR counts the full quota of overs when a team is all out.</div></div>`}).join('')}
+  else if(tab==='lead'){const L=tourStats(t);
+    if(!L.length)body='<div class="card mu">VERIFIED DATA UNAVAILABLE. Leaderboards appear after the first completed match.</div>';
+    else{const bt=L.filter(x=>x.b>0).sort((a,b)=>b.r-a.r).slice(0,10),bw=L.filter(x=>x.w>0).sort((a,b)=>b.w-a.w||a.br-b.br).slice(0,10),sr=L.filter(x=>x.b>=10).sort((a,b)=>b.r/b.b-a.r/a.b).slice(0,5);
+      const box=(h,rows)=>`<div class="card"><h3>${h}</h3>${rows||'<div class="mu">None yet.</div>'}</div>`,it=(x,v)=>`<div class="item"><div class="avatar" style="width:34px;height:34px">${av(P(x.id))}</div><span>${esc(P(x.id).name)}</span><span class="grow"></span><b>${v}</b></div>`;
+      body=box('Most runs',bt.map(x=>it(x,x.r+' ('+x.b+')')).join(''))+box('Most wickets',bw.map(x=>it(x,x.w+' wkts')).join(''))+box('Best strike rate (10+ balls)',sr.map(x=>it(x,(x.r*100/x.b).toFixed(1))).join(''))+box('Most sixes',L.filter(x=>x.f6>0).sort((a,b)=>b.f6-a.f6).slice(0,5).map(x=>it(x,x.f6)).join(''))}}
+  else if(tab==='awd'){const a=tourAwards(t);
+    if(!a)body='<div class="card mu">INSUFFICIENT VERIFIED DATA. Awards and the Scoring Heroes XI appear after completed matches.</div>';
+    else{const w=(h,x,v)=>x?`<div class="card"><div class="mu sm">${h}</div><div class="row" style="flex-wrap:nowrap"><div class="avatar" style="width:48px;height:48px">${av(P(x.id))}</div><div><div class="b">${esc(P(x.id).name)}</div><div class="mu sm">${v}</div></div></div></div>`:'';
+      body=w('Orange cap (most runs)',a.orange,a.orange.r+' runs')+w('Purple cap (most wickets)',a.purple,a.purple.w+' wickets')+w('Most valuable player',a.mvp,a.mvp.pts+' performance points')+
+      `<div class="card"><h3>Scoring Heroes XI (tournament)</h3><div class="mu sm" style="margin-bottom:6px">Chosen only from verified performance points.</div>${a.xi.map((x,i)=>`<div class="item"><span class="b">${i+1}</span><div class="avatar" style="width:30px;height:30px">${av(P(x.id))}</div><span>${esc(P(x.id).name)}</span><span class="grow"></span><b>${x.pts}</b></div>`).join('')}</div>`}}
+  else body=`<div class="card"><h3>Rules</h3><div class="item"><span>Sport</span><span class="grow"></span><b>Cricket</b></div><div class="item"><span>Overs per match</span><span class="grow"></span><b>${t.overs}</b></div><div class="item"><span>Points</span><span class="grow"></span><b>Win ${ptsRule(t).win} | Tie ${ptsRule(t).tie} | NR ${ptsRule(t).nr}</b></div><div class="item"><span>Tie-break</span><span class="grow"></span><b>Points, then NRR, then wins</b></div><div class="item"><span>Teams</span><span class="grow"></span><b>${t.teams.length}</b></div></div>${can()?`<button class="btn ghost sm" data-a="tourDel" data-id="${t.id}">Delete tournament</button>`:''}`;
+  return `<div class="bar"><button class="btn sm ghost" data-a="go" data-v="tours">&#8249; All</button><h2 style="margin-left:8px">${esc(t.name)}</h2></div><div class="tabs">${tabs.map(([k,l])=>`<button class="${tab===k?'on':''}" data-a="ttab" data-v="${k}">${l}</button>`).join('')}</div>${body}`};
+Object.assign(A,{
+  tourOpen(d){UI.tid=d.id;UI.ttab='fix';UI.view='tour';render()},ttab(d){UI.ttab=d.v;render()},
+  tourDel(d){if(!confirm('Delete this tournament? Matches already played stay in Matches.'))return;S.tours=S.tours.filter(x=>x.id!==d.id);UI.view='tours';commit()},
+  tStart(d){if(!can())return toast('Only Admin or Scorer accounts can start matches');const t=trObj(d.t),f=t&&t.fixtures.find(x=>x.id===d.id);if(!f)return;
+    const w=wzFresh();Object.assign(w,{mode:t.kind==='series'?'series':'tournament',a:f.a,b:f.b,toss:f.a,overs:t.overs,date:f.date||w.date,name:t.name+' - '+fxLabel(t,f),tid:t.id,fid:f.id,step:3});S.wiz=w;save();wzShow()},
+  tKo(d){const t=trObj(d.id);if(!t)return;const lg=t.fixtures.filter(f=>f.stage==='League');
+    if(!lg.length||lg.some(f=>!(fxResult(f)&&fxResult(f).status==='done')))return toast('Finish all league matches first',3000);
+    const has=s=>t.fixtures.some(f=>f.stage===s),G=t.groups&&t.groups.length>1,rows=G?null:standings(t);const dt=new Date(Date.now()+864e5).toISOString().slice(0,10);
+    if(!has('Semi-final 1')&&!has('Final')){
+      if(G){const g=t.groups.map(x=>standings(t,x));if(g.length<2)return;t.fixtures.push({id:uid(),a:g[0][0].id,b:g[1][1].id,stage:'Semi-final 1',date:dt,mid:null},{id:uid(),a:g[1][0].id,b:g[0][1].id,stage:'Semi-final 2',date:dt,mid:null})}
+      else{if(rows.length<4)return toast('Need 4 teams for semi-finals',3000);t.fixtures.push({id:uid(),a:rows[0].id,b:rows[3].id,stage:'Semi-final 1',date:dt,mid:null},{id:uid(),a:rows[1].id,b:rows[2].id,stage:'Semi-final 2',date:dt,mid:null})}
+      commit();return toast('Semi-finals created',2500)}
+    if(!has('Final')){const s1=t.fixtures.find(f=>f.stage==='Semi-final 1'),s2=t.fixtures.find(f=>f.stage==='Semi-final 2'),m1=fxResult(s1),m2=fxResult(s2);
+      if(!m1||!m2||m1.status!=='done'||m2.status!=='done')return toast('Finish both semi-finals first',3000);
+      if(!m1.win||!m2.win)return toast('A semi-final has no winner. Decide it first.',3500);
+      t.fixtures.push({id:uid(),a:m1.win,b:m2.win,stage:'Final',date:dt,mid:null});commit();return toast('Final created',2500)}
+    toast('All knockout fixtures already exist')}});
+Object.assign(F,{tourAdd(fd){if(!can())return;const ids=fd.getAll('teams');if(ids.length<2)return toast('Pick at least two teams');
+  const g=Math.min(+fd.get('groups')||1,Math.floor(ids.length/2)),groups=g>1?Array.from({length:g},(_,i)=>({name:'Group '+String.fromCharCode(65+i),teams:ids.filter((_,j)=>j%g===i)})):[];
+  const t={id:uid(),name:(fd.get('name')||'').trim(),kind:fd.get('kind'),sport:'cricket',overs:+fd.get('overs')||20,teams:ids,groups,dbl:!!fd.get('dbl'),rules:{win:+fd.get('pw'),tie:+fd.get('pt'),nr:+fd.get('pn'),loss:0},fixtures:[],created:Date.now()};
+  if(!t.name)return;t.fixtures=mkFixtures(t,fd.get('start'));S.tours.push(t);UI.tid=t.id;UI.ttab='fix';UI.view='tour';commit();toast(t.fixtures.length+' fixtures created')}});
+{const ws0=A.wzStart;A.wzStart=function(d){const w=S.wiz,tid=w&&w.tid,fid=w&&w.fid,n=S.matches.length;ws0.call(this,d);
+  if(tid&&S.matches.length>n){const m=S.matches[S.matches.length-1];m.tid=tid;m.fid=fid;const t=trObj(tid),f=t&&t.fixtures.find(x=>x.id===fid);if(f)f.mid=m.id;save()}}}
+MENU.splice(3,0,['tours','Tournaments']);
+Object.assign(XV,{});
+
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});
