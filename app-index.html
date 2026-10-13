@@ -339,8 +339,8 @@ function seed(){
 
 /* ---------------- 3 ENGINE ---------------- */
 const fmtOv=l=>Math.floor(l/6)+'.'+l%6;
-const P=id=>S.players.find(p=>p.id===id);
-const T=id=>S.teams.find(t=>t.id===id);
+const P=id=>S.players.find(p=>p.id===id)||(S.rt&&S.rt.players[id]);
+const T=id=>S.teams.find(t=>t.id===id)||(S.rt&&S.rt.teams[id]);
 const nm=id=>(P(id)||{}).name||'-';
 const sh=id=>{const n=nm(id).split(' ');return n.length>1?n[0][0]+'. '+n.slice(1).join(' '):n[0]};
 const mx=m=>m.overs*6;
@@ -3093,6 +3093,60 @@ XV.streamhub=function(){const L=S.matches.filter(m=>getStream('m'+m.id)).reverse
 MENU2[0][1].splice(2,0,['search','\u{1F50D}','Search'],['rankings','\u{1F3C5}','Player rankings']);
 MENU2[1][1].push(['streamhub','\u{1F4E1}','Live streams']);
 {const h0=heroHome;heroHome=function(){return h0().replace('<div class="cbzchips">','<div class="cbzchips"><button data-a="go" data-v="search"><span>\u{1F50D}</span>Search</button><button data-a="go" data-v="rankings"><span>\u{1F3C5}</span>Rankings</button>')}}
+
+/* ---- Shared data: publish my matches, tournaments and auctions; show other people's (read-only) ---- */
+S.rt=S.rt||{teams:{},players:{}};
+const shMe=()=>S.user?String(S.user.phone||'').replace(/\D/g,'').slice(-10):'';
+const shTok=()=>S.tok||'';
+const shOn=()=>!!(apiBase()&&shTok()&&shMe());
+UI.sh=UI.sh||{hash:{},busy:false,last:0,state:'idle',err:''};
+function shPack(col,o){
+  if(col==='matches'){const t={},pl={};[o.a,o.b].forEach(id=>{const x=T(id);if(x){t[id]={id:x.id,name:x.name,short:x.short,color:x.color,state:x.state,country:x.country,level:x.level,players:x.players}}});
+    Object.values(o.xi||{}).flat().forEach(id=>{const x=P(id);if(x)pl[id]={id:x.id,name:x.name,role:x.role,jersey:x.jersey,team:x.team,bat:x.bat,bowl:x.bowl,avatar:x.avatar}});return {m:o,teams:t,players:pl}}
+  if(col==='tours'){const t={};o.teams.forEach(id=>{const x=T(id);if(x)t[id]={id:x.id,name:x.name,short:x.short,color:x.color,players:[]}});return {t:o,teams:t}}
+  return {a:o}}
+async function shPush(){
+  if(!shOn()||UI.sh.busy)return;UI.sh.busy=true;
+  try{
+    const jobs=[];
+    S.matches.filter(m=>!m.rm&&!isDemo(m)&&m.status!=='setup').forEach(m=>jobs.push(['matches',m.id,shPack('matches',m)]));
+    (S.tours||[]).filter(t=>!t.rm).forEach(t=>jobs.push(['tours',t.id,shPack('tours',t)]));
+    (S.auc||[]).filter(a=>!a.rm).forEach(a=>jobs.push(['auc',a.id,shPack('auc',a)]));
+    for(const [col,id,data] of jobs){const h=JSON.stringify(data);if(UI.sh.hash[col+id]===h)continue;
+      const r=await fetch(apiBase()+'/api/shared/'+col+'/'+id,{method:'PUT',headers:{'Authorization':'Bearer '+shTok(),'Content-Type':'application/json'},body:JSON.stringify({data})});
+      const j=await r.json();if(j.ok)UI.sh.hash[col+id]=h;else{UI.sh.err=j.error||'';if(r.status===401){UI.sh.state='login';break}}}
+    UI.sh.state=UI.sh.state==='login'?'login':'ok';
+  }catch(e){UI.sh.state='offline'}
+  UI.sh.busy=false}
+async function shPull(){
+  if(!apiBase())return;let changed=false;
+  try{
+    const me=shMe();
+    for(const col of ['matches','tours','auc']){
+      const r=await fetch(apiBase()+'/api/shared/'+col);const j=await r.json();if(!j.ok)continue;
+      for(const it of j.items){const d=it.data||{},mine=it.owner===me;
+        const h=JSON.stringify(d);
+        if(col==='matches'&&d.m){const i=S.matches.findIndex(x=>x.id===it.id);if(i>=0&&!S.matches[i].rm)continue;
+          if(i>=0&&S.matches[i]._sh===it.updated)continue;
+          const m=Object.assign({},d.m,{rm:mine?0:1,_sh:it.updated,by:it.ownerName});
+          if(mine&&i<0){Object.values(d.teams||{}).forEach(t=>{if(!S.teams.some(x=>x.id===t.id))S.teams.push(Object.assign({logo:null,preset:null},t))});Object.values(d.players||{}).forEach(p=>{if(!S.players.some(x=>x.id===p.id))S.players.push(p)})}
+          else{Object.assign(S.rt.teams,d.teams||{});Object.assign(S.rt.players,d.players||{})}
+          if(i>=0)S.matches[i]=m;else S.matches.push(m);changed=true}
+        else if(col==='tours'&&d.t){if(mine&&S.tours.some(x=>x.id===it.id))continue;const i=S.tours.findIndex(x=>x.id===it.id);if(i>=0&&S.tours[i]._sh===it.updated)continue;
+          Object.assign(S.rt.teams,d.teams||{});const t=Object.assign({},d.t,{rm:mine?0:1,_sh:it.updated,by:it.ownerName});if(i>=0)S.tours[i]=t;else S.tours.push(t);changed=true}
+        else if(col==='auc'&&d.a){if(mine&&S.auc.some(x=>x.id===it.id))continue;const i=S.auc.findIndex(x=>x.id===it.id);if(i>=0&&S.auc[i]._sh===it.updated)continue;
+          const a=Object.assign({},d.a,{rm:mine?0:1,_sh:it.updated,by:it.ownerName});if(i>=0)S.auc[i]=a;else S.auc.push(a);changed=true}}}
+    UI.sh.state=UI.sh.state==='login'?'login':'ok'
+  }catch(e){UI.sh.state='offline'}
+  if(changed){save();render()}}
+{const sv=save;save=function(){sv.apply(this,arguments);clearTimeout(UI.sh.t);UI.sh.t=setTimeout(shPush,2500)}}
+{const fl=finishLogin;finishLogin=function(){const L=UI.login;if(L&&L.session)S.tok=L.session;const r=fl.apply(this,arguments);setTimeout(()=>{shPush();shPull()},1500);return r}}
+setInterval(()=>{if(document.visibilityState==='visible'&&S.user)shPull()},25000);
+setTimeout(()=>{if(S.user){shPull();shPush()}},2500);
+/* remote items are read-only */
+{const g=(f)=>function(d){const m=S.matches.find(x=>x.id===d.id);if(m&&m.rm)return toast('This match belongs to '+(m.by||'another scorer')+'. You can watch it but not change it.',3500);return f.apply(this,arguments)};
+ A.scoreIt=g(A.scoreIt);A.delMatch=g(A.delMatch)}
+{const t0=vScore;vScore=function(){const m=S.matches.find(x=>x.id===UI.sid);if(m&&m.rm){UI.sid=null}return t0()}}
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});

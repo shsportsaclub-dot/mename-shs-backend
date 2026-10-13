@@ -25,9 +25,31 @@ const DATA_FILE = E.DATA_FILE || './data.json';
 const SECRET = E.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
 if (!E.SESSION_SECRET) console.warn('SESSION_SECRET not set: sessions reset on every restart.');
 
-let db = { users: {} };
+const DATABASE_URL = E.DATABASE_URL || '';   // optional Neon/Postgres connection string: makes accounts and shared data survive restarts
+let db = { users: {}, shared: {} };
 try { db = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')); } catch {}
-const saveDb = () => fs.writeFileSync(DATA_FILE, JSON.stringify(db));
+const neon = async (query, params = []) => {
+  const host = new URL(DATABASE_URL).hostname;
+  const r = await fetch(`https://${host}/sql`, { method: 'POST', headers: { 'content-type': 'application/json', 'Neon-Connection-String': DATABASE_URL }, body: JSON.stringify({ query, params }) });
+  if (!r.ok) throw new Error('neon ' + r.status + ' ' + (await r.text()).slice(0, 200));
+  return r.json();
+};
+let neonTimer = null, neonOk = false;
+const saveDb = () => {
+  try { fs.writeFileSync(DATA_FILE, JSON.stringify(db)); } catch {}
+  if (!DATABASE_URL || !neonOk) return;
+  clearTimeout(neonTimer);
+  neonTimer = setTimeout(() => neon('insert into kv(k,v) values($1,$2) on conflict(k) do update set v=excluded.v', ['db', JSON.stringify(db)]).catch(e => console.error('db save failed', e.message)), 1500);
+};
+if (DATABASE_URL) {
+  try {
+    await neon('create table if not exists kv(k text primary key, v text not null)');
+    const r = await neon('select v from kv where k=$1', ['db']);
+    if (r.rows && r.rows[0]) db = JSON.parse(r.rows[0].v); else await neon('insert into kv(k,v) values($1,$2)', ['db', JSON.stringify(db)]);
+    neonOk = true; console.log('Database connected: accounts and shared data are durable');
+  } catch (e) { console.error('DATABASE_URL set but not usable, using the local file only:', e.message); }
+}
+db.users = db.users || {}; db.shared = db.shared || {};
 
 const pending = new Map();   // phone -> {hash,salt,exp,tries,mode,profile,linkToken}
 const links = new Map();     // linkToken -> {phone,exp}
@@ -336,7 +358,7 @@ const allow = o => ORIGINS.length === 0 ? '*' : (ORIGINS.includes(o) ? o : 'null
 http.createServer(async (req, res) => {
   const origin = req.headers.origin, path = new URL(req.url, 'http://x').pathname;
   const out = (code, obj) => {
-    res.writeHead(code, { 'content-type': typeof obj === 'string' ? 'text/plain' : 'application/json', 'access-control-allow-origin': allow(origin), vary: 'origin', 'access-control-allow-headers': 'content-type,authorization', 'access-control-allow-methods': 'GET,POST,OPTIONS' });
+    res.writeHead(code, { 'content-type': typeof obj === 'string' ? 'text/plain' : 'application/json', 'access-control-allow-origin': allow(origin), vary: 'origin', 'access-control-allow-methods': 'GET,PUT,POST,DELETE,OPTIONS', 'access-control-allow-headers': 'authorization, content-type' });
     res.end(code === 204 ? '' : typeof obj === 'string' ? obj : JSON.stringify(obj));
   };
   if (req.method === 'OPTIONS') return out(204);
@@ -350,6 +372,29 @@ http.createServer(async (req, res) => {
       res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache' });
       return res.end(html);
     } catch { /* fall through to 404 */ }
+  }
+  if (path.startsWith('/api/shared/')) {   // shared public data: matches, tournaments, auctions (anyone reads, the owner writes)
+    const [, , , col, id] = path.split('/'), COLS = ['matches', 'tours', 'auc'];
+    if (!COLS.includes(col)) return out(404, { ok: false, error: 'Unknown collection' });
+    const bag = db.shared[col] = db.shared[col] || {};
+    if (req.method === 'GET' && !id) {
+      const since = +new URL(req.url, 'http://x').searchParams.get('since') || 0;
+      const list = Object.values(bag).filter(d => d.updated > since).sort((a, b) => b.updated - a.updated).slice(0, 200);
+      return out(200, { ok: true, items: list, now: Date.now() });
+    }
+    if (req.method === 'GET') return bag[id] ? out(200, { ok: true, item: bag[id] }) : out(404, { ok: false, error: 'Not found' });
+    const tok = String(req.headers.authorization || '').replace(/^Bearer\s+/i, ''), phone = readSession(tok), u = phone && db.users[phone];
+    if (!u) return out(401, { ok: false, error: 'Please sign in again' });
+    if (!id || !/^[\w-]{3,40}$/.test(id)) return out(400, { ok: false, error: 'Bad id' });
+    const cur = bag[id];
+    if (cur && cur.owner !== phone && u.role !== 'admin') return out(403, { ok: false, error: 'Only the owner can change this' });
+    if (req.method === 'DELETE') { delete bag[id]; saveDb(); return out(200, { ok: true }); }
+    if (req.method !== 'PUT') return out(405, { ok: false, error: 'Method not allowed' });
+    let raw = ''; for await (const c of req) { raw += c; if (raw.length > 400000) return out(413, { ok: false, error: 'Too large' }); }
+    let b; try { b = JSON.parse(raw); } catch { return out(400, { ok: false, error: 'Bad body' }); }
+    if (limited('shw:' + phone, 600, 36e5)) return out(429, { ok: false, error: 'Too many saves, slow down' });
+    bag[id] = { id, owner: cur ? cur.owner : phone, ownerName: u.nick || u.name || '', updated: Date.now(), data: b.data };
+    saveDb(); return out(200, { ok: true, updated: bag[id].updated });
   }
   const pth = path === '/otp/verify-link' ? '/api/otp/link' : (/^\/(otp|live|cric|streams|mo|wa|news|auth)/.test(path) ? '/api' + path : path);
   const h = routes[req.method + ' ' + pth];
