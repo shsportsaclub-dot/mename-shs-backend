@@ -10,7 +10,5 @@ services:
         generateValue: true
       - key: SMS_PROVIDER
         value: console
-      - key: ALLOWED_ORIGINS
-        value: "*"
       - key: CRIC_API_KEY
         sync: false
