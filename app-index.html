@@ -271,6 +271,9 @@ details.card summary{cursor:pointer;color:var(--ac2)}</style>
 .aucbar{display:flex;position:sticky;bottom:60px;background:#fff;border-top:1px solid #ddd;z-index:4}.aucbar button{flex:1;background:none;border:0;padding:12px 2px;font-size:12px;font-weight:700;color:#222}.aucbar button.on{color:#b0211a}
 .aucempty{text-align:center;color:#999;padding:80px 10px}.aucsearch{width:100%;padding:14px;border-radius:14px;margin-bottom:12px}.aucplayer{display:flex;gap:14px;align-items:center;background:#b0211a;color:#fff;border-radius:14px;padding:14px}.aucplayer .mu{color:#fdd}.aucbid{display:flex;flex-direction:column;align-items:center;margin:12px 0}.aucbid b{font-size:40px;color:#b0211a}
 .auctiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}.auctile{display:flex;flex-direction:column;align-items:center;gap:4px;background:#fff;border:1.5px solid #ddd;border-radius:12px;padding:10px;color:#111}.auctile.lead{border-color:#3f8f1f;background:#eaf6e4}.auctile:disabled{opacity:.45}.auctile small{color:#666}</style>
+<style>.gtt{background:#2a2216;color:#ff9a1f;text-align:center;font-weight:700;font-size:20px;padding:14px;margin:8px 0;border-radius:8px}.gth{display:flex;justify-content:space-between;align-items:center;background:#0a3a78;color:#fff;padding:12px 14px;border-radius:8px 8px 0 0}.gtl{display:flex;justify-content:space-between;padding:10px 14px;color:var(--mu);font-size:13px;background:var(--c2)}
+.gtp{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--bd)}.gtp>div{display:flex;align-items:center;gap:10px;padding:12px 14px}.gtp>div.r{justify-content:flex-end;text-align:right;border-left:1px solid var(--bd)}.gtn{color:var(--ac2);font-weight:600}
+.gcr{display:flex;justify-content:space-around;gap:8px}.gcr button{background:none;border:0;color:var(--tx);display:flex;flex-direction:column;align-items:center;gap:8px;font-size:13px}.gcr button span{width:64px;height:64px;border-radius:50%;background:var(--c2);display:flex;align-items:center;justify-content:center;font-size:28px}</style>
 </head>
 <body>
 <div id="app"></div><div id="modal"></div><div id="toast"></div>
@@ -2482,7 +2485,7 @@ function hhCard(m){const live=m.started&&!m.ended,tm=(m.teams||[]).slice(0,2),sp
  const tag=live?'<span class="lv">LIVE</span>':m.ended?'<span class="lv r">RESULT</span>':'<span class="lv u">UPCOMING</span>';
  return `<div class="hh-lc" data-a="wOpen" data-id="${esc(m.id)}">${tag}<div class="tp">${esc((sp.desc?sp.desc+' • ':'')+sp.series)} • ${esc(f[0])}</div>
  ${tm.map(t=>`<div class="tm">${wBadge(t)}<b>${esc(t.name||t.short)}</b><span class="sc">${wTeamScore(m,t)||''}</span></div>`).join('')}
- <div class="st">${esc(m.started?(m.status||''):'Starts '+wWhen(m))}</div><div class="vn">${esc(m.venue||'')}</div>
+ <div class="st">${esc(m.started?(m.status||''):wIn(m))}</div><div class="vn">${esc(m.venue||'')}</div>
  <div class="ac"><button data-a="wOpen" data-id="${esc(m.id)}">Scorecard</button><button data-a="wOpen" data-id="${esc(m.id)}">Commentary</button><button data-a="wOpen" data-id="${esc(m.id)}">${live?'Watch Live':'Details'}</button></div></div>`}
 function heroHome(){
  const h=UI.hf,j=UI.live,L=hhMatches(),all=j&&j.ok?j.matches:[],sp=UI.sport||'cricket',N=(UI.news&&UI.news.ok?UI.news.items:[]);
@@ -2859,6 +2862,19 @@ Object.assign(F,{
  auPlayer(fd){const a=aucOf(fd.get('aid'));a.players.push({id:uid(),name:fd.get('name'),age:+fd.get('age')||0,cat:fd.get('cat'),skill:fd.get('skill'),spec1:fd.get('spec1'),spec2:fd.get('spec2'),st:null});commit()},
  auCreate(fd){const a={id:uid(),name:fd.get('name'),venue:fd.get('venue'),date:fd.get('date'),time:fd.get('time'),ppt:+fd.get('ppt')||11,pts:+fd.get('pts')||10000,base:+fd.get('base')||100,inc:+fd.get('inc')||50,fee:'Free',owner:S.user&&S.user.id,teams:[],players:[],cur:null,bid:null,bidTeam:null};S.auc.push(a);UI.modal=null;UI.au.tab='my';UI.au.open=a.id;UI.au.dtab='teams';commit();toast('Auction created')}});
 C.auq=v=>{UI.au.q=v;render()};
+
+/* ---- CricGiri style bits: countdown, Top Performers, Create Your Own ---- */
+function wIn(m){const t=wTm(m);if(!t)return 'Starts '+wWhen(m);const d=new Date(t).getTime()-Date.now();if(d<=0||d>864e5)return 'Starts '+wWhen(m);const h=Math.floor(d/36e5),mi=Math.floor(d%36e5/6e4);return 'Match starts in '+(h?h+' Hour'+(h>1?'s':'')+' ':'')+mi+' Minute'+(mi===1?'':'s')+'.'}
+{const i0=tInfo;tInfo=function(m){
+  const top=m.innings.map((inn,j)=>{const k=calc(m,j),t=T(inn.bat);
+    const bats=Object.entries(k.bat).filter(([id,b])=>b.b>0).sort((a,b)=>b[1].r-a[1].r).slice(0,3);
+    const bowl=Object.entries(k.bowl).filter(([id,w])=>w.b>0).sort((a,b)=>b[1].w-a[1].w||a[1].r-b[1].r).slice(0,3);
+    const rows=Math.max(bats.length,bowl.length);let r='';
+    for(let q=0;q<rows;q++){const b=bats[q],w=bowl[q];
+      r+=`<div class="gtp"><div>${b?`<span class="pphoto" style="width:40px;height:40px;flex:none">${av(P(b[0])||{name:nm(b[0])})}</span><div><div class="gtn">${esc(nm(b[0]))}</div><div class="mu">${b[1].r} (${b[1].b})</div></div>`:''}</div><div class="r">${w?`<div><div class="gtn">${esc(nm(w[0]))}</div><div class="mu">${w[1].w}-${w[1].r} (${fmtOv(w[1].b)})</div></div><span class="pphoto" style="width:40px;height:40px;flex:none">${av(P(w[0])||{name:nm(w[0])})}</span>`:''}</div></div>`}
+    return `<div class="gth"><span>${logo(t,30)} <b>${esc(t.name)}</b></span><span>Overs ${fmtOv(k.lg)} &nbsp;<b>${k.runs}/${k.wk}</b></span></div><div class="gtl"><span>Batters</span><span>Bowlers</span></div>${r}`}).join('');
+  return (top?`<div class="gtt">&#127941; Top Performers</div>${top}`:'')+i0(m)}}
+{const v0=vMatches;vMatches=function(){return `<div class="card gco"><div class="b" style="font-size:18px;margin-bottom:10px">Create Your Own</div><div class="gcr"><button data-a="dact" data-v="newMatch"><span>&#127951;</span>Create Match</button><button data-a="go" data-v="tours"><span>&#127942;</span>Create Tournament</button><button data-a="go" data-v="teams"><span>&#128101;</span>Create Team</button></div></div>`+v0()}}
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});
