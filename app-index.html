@@ -286,7 +286,7 @@ details.card summary{cursor:pointer;color:var(--ac2)}</style>
 .ppsub{padding:12px 0 8px}.pprow{display:grid;grid-template-columns:1.1fr .7fr .8fr 1.1fr;gap:6px;padding:14px 0;border-bottom:1px dashed #ddd;cursor:pointer;align-items:center}.pprow.hd{background:#e6f4ec;margin:0 -14px;padding:10px 14px;color:#777;cursor:default}.ppsel{background:#dff3ec;color:#666;padding:14px;border-radius:10px;margin-bottom:10px}.ppbody .empty{color:#777}</style>
 <style>.cbhero{background:linear-gradient(135deg,#2b0a55,#12031f);margin:-12px -12px 0;padding:70px 16px 16px;position:relative;display:flex;flex-direction:column;gap:12px}.cbht h2{margin:0;color:#fff}.cbht div{color:#e6d9ff}
 .cbtabs{display:flex;overflow-x:auto;background:#3a006b;margin:0 -12px}.cbtabs button{flex:none;background:none;border:0;color:#fff;padding:16px 18px;font-weight:600;white-space:nowrap}.cbtabs button.on{background:#fff;color:#3a006b;font-weight:800}
-.cbbody{background:#fff;color:#111;margin:0 -12px;padding:12px 14px 90px;min-height:60vh}.cbbody .mu{color:#777}.cbbody .card,.cbbody .item{background:#fff;color:#111;border:1px solid #e6e6e6}.cbbody table{color:#111}.cbbody .fx{border-color:#e6e6e6;color:#111}.cbbody .b{color:#111}.cbbody .btn.ghost{color:#3a006b;border-color:#3a006b;background:#fff}
+.cbbody{background:#fff;color:#111;margin:0 -12px;padding:12px 14px 90px;min-height:60vh}.cbbody .mu{color:#777}.cbbody .card,.cbbody .item{background:#fff;color:#111;border:1px solid #e6e6e6}.cbbody table{color:#111}.cbbody .fx{border-color:#e6e6e6;color:#111}.cbbody .b{color:#111}.cbbody input,.cbbody select{background:#fff;color:#111;border:1px solid #bbb;border-radius:8px}.cbbody label{color:#555}.cbbody .btn.ghost{color:#3a006b;border-color:#3a006b;background:#fff}
 .cbsec{background:#f4f4f6;color:#3a006b;font-weight:700;padding:14px;margin:8px -14px 0}.cbrow{display:flex;justify-content:space-between;gap:12px;padding:16px 4px;border-bottom:1px solid #e6e6e6}.cbrow span{color:#777}.cbrow b{text-align:right}
 .cbsearch{width:100%;padding:14px;border:1px solid #ddd;border-radius:12px;background:#fff;color:#111;margin-bottom:8px}.cbteam{display:flex;gap:14px;align-items:center;padding:12px 4px;border-bottom:1px solid #eee;cursor:pointer}.cbc{display:inline-block;background:#3a006b;color:#fff;border-radius:50%;width:18px;height:18px;text-align:center;font-size:11px;line-height:18px}
 .cbof{display:flex;gap:14px;align-items:center;border:1px solid #e6e6e6;border-radius:12px;padding:12px;margin:6px 0}.cbempty{text-align:center;padding:60px 20px;color:#111}.cbempty .mu{margin-top:6px}
@@ -3028,6 +3028,71 @@ bnav=function(){
 {const c0=hhCard;hhCard=function(m){let o=c0(m);const live=m.started&&!m.ended;
   if(!live&&!m.ended)o=o.replace(/<div class="ac">[\s\S]*?<\/div><\/div>$/,`<div class="ac"><button data-a="wOpen" data-id="${esc(m.id)}">MATCH FORECAST</button><button data-a="go" data-v="matches">SCHEDULE</button></div></div>`);
   return o}}
+
+/* ---- CricHeroes-style: boundary tracker, what-if NRR calculator, rankings, smart search, officials sign-up ---- */
+UI.nc=UI.nc||{a:'',b:'',ra:'',oa:'',rb:'',ob:''};UI.rk=UI.rk||{scope:'all',state:'',g:'men',cat:'bat'};UI.sq=UI.sq||'';
+const ovToBalls=v=>{const [o,b]=String(v).split('.');return (+o||0)*6+(+b||0)};
+function bndTracker(t){const L=tourStats(t);const x=L.filter(y=>y.f4||y.f6);
+  if(!x.length)return `<div class="cbsec">Boundary tracker</div><div class="aucmu">No fours or sixes recorded yet.</div>`;
+  const tot4=L.reduce((a,y)=>a+y.f4,0),tot6=L.reduce((a,y)=>a+y.f6,0),top=(k)=>L.filter(y=>y[k]>0).sort((a,b)=>b[k]-a[k]).slice(0,5);
+  const row=(y,k)=>`<div class="item"><span class="aucc" style="width:34px;height:34px;background:hsl(${aucHue(P(y.id).name)} 50% 38%)">${esc(P(y.id).name[0])}</span><span>${esc(P(y.id).name)}</span><span class="grow"></span><b>${y[k]}</b></div>`;
+  return `<div class="cbsec">Boundary tracker</div><div class="mctiles" style="grid-template-columns:1fr 1fr;margin:10px 0"><div><b>${tot4}</b><span>FOURS</span></div><div><b>${tot6}</b><span>SIXES</span></div></div><div class="b" style="margin:8px 2px">Most fours</div>${top('f4').map(y=>row(y,'f4')).join('')}<div class="b" style="margin:12px 2px 4px">Most sixes</div>${top('f6').map(y=>row(y,'f6')).join('')}`}
+function nrrCalc(t){
+  const N=UI.nc,tm=t.teams.map(id=>[id,T(id).name]);if(!N.a||!tm.some(x=>x[0]===N.a))N.a=tm[0]&&tm[0][0]||'';if(!N.b||N.b===N.a||!tm.some(x=>x[0]===N.b))N.b=(tm.find(x=>x[0]!==N.a)||[''])[0];
+  const rows=standings(t),me=rows.find(r=>r.id===N.a);
+  let out='<div class="mu sm">Type both innings to see the table after this match.</div>';
+  if(me&&N.ra!==''&&N.oa!==''&&N.rb!==''&&N.ob!==''){
+    const R=ptsRule(t),ra=+N.ra,rb=+N.rb,ba=ovToBalls(N.oa),bb=ovToBalls(N.ob);
+    if(ba>0&&bb>0){const sim=rows.map(r=>({...r}));const A=sim.find(r=>r.id===N.a),B=sim.find(r=>r.id===N.b);
+      if(A&&B){A.p++;B.p++;A.rf+=ra;A.bf+=ba;A.ra+=rb;A.bb+=bb;B.rf+=rb;B.bf+=bb;B.ra+=ra;B.bb+=ba;
+        if(ra>rb){A.w++;A.pts+=R.win;B.l++;B.pts+=R.loss}else if(rb>ra){B.w++;B.pts+=R.win;A.l++;A.pts+=R.loss}else{A.pts+=R.tie;B.pts+=R.tie}
+        sim.forEach(r=>{r.nrr=(r.bf?r.rf/(r.bf/6):0)-(r.bb?r.ra/(r.bb/6):0)});sim.sort((x,y)=>y.pts-x.pts||y.nrr-x.nrr||y.w-x.w);
+        const pos=sim.findIndex(r=>r.id===N.a)+1,old=rows.findIndex(r=>r.id===N.a)+1,A2=sim[pos-1];
+        out=`<div class="cbrow"><span>${esc(T(N.a).name)} now</span><b>#${old} | ${me.pts} pts | NRR ${me.nrr>=0?'+':''}${me.nrr.toFixed(3)}</b></div><div class="cbrow"><span>After this result</span><b>#${pos} | ${A2.pts} pts | NRR ${A2.nrr>=0?'+':''}${A2.nrr.toFixed(3)}</b></div><div class="mu sm" style="margin-top:6px">Uses this tournament's own points rule and the table of verified completed matches. If a side is all out, enter the full quota of overs.</div>`}}}
+  return `<div class="cbsec">NRR calculator (what if)</div><div class="row" style="margin:8px 0"><select data-c="ncA" style="flex:1">${opt(tm,N.a)}</select><span>vs</span><select data-c="ncB" style="flex:1">${opt(tm.filter(x=>x[0]!==N.a),N.b)}</select></div>
+  <div class="row"><label style="flex:1">${esc(T(N.a).short)} runs<input data-c="ncv" name="ra" inputmode="numeric" value="${esc(N.ra)}"></label><label style="flex:1">overs faced<input data-c="ncv" name="oa" placeholder="19.2" value="${esc(N.oa)}"></label></div>
+  <div class="row"><label style="flex:1">${esc(T(N.b).short)} runs<input data-c="ncv" name="rb" inputmode="numeric" value="${esc(N.rb)}"></label><label style="flex:1">overs faced<input data-c="ncv" name="ob" placeholder="20" value="${esc(N.ob)}"></label></div><div style="margin-top:8px">${out}</div>`}
+{const t0=XV.tour;XV.tour=function(){const o=t0(),t=trObj(UI.tid);if(!t)return o;
+  const tab=UI.ttab;let add='';if(tab==='awd')add=bndTracker(t);if(tab==='pts')add=nrrCalc(t);
+  return add?o.replace(/<\/div>\s*$/,`${add}</div>`):o}}
+Object.assign(C,{ncA(v){UI.nc.a=v;render()},ncB(v){UI.nc.b=v;render()},ncv(v,el){UI.nc[el.name]=v}});
+document.addEventListener('change',e=>{if(e.target&&e.target.dataset&&e.target.dataset.c==='ncv')render()});
+const isWomen=t=>t&&/women|girls|ladies|\(w\)|\bwomen's|[- ]w$/i.test(t.name||'');
+XV.rankings=function(){
+  const K=UI.rk,cr=career(),states=[...new Set(S.teams.map(t=>t.state).filter(Boolean))].sort();
+  const pl=S.players.filter(p=>{const t=T(p.team);if(!t)return false;if((K.g==='women')!==isWomen(t))return false;if(K.scope==='state'&&K.state&&t.state!==K.state)return false;return true});
+  const rows=pl.map(p=>({p,c:cr[p.id]||{m:new Set()}})).filter(x=>x.c.m.size);
+  let L=[],hd='',fmt;
+  if(K.cat==='bat'){L=rows.filter(x=>x.c.r>0).sort((a,b)=>b.c.r-a.c.r);hd='Runs';fmt=x=>`${x.c.r} <span class="mu sm">(${x.c.inn} inn, SR ${x.c.b?(x.c.r*100/x.c.b).toFixed(0):0})</span>`}
+  else if(K.cat==='bowl'){L=rows.filter(x=>x.c.w>0).sort((a,b)=>b.c.w-a.c.w||a.c.or-b.c.or);hd='Wickets';fmt=x=>`${x.c.w} <span class="mu sm">(Eco ${x.c.ob?(x.c.or*6/x.c.ob).toFixed(1):0})</span>`}
+  else{L=[];hd='Catches'}
+  const seg=(key,arr)=>`<div class="mcsub">${arr.map(([k,l])=>`<button class="${K[key]===k?'on':''}" data-a="rkSet" data-k="${key}" data-v="${k}">${l}</button>`).join('')}</div>`;
+  return `<div class="bar"><h2>Player rankings</h2></div>${seg('g',[['men','Men / Open'],['women','Women']])}${seg('scope',[['all','National (all)'],['state','By state']])}${K.scope==='state'?`<select data-c="rkState"><option value="">Choose state</option>${states.map(x=>`<option ${K.state===x?'selected':''}>${esc(x)}</option>`).join('')}</select>`:''}${seg('cat',[['bat','Batting'],['bowl','Bowling'],['fld','Fielding']])}
+  <div class="card" style="padding:0">${K.cat==='fld'?'<div class="empty">Catches and run-outs are not recorded per fielder yet, so no fielding ranking is shown.</div>':L.length?L.slice(0,50).map((x,i)=>`<div class="chmv"><span class="mu" style="width:22px">${i+1}</span><span class="pphoto" style="width:44px;height:44px;flex:none">${av(x.p)}</span><div style="flex:1;min-width:0"><div class="b">${esc(x.p.name)}</div><div class="mu sm">${esc(T(x.p.team).name)}</div></div><b>${fmt(x)}</b></div>`).join(''):'<div class="empty">No ranked players yet for this filter. Rankings are built only from matches scored in this app.</div>'}</div>
+  <div class="mu sm" style="margin:8px 2px">City and district filters need a place on each team; state and country are used now. Women is inferred from the team name until a gender field is added.</div>`};
+Object.assign(A,{rkSet(d){UI.rk[d.k]=d.v;render()}});C.rkState=v=>{UI.rk.state=v;render()};
+XV.search=function(){
+  const q=(UI.sq||'').trim().toLowerCase(),has=(...a)=>a.some(x=>String(x||'').toLowerCase().includes(q));
+  const sec=(h,items)=>items.length?`<div class="cbsec" style="margin:10px -2px 0">${h}</div>${items.join('')}`:'';
+  let body='<div class="aucmu">Search players, teams, tournaments, venues, auctions and officials.</div>';
+  if(q.length>=2){
+    const P1=S.players.filter(p=>has(p.name,p.city)).slice(0,8).map(p=>`<div class="item" data-a="viewPlayer" data-id="${p.id}"><span class="pphoto" style="width:36px;height:36px;flex:none">${av(p)}</span><div><div class="b">${esc(p.name)}</div><div class="mu sm">${esc((T(p.team)||{}).name||'Free agent')}</div></div></div>`),
+    T1=S.teams.filter(t=>has(t.name,t.short,t.state)).slice(0,8).map(t=>`<div class="item" data-a="go" data-v="teams">${logo(t,34)}<div><div class="b">${esc(t.name)}</div><div class="mu sm">${esc(t.state||'')}</div></div></div>`),
+    R1=S.tours.filter(t=>has(t.name)).map(t=>`<div class="item" data-a="tourOpen" data-id="${t.id}"><span>&#127942;</span><div class="b">${esc(t.name)}</div></div>`),
+    V1=(S.venues||[]).filter(v=>has(v.name,v.city)).map(v=>`<div class="item"><span>&#128205;</span><div><div class="b">${esc(v.name)}</div><div class="mu sm">${esc(v.city||'')}</div></div></div>`),
+    M1=S.matches.filter(m=>has(m.venue,T(m.a).name,T(m.b).name,m.name)).slice(0,6).map(m=>`<div class="item" data-a="open" data-id="${m.id}"><span>&#127951;</span><div><div class="b">${esc(T(m.a).short)} vs ${esc(T(m.b).short)}</div><div class="mu sm">${esc(m.date)} ${esc(m.venue||'')}</div></div></div>`),
+    U1=S.auc.filter(a=>has(a.name,a.venue)).map(a=>`<div class="item" data-a="aucGo" data-id="${a.id}"><span>&#128296;</span><div class="b">${esc(a.name)}</div></div>`),
+    O1=S.officials.filter(o=>has(o.name,o.city)).map(o=>`<div class="item" data-a="offOpen" data-id="${o.id}"><span>&#129489;&#8205;&#9878;&#65039;</span><div><div class="b">${esc(o.name)}</div><div class="mu sm">${esc(roleName(o.role))}</div></div></div>`);
+    body=sec('Players',P1)+sec('Teams',T1)+sec('Tournaments',R1)+sec('Matches',M1)+sec('Venues',V1)+sec('Auctions',U1)+sec('Officials',O1)||'<div class="aucmu">Nothing found.</div>'}
+  return `<div class="bar"><h2>Search</h2></div><input class="aucsearch" style="background:var(--c2);color:var(--tx);border:1px solid var(--bd)" data-c="sq" placeholder="Search players, teams, tournaments, venues..." value="${esc(UI.sq)}" autofocus>${body}`};
+C.sq=v=>{UI.sq=v;render();const i=document.querySelector('[data-c=sq]');if(i){i.focus();i.setSelectionRange(v.length,v.length)}};
+{const o0=XV.officials;XV.officials=function(){const o=o0();
+  return o+`<div class="card" style="margin-top:10px"><h3>Register as scorer, umpire or commentator</h3><div class="mu sm">Anyone can sign up so organisers can find you. Certificates are shown as NOT VERIFIED.</div><form data-f="offAdd"><label>Name<input name="name" required value="${esc(S.user&&S.user.name||'')}"></label><div class="row"><label style="flex:1">Role<select name="role">${OFFROLES.map(([k,l])=>`<option value="${k}">${l}</option>`).join('')}</select></label><label style="flex:1">City<input name="city"></label></div><label>Phone<input name="phone" inputmode="tel"></label><button class="btn wide" style="margin-top:8px">Register me</button></form></div>`}}
+XV.streamhub=function(){const L=S.matches.filter(m=>getStream('m'+m.id)).reverse();
+  return `<div class="bar"><h2>Live streams</h2></div>${L.length?L.map(m=>`<div class="mcm" data-a="open" data-id="${m.id}"><div class="row" style="justify-content:space-between"><b>${esc(T(m.a).name)} vs ${esc(T(m.b).name)}</b><span class="mcst ${m.status==='live'?'LIVE':'RESULT'}">${m.status==='live'?'LIVE':'ENDED'}</span></div><div class="mu sm">${esc(m.venue||'')} | ${esc(m.date)}</div><div style="margin-top:6px;color:var(--ac2)">&#9654; Watch</div></div>`).join(''):'<div class="empty">No match has a stream link yet. Add one from Stream and OBS or the Start Match wizard.</div>'}`};
+MENU2[0][1].splice(2,0,['search','\u{1F50D}','Search'],['rankings','\u{1F3C5}','Player rankings']);
+MENU2[1][1].push(['streamhub','\u{1F4E1}','Live streams']);
+{const h0=heroHome;heroHome=function(){return h0().replace('<div class="cbzchips">','<div class="cbzchips"><button data-a="go" data-v="search"><span>\u{1F50D}</span>Search</button><button data-a="go" data-v="rankings"><span>\u{1F3C5}</span>Rankings</button>')}}
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});
