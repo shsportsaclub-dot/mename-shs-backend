@@ -23,8 +23,8 @@ Requirements are kept separate from implementation status. Conflicts: latest exp
 | R14 | Career timeline with Verified/Imported/Self-declared labels | Player doc 4 | Career tab | - | - | Basic timeline from matches only | PARTIAL |
 | R15 | Rankings per sport with disclosed method | Player doc 6, Rem. 5 | Rankings tab | - | - | Simple runs/wickets leaderboard, disclosed as NOT a points formula | PARTIAL; formulas SOURCE/DEFINITION REQUIRED |
 | R16 | Social auto-posting to connected accounts | Player doc 5 | Social | - | Connected accounts + editorial review | - | NOT BUILT |
-| R17 | Match category/eligibility (Men/Women/Mixed, age, level, ball type) | Rem. 1 | Match Start | - | - | - | NOT BUILT |
-| R18 | Match Start wizard | Workflow doc | Score | - | - | - | NOT BUILT |
+| R17 | Match category/eligibility (Men/Women/Mixed, age, level, ball type) | Rem. 1 | Match Start wizard, Format step | m.cat | Scorer | Playwright: required category, saved on match, shown in header | PARTIAL: labels built; competition-specific player eligibility and inherited approved rules NOT BUILT |
+| R18 | Match Start wizard (9 steps already existed: mode, teams, format, players, venue, officials, broadcast, toss, review) | Workflow doc | Score | S.wiz | Scorer | Existing + category step tested | PARTIAL: Select Sport step and competition/fixture linkage NOT BUILT (wizard is cricket only) |
 | R19 | Board/league administration, affiliation | Rem. 2 | Admin | - | Board admins | - | NOT BUILT |
 | R20 | Live-telecast viewing passes (separate from stadium tickets) | Rem. 3 | Watch | payment + entitlement | Server-side | - | NOT BUILT (payment gateway + stream source required) |
 | R21 | Subscriptions, entitlements, expiry never deletes records | Rem. 4 | Plans | - | Server-side | - | NOT BUILT (SOURCE: plan/settlement rules required) |
@@ -37,7 +37,7 @@ Requirements are kept separate from implementation status. Conflicts: latest exp
 | R28 | Email optional | User | Register | cleanProfile | - | Tested | BUILT-TESTED |
 | R29 | Voice AI integration | Rem. 11 | - | - | - | - | SOURCE/DEFINITION REQUIRED (source code + contract) |
 | R30 | Approved logo/icon/background assets | Rem. 11 | - | - | - | - | SOURCE/DEFINITION REQUIRED |
-| R31 | Welcome screen with language + country | Workflow | Entry | - | - | - | NOT BUILT |
+| R31 | Welcome screen with language + country | Workflow | Entry | S.prefs | Public | Playwright: first launch shows it, saves, not shown again | PARTIAL: Role/Avatar/SH ID claim steps NOT BUILT; app text not translated |
 | R32 | Auction public-link registration: organiser setup (categories, base prices, fee, dates), player form with mandatory photo, status flow, duplicate prevention, organiser review, approve to pool, per-player base/max in bidding | Auction reg doc | Auction > Register tab; ?reg= link | /api/aucreg/* (server decides status) | Player / organiser / admin | Playwright 2-user test: photo required, duplicate blocked, unpaid cannot be approved, changes-required loop, approve adds to pool, player cannot approve | PARTIAL: BUILT-TESTED core; NOT BUILT: online fee payment + server verification (only organiser-recorded), QR, OTP step, eligibility rules/extra required fields, tournament linkage, notify player on SOLD, re-auction |
 | R33 | External profile link import (CricHeroes, CrickBro, CricGiri Live, CricLabs) | Import doc | Registration form | link + provenance | Player | Source detection tested for CricHeroes | PARTIAL: link attached as self-declared/unverified only. Automatic fetch/preview NOT BUILT: no verified public API or permission route; sandbox cannot reach those sites; QR scan not built |
 | R34 | Media engine: automatic posters (13 types, presets), editable, publish workflow | Media doc 1-3 | - | - | Editorial approval | - | NOT BUILT (assets/branding SOURCE REQUIRED) |

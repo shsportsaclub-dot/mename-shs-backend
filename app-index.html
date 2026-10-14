@@ -1668,6 +1668,7 @@ function wzGate(){
    ['Two different teams',!!w.a&&!!w.b&&w.a!==w.b],
    ['Format and date',+w.overs>0&&!!w.date],
    ['Ball type',!!w.ball],
+   ['Match category (Men / Women / Mixed)',!!w.gender],
    ['Playing XI for both teams (at least 2 each)',xa>=2&&xb>=2],
    ['Venue',!!v],
    ['Playing area',!!(v&&w.areaId&&(v.areas||[]).some(a=>a.id===w.areaId))],
@@ -1684,7 +1685,10 @@ function wzStepHTML(){
     <div class="card" style="margin-top:10px"><div class="b">Team not in the list? Register it</div><div class="row"><input id="wz-tn" placeholder="Team name" style="flex:2"><input id="wz-ts" placeholder="Short" maxlength="4" style="flex:1"><button type="button" class="btn sm" data-a="wzTeam">Add team</button></div></div>`;
   case 2:return `<label>Match name (optional)<input data-c="wz" name="name" value="${esc(w.name)}" placeholder="e.g. Sunday friendly"></label>
     <div class="row"><label style="flex:1">Format<select data-c="wz" name="overs">${opt([['5','5 overs'],['6','6 overs'],['8','8 overs'],['10','T10'],['15','15 overs'],['20','T20'],['20.5','The Hundred (100 balls)'],['30','30 overs'],['40','40 overs'],['50','ODI 50']],String(w.overs))}</select></label><label style="flex:1">Date<input type="date" data-c="wz" name="date" value="${esc(w.date)}"></label></div>
-    <label>Ball type (required)<select data-c="wz" name="ball">${opt([['','Choose ball type'],['leather','Leather ball'],['tennis','Tennis ball']],w.ball||'')}</select></label><div class="mu sm">Tennis ball here means the cricket ball type, not the sport Tennis. It is kept with the match and its stats.</div>`;
+    <label>Ball type (required)<select data-c="wz" name="ball">${opt([['','Choose ball type'],['leather','Leather ball'],['tennis','Tennis ball']],w.ball||'')}</select></label><div class="mu sm">Tennis ball here means the cricket ball type, not the sport Tennis. It is kept with the match and its stats.</div>
+    <div class="row"><label style="flex:1">Category (required)<select data-c="wz" name="gender">${opt([['','Choose'],['men','Men'],['women','Women'],['mixed','Mixed']],w.gender||'')}</select></label><label style="flex:1">Age group<select data-c="wz" name="age">${opt([['','Not specified'],['open','Open (no age limit)'],['u19','Under 19'],['u16','Under 16'],['u14','Under 14'],['u12','Under 12'],['vet','Veterans']],w.age||'')}</select></label></div>
+    <label>Match level<select data-c="wz" name="level">${opt([['','Not specified'],['local','Local'],['corporate','Corporate'],['academy','Academy'],['club','Club'],['board','Domestic board'],['national','National'],['intl','International']],w.level||'')}</select></label>
+    <div class="mu sm">These labels are kept with the match and shown on it. They do not yet block players by age or gender: competition-specific eligibility rules are not built.</div>`;
   case 3:return [w.a,w.b].map(tid=>{const t=T(tid),xi=w.xi[tid]||[],sb=w.subs[tid]||[];
     return `<div class="card" style="margin:8px 0"><div class="b">${esc(t.name)}: playing XI ${xi.length}/11, substitutes ${sb.length}/4</div>
     ${t.players.length?t.players.map(id=>{const p=P(id)||{};return `<div class="row" style="justify-content:space-between;padding:4px 0"><span style="display:flex;align-items:center;gap:8px;min-width:0"><span class="pphoto" style="width:30px;height:30px;font-size:13px;flex:none">${typeof av==='function'?av(p):''}</span><span>${esc(p.name||'')} <span class="mu sm">${esc(p.role||'')}</span></span></span><span class="row" style="gap:10px;flex-wrap:nowrap"><label class="ck" style="margin:0"><input type="checkbox" data-c="wzxi" data-k="xi" data-t="${tid}" value="${id}" ${xi.includes(id)?'checked':''}> XI</label><label class="ck" style="margin:0"><input type="checkbox" data-c="wzxi" data-k="subs" data-t="${tid}" value="${id}" ${sb.includes(id)?'checked':''}> Sub</label></span></div>`}).join(''):'<div class="mu sm">No players yet. Add one below.</div>'}
@@ -1723,6 +1727,7 @@ function wzShow(){UI.modal={t:'html',html:wzHTML()};renderModal()}
 function wzCheck(step){const w=S.wiz;
   if(step===1&&(!w.a||!w.b||w.a===w.b))return 'Pick two different teams';
   if(step===2&&!w.ball)return 'Choose the ball type: leather or tennis';
+  if(step===2&&!w.gender)return 'Choose the match category: Men, Women or Mixed';
   if(step===3&&((w.xi[w.a]||[]).length<2||(w.xi[w.b]||[]).length<2))return 'Select at least 2 playing XI players for each team';
   if(step===4&&(!wzVenue()||!w.areaId))return 'Choose a venue and a playing area';
   if(step===5&&!String(w.off.sc||'').trim())return 'Name the scorer';
@@ -1773,7 +1778,7 @@ Object.assign(A,{
   wzStart(){const w=S.wiz,g=wzGate();if(!g.every(x=>x[1])){const i=g.findIndex(x=>!x[1]);return toast('Not ready: '+g[i][0],3000)}
     const v=wzVenue(),area=(v.areas||[]).find(a=>a.id===w.areaId),pit=area&&(area.pitches||[]).find(p=>p.id===w.pitchId),off=w.off;
     const m=newMatch({a:w.a,b:w.b,overs:w.overs,venue:v.name+(area?' - '+area.name:'')+(pit?' - '+pit.name:''),date:w.date,toss:w.toss,dec:w.dec,xiA:w.xi[w.a].slice(),xiB:w.xi[w.b].slice(),umpires:[off.u1,off.u2].filter(Boolean).join(', ')});
-    Object.assign(m,{ball:w.ball||'',mode:w.mode,name:w.name,venueId:v.id,areaId:w.areaId,pitchId:w.pitchId||'',officials:Object.assign({},off),bc:w.bc,subs:{[w.a]:(w.subs[w.a]||[]).slice(),[w.b]:(w.subs[w.b]||[]).slice()},scorer:off.sc||m.scorer,ready:true,
+    Object.assign(m,{cat:{gender:w.gender||'',age:w.age||'',level:w.level||''},ball:w.ball||'',mode:w.mode,name:w.name,venueId:v.id,areaId:w.areaId,pitchId:w.pitchId||'',officials:Object.assign({},off),bc:w.bc,subs:{[w.a]:(w.subs[w.a]||[]).slice(),[w.b]:(w.subs[w.b]||[]).slice()},scorer:off.sc||m.scorer,ready:true,
       audit:[{t:Date.now(),type:'lineup_locked',by:S.user?S.user.nick||S.user.name:'',xi:{[w.a]:w.xi[w.a].slice(),[w.b]:w.xi[w.b].slice()}}]});
     [['u1','umpire'],['u2','umpire'],['u3','umpire'],['ref','referee'],['sc','scorer'],['co','scorer']].forEach(([k,r])=>{const n=String(off[k]||'').trim();if(n&&!S.officials.some(o=>o.role===r&&o.name.toLowerCase()===n.toLowerCase()))S.officials.push({id:uid(),name:n,role:r})});
     if(w.bc==='own'&&w.bcUrl){S.streams=S.streams||{};S.streams['m'+m.id]=w.bcUrl;try{saveStream('m'+m.id,w.bcUrl)}catch(e){}}
@@ -1781,7 +1786,7 @@ Object.assign(A,{
 });
 {const s0=vScore;vScore=function(){const open=S.matches.filter(x=>x.status!=='done'),m=S.matches.find(x=>x.id===UI.sid)||open[open.length-1];
   if(!m&&S.wiz&&can())return `<div class="empty">Your match setup is not finished.<br><br><button class="btn" data-a="newMatch">Continue setup (step ${S.wiz.step+1} of ${WSTEPS.length})</button></div>`;return s0()}}
-{const m0=mHead;mHead=function(m){const o=m0(m);const bits=[m.name,m.mode&&(MODES.find(x=>x[0]===m.mode)||[0,m.mode])[1]].filter(Boolean);return bits.length?`<div class="mu sm" style="margin:2px 0 6px">${esc(bits.join(' | '))}</div>`+o:o}}
+{const m0=mHead;mHead=function(m){const o=m0(m);const CL={men:'Men',women:'Women',mixed:'Mixed',u19:'Under 19',u16:'Under 16',u14:'Under 14',u12:'Under 12',vet:'Veterans',open:'Open',local:'Local',corporate:'Corporate',academy:'Academy',club:'Club',board:'Domestic board',national:'National',intl:'International'},cb=m.cat?[m.cat.gender,m.cat.age,m.cat.level].filter(Boolean).map(x=>CL[x]||x).join(' / '):'';const bits=[m.name,m.mode&&(MODES.find(x=>x[0]===m.mode)||[0,m.mode])[1],cb].filter(Boolean);return bits.length?`<div class="mu sm" style="margin:2px 0 6px">${esc(bits.join(' | '))}</div>`+o:o}}
 
 
 /* ---------------- REELS STRIP on Home (tap opens the full-screen reels at that card) ---------------- */
