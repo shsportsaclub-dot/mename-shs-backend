@@ -16,3 +16,4 @@ jobs:
           node-version: '22'
       - run: node --check server.js
       - run: node --test tests/textbee.test.mjs
+      - run: node tests/textbee-burst.test.mjs

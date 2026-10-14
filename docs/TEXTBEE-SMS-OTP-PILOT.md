@@ -45,3 +45,10 @@ No bulk campaign and no real SMS were sent during development.
 References:
 https://textbee.dev/docs/faq
 https://textbee.dev/docs/sending-sms/sending-sms
+
+## 50-user burst handling
+50 concurrent OTP requests for distinct numbers are supported behind one shared IP.
+SMS_OTP_IP_HOURLY_LIMIT defaults to 100 (configurable 50–1000). Per-number limits remain active.
+Each OTP uses its own request; a 50-recipient bulk-batch entitlement is not assumed.
+Provider quotas/API limits and device/carrier pacing still govern sending.
+Mocked test: 50 queued requests, 50 codes verified, immediate repeat blocked. Zero real SMS.

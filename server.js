@@ -12,6 +12,8 @@ const PORT = +E.PORT || 8080;
 const APP_URL = (E.APP_URL || 'http://localhost:5500').replace(/\/$/, '');   // where the Scoring Heroes web app is hosted (HTTPS in production)
 const ORIGINS = (E.ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean); // empty = allow any origin (dev only)
 const SMS_PROVIDER = E.SMS_PROVIDER || 'console';           // console | msg91 | textbee
+// Allow a 50-user OTP burst behind a shared network; per-number and gateway quotas still apply.
+const SMS_OTP_IP_HOURLY_LIMIT = Number.isInteger(Number(E.SMS_OTP_IP_HOURLY_LIMIT)) && Number(E.SMS_OTP_IP_HOURLY_LIMIT) >= 50 && Number(E.SMS_OTP_IP_HOURLY_LIMIT) <= 1000 ? Number(E.SMS_OTP_IP_HOURLY_LIMIT) : 100;
 const EMAIL_PROVIDER = E.EMAIL_PROVIDER || 'console';       // console | resend | smtp (Gmail app password works)
 const EMAIL_FROM = E.EMAIL_FROM || E.SMTP_USER || 'SH Sports <no-reply@example.com>';
 const COUNTRY = E.COUNTRY_CODE || '91';
@@ -220,7 +222,7 @@ const routes = {
       profile = c.profile;
     }
     if (limited('p:' + phone + ':30s', 1, 30e3)) return [429, { ok: false, error: 'Please wait 30 seconds before asking for another code' }];
-    if (limited('p:' + phone, 5, 36e5) || limited('ip:' + ip, 30, 36e5)) return [429, { ok: false, error: 'Too many requests. Try again later.' }];
+    if (limited('p:' + phone, 5, 36e5) || limited('ip:' + ip, SMS_OTP_IP_HOURLY_LIMIT, 36e5)) return [429, { ok: false, error: 'Too many requests. Try again later.' }];
     const code = String(crypto.randomInt(100000, 1000000)), salt = crypto.randomBytes(8).toString('hex'), linkToken = crypto.randomBytes(16).toString('hex');
     pending.set(phone, { e164: e164(P), hash: hashCode(code, salt), salt, exp: Date.now() + 5 * 60e3, tries: 0, mode, profile, linkToken });
     links.set(linkToken, { phone, exp: Date.now() + 10 * 60e3 });
