@@ -398,6 +398,35 @@ http.createServer(async (req, res) => {
     bag[id] = { id, owner: cur ? cur.owner : phone, ownerName: u.nick || u.name || '', updated: Date.now(), data: b.data };
     saveDb(); return out(200, { ok: true, updated: bag[id].updated });
   }
+  if (path === '/api/prefs' || path === '/api/catalogue') {   // account preferences (country, sports, primary sport) and the admin-managed sports catalogue
+    const tok = String(req.headers.authorization || '').replace(/^Bearer\s+/i, ''), phone = readSession(tok), u = phone && db.users[phone];
+    if (path === '/api/catalogue') {
+      if (req.method === 'GET') return out(200, { ok: true, cfg: db.catalogue || null });
+      if (req.method !== 'PUT') return out(405, { ok: false, error: 'Method not allowed' });
+      if (!u) return out(401, { ok: false, error: 'Please sign in again' });
+      if (u.role !== 'admin') return out(403, { ok: false, error: 'Only an admin can change the sports catalogue' });
+      let raw = ''; for await (const c of req) { raw += c; if (raw.length > 600000) return out(413, { ok: false, error: 'Too large' }); }
+      let b; try { b = JSON.parse(raw); } catch { return out(400, { ok: false, error: 'Bad body' }); }
+      const cfg = b.cfg;
+      if (!cfg || !Array.isArray(cfg.cat) || cfg.cat.length > 3000 || typeof cfg.cdef !== 'object') return out(400, { ok: false, error: 'Bad catalogue' });
+      if (limited('cat:' + phone, 120, 36e5)) return out(429, { ok: false, error: 'Too many saves, slow down' });
+      db.catalogue = { updated: Date.now(), by: u.nick || u.name || phone, cat: cfg.cat, cdef: cfg.cdef };
+      saveDb(); return out(200, { ok: true, updated: db.catalogue.updated });
+    }
+    if (!u) return out(401, { ok: false, error: 'Please sign in again' });
+    if (!u.shid) { let id; do { id = 'SH-' + crypto.randomBytes(5).toString('hex').slice(0, 8).toUpperCase(); } while (Object.values(db.users).some(x => x.shid === id)); u.shid = id; saveDb(); }
+    if (req.method === 'GET') return out(200, { ok: true, prefs: u.prefs || null, shid: u.shid });
+    if (req.method !== 'PUT') return out(405, { ok: false, error: 'Method not allowed' });
+    let raw = ''; for await (const c of req) { raw += c; if (raw.length > 20000) return out(413, { ok: false, error: 'Too large' }); }
+    let b; try { b = JSON.parse(raw); } catch { return out(400, { ok: false, error: 'Bad body' }); }
+    const q = b.prefs || {}, id = /^[\w-]{1,40}$/;
+    if (!Array.isArray(q.sports) || q.sports.length > 100 || !q.sports.every(x => typeof x === 'string' && id.test(x))) return out(400, { ok: false, error: 'Bad sports list' });
+    if (q.primary && !(typeof q.primary === 'string' && id.test(q.primary))) return out(400, { ok: false, error: 'Bad primary sport' });
+    if (q.country && !/^[A-Z]{2}$/.test(q.country)) return out(400, { ok: false, error: 'Bad country' });
+    if (limited('prf:' + phone, 300, 36e5)) return out(429, { ok: false, error: 'Too many saves, slow down' });
+    u.prefs = { country: q.country || '', sports: q.sports, primary: q.primary || 'cricket', lang: String(q.lang || 'en').slice(0, 8), updated: Date.now() };
+    saveDb(); return out(200, { ok: true, updated: u.prefs.updated, shid: u.shid });
+  }
   const pth = path === '/otp/verify-link' ? '/api/otp/link' : (/^\/(otp|live|cric|streams|mo|wa|news|auth)/.test(path) ? '/api' + path : path);
   const h = routes[req.method + ' ' + pth];
   if (!h) return out(404, { ok: false, error: 'Not found' });

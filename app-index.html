@@ -3692,6 +3692,44 @@ function shHubKeys(){const keys=[];const order=[S.prefs.primary].concat(shMine()
 const shLab=k=>(k==='football'?'⚽ Football':k==='tennis'?'\u{1F3BE} Tennis':(RS[k]?RS[k].ic:S2I[k]||'')+' '+S2N[k]);
 {const f0=XV.sgnew;XV.sgnew=function(){const sp=UI.sgnew||'football';return `<div class="card"><label>Sport<select data-c="sgsp">${shHubKeys().map(k=>`<option value="${k}" ${k===sp?'selected':''}>${esc(S2N[k]||k.charAt(0).toUpperCase()+k.slice(1))}</option>`).join('')}</select></label></div>`+f0()}}
 Object.assign(C,{sgsp(v){UI.sgnew=v;render()}});
+/* ---------------- SERVER SYNC FOR PREFERENCES AND CATALOGUE, SH ID, SUPPORT PAGES ---------------- */
+UI.shs=UI.shs||{prefHash:'',catHash:'',pm:'',cm:'',busy:0};
+const shPH=()=>JSON.stringify([S.prefs.country,S.prefs.sports,S.prefs.primary,S.prefs.lang]),shCH=()=>JSON.stringify([S.cat,S.cdef]);
+const shHdr=()=>({'Authorization':'Bearer '+shTok(),'Content-Type':'application/json'});
+async function shPrefsPull(){if(!apiBase()||!shTok())return;try{const r=await fetch(apiBase()+'/api/prefs',{headers:shHdr()});const j=await r.json();if(!j.ok){if(r.status===401)UI.shs.pm='Sign in again to sync your sports.';return}
+  S.prefs.shid=j.shid;const sv=j.prefs;
+  if(sv&&(sv.updated||0)>=(S.prefs.ts||0)){S.prefs.country=sv.country||S.prefs.country;S.prefs.sports=sv.sports||[];S.prefs.primary=sv.primary||'cricket';S.prefs.lang=sv.lang||'en';S.prefs.ts=sv.updated;S.prefs.asked=1;UI.shs.prefHash=shPH();UI.shs.pm='Saved to your account'}
+  else{UI.shs.prefHash='';await shPrefsPush(true)}
+  save();render()}catch(e){UI.shs.pm='Offline: using the copy on this device'}}
+async function shPrefsPush(force){if(!apiBase()||!shTok())return;const h=shPH();if(!force&&h===UI.shs.prefHash)return;
+  try{S.prefs.ts=Date.now();const r=await fetch(apiBase()+'/api/prefs',{method:'PUT',headers:shHdr(),body:JSON.stringify({prefs:{country:S.prefs.country,sports:S.prefs.sports,primary:S.prefs.primary,lang:S.prefs.lang}})});const j=await r.json();
+    if(j.ok){UI.shs.prefHash=h;S.prefs.ts=j.updated;S.prefs.shid=j.shid||S.prefs.shid;UI.shs.pm='Saved to your account'}else UI.shs.pm='Not saved: '+(j.error||'server error')}catch(e){UI.shs.pm='Offline: will retry'}}
+async function shCatPull(){if(!apiBase())return;try{const r=await fetch(apiBase()+'/api/catalogue');const j=await r.json();if(!j.ok||!j.cfg)return;
+  if((j.cfg.updated||0)>(S.catTs||0)){S.cat=j.cfg.cat;S.cdef=j.cfg.cdef;S.catTs=j.cfg.updated;UI.shs.catHash=shCH();shMigrate();save();render()}}catch(e){}}
+async function shCatPush(){if(!apiBase()||!shTok()||!shAdmin())return;const h=shCH();if(h===UI.shs.catHash)return;
+  try{const r=await fetch(apiBase()+'/api/catalogue',{method:'PUT',headers:shHdr(),body:JSON.stringify({cfg:{cat:S.cat,cdef:S.cdef}})});const j=await r.json();
+    if(j.ok){UI.shs.catHash=h;S.catTs=j.updated;UI.shs.cm='Catalogue saved to the server'}else{UI.shs.cm='Not saved to the server: '+(j.error||'error');UI.shs.catHash=h}}catch(e){UI.shs.cm='Offline: kept on this device only'}}
+let shTm=null;function shKick(){clearTimeout(shTm);shTm=setTimeout(()=>{shPrefsPush();shCatPush()},1200)}
+{const c0=commit;commit=function(){c0.apply(this,arguments);if(S.user&&S.tok)shKick()}}
+window.addEventListener('online',()=>{shPrefsPull();shCatPull()});
+setTimeout(()=>{shCatPull();if(S.user&&S.tok)shPrefsPull()},2500);
+{const l0=A.go;}
+/* SH ID shown on My sports; only issued by the server, never made up on the device */
+{const f0=XV.mysports;XV.mysports=function(){const id=S.prefs.shid;return f0()+`<div class="card"><div class="b">Scoring Heroes ID</div><div style="font-size:20px;font-weight:800;letter-spacing:1px;margin:4px 0">${id?esc(id):'Not issued yet'}</div><div class="mu sm">${id?'Your stable identity across devices. It is issued by the server and shown only to you here.':'Sign in with your mobile number to get your ID.'} Linking existing profiles from other apps is not available yet.</div><div class="mu sm" style="margin-top:6px">${esc(UI.shs.pm||'')}</div></div>`}}
+{const f0=XV.sportsadmin;XV.sportsadmin=function(){return f0()+`<div class="mu sm">${esc(UI.shs.cm||'')}</div>`}}
+/* Help, contact and policy pages. Contact details are from the master document; policy wording is NOT written here. */
+XV.support=function(){const tp=UI.sp||'help';const P=[['help','Help and support'],['about','About'],['privacy','Privacy'],['terms','Terms'],['refund','Refund and cancellation']];
+  const pend=n=>`<div class="card"><h3>${n}</h3><div class="need">The official ${n.toLowerCase()} text has not been supplied yet, so it is not published here. It must be written or approved by Scoring Heroes (legal review recommended) before launch.</div></div>`;
+  return `<div class="bar"><h2>Help and support</h2></div><div class="tabs">${P.map(([k,l])=>`<button class="${tp===k?'on':''}" data-a="spTab" data-v="${k}">${l}</button>`).join('')}</div>`+
+  (tp==='help'?`<div class="card"><h3>Contact us</h3><div class="kv"><div>Phone</div><div><a href="tel:+919988402403">+91 9988402403</a></div><div>Email</div><div><a href="mailto:help@scoringheroes.com">help@scoringheroes.com</a></div></div><div class="mu sm" style="margin-top:8px">Human support by phone or email. AI chat assistance is not available yet.</div></div>`:
+  tp==='about'?`<div class="card"><h3>About Scoring Heroes</h3><div class="mu">A sports scoring and community platform, cricket first, with scorers for more sports and a catalogue of ${S.cat.length} sports and games.</div></div>`:
+  pend(P.find(x=>x[0]===tp)[1]))};
+Object.assign(A,{spTab(d){UI.sp=d.v;render()}});
+MENU2[0][1].splice(5,0,['support','❓','Help and support']);
+/* bottom navigation target: HOME / MATCHES / + SCORE / STATS / MORE */
+bnav=function(){const v=UI.view==='tour'?'tours':UI.view;
+  const t=[['home','Home','home'],['matches','Matches','matches'],null,['rankings','Stats','trophy'],['@menu','More','dots']];
+  return `<nav class="bnav">${t.map(x=>x?(x[0]==='@menu'?`<button data-a="menu" aria-label="More">${ic(x[2])}${x[1]}</button>`:`<button class="${v===x[0]?'on':''}" data-a="go" data-v="${x[0]}">${ic(x[2])}${x[1]}</button>`):`<button data-a="plus" aria-label="Score"><span class="fab">${ic('plus')}</span>Score</button>`).join('')}</nav>`};
 /* ---------------- THE HUNDRED (100 balls, 5-ball sets) ---------------- */
 {const f0=newMatch;newMatch=function(d){const h=String(d.overs)==='20.5';const m=f0(h?Object.assign({},d,{overs:20}):d);if(h){m.bpo=5;m.nbp=2;m.fmt='hundred';m.rules=Object.assign(m.rules||{},{ppb:25})}return m}}
 {const f0=vScore;vScore=function(){const o=f0();const m=S.matches.find(x=>x.id===UI.sid)||S.matches.filter(x=>x.status!=='done').slice(-1)[0];
