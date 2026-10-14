@@ -2534,10 +2534,10 @@ function hhCard(m){const live=m.started&&!m.ended,tm=(m.teams||[]).slice(0,2),sp
  <div class="ac"><button data-a="wOpen" data-id="${esc(m.id)}">Scorecard</button><button data-a="wOpen" data-id="${esc(m.id)}">Commentary</button><button data-a="wOpen" data-id="${esc(m.id)}">${live?'Watch Live':'Details'}</button></div></div>`}
 function hhBelow(feed,N){
  const spn=(S.settings.sponsors||[]).map(x=>x.img||x).filter(Boolean);
- const ads=spn.length?`<div class="hh-box"><h3>Sponsored</h3><div class="hscroll" style="gap:10px;align-items:center">${spn.map(x=>`<img src="${esc(x)}" alt="Sponsor" style="max-height:64px;border-radius:8px;flex:none">`).join('')}</div></div>`:(isAdmin()?`<div class="hh-box"><h3>Sponsored</h3><div class="mu sm">Ad slot. Add sponsor logos in Settings and they show here.</div></div>`:'');
- const news=`<div class="hh-box hh-ts"><h3>News</h3>${N.length?N.slice(0,6).map(n=>`<a ${n.link?`href="${esc(n.link)}" target="_blank" rel="noopener"`:''}>${esc(n.title)}<small>${esc(n.source||'')}${n.date?' | '+cbAgo(n.date):''}</small></a>`).join(''):'<div class="mu sm">No news yet. Cricket news loads from the live server on the real app link.</div>'}</div>`;
+ const ads=spn.length?`<div class="hh-box"><h3>Sponsored</h3><div class="hscroll" style="gap:10px;align-items:center">${spn.map(x=>`<img src="${esc(x)}" alt="Sponsor" style="max-height:64px;border-radius:8px;flex:none">`).join('')}</div></div>`:'';
+ const news=N.length?`<div class="hh-box hh-ts"><h3>News</h3>${N.slice(0,6).map(n=>`<a ${n.link?`href="${esc(n.link)}" target="_blank" rel="noopener"`:''}>${esc(n.title)}<small>${esc(n.source||'')}${n.date?' | '+cbAgo(n.date):''}</small></a>`).join('')}<button class="btn sm ghost wide" data-a="go" data-v="epaper" style="margin-top:8px">All news</button></div>`:'';
  let posts='';try{posts=reelStrip()||''}catch(e){}
- posts=`<div class="hh-box"><h3>Posts</h3>${posts||'<div class="mu sm">No posts yet. Community posts and match reels appear here.</div>'}</div>`;
+ posts=posts?`<div class="hh-box"><h3>Posts</h3>${posts}</div>`:'';
  const inst=!(window.matchMedia&&matchMedia('(display-mode: standalone)').matches)?`<div class="hh-box"><h3>Install Scoring Heroes</h3><div class="mu" style="margin-bottom:8px">Add the app to your home screen for full-screen scoring.</div><button class="btn" data-a="install">Install app</button></div>`:'';
  return feed+ads+news+posts+inst}
 function heroHome(){
@@ -4146,6 +4146,11 @@ A.avopen=function(){avOpen()};
 {const e1=enter;enter=function(){const r=e1.apply(this,arguments);try{if(S.user&&!S.user.guest&&!S.user.avatar2&&!S.prefs.avSkip&&!S.prefs.avDone)setTimeout(avOpen,900)}catch(e){}return r}}
 {const h1=hdr;hdr=function(){let o=h1();const u=S.user;if(u&&u.avatar2)o=o.replace(/(aria-label="Profile">)[\s\S]*?(<\/button>)/,'$1<span class="avatar" style="width:100%;height:100%;background:transparent"><img src="'+u.avatar2+'" alt=""></span>$2');return o}}
 
+/* bottom navigation, Cricbuzz order: HOME / MATCHES / VIDEOS / NEWS / MORE, with a floating Score button */
+{const st=document.createElement('style');st.textContent='.bnav{grid-template-columns:repeat(5,1fr)!important}.fabfloat{position:fixed;right:14px;bottom:calc(74px + env(safe-area-inset-bottom,0px));z-index:40;width:58px;height:58px;border-radius:50%;border:2px solid #fff3;background:linear-gradient(135deg,#0a1f5c,#e11d2e);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10px;font-weight:700;box-shadow:0 6px 18px #0008;cursor:pointer;gap:0}.fabfloat svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round}';document.head.appendChild(st)}
+bnav=function(){const v=UI.view==='tour'?'tours':UI.view==='epaper'?'epaper':UI.view;
+ const t=[['home','Home','home'],['matches','Matches','matches'],['reels','Videos','reels'],['epaper','News','news'],['@menu','More','dots']];
+ return `<nav class="bnav">${t.map(x=>x[0]==='@menu'?`<button data-a="menu" aria-label="More">${ic(x[2])}${x[1]}</button>`:`<button class="${v===x[0]?'on':''}" data-a="go" data-v="${x[0]}">${ic(x[2])}${x[1]}</button>`).join('')}</nav><button class="fabfloat" data-a="plus" aria-label="Score">${ic('plus')}Score</button>`};
 /* ---------------- THE HUNDRED (100 balls, 5-ball sets) ---------------- */
 {const f0=newMatch;newMatch=function(d){const h=String(d.overs)==='20.5';const m=f0(h?Object.assign({},d,{overs:20}):d);if(h){m.bpo=5;m.nbp=2;m.fmt='hundred';m.rules=Object.assign(m.rules||{},{ppb:25})}return m}}
 {const f0=vScore;vScore=function(){const o=f0();const m=S.matches.find(x=>x.id===UI.sid)||S.matches.filter(x=>x.status!=='done').slice(-1)[0];
