@@ -71,3 +71,10 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 ## Avatar Studio (Oct 2026)
 - After register/login (not guest) the app offers "Your hero photo": camera selfie (getUserMedia) or photo upload, drag/zoom the face into an oval, placed on a Scoring Heroes player avatar (Batter/Bowler/Fielder, team colours). Also menu: Account > Photo avatar. Saved on-device (S.user.avatar2, player photo). BUILT, tested in browser with a fake camera.
 - NOT AI: it is manual placement with a soft-edged oval, no automatic face detection or real face-swap model. Real face-swap needs a model (verify licensing/privacy) - NOT BUILT.
+
+## 30-year history store (Oct 2026)
+- BUILT: server importer (history.mjs) reads a Cricsheet-format zip, keeps a match index and every player's career totals (batting, bowling, fielding; per format and overall). API: /api/history/status|players|player|matches, admin POST /api/history/import. App: Menu > History (30 years): player search + career tables, match archive filters, admin "Import" button with progress.
+- TESTED only with synthetic Cricsheet-format files (10 files, and 3000 files in 0.35 s, 84 MB). NOT tested against the real Cricsheet download: the sandbox cannot reach cricsheet.org. File name/URL, JSON details and licence terms are from memory and MUST be verified.
+- LIMIT: Cricsheet ball-by-ball coverage starts around the early 2000s, so 30 years (1996 on) cannot be complete from this source. Earlier years need another source (e.g. licensed data) - NOT BUILT.
+- LIMIT: Render Free erases the disk on restart: use HISTORY_AUTOIMPORT=1 (re-imports on start) or a persistent disk.
+- Career figures are computed from ball-by-ball data and can differ from official records (e.g. boundary and not-out edge cases, super overs excluded).

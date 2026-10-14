@@ -6,6 +6,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import net from 'node:net';
 import tls from 'node:tls';
+import { createHistory } from './history.mjs';
 
 const E = process.env;
 const PORT = +E.PORT || 8080;
@@ -354,6 +355,35 @@ routes['POST /api/mo/inbound'] = moInbound;
 routes['GET /api/mo/inbound'] = moInbound;
 setInterval(() => { const n = Date.now(); for (const [k, v] of moPending) if (v.exp < n) moPending.delete(k); }, 6e4).unref();
 
+
+// ---- 30-year history store (matches + player career totals from Cricsheet-format data) ----
+const HISTORY_URL = E.HISTORY_URL || 'https://cricsheet.org/downloads/all_json.zip';
+const HISTORY_YEARS = Math.min(60, Math.max(1, parseInt(E.HISTORY_YEARS, 10) || 30));
+const history = createHistory({ dir: E.HISTORY_DIR || './history-data', log: m => console.log(m) });
+const histSince = () => new Date().getUTCFullYear() - HISTORY_YEARS;
+const startHistory = () => history.importFrom({ url: HISTORY_URL, sinceYear: histSince() }).catch(e => console.error(e.message));
+if (E.HISTORY_AUTOIMPORT === '1' && !history.status().ready) setTimeout(startHistory, 20000);
+routes['GET /api/history/status'] = async () => [200, { ok: true, ...history.status(), url: HISTORY_URL, years: HISTORY_YEARS }];
+routes['GET /api/history/players'] = async (req, body, ip) => {
+  if (limited('hp:' + ip, 600, 36e5)) return [429, { ok: false, error: 'Too many requests' }];
+  return [200, { ok: true, players: history.searchPlayers(body.q, Math.min(50, +body.limit || 20)) }];
+};
+routes['GET /api/history/player'] = async (req, body) => {
+  const p = history.player(body.id);
+  return p ? [200, { ok: true, player: p }] : [404, { ok: false, error: 'Player not found in the history store' }];
+};
+routes['GET /api/history/matches'] = async (req, body, ip) => {
+  if (limited('hm:' + ip, 600, 36e5)) return [429, { ok: false, error: 'Too many requests' }];
+  return [200, { ok: true, ...history.searchMatches({ q: body.q, type: body.type, year: body.year, team: body.team, gender: body.gender, limit: +body.limit || 30, offset: +body.offset || 0 }) }];
+};
+routes['POST /api/history/import'] = async (req, body) => {
+  const phone = readSession((req.headers.authorization || '').replace(/^Bearer /, '')), u = phone && db.users[phone];
+  if (!u) return [401, { ok: false, error: 'Please sign in again' }];
+  if (u.role !== 'admin') return [403, { ok: false, error: 'Only an admin can import history' }];
+  if (history.status().job.state === 'running') return [409, { ok: false, error: 'An import is already running', ...history.status() }];
+  startHistory();
+  return [202, { ok: true, started: true, years: HISTORY_YEARS }];
+};
 
 // ---- Sports news (Google News RSS, cached 10 min) ----
 const NEWS_BASE = E.NEWS_BASE || 'https://news.google.com/rss/search';
