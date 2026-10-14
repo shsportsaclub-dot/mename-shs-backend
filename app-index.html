@@ -3670,12 +3670,13 @@ function shScorers(id){const st=(shGet(id)||{}).st;if(id==='cricket')return['cri
 {const st=document.createElement('style');st.textContent='.hh-sports{flex-wrap:wrap!important;overflow:visible!important}.hh-sports button{flex:0 0 auto}';document.head.appendChild(st)}
 function shRow(sp){const ids=shRowIds().slice(0,6);return `<div class="hh-sports">${ids.map(id=>{const c=shGet(id);return `<button class="${sp===id?'on':''}" data-a="hsport" data-v="${id}" title="${esc(shStTxt(c.st))}"><i>${c.icon}</i>${esc(c.name.split(' / ')[0])}</button>`}).join('')}<button data-a="shMore"><i>⋯</i>More</button></div>`}
 function shMatchesOf(id){const keys=CAT_SCORER[id]||[];return S.sg.filter(m=>keys.includes(m.sport))}
-function shBody(sp){const c=shGet(sp);if(!c)return '<div class="hh-box"><div class="mu">Sport not found in the catalogue.</div></div>';const ks=shScorers(sp),L=shMatchesOf(sp).slice().reverse(),go=L.filter(m=>!m.result),done=L.filter(m=>m.result);
+function shBody(sp){const c=shGet(sp);if(!c)return '<div class="hh-box"><div class="mu">Sport not found in the catalogue.</div></div>';const ks=shScorers(sp),L=shMatchesOf(sp).slice().reverse(),go=L.filter(m=>!m.result&&!(m.sport==='football'&&m.ph==='pre')),up=L.filter(m=>!m.result&&m.sport==='football'&&m.ph==='pre'),done=L.filter(m=>m.result);
   return `<div class="hh-box"><h3>${c.icon} ${esc(c.name)} <span class="n">${esc(shStTxt(c.st))}</span></h3>
   <div class="mu sm">${c.k==='Game'?'Game':'Sport'}${c.fm.length?' | Formats: '+esc(c.fm.join(', ')):''}</div>${c.vr&&c.vr.length?`<div class="mu sm">Variants: ${esc(c.vr.join(', '))}</div>`:''}${c.pc&&c.pc.length?`<div class="mu sm">Categories: ${esc(c.pc.join(', '))}</div>`:''}
   ${ks.length?`<div class="row" style="gap:8px;flex-wrap:wrap;margin-top:10px">${ks.map(k=>`<button class="btn sm" data-a="sgNew" data-v="${k}">Start scoring${ks.length>1?': '+esc(S2N[k]||k):''}</button>`).join('')}<button class="btn sm ghost" data-a="go" data-v="sgames">My ${esc(c.name)} matches</button></div>`:`<div class="need" style="margin-top:10px">${c.st==='DISABLED'?'This sport is switched off by the admin.':'The '+esc(c.name)+' scorer is not built yet. Status: '+esc(shStTxt(c.st))+'. It will get its own rules-based scorer, not a renamed one.'}</div>`}</div>
-  ${ks.length?`<div class="hh-box"><h3>Live</h3><div class="mu">No live feed for ${esc(c.name)} yet. Only matches scored on this device appear below, labelled as such.</div></div>
-  <div class="hh-box"><h3>In progress (scored here) <span class="n">${go.length}</span></h3>${go.length?go.map(m=>`<div class="mcm" data-a="sgOpen" data-id="${m.id}"><div class="b">${esc(m.tn[0])} vs ${esc(m.tn[1])}</div><div class="mu sm">${esc(s2Sum(m))} | ${esc(m.date)}</div></div>`).join(''):'<div class="mu">None. Start scoring above, or open Results.</div>'}</div>
+  ${ks.length?`<div class="hh-box"><h3>Live</h3><div class="mu">Scoring Heroes live scores: locally scored and server-shared ${esc(c.name)} matches. External competition feeds are not connected here.</div></div>
+  <div class="hh-box"><h3>In progress <span class="n">${go.length}</span></h3>${go.length?go.map(m=>`<div class="mcm" data-a="sgOpen" data-id="${m.id}"><div class="b">${esc(m.tn[0])} vs ${esc(m.tn[1])}</div><div class="mu sm">${esc(s2Sum(m))} | ${esc(m.date)}</div></div>`).join(''):'<div class="mu">None. Start scoring above, or open Results.</div>'}</div>
+  <div class="hh-box"><h3>Upcoming <span class="n">${up.length}</span></h3>${up.length?up.map(m=>`<div class="mcm" data-a="sgOpen" data-id="${m.id}"><div class="b">${esc(m.tn[0])} vs ${esc(m.tn[1])}</div><div class="mu sm">Not started | ${esc(m.date)}</div></div>`).join(''):'<div class="mu">No upcoming matches.</div>'}</div>
   <div class="hh-box"><h3>Results <span class="n">${done.length}</span></h3>${done.length?done.slice(0,10).map(m=>`<div class="mcm" data-a="sgOpen" data-id="${m.id}"><div class="b">${esc(m.tn[0])} vs ${esc(m.tn[1])}</div><div class="mu sm">${esc(m.result)} | ${esc(m.date)}</div></div>`).join(''):'<div class="mu">No finished matches yet.</div>'}</div>`:''}
   <button class="btn sm ghost" style="margin-top:8px" data-a="hsport" data-v="cricket">Back to Cricket</button>`}
 function shFind(q){q=(q||'').trim().toLowerCase();return S.cat.filter(c=>c.on&&(!q||c.name.toLowerCase().includes(q)||c.al.some(a=>a.toLowerCase().includes(q))||(c.vr||[]).some(a=>a.toLowerCase().includes(q))||c.id.includes(q)))}
@@ -4058,7 +4059,7 @@ UI.sportLink=new URLSearchParams(location.search).get('sportmatch')||'';
 }}
 {const querySport=new URLSearchParams(location.search).get('sport');
  if(['cricket','football','kabaddi','badminton','volleyball'].includes(querySport)){
-  S.prefs=S.prefs||{};S.prefs.sports=Array.from(new Set([...(S.prefs.sports||[]),querySport]));S.prefs.primary=querySport;
+  UI.sport=querySport;
  }
 }
 
