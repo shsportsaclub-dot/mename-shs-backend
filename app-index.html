@@ -2546,7 +2546,7 @@ function heroHome(){
  let pl='';const real=S.matches.some(m=>!isDemo(m));
  if(real){try{const C=career();const top=Object.entries(C).filter(([id,c])=>c.r>0).sort((a,b)=>b[1].r-a[1].r).slice(0,5);pl=top.length?top.map(([id,c],i)=>`<div class="it"><span>${i+1}</span><span>${esc(nm(id))}</span><b class="v">${c.r}</b></div>`).join(''):''}catch(e){}}
  const reg=S.user?'':'<button class="hh-reg" data-a="go" data-v="login">Register now</button>';
- const feed=!j?'<div class="mu">Loading live scores...</div>':!j.ok?`<div class="mu">Live feed unavailable: ${esc(j.error||'')}</div>`:'';
+ const feed=!j?'<div class="mu">Loading live scores...</div>':!j.ok?`<div class="hh-box" style="border-color:var(--ac)"><div class="b">Live scores load only on the real app link</div><div class="mu sm" style="margin:4px 0 8px">This preview/file cannot reach the live server (${esc(j.error||'')}). Open the app link to see live matches.</div><a class="btn" href="${DEFAULT_API}" target="_blank" rel="noopener" style="display:inline-block">Open live app</a></div>`:'';
  const body=sp!=='cricket'?shBody(sp):`
  ${feed}
  <div class="hh-grid"><div>
