@@ -1214,7 +1214,7 @@ magicLink();
 async function pullLive(){
   if(!apiBase()&&!S.settings.cricKey)return;
   try{
-    let sj=null;if(apiBase()){try{const r=await fetch(apiBase()+'/live');sj=await r.json()}catch(e){sj=null}}
+    let sj=null;UI.diag={srv:'none',msg:'',dir:''};if(apiBase()){try{const r=await fetch(apiBase()+'/live');sj=await r.json();UI.diag.srv=sj&&sj.ok?'ok':'feed';UI.diag.msg=sj&&sj.ok?'':(sj&&sj.error)||('HTTP '+r.status)}catch(e){sj=null;UI.diag.srv='down';UI.diag.msg=e.message}}
     if(sj&&sj.ok)UI.live=sj;
     else if(UI.liveDirectT&&Date.now()-UI.liveDirectT<20*60000){/* save the daily API quota: keep what we have */}
     else{UI.liveDirectT=Date.now();const K=encodeURIComponent(S.settings.cricKey),get=async ep=>{const r=await fetch('https://api.cricapi.com/v1/'+ep+'?offset=0&apikey='+K);return r.json()};
@@ -1224,7 +1224,7 @@ async function pullLive(){
       const seen={},all=[];(j.data||[]).concat(j2&&j2.status==='success'?(j2.data||[]):[]).forEach(m=>{if(m&&m.id&&!seen[m.id]){seen[m.id]=1;all.push(mp(m))}});
       UI.live={ok:true,matches:all,updated:new Date().toISOString()}}
     if(UI.live&&UI.live.ok)wNorm();
-  }catch(e){UI.live={ok:false,error:e.message==='Failed to fetch'?'Cannot reach the cricket API from this browser':e.message}}
+  }catch(e){UI.diag=UI.diag||{};UI.diag.dir=e.message;UI.live={ok:false,error:e.message==='Failed to fetch'?'Cannot reach the cricket API from this browser':e.message}}
   if(S.user&&UI.view==='home'&&UI.stage!=='welcome'&&location.hash!=='#overlay')render()}
 function liveFeedCard(){
   if(!apiBase()&&!S.settings.cricKey)return'';
@@ -2540,6 +2540,10 @@ function hhBelow(feed,N){
  posts=posts?`<div class="hh-box"><h3>Posts</h3>${posts}</div>`:'';
  const inst=!(window.matchMedia&&matchMedia('(display-mode: standalone)').matches)?`<div class="hh-box"><h3>Install Scoring Heroes</h3><div class="mu" style="margin-bottom:8px">Add the app to your home screen for full-screen scoring.</div><button class="btn" data-a="install">Install app</button></div>`:'';
  return feed+ads+news+posts+inst}
+function liveDiagHtml(){const j=UI.live,d=UI.diag;if(j&&j.ok)return'';
+ const srv=!d?'Checking...':d.srv==='ok'?'Server reachable, feed OK':d.srv==='feed'?'Server reachable, but the cricket feed has a problem: '+esc(d.msg):d.srv==='down'?'Server NOT reachable from here ('+esc(d.msg)+')':'No server address set';
+ const hint=!d?'':d.srv==='feed'?(/CRIC_API_KEY/.test(d.msg)?'Fix: in Render, open scoring-heroes-api, Environment, add CRIC_API_KEY (your cricket API key), then Manual Deploy.':'Fix: the cricket API refused the request (daily limit or key problem). Check the key and plan.'):d.srv==='down'?'This happens in a preview or file view. Open the app from the Render link on your phone browser or the installed app. If it still fails there, the Render service is asleep or not deployed: open the Render link once and wait a minute.':'';
+ return `<div class="card" style="border-color:var(--ac)"><div class="b">Why no live matches?</div><div class="mu sm" style="margin-top:4px">${srv}</div>${hint?`<div class="mu sm" style="margin-top:4px">${hint}</div>`:''}<div class="row" style="margin-top:8px;gap:8px"><button class="btn sm" data-a="refreshLive">Check again</button><a class="btn sm ghost" href="${DEFAULT_API}/health" target="_blank" rel="noopener" style="text-decoration:none">Open server link</a></div></div>`}
 function heroHome(){
  const h=UI.hf,j=UI.live,L=hhMatches(),all=j&&j.ok?j.matches:[],sp=UI.sport||'cricket',N=(UI.news&&UI.news.ok?UI.news.items:[]);
  const yrs=[...new Set(all.map(m=>new Date(wTm(m)||0).getFullYear()).filter(y=>y>2000))].sort((a,b)=>b-a);
@@ -4085,7 +4089,7 @@ XV.matches=function(){
  const feed=!j?'<div class="mu sm">Loading world matches...</div>':!j.ok?`<div class="mu sm" style="margin:6px 0">World feed unavailable here (${esc(j.error||'')}). Open the real app link for live data. SH matches below still work.</div>`:`<div class="mu sm" style="margin:6px 0">World data updated ${j.updated?new Date(j.updated).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'-'}${j.stale?' (older data)':''}</div>`;
  const empty=!ms.length&&cnt('all')===0?'<div class="empty">No matches yet. Create a match, or load the demo match to see every screen working.</div>':'';
  const head=`<div class="bar"><h2>Matches</h2><div class="grow"></div>${can()?'<button class="btn" data-a="newMatch">+ New match</button>':''}<button class="btn ghost" data-a="demo">Load demo match</button></div>`;
- return head+`<div class="msk msk-${sk()}">${bar()}<div class="tabs" style="margin-bottom:8px">${TT.map(([k,l])=>`<button class="${tab===k?'on':''}" data-a="mtab" data-v="${k}">${l} <span class="mu sm">${cnt(k)}</span></button>`).join('')}</div>${feed}${sec||''}${empty}</div>`};
+ return head+`<div class="msk msk-${sk()}">${bar()}<div class="tabs" style="margin-bottom:8px">${TT.map(([k,l])=>`<button class="${tab===k?'on':''}" data-a="mtab" data-v="${k}">${l} <span class="mu sm">${cnt(k)}</span></button>`).join('')}</div>${(j&&j.ok)?'':liveDiagHtml()}${feed}${sec||''}${empty}</div>`};
 A.mtab=function(d){UI.mtab=d.v;render()};
 XV.match=function(){const o=fM1();return `<div class="msk msk-${sk()}">${bar()}${o}</div>`};
 A.mskin=function(d){S.settings.mskin=d.v==='ca'?'ca':'cb';commit()};
