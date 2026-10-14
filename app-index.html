@@ -3360,8 +3360,226 @@ XV.sgnew=function(){const sp=UI.sgnew||'football',tm=S.teams.map(t=>[t.id,t.name
    <div class="row"><label style="flex:1">Substitutes<input name="subs" type="number" value="5"></label><label style="flex:1">Opportunities<input name="wins" type="number" value="3"></label></div>
    <label class="ck"><input type="checkbox" name="winner"> A winner is needed (extra time, then penalties)</label><button class="btn wide" style="margin-top:8px">Start match</button></form>`};
 XV.sgame=function(){const m=sgCur();if(!m)return '<div class="empty">Match not found.</div>';return `<div class="bar"><h2>${m.sport==='football'?'⚽':'\u{1F3BE}'} ${esc(m.tn[0])} vs ${esc(m.tn[1])}</h2></div>`+(m.sport==='football'?fbView(m):tnView(m))};
-MENU2[0][1].splice(5,0,['sgames','⚽','Football and tennis scorers']);
+MENU2[0][1].splice(5,0,['sgames','⚽','Other sports scorers']);
 setInterval(()=>{if(UI.view==='sgame'){const m=sgCur();if(m&&m.sport==='football'){const el=document.getElementById('sgclk');if(el&&['h1','h2','et1','et2'].includes(m.ph))el.textContent=fbClock(m)}}},1000);
+/* ---------------- MORE SPORTS: rally sports, basketball, rugby, kabaddi, golf, chess, carrom, generic ---------------- */
+const RS={vb:{n:'Volleyball (indoor)',ic:'\u{1F3D0}',best:5,t:25,f:15,cap:0},vbb:{n:'Beach volleyball',ic:'\u{1F3D0}',best:3,t:21,f:15,cap:0},tt:{n:'Table tennis',ic:'\u{1F3D3}',best:5,t:11,f:11,cap:0},bd:{n:'Badminton (3x21)',ic:'\u{1F3F8}',best:3,t:21,f:21,cap:30},bd15:{n:'Badminton (3x15, BWF 2026)',ic:'\u{1F3F8}',best:3,t:15,f:15,cap:21},pb:{n:'Pickleball',ic:'\u{1F3D3}',best:3,t:11,f:11,cap:0}};
+const S2N={vb:'Volleyball (indoor)',vbb:'Beach volleyball',tt:'Table tennis',bd:'Badminton (3x21)',bd15:'Badminton (3x15, BWF 2026)',pb:'Pickleball',basketball:'Basketball',rugby:'Rugby',kabaddi:'Kabaddi',golf:'Golf',chess:'Chess',carrom:'Carrom',generic:'Other sport (hockey, handball, etc.)'};
+const S2I={basketball:'\u{1F3C0}',rugby:'\u{1F3C9}',kabaddi:'\u{1F93C}',golf:'⛳',chess:'♟️',carrom:'\u{1F534}',generic:'\u{1F3C5}'};
+const s2ic=m=>m.sport==='football'?'⚽':m.sport==='tennis'?'\u{1F3BE}':(RS[m.sport]||{}).ic||S2I[m.sport]||'\u{1F3C5}';
+function rsState(m){const k=m.sport,c=RS[k],best=m.cfg.best,need=Math.ceil(best/2);
+  let w=[0,0],games=[],gs=[0,0],gi=0,sn=2,done=false,win=null,note='',tc=[0,0],sb=[0,0];
+  const gfirst=()=>((m.cfg.first||0)+gi)%2;let F0=gfirst(),srv=F0;
+  const isDec=()=>best>1&&w[0]===need-1&&w[1]===need-1,tgt=()=>isDec()?c.f:c.t;
+  for(const e of m.log){if(done)break;
+    if(e.to!=null){tc[e.to]++;continue}if(e.sb!=null){sb[e.sb]++;continue}
+    const p=e.w;note='';const T=tgt(),dec=isDec();
+    if(k==='pb'){if(p===srv){gs[p]++}else{if(m.cfg.dbl&&sn===1){sn=2}else{srv=1-srv;sn=1}note='Side out'}}
+    else{gs[p]++;
+      if(k==='vb'||k==='vbb'){if(p!==srv)note='Side-out: '+m.tn[p]+' rotate';srv=p}
+      else if(k==='bd'||k==='bd15'){srv=p}
+      else if(k==='tt'){const n=gs[0]+gs[1],t1=c.t-1;srv=n<2*t1?F0^(Math.floor(n/2)%2):F0^(t1%2)^((n-2*t1)%2)}}
+    const n=gs[0]+gs[1],hi=Math.max(...gs),lo=Math.min(...gs);
+    if(k==='vbb'){if(n%(dec?5:7)===0)note='Change ends';else if(n===21&&!dec)note='Technical timeout (30 s)'}
+    if(k==='vb'&&dec&&gs[p]===8&&gs[1-p]<8)note='Change ends (deciding set, at 8)';
+    if(k==='tt'&&dec&&gs[p]===5&&gs[1-p]<5)note='Change ends (final game, at 5)';
+    if(k==='bd'||k==='bd15'){const thr=k==='bd'?11:8;if(gs[p]===thr&&gs[1-p]<thr)note=dec?'Change ends and 60-second interval':'60-second interval'}
+    if((hi>=T&&hi-lo>=2)||(c.cap&&hi>=c.cap)){const gw=gs[0]>gs[1]?0:1;games.push({s:gs.slice(),w:gw});w[gw]++;note='Game to '+m.tn[gw];
+      if(w[gw]>=need){done=true;win=gw}else{gs=[0,0];gi++;tc=[0,0];sb=[0,0];F0=gfirst();srv=F0;sn=2;if(k==='bd'||k==='bd15')srv=gw}}}
+  return{gs,games,w,gi,done,win,srv,sn,note,tc,sb,dec:isDec(),need}}
+function rsRes(m,s){return m.tn[s.win]+' won '+s.w[s.win]+'-'+s.w[1-s.win]+' ('+s.games.map(g=>g.s.join('-')).join(', ')+')'}
+const RSRULE={vb:'Rally point: every rally scores. Sets to 25 (win by 2), deciding fifth set to 15. Best of five. International rules allow 6 substitutions a set (USA Volleyball page). Timeouts per set: 2 (FIVB indoor, not re-checked from a primary source).',
+ vbb:'FIVB beach volleyball: best of three sets. Sets 1 and 2 to 21, deciding set to 15, always win by 2. Teams switch ends every 7 points (every 5 in the deciding set). One 30-second timeout per team per set, plus a technical timeout at a combined 21 points in sets 1 and 2.',
+ tt:'ITTF: games to 11, win by 2. Service changes every 2 points, and every point from 10-10. Players change ends after each game and at 5 points in the last game. The expedite system after 10 minutes is not tracked.',
+ bd:'BWF 3x21: rally point, games to 21 (win by 2, cap at 30). 60-second interval at 11, 120 seconds between games, ends change at 11 in the third game. The winner of the previous rally serves.',
+ bd15:'BWF 3x15 (approved April 2026; proposed to start in January 2027): best of three games to 15, win by 2, cap at 21 (at 20-20 next point wins). 60-second interval at 8, ends change at 8 in the third game, 120 seconds between games.',
+ pb:'USA Pickleball: games to 11, win by 2, only the serving side scores (side-out scoring). Doubles: call is serving score, receiving score, server number; the first server of the game starts at server 2. Best-of format depends on the event.'};
+Object.assign(A,{rsPt(d){const m=sgCur();if(!m||!can())return;const s=rsState(m);if(s.done)return;m.log.push({w:+d.w});const q=rsState(m);if(q.done)m.result=rsRes(m,q);commit();if(q.note&&!q.done)toast(q.note,2200)},
+ rsTo(d){const m=sgCur();if(!m||!can())return;const s=rsState(m);if(s.done)return;m.log.push({to:+d.t});const lim=m.sport==='vbb'?1:m.sport==='vb'?2:99;if(s.tc[+d.t]+1>lim)toast('Warning: more than '+lim+' timeout(s) in this set',3500);commit()},
+ rsSb(d){const m=sgCur();if(!m||!can())return;const s=rsState(m);if(s.done)return;m.log.push({sb:+d.t});if(s.sb[+d.t]+1>6)toast('Warning: more than 6 substitutions in this set (international rule)',3500);commit()},
+ rsUndo(){const m=sgCur();if(!m||!can())return;m.log.pop();const s=rsState(m);m.result=s.done?rsRes(m,s):'';commit()}});
+function rsView(m){const s=rsState(m),c=RS[m.sport],lim=m.sport==='vbb'?1:2,dbl=m.sport==='pb'&&m.cfg.dbl;
+  const scoreOf=i=>{if(m.sport==='pb'&&!s.done){return i===s.srv?s.gs[i]:s.gs[i]}return s.gs[i]};
+  const row=i=>`<div class="item" style="gap:8px"><span style="width:14px">${!s.done&&s.srv===i?'\u{1F7E1}':''}</span><b style="flex:1">${esc(m.tn[i])}${s.done&&s.win===i?' \u{1F3C6}':''}</b>${s.games.map(g=>`<b style="min-width:26px;text-align:center">${g.s[i]}</b>`).join('')}${s.done?'':`<b style="min-width:44px;text-align:center;background:var(--c2);border-radius:8px;padding:6px;font-size:20px">${scoreOf(i)}</b>`}</div>`;
+  const call=m.sport==='pb'&&!s.done?(dbl?s.gs[s.srv]+'-'+s.gs[1-s.srv]+'-'+s.sn:s.gs[s.srv]+'-'+s.gs[1-s.srv]):'';
+  return `<div class="card"><div class="mu sm">${esc(m.date)} | ${c.n} | Best of ${m.cfg.best}${s.dec&&!s.done?' | Deciding game, to '+c.f:''}</div>${row(0)}${row(1)}
+   ${call?`<div class="mu sm" style="margin-top:6px">Score call: <b>${call}</b> (${esc(m.tn[s.srv])} serving${dbl?', server '+s.sn:''})</div>`:''}
+   ${s.note&&!s.done?`<div class="need" style="margin-top:6px">${esc(s.note)}</div>`:''}${m.result?`<div class="need" style="margin-top:8px">${esc(m.result)}</div>`:''}</div>
+  ${can()&&!s.done?`<div class="card"><div class="row" style="gap:8px"><button class="btn" style="flex:1;padding:20px 6px" data-a="rsPt" data-w="0">Point ${esc(m.tn[0])}</button><button class="btn" style="flex:1;padding:20px 6px" data-a="rsPt" data-w="1">Point ${esc(m.tn[1])}</button></div>
+   ${m.sport==='vb'||m.sport==='vbb'?`<div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap"><button class="btn sm ghost" data-a="rsTo" data-t="0">Timeout ${esc(m.tn[0])} (${s.tc[0]}/${lim})</button><button class="btn sm ghost" data-a="rsTo" data-t="1">Timeout ${esc(m.tn[1])} (${s.tc[1]}/${lim})</button>${m.sport==='vb'?`<button class="btn sm ghost" data-a="rsSb" data-t="0">Sub ${esc(m.tn[0])} (${s.sb[0]}/6)</button><button class="btn sm ghost" data-a="rsSb" data-t="1">Sub ${esc(m.tn[1])} (${s.sb[1]}/6)</button>`:''}</div>`:''}</div>`:''}
+  ${can()?`<div class="row" style="gap:8px"><button class="btn sm ghost" data-a="rsUndo">Undo last</button><button class="btn sm ghost" data-a="sgDel" data-id="${m.id}">Delete match</button></div>`:''}
+  <div class="mu sm" style="margin-top:8px">Rules used: ${RSRULE[m.sport]}</div>`}
+/* ----- basketball ----- */
+function bbState(m){const c=m.cfg,sc=[0,0],byP=[],tf=[],pf=[{},{}],tos={},ppl=[{},{}];
+  m.log.forEach(e=>{const p=e.per;byP[p]=byP[p]||[0,0];tf[p]=tf[p]||[0,0];
+    if(e.ty==='p'){sc[e.tm]+=e.v;byP[p][e.tm]+=e.v;if(e.pl)ppl[e.tm][e.pl]=(ppl[e.tm][e.pl]||0)+e.v}
+    else if(e.ty==='f'){tf[p][e.tm]++;if(e.pl)pf[e.tm][e.pl]=(pf[e.tm][e.pl]||0)+1}
+    else if(e.ty==='t'){const key=c.fiba?(p<=2?'h1':p<=4?'h2':'o'+p):(p<=4?'g':'o'+p);tos[key+e.tm]=(tos[key+e.tm]||0)+1}});
+  return{sc,byP,tf,pf,tos,ppl}}
+const bbPer=(m,p)=>p<=m.cfg.q?'Q'+p:'OT'+(p-m.cfg.q);
+function bbToLim(m,p){return m.cfg.fiba?(p<=2?2:p<=4?3:1):(p<=4?6:2)}
+function bbToUsed(m,st,p,tm){const c=m.cfg;const key=c.fiba?(p<=2?'h1':p<=4?'h2':'o'+p):(p<=4?'g':'o'+p);return st.tos[key+tm]||0}
+Object.assign(A,{bbPts(d){const m=sgCur();if(!m||!can()||m.result)return;const el=document.getElementById('bbpl');m.log.push({ty:'p',tm:+d.t,v:+d.v,per:m.per,pl:el?el.value.trim():''});commit()},
+ bbFoul(d){const m=sgCur();if(!m||!can()||m.result)return;const el=document.getElementById('bbpl'),pl=el?el.value.trim():'';m.log.push({ty:'f',tm:+d.t,per:m.per,pl});const st=bbState(m);if(pl&&st.pf[+d.t][pl]>=m.cfg.fouls)toast(pl+' has '+m.cfg.fouls+' fouls: must leave the game',4500);commit()},
+ bbTo(d){const m=sgCur();if(!m||!can()||m.result)return;const st=bbState(m);if(bbToUsed(m,st,m.per,+d.t)+1>bbToLim(m,m.per))toast('Warning: more timeouts than allowed for this period',3500);m.log.push({ty:'t',tm:+d.t,per:m.per});commit()},
+ bbNext(){const m=sgCur();if(!m||!can()||m.result)return;const st=bbState(m);if(m.per<m.cfg.q)m.per++;else if(st.sc[0]===st.sc[1])m.per++;else m.result=bbRes(m,st);commit()},
+ bbUndo(){const m=sgCur();if(!m||!can())return;if(m.result){m.result=''}else m.log.pop();commit()}});
+function bbRes(m,st){const a=st.sc[0],b=st.sc[1];return a>b?m.tn[0]+' won '+a+'-'+b:m.tn[1]+' won '+b+'-'+a}
+function bbView(m){const st=bbState(m),p=m.per,tf=st.tf[p]||[0,0],c=m.cfg,lp=p<=c.q?(c.mins+' min'):'5 min overtime';
+  const bonus=i=>(tf[1-i]||0)>=4;
+  const pfl=i=>Object.entries(st.pf[i]).map(([k,v])=>`${esc(k)}: ${v}${v>=c.fouls?' (out)':''}`).join(', ')||'none named';
+  const ppl=i=>Object.entries(st.ppl[i]).map(([k,v])=>`${esc(k)} ${v}`).join(', ');
+  return `<div class="card"><div class="mu sm">${esc(m.date)} | ${c.fiba?'FIBA':'NBA'} rules | ${c.q}x${c.mins} min</div>
+   ${[0,1].map(i=>`<div class="item" style="gap:8px"><b style="flex:1">${esc(m.tn[i])}${m.result&&st.sc[i]>st.sc[1-i]?' \u{1F3C6}':''}</b><span class="mu sm">Fouls ${tf[i]||0} ${bonus(i)?'(opponent in bonus)':''}</span><b style="min-width:54px;text-align:center;background:var(--c2);border-radius:8px;padding:6px;font-size:22px">${st.sc[i]}</b></div>`).join('')}
+   <div class="mu sm">${bbPer(m,p)} (${lp}) | by period: ${[...Array(p).keys()].map(j=>{const x=st.byP[j+1]||[0,0];return bbPer(m,j+1)+' '+x[0]+'-'+x[1]}).join(' | ')}</div>
+   ${bonus(0)||bonus(1)?`<div class="need" style="margin-top:6px">Team-foul bonus: after the 4th team foul in a period, non-shooting fouls give 2 free throws.</div>`:''}${m.result?`<div class="need" style="margin-top:8px">${esc(m.result)}</div>`:''}</div>
+  ${can()&&!m.result?`<div class="card"><label>Player (optional, used for points and fouls)<input id="bbpl" placeholder="name or number"></label>
+   ${[0,1].map(i=>`<div class="b" style="margin-top:8px">${esc(m.tn[i])}</div><div class="row" style="gap:6px;flex-wrap:wrap">${[1,2,3].map(v=>`<button class="btn sm" data-a="bbPts" data-t="${i}" data-v="${v}">+${v}</button>`).join('')}<button class="btn sm ghost" data-a="bbFoul" data-t="${i}">Foul</button><button class="btn sm ghost" data-a="bbTo" data-t="${i}">Timeout (${bbToUsed(m,st,p,i)}/${bbToLim(m,p)})</button></div>`).join('')}
+   <button class="btn wide" style="margin-top:10px" data-a="bbNext">${p<c.q?'End '+bbPer(m,p)+', start next period':st.sc[0]===st.sc[1]?'Tied: start overtime':'End game'}</button></div>`:''}
+  <div class="card"><div class="b">Players</div><div class="mu sm">Points: ${esc(m.tn[0])}: ${ppl(0)||'-'} | ${esc(m.tn[1])}: ${ppl(1)||'-'}</div><div class="mu sm">Fouls (out at ${c.fouls}): ${esc(m.tn[0])}: ${pfl(0)} | ${esc(m.tn[1])}: ${pfl(1)}</div></div>
+  ${can()?`<div class="row" style="gap:8px"><button class="btn sm ghost" data-a="bbUndo">Undo last</button><button class="btn sm ghost" data-a="sgDel" data-id="${m.id}">Delete match</button></div>`:''}
+  <div class="mu sm" style="margin-top:8px">Rules used: ${c.fiba?'FIBA: four 10-minute quarters, 5 fouls fouls a player out, timeouts 2 in the first half, 3 in the second half and 1 per overtime, 5-minute overtimes until a winner.':'NBA: four 12-minute quarters, 6 fouls fouls a player out, 6 regular timeouts and 2 per overtime, 5-minute overtimes.'} Team-foul bonus is shown after 4 fouls in a period (the NBA last-two-minutes bonus and the FIBA last-two-minutes timeout limit are not tracked). The game clock is not run by the app.</div>`}
+/* ----- rugby ----- */
+const RGV={union:{n:'Rugby union',half:40,pts:{try:5,con:2,pen:3,dg:3,pt:7},sin:10},sevens:{n:'Rugby sevens',half:7,pts:{try:5,con:2,pen:3,dg:3,pt:7},sin:2},league:{n:'Rugby league',half:40,pts:{try:4,con:2,pen:2,dg:1},sin:10}};
+const RGL={try:'Try',con:'Conversion',pen:'Penalty goal',dg:'Drop goal',pt:'Penalty try',yc:'Yellow card',rc:'Red card'};
+function rgState(m){const v=RGV[m.cfg.v],sc=[0,0],cnt=[{},{}];m.log.forEach(e=>{if(v.pts[e.ty]){sc[e.tm]+=v.pts[e.ty];cnt[e.tm][e.ty]=(cnt[e.tm][e.ty]||0)+1}else cnt[e.tm][e.ty]=(cnt[e.tm][e.ty]||0)+1});return{sc,cnt,v}}
+Object.assign(A,{rgEv(d){const m=sgCur();if(!m||!can()||m.result)return;const el=document.getElementById('rgpl'),st=rgState(m);
+  if(d.ty==='con'){const pending=m.log.filter(e=>e.tm===+d.t&&e.ty==='try').length+m.log.filter(e=>e.tm===+d.t&&e.ty==='con').length*0;const tr=m.log.filter(e=>e.tm===+d.t&&e.ty==='try').length,cv=m.log.filter(e=>e.tm===+d.t&&e.ty==='con').length;if(cv>=tr){toast('A conversion needs a try first',3000);return}}
+  m.log.push({ty:d.ty,tm:+d.t,per:m.per,pl:el?el.value.trim():''});
+  if(m.cfg.v==='sevens'&&m.per===3&&RGV.sevens.pts[d.ty]&&d.ty!=='con'){const s2=rgState(m);if(s2.sc[0]!==s2.sc[1]){m.result=rgRes(m,s2)}}
+  commit()},
+ rgNext(){const m=sgCur();if(!m||!can()||m.result)return;if(m.per<2)m.per++;else{const st=rgState(m);if(st.sc[0]!==st.sc[1])m.result=rgRes(m,st);else m.per=3}commit()},
+ rgEnd(){const m=sgCur();if(!m||!can())return;m.result=rgRes(m,rgState(m));commit()},
+ rgUndo(){const m=sgCur();if(!m||!can())return;if(m.result)m.result='';else m.log.pop();commit()}});
+function rgRes(m,st){const a=st.sc[0],b=st.sc[1];return a>b?m.tn[0]+' won '+a+'-'+b:b>a?m.tn[1]+' won '+b+'-'+a:'Draw '+a+'-'+b}
+function rgView(m){const st=rgState(m),v=st.v,pl=['1st half','2nd half',m.cfg.v==='sevens'?'Extra time (sudden death, 5 min)':'Extra time'][m.per-1];
+  const tys=Object.keys(v.pts).concat(['yc','rc']);
+  return `<div class="card"><div class="mu sm">${esc(m.date)} | ${v.n} | 2 x ${v.half} min | ${pl}</div>
+   ${[0,1].map(i=>`<div class="item" style="gap:8px"><b style="flex:1">${esc(m.tn[i])}${m.result&&st.sc[i]>st.sc[1-i]?' \u{1F3C6}':''}</b><span class="mu sm">${Object.entries(st.cnt[i]).map(([k,n])=>RGL[k]+' '+n).join(', ')}</span><b style="min-width:54px;text-align:center;background:var(--c2);border-radius:8px;padding:6px;font-size:22px">${st.sc[i]}</b></div>`).join('')}${m.result?`<div class="need" style="margin-top:8px">${esc(m.result)}</div>`:''}</div>
+  ${can()&&!m.result?`<div class="card"><label>Player (optional)<input id="rgpl" placeholder="name or number"></label>${[0,1].map(i=>`<div class="b" style="margin-top:8px">${esc(m.tn[i])}</div><div class="row" style="gap:6px;flex-wrap:wrap">${tys.map(t=>`<button class="btn sm ${t==='yc'||t==='rc'?'ghost':''}" data-a="rgEv" data-t="${i}" data-ty="${t}">${RGL[t]}${v.pts[t]?' +'+v.pts[t]:''}</button>`).join('')}</div>`).join('')}
+   <div class="row" style="gap:8px;margin-top:10px"><button class="btn" style="flex:1" data-a="rgNext">${m.per<2?'Half time':'Full time'}</button>${m.per===2?'<button class="btn ghost" style="flex:1" data-a="rgEnd">Finish as it stands</button>':''}</div></div>`:''}
+  ${m.log.length?`<div class="card"><div class="b">Events</div>${m.log.slice().reverse().map(e=>`<div class="mu sm">${['1H','2H','ET'][e.per-1]} ${esc(m.tn[e.tm])}: ${RGL[e.ty]}${e.pl?' ('+esc(e.pl)+')':''}${e.ty==='yc'?' - sin-bin '+v.sin+' min':''}</div>`).join('')}</div>`:''}
+  ${can()?`<div class="row" style="gap:8px"><button class="btn sm ghost" data-a="rgUndo">Undo last</button><button class="btn sm ghost" data-a="sgDel" data-id="${m.id}">Delete match</button></div>`:''}
+  <div class="mu sm" style="margin-top:8px">Rules used: ${m.cfg.v==='league'?'Rugby league: try 4, conversion 2, penalty goal 2, drop goal 1 (these values are from general knowledge, not re-checked on an official page).':'Rugby union and sevens: try 5, conversion 2, penalty goal 3, drop goal 3, penalty try 7 (conversion is not taken). A yellow card is a '+v.sin+'-minute sin-bin'+(m.cfg.v==='sevens'?' in sevens (2 minutes), sevens halves are 7 minutes, and knockout extra time is 5-minute sudden death.':' (10 minutes in union is from general knowledge, not re-checked on an official page); a red card is a permanent dismissal.')} Sin-bin and match clocks are not run by the app. A conversion is only accepted after a try.'}</div>`}
+/* ----- kabaddi ----- */
+function kbState(m){const sc=[0,0],out=[0,0],em=[0,0],ev=[];let last=null,ao=[0,0];
+  const revive=(t,n)=>{out[t]=Math.max(0,out[t]-n)};
+  const allout=(by,t)=>{if(out[t]>=7){sc[by]+=2;out[t]=0;ao[t]++;return true}return false};
+  m.log.forEach(e=>{const t=e.tm,d=1-t;let tx='';const dod=em[t]>=2;
+    if(e.ty==='raid'){const n=Math.min(e.n,7-out[d]),b=e.b?1:0;sc[t]+=n+b;revive(t,n);out[d]+=n;em[t]=(n+b)>0?0:em[t]+1;tx=(n>=3||(n>=2&&b)?'Super raid: ':'Raid: ')+n+' touch'+(n===1?'':'es')+(b?' + bonus':'');if(allout(t,d))tx+=' + ALL OUT (+2)'}
+    else if(e.ty==='tackle'){const sup=(7-out[d])<=3;sc[d]+=sup?2:1;out[t]++;revive(d,1);em[t]++;tx=(sup?'Super tackle (+2)':'Tackle (+1)');if(allout(d,t))tx+=' + ALL OUT (+2)'}
+    else if(e.ty==='empty'){em[t]++;tx='Empty raid'}
+    else if(e.ty==='dod'){sc[d]+=1;out[t]++;revive(d,1);em[t]=0;tx='Do-or-die raid failed: raider out, +1 defence';if(allout(d,t))tx+=' + ALL OUT (+2)'}
+    ev.push({per:e.per,tm:t,tx});last=t});
+  const nxt=last==null?(m.cfg.first||0):1-last;return{sc,out,em,ev,nxt,ao}}
+Object.assign(A,{kbEv(d){const m=sgCur();if(!m||!can()||m.result)return;const st=kbState(m),t=+(document.getElementById('krt').value),dd=1-t;
+  let e={ty:d.ty,tm:t,per:m.per};
+  if(d.ty==='raid'){e.n=+document.getElementById('krn').value;e.b=document.getElementById('krb').checked?1:0;
+    if(e.b&&7-st.out[dd]<6){toast('No bonus: the bonus line is only active when 6 or more defenders are on the mat',4500);return}
+    if(!e.n&&!e.b){e.ty=st.em[t]>=2?'dod':'empty'}}
+  else if(d.ty==='empty'&&st.em[t]>=2){e.ty='dod'}
+  m.log.push(e);commit()},
+ kbNext(){const m=sgCur();if(!m||!can()||m.result)return;if(m.per<2)m.per++;else{const st=kbState(m);m.result=st.sc[0]>st.sc[1]?m.tn[0]+' won '+st.sc[0]+'-'+st.sc[1]:st.sc[1]>st.sc[0]?m.tn[1]+' won '+st.sc[1]+'-'+st.sc[0]:'Tie '+st.sc[0]+'-'+st.sc[1]}commit()},
+ kbUndo(){const m=sgCur();if(!m||!can())return;if(m.result)m.result='';else m.log.pop();commit()}});
+function kbView(m){const st=kbState(m),dod=st.em[st.nxt]>=2;
+  return `<div class="card"><div class="mu sm">${esc(m.date)} | Kabaddi | ${m.per===1?'1st half':'2nd half'} (2 x ${m.cfg.half} min, clock not run by the app)</div>
+   ${[0,1].map(i=>`<div class="item" style="gap:8px"><b style="flex:1">${esc(m.tn[i])}${m.result&&st.sc[i]>st.sc[1-i]?' \u{1F3C6}':''}</b><span class="mu sm">On mat ${7-st.out[i]} | all-outs against ${st.ao[i]}</span><b style="min-width:54px;text-align:center;background:var(--c2);border-radius:8px;padding:6px;font-size:22px">${st.sc[i]}</b></div>`).join('')}${m.result?`<div class="need" style="margin-top:8px">${esc(m.result)}</div>`:''}</div>
+  ${can()&&!m.result?`<div class="card"><div class="mu sm">Next raid: ${esc(m.tn[st.nxt])}${dod?' - <b>DO-OR-DIE RAID</b> (two empty raids in a row)':''}</div>
+   <div class="row" style="gap:8px;margin-top:6px"><label style="flex:1">Raiding team<select id="krt">${[0,1].map(i=>`<option value="${i}" ${i===st.nxt?'selected':''}>${esc(m.tn[i])}</option>`).join('')}</select></label><label style="flex:1">Defenders touched<select id="krn">${[0,1,2,3,4,5,6,7].map(n=>`<option>${n}</option>`).join('')}</select></label></div>
+   <label class="ck"><input type="checkbox" id="krb"> Bonus point (needs 6+ defenders on the mat)</label>
+   <div class="row" style="gap:6px;flex-wrap:wrap;margin-top:8px"><button class="btn sm" data-a="kbEv" data-ty="raid">Record raid</button><button class="btn sm ghost" data-a="kbEv" data-ty="tackle">Raider tackled</button><button class="btn sm ghost" data-a="kbEv" data-ty="empty">Empty raid</button><button class="btn sm ghost" data-a="kbEv" data-ty="dod">Do-or-die failed</button></div>
+   <button class="btn wide" style="margin-top:10px" data-a="kbNext">${m.per<2?'End first half':'Full time'}</button></div>`:''}
+  ${st.ev.length?`<div class="card"><div class="b">Raid log</div>${st.ev.slice().reverse().slice(0,25).map(e=>`<div class="mu sm">${e.per===1?'1H':'2H'} ${esc(m.tn[e.tm])}: ${esc(e.tx)}</div>`).join('')}</div>`:''}
+  ${can()?`<div class="row" style="gap:8px"><button class="btn sm ghost" data-a="kbUndo">Undo last</button><button class="btn sm ghost" data-a="sgDel" data-id="${m.id}">Delete match</button></div>`:''}
+  <div class="mu sm" style="margin-top:8px">Rules used (Pro Kabaddi League): 7 players a side. A raid scores one point per defender touched; each touch revives one of the raiding team. Bonus point only with 6+ defenders, and it never revives. Tackle gives the defence 1 point, or 2 (super tackle) when they have 3 or fewer players on the mat. Three or more touches (or two plus a bonus) is a super raid. All-out gives 2 extra points and revives the team. After two empty raids the third is do-or-die: if it scores nothing the raider is out, the defence gets a point and a player revives. Tackled raids are counted toward the empty-raid streak (not stated on the page I read). Match length of 2 x 20 minutes is from general knowledge.</div>`}
+/* ----- golf ----- */
+const golfSF=(d)=>d<=-3?5:d===-2?4:d===-1?3:d===0?2:d===1?1:0;
+function golfTot(m,pi){let st=0,par=0,pts=0,n=0;for(let h=0;h<m.holes;h++){const s=m.sc[pi][h];if(s){st+=s;par+=m.par[h];pts+=golfSF(s-m.par[h]);n++}}return{st,par,pts,n,vs:st-par}}
+Object.assign(F,{golfHole(fd){const m=sgCur();if(!m||!can())return;const h=UI.sg.h||0;const par=+fd.get('par');if(par)m.par[h]=par;m.pl.forEach((p,i)=>{const v=+fd.get('s'+i);m.sc[i][h]=v>0?v:null});if(h<m.holes-1)UI.sg.h=h+1;commit()}});
+Object.assign(A,{golfGo(d){UI.sg.h=Math.max(0,Math.min(sgCur().holes-1,+d.h));render()}});
+function golfView(m){const h=UI.sg.h||0,tt=m.pl.map((_,i)=>golfTot(m,i)),stab=m.cfg.mode==='stab';
+  const order=tt.map((t,i)=>i).sort((a,b)=>stab?tt[b].pts-tt[a].pts:(tt[a].n?tt[a].vs:999)-(tt[b].n?tt[b].vs:999));
+  return `<div class="card"><div class="mu sm">${esc(m.date)} | ${m.holes} holes | ${stab?'Stableford':'Stroke play'}${m.cfg.course?' | '+esc(m.cfg.course):''}</div><div style="overflow-x:auto"><table><tr><th>#</th><th>Player</th><th>Holes</th><th>Strokes</th><th>To par</th>${stab?'<th>Points</th>':''}</tr>${order.map((i,r)=>`<tr><td>${r+1}</td><td>${esc(m.pl[i])}</td><td>${tt[i].n}</td><td>${tt[i].st||'-'}</td><td>${tt[i].n?(tt[i].vs>0?'+':'')+tt[i].vs:'-'}</td>${stab?`<td><b>${tt[i].pts}</b></td>`:''}</tr>`).join('')}</table></div></div>
+  ${can()?`<form class="card" data-f="golfHole"><div class="row" style="align-items:center;gap:8px"><button type="button" class="btn sm ghost" data-a="golfGo" data-h="${h-1}">&lt;</button><b style="flex:1;text-align:center">Hole ${h+1} of ${m.holes}</b><button type="button" class="btn sm ghost" data-a="golfGo" data-h="${h+1}">&gt;</button></div>
+   <label>Par<input name="par" type="number" min="3" max="6" value="${m.par[h]}"></label>${m.pl.map((p,i)=>`<label>${esc(p)} strokes<input name="s${i}" type="number" min="1" value="${m.sc[i][h]||''}"></label>`).join('')}<button class="btn wide" style="margin-top:8px">Save hole</button></form>`:''}
+  <div class="card"><div class="b">Scorecard</div><div style="overflow-x:auto"><table><tr><th>Hole</th><th>Par</th>${m.pl.map(p=>`<th>${esc(p)}</th>`).join('')}</tr>${[...Array(m.holes).keys()].map(j=>`<tr><td>${j+1}</td><td>${m.par[j]}</td>${m.pl.map((p,i)=>`<td>${m.sc[i][j]||'-'}</td>`).join('')}</tr>`).join('')}</table></div></div>
+  ${can()?`<button class="btn sm ghost" data-a="sgDel" data-id="${m.id}">Delete match</button>`:''}
+  <div class="mu sm" style="margin-top:8px">Rules used: stroke play counts total strokes against par; lowest score wins. ${stab?'Stableford (unhandicapped) points: double bogey or worse 0, bogey 1, par 2, birdie 3, eagle 4, albatross 5; highest total wins (values from general knowledge, not re-checked on an official page).':''} Handicaps, net scores and match play are not included.</div>`}
+/* ----- chess ----- */
+const CHH={mate:'Checkmate',res:'Resignation',time:'Time forfeit',stale:'Stalemate',rep:'Threefold repetition',f50:'Fifty-move rule',agree:'Agreed draw',dead:'Dead position (insufficient material)',forf:'Forfeit / default'};
+function chTot(m){const t=[0,0];m.games.forEach(g=>{if(g.r==='1-0')t[g.wh]+=1;else if(g.r==='0-1')t[1-g.wh]+=1;else{t[0]+=.5;t[1]+=.5}});return t}
+Object.assign(F,{chGame(fd){const m=sgCur();if(!m||!can())return;const wh=m.games.length%2===0?0:1,r=fd.get('r'),how=fd.get('how');
+  if((how==='stale'||how==='rep'||how==='f50'||how==='agree'||how==='dead')&&r!=='1/2'){toast('That ending is a draw',3000);return}if((how==='mate'||how==='res'||how==='time')&&r==='1/2'){toast('That ending has a winner',3000);return}
+  m.games.push({r:r==='1/2'?'1/2-1/2':r,how,wh,mv:+fd.get('mv')||0,pgn:(fd.get('pgn')||'').trim()});const t=chTot(m);
+  if(m.cfg.n){const need=m.cfg.n/2;if(t[0]>need||t[1]>need||m.games.length>=m.cfg.n){m.result=t[0]>t[1]?m.tn[0]+' won '+t[0]+'-'+t[1]:t[1]>t[0]?m.tn[1]+' won '+t[1]+'-'+t[0]:'Match drawn '+t[0]+'-'+t[1]}}commit()}});
+Object.assign(A,{chUndo(){const m=sgCur();if(!m||!can())return;m.games.pop();m.result='';commit()},chEnd(){const m=sgCur();if(!m||!can())return;const t=chTot(m);m.result=t[0]>t[1]?m.tn[0]+' won '+t[0]+'-'+t[1]:t[1]>t[0]?m.tn[1]+' won '+t[1]+'-'+t[0]:'Match drawn '+t[0]+'-'+t[1];commit()}});
+function chView(m){const t=chTot(m),wh=m.games.length%2===0?0:1;
+  return `<div class="card"><div class="mu sm">${esc(m.date)} | ${esc(m.cfg.tc||'')}${m.cfg.n?' | '+m.cfg.n+' games':''}</div>${[0,1].map(i=>`<div class="item" style="gap:8px"><b style="flex:1">${esc(m.tn[i])}${m.result&&t[i]>t[1-i]?' \u{1F3C6}':''}</b><b style="min-width:54px;text-align:center;background:var(--c2);border-radius:8px;padding:6px;font-size:22px">${t[i]}</b></div>`).join('')}${m.result?`<div class="need" style="margin-top:8px">${esc(m.result)}</div>`:''}</div>
+  ${can()&&!m.result?`<form class="card" data-f="chGame"><div class="b">Game ${m.games.length+1}: ${esc(m.tn[wh])} has White</div>
+   <label>Result<select name="r"><option value="1-0">White won (1-0)</option><option value="0-1">Black won (0-1)</option><option value="1/2">Draw (1/2-1/2)</option></select></label>
+   <label>How it ended<select name="how">${Object.entries(CHH).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select></label>
+   <div class="row"><label style="flex:1">Moves played<input name="mv" type="number" min="0"></label></div><label>Moves (PGN text, optional)<textarea name="pgn" rows="2" placeholder="1. e4 e5 2. Nf3 ..."></textarea></label><button class="btn wide">Save game result</button></form>`:''}
+  ${m.games.length?`<div class="card"><div class="b">Games</div>${m.games.map((g,i)=>`<div class="mu sm">${i+1}. ${esc(m.tn[g.wh])} (W) vs ${esc(m.tn[1-g.wh])} (B): <b>${g.r}</b> - ${CHH[g.how]}${g.mv?', '+g.mv+' moves':''}</div>`).join('')}</div>`:''}
+  ${can()?`<div class="row" style="gap:8px"><button class="btn sm ghost" data-a="chUndo">Undo last game</button>${!m.result&&m.games.length?'<button class="btn sm ghost" data-a="chEnd">Finish match</button>':''}<button class="btn sm ghost" data-a="sgDel" data-id="${m.id}">Delete match</button></div>`:''}
+  <div class="mu sm" style="margin-top:8px">Rules used (FIDE): win 1 point, draw 1/2, loss 0. Draws: stalemate, dead position, agreement, threefold repetition and fifty-move rule (the last two on a claim). Colours alternate each game. The app records results and does not check the moves.</div>`}
+/* ----- carrom ----- */
+function crState(m){const sc=[0,0],rows=[];m.boards.forEach(b=>{const w=b.w;let q=0;if(b.q&&sc[w]<22)q=3;const pts=b.p+q;sc[w]+=pts;rows.push({w,p:b.p,q,pts,s:sc.slice()})});
+  const end=sc[0]>=25||sc[1]>=25||m.boards.length>=m.cfg.maxb;return{sc,rows,end}}
+Object.assign(F,{crBoard(fd){const m=sgCur();if(!m||!can()||m.result)return;m.boards.push({w:+fd.get('w'),p:Math.max(0,Math.min(9,+fd.get('p')||0)),q:fd.get('q')?1:0});const st=crState(m);if(st.end)m.result=st.sc[0]>st.sc[1]?m.tn[0]+' won '+st.sc[0]+'-'+st.sc[1]:st.sc[1]>st.sc[0]?m.tn[1]+' won '+st.sc[1]+'-'+st.sc[0]:'Tied '+st.sc[0]+'-'+st.sc[1];commit()}});
+Object.assign(A,{crUndo(){const m=sgCur();if(!m||!can())return;m.boards.pop();m.result='';commit()}});
+function crView(m){const st=crState(m);
+  return `<div class="card"><div class="mu sm">${esc(m.date)} | Carrom | game to 25 points or ${m.cfg.maxb} boards</div>${[0,1].map(i=>`<div class="item" style="gap:8px"><b style="flex:1">${esc(m.tn[i])}${m.result&&st.sc[i]>st.sc[1-i]?' \u{1F3C6}':''}</b><b style="min-width:54px;text-align:center;background:var(--c2);border-radius:8px;padding:6px;font-size:22px">${st.sc[i]}</b></div>`).join('')}${m.result?`<div class="need" style="margin-top:8px">${esc(m.result)}</div>`:''}</div>
+  ${can()&&!m.result?`<form class="card" data-f="crBoard"><div class="b">Board ${m.boards.length+1} result</div><label>Board won by<select name="w"><option value="0">${esc(m.tn[0])}</option><option value="1">${esc(m.tn[1])}</option></select></label><label>Opponent pieces left on the board (0 to 9)<input name="p" type="number" min="0" max="9" value="0"></label><label class="ck"><input type="checkbox" name="q"> Winner covered the queen (3 points)</label><button class="btn wide">Save board</button></form>`:''}
+  ${st.rows.length?`<div class="card"><div class="b">Boards</div>${st.rows.map((r,i)=>`<div class="mu sm">Board ${i+1}: ${esc(m.tn[r.w])} +${r.pts} (${r.p} piece${r.p===1?'':'s'}${r.q?' + queen 3':''}) | ${r.s[0]}-${r.s[1]}</div>`).join('')}</div>`:''}
+  ${can()?`<div class="row" style="gap:8px"><button class="btn sm ghost" data-a="crUndo">Undo last board</button><button class="btn sm ghost" data-a="sgDel" data-id="${m.id}">Delete match</button></div>`:''}
+  <div class="mu sm" style="margin-top:8px">Rules used (carrom.co.uk rules): the board winner scores one point for each opponent piece left and 3 for the queen if they covered it; no queen points once a player has 22. A game ends at 25 points or after ${m.cfg.maxb} boards. Fouls and penalties (such as pocketing the striker or the opponent's last piece) are not calculated: enter the final board result. Different federations may use other point values.</div>`}
+/* ----- generic ----- */
+Object.assign(A,{gnPts(d){const m=sgCur();if(!m||!can()||m.result)return;m.log.push({tm:+d.t,v:+d.v,per:m.per});commit()},gnNext(){const m=sgCur();if(!m||!can()||m.result)return;if(m.per<m.cfg.periods)m.per++;else{const s=gnSc(m);m.result=s[0]>s[1]?m.tn[0]+' won '+s[0]+'-'+s[1]:s[1]>s[0]?m.tn[1]+' won '+s[1]+'-'+s[0]:'Draw '+s[0]+'-'+s[1]}commit()},gnUndo(){const m=sgCur();if(!m||!can())return;if(m.result)m.result='';else m.log.pop();commit()}});
+const gnSc=m=>{const s=[0,0];m.log.forEach(e=>s[e.tm]+=e.v);return s};
+function gnView(m){const s=gnSc(m);return `<div class="card"><div class="mu sm">${esc(m.date)} | ${esc(m.cfg.name)} | period ${m.per} of ${m.cfg.periods}</div>${[0,1].map(i=>`<div class="item" style="gap:8px"><b style="flex:1">${esc(m.tn[i])}${m.result&&s[i]>s[1-i]?' \u{1F3C6}':''}</b><b style="min-width:54px;text-align:center;background:var(--c2);border-radius:8px;padding:6px;font-size:22px">${s[i]}</b></div>`).join('')}${m.result?`<div class="need" style="margin-top:8px">${esc(m.result)}</div>`:''}</div>
+  ${can()&&!m.result?`<div class="card">${[0,1].map(i=>`<div class="b" style="margin-top:6px">${esc(m.tn[i])}</div><div class="row" style="gap:6px;flex-wrap:wrap">${m.cfg.vals.map(v=>`<button class="btn sm" data-a="gnPts" data-t="${i}" data-v="${v}">+${v}</button>`).join('')}<button class="btn sm ghost" data-a="gnPts" data-t="${i}" data-v="-1">-1</button></div>`).join('')}<button class="btn wide" style="margin-top:10px" data-a="gnNext">${m.per<m.cfg.periods?'End period '+m.per:'Full time'}</button></div>`:''}
+  ${can()?`<div class="row" style="gap:8px"><button class="btn sm ghost" data-a="gnUndo">Undo last</button><button class="btn sm ghost" data-a="sgDel" data-id="${m.id}">Delete match</button></div>`:''}
+  <div class="mu sm" style="margin-top:8px">This is a plain scoreboard (points per tap and periods). It does not apply the official rules of ${esc(m.cfg.name)}; a dedicated scorer needs its rulebook checked first.</div>`}
+/* ----- hub, new-match forms ----- */
+const S2K=['vb','vbb','tt','bd','bd15','pb','basketball','rugby','kabaddi','golf','chess','carrom','generic'];
+function s2Sum(m){if(m.sport==='football'){const[a,b]=fbScore(m);return a+' - '+b+' | '+FPH[m.ph]}
+  if(m.sport==='tennis'){const s=tnState(m);return s.sets.map(x=>x.g.join('-')).join(' ')+(s.cur?' ('+tnPt({noad:m.cfg.noad,cur:s.cur},0)+'-'+tnPt({noad:m.cfg.noad,cur:s.cur},1)+')':'')}
+  if(RS[m.sport]){const s=rsState(m);return s.w.join('-')+' in games'+(s.done?'':' | now '+s.gs.join('-'))}
+  if(m.sport==='basketball')return bbState(m).sc.join(' - ')+' | '+bbPer(m,m.per);
+  if(m.sport==='rugby')return rgState(m).sc.join(' - ');
+  if(m.sport==='kabaddi')return kbState(m).sc.join(' - ');
+  if(m.sport==='golf')return m.pl.map((p,i)=>p+' '+golfTot(m,i).st).join(', ');
+  if(m.sport==='chess')return chTot(m).join(' - ');
+  if(m.sport==='carrom')return crState(m).sc.join(' - ');
+  if(m.sport==='generic')return gnSc(m).join(' - ');return ''}
+XV.sgames=function(){const L=S.sg.slice().reverse(),B=(k,l)=>`<button class="btn sm ghost" data-a="sgNew" data-v="${k}">${l}</button>`;
+  return `<div class="bar"><h2>Other sports scorers</h2></div><div class="card"><div class="b">Start a new match</div><div class="row" style="gap:6px;flex-wrap:wrap;margin-top:6px">${B('football','⚽ Football')}${B('tennis','\u{1F3BE} Tennis')}${S2K.map(k=>B(k,(RS[k]?RS[k].ic:S2I[k])+' '+S2N[k])).join('')}</div></div>
+  ${L.length?L.map(m=>`<div class="mcm" data-a="sgOpen" data-id="${m.id}"><div class="b">${s2ic(m)} ${m.sport==='golf'||m.sport==='generic'&&!m.tn?esc(m.cfg&&m.cfg.course||S2N[m.sport]):esc(m.tn[0])+' vs '+esc(m.tn[1])}</div><div class="mu sm">${esc(s2Sum(m))} | ${esc(m.date)}${m.result?' | '+esc(m.result):''}</div></div>`).join(''):'<div class="empty">No matches yet. Start one above.</div>'}`};
+{const f0=XV.sgnew;XV.sgnew=function(){const sp=UI.sgnew||'football';if(sp==='football'||sp==='tennis')return f0();
+  const nm=`<div class="row"><label style="flex:1">${sp==='tt'||sp==='bd'||sp==='bd15'||sp==='pb'?'Player or pair 1':'Team 1'}<input name="n0" placeholder="name"></label><label style="flex:1">${sp==='tt'||sp==='bd'||sp==='bd15'||sp==='pb'?'Player or pair 2':'Team 2'}<input name="n1" placeholder="name"></label></div>`;
+  let body='';
+  if(RS[sp]){const c=RS[sp];body=nm+`<div class="row"><label style="flex:1">Match<select name="best">${[1,3,5,7].map(n=>`<option value="${n}" ${n===c.best?'selected':''}>Best of ${n}</option>`).join('')}</select></label><label style="flex:1">First server / serving side<select name="first"><option value="0">Side 1</option><option value="1">Side 2</option></select></label></div>${sp==='pb'?'<label class="ck"><input type="checkbox" name="dbl" checked> Doubles (three-number score call)</label>':''}`}
+  else if(sp==='basketball')body=nm+`<label>Rule set<select name="rs"><option value="fiba">FIBA (4 x 10 min, 5 fouls out)</option><option value="nba">NBA (4 x 12 min, 6 fouls out)</option></select></label>`;
+  else if(sp==='rugby')body=nm+`<label>Format<select name="v"><option value="union">Rugby union (2 x 40)</option><option value="sevens">Rugby sevens (2 x 7)</option><option value="league">Rugby league (2 x 40)</option></select></label>`;
+  else if(sp==='kabaddi')body=nm+`<div class="row"><label style="flex:1">Half (min)<input name="half" type="number" value="20"></label><label style="flex:1">First raid<select name="first"><option value="0">Team 1</option><option value="1">Team 2</option></select></label></div>`;
+  else if(sp==='golf')body=`<label>Course (optional)<input name="course"></label><label>Players, comma separated (up to 4)<input name="pl" placeholder="Ravi, Kiran"></label><div class="row"><label style="flex:1">Holes<select name="holes"><option value="18">18</option><option value="9">9</option></select></label><label style="flex:1">Scoring<select name="mode"><option value="stroke">Stroke play</option><option value="stab">Stableford</option></select></label></div>`;
+  else if(sp==='chess')body=`<div class="row"><label style="flex:1">Player 1 (White first)<input name="n0"></label><label style="flex:1">Player 2<input name="n1"></label></div><div class="row"><label style="flex:1">Games in match (0 = open)<input name="n" type="number" value="1" min="0"></label><label style="flex:1">Time control (label)<input name="tc" placeholder="e.g. 10+5 rapid"></label></div>`;
+  else if(sp==='carrom')body=nm+`<label>Maximum boards<input name="maxb" type="number" value="8" min="1"></label>`;
+  else body=nm+`<label>Sport name<input name="name" placeholder="Hockey, handball, netball..."></label><div class="row"><label style="flex:1">Points per tap (comma list)<input name="vals" value="1,2,3"></label><label style="flex:1">Periods<input name="periods" type="number" value="2" min="1"></label></div>`;
+  return `<div class="bar"><h2>New ${esc(S2N[sp])} match</h2></div><form class="card" data-f="s2New"><input type="hidden" name="sp" value="${sp}">${body}<button class="btn wide" style="margin-top:8px">Start match</button></form>`}}
+Object.assign(F,{s2New(fd){const sp=fd.get('sp'),n0=(fd.get('n0')||'').trim()||'Side 1',n1=(fd.get('n1')||'').trim()||'Side 2',m={id:uid(),sport:sp,tn:[n0,n1],date:new Date().toISOString().slice(0,10),log:[],result:'',by:S.user?S.user.name:''};
+  if(RS[sp]){m.cfg={k:sp,best:+fd.get('best'),first:+fd.get('first')||0,dbl:fd.get('dbl')?1:0}}
+  else if(sp==='basketball'){const f=fd.get('rs')==='fiba';m.cfg={fiba:f,q:4,mins:f?10:12,fouls:f?5:6};m.per=1}
+  else if(sp==='rugby'){m.cfg={v:fd.get('v')};m.per=1}
+  else if(sp==='kabaddi'){m.cfg={half:+fd.get('half')||20,first:+fd.get('first')||0};m.per=1}
+  else if(sp==='golf'){const pl=(fd.get('pl')||'').split(',').map(x=>x.trim()).filter(Boolean).slice(0,4);if(!pl.length)pl.push('Player 1');m.pl=pl;m.tn=[pl[0],pl[1]||''];m.holes=+fd.get('holes')||18;m.par=Array(m.holes).fill(4);m.sc=pl.map(()=>Array(m.holes).fill(null));m.cfg={mode:fd.get('mode'),course:(fd.get('course')||'').trim()};UI.sg.h=0}
+  else if(sp==='chess'){m.games=[];m.cfg={n:+fd.get('n')||0,tc:(fd.get('tc')||'').trim()}}
+  else if(sp==='carrom'){m.boards=[];m.cfg={maxb:Math.max(1,+fd.get('maxb')||8)}}
+  else{const vals=(fd.get('vals')||'1').split(',').map(x=>+x.trim()).filter(x=>x>0);m.cfg={name:(fd.get('name')||'Sport').trim(),vals:vals.length?vals:[1],periods:Math.max(1,+fd.get('periods')||2)};m.per=1}
+  S.sg.push(m);UI.sgid=m.id;UI.view='sgame';commit()}});
+{const f0=XV.sgame;XV.sgame=function(){const m=sgCur();if(!m)return '<div class="empty">Match not found.</div>';if(m.sport==='football'||m.sport==='tennis')return f0();
+  const v=RS[m.sport]?rsView(m):m.sport==='basketball'?bbView(m):m.sport==='rugby'?rgView(m):m.sport==='kabaddi'?kbView(m):m.sport==='golf'?golfView(m):m.sport==='chess'?chView(m):m.sport==='carrom'?crView(m):gnView(m);
+  return `<div class="bar"><h2>${s2ic(m)} ${m.sport==='golf'?esc(m.cfg.course||'Golf round'):esc(m.tn[0])+' vs '+esc(m.tn[1])}</h2></div>`+v}}
 /* ---------------- THE HUNDRED (100 balls, 5-ball sets) ---------------- */
 {const f0=newMatch;newMatch=function(d){const h=String(d.overs)==='20.5';const m=f0(h?Object.assign({},d,{overs:20}):d);if(h){m.bpo=5;m.nbp=2;m.fmt='hundred';m.rules=Object.assign(m.rules||{},{ppb:25})}return m}}
 {const f0=vScore;vScore=function(){const o=f0();const m=S.matches.find(x=>x.id===UI.sid)||S.matches.filter(x=>x.status!=='done').slice(-1)[0];
