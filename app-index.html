@@ -805,7 +805,7 @@ function vSettings(){
   <label>App logo<input type="file" accept="image/*" data-c="appLogo"></label>${s.appLogo?'<button class="btn sm ghost" data-a="rmAppLogo" style="margin-top:6px">Use default logo</button>':''}
   <div class="b" style="margin-top:12px">Default team logo style</div><div class="row" style="margin-top:6px">${[0,1,2,3,4,5].map(i=>`<button class="btn sm ghost" style="padding:2px;${s.defLogo===i?'border-color:var(--ac)':''}" data-a="defLogo" data-v="${i}">${crest(i,'var(--ac)','CA',34)}</button>`).join('')}</div>
   <label>Add sponsor logo<input type="file" accept="image/*" data-c="sponsor"></label><div class="row" style="margin-top:6px">${s.sponsors.map((x,i)=>`<span><img src="${x}" height="34" alt="" class="logo" style="background:#fff;padding:2px"><button class="btn sm ghost" data-a="rmSponsor" data-v="${i}">x</button></span>`).join('')}</div></div>
-  <div class="card"><h3>Account</h3><div class="kv"><div>Name</div><div>${esc(S.user.name)}</div><div>Mobile</div><div>${esc(S.user.phone||'-')}</div><div>Role</div><div><select data-c="role">${opt([['viewer','Viewer'],['scorer','Scorer'],['admin','Admin']],S.user.role)}</select></div></div>
+  <div class="card"><h3>Account</h3><div class="kv"><div>Name</div><div>${esc(S.user.name)}</div><div>${String(S.user.phone||'').startsWith('e:')?'Email':'Mobile'}</div><div>${esc(String(S.user.phone||'-').replace(/^e:/,''))}</div><div>Role</div><div><select data-c="role">${opt([['viewer','Viewer'],['scorer','Scorer'],['admin','Admin']],S.user.role)}</select></div></div>
   <p class="mu sm">Role switching is for the demo. In production, roles must be enforced on your server.</p><div class="row"><button class="btn ghost" data-a="backup">Export all data</button><button class="btn ghost" data-a="restore">Import data</button><button class="btn red" data-a="wipe">Reset everything</button></div></div></div>`}
 /* modals */
 function renderModal(){
@@ -942,7 +942,7 @@ const logoSrc=()=>S.settings.appLogo||HELMET;
 const IC={home:'<path d="M3 11l9-8 9 8v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/>',matches:'<circle cx="12" cy="12" r="9"/><path d="M5 7c4 2 10 2 14 0M5 17c4-2 10-2 14 0"/>',plus:'<path d="M12 5v14M5 12h14"/>',academy:'<path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2 9 2 12 0v-5"/>',profile:'<circle cx="12" cy="8" r="4"/><path d="M4 21c1-5 15-5 16 0"/>',menu:'<path d="M4 6h16M4 12h16M4 18h16"/>',bell:'<path d="M6 16v-5a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 21h4"/>'};
 const ic=n=>`<svg viewBox="0 0 24 24" aria-hidden="true">${IC[n]}</svg>`;
 const money=L=>L>=100?'\u20B9'+(L/100).toFixed(2)+' Cr':'\u20B9'+L+' L';
-const digits=s=>{const d=String(s||'').replace(/\D/g,'').replace(/^0+/,'');return (UI&&UI.cc&&UI.cc!=='91')?d.slice(0,14):d.slice(-10)};
+const digits=s=>{if(String(s||'').startsWith('e:'))return String(s);const d=String(s||'').replace(/\D/g,'').replace(/^0+/,'');return (UI&&UI.cc&&UI.cc!=='91')?d.slice(0,14):d.slice(-10)};
 let av=p=>p.photo?`<img src="${p.photo}" alt="">`:(p.avatar||esc(p.name[0]));
 const MENU=[['home','Home'],['matches','Matches'],['match','Match centre'],['score','Scorer'],['players','Players'],['teams','Teams'],['auction','Auction'],['dream','Team 11'],['academy','Academy'],['book','Ground bookings'],['stream','Stream and OBS'],['reports','Reports'],['profile','My profile'],['settings','Settings']];
 const SPORTS=[['cricket','Cricket','\u{1F3CF}',1],['football','Football','\u26BD'],['hockey','Hockey','\u{1F3D1}'],['kabaddi','Kabaddi','\u{1F93C}'],['badminton','Badminton','\u{1F3F8}'],['volleyball','Volleyball','\u{1F3D0}'],['basketball','Basketball','\u{1F3C0}']];
@@ -3107,7 +3107,7 @@ MENU2[1][1].push(['streamhub','\u{1F4E1}','Live streams']);
 
 /* ---- Shared data: publish my matches, tournaments and auctions; show other people's (read-only) ---- */
 S.rt=S.rt||{teams:{},players:{}};
-const shMe=()=>S.user?String(S.user.phone||'').replace(/\D/g,'').slice(-10):'';
+const shMe=()=>{const p=S.user?String(S.user.phone||''):'';return p.startsWith('e:')?p:p.replace(/\D/g,'')};
 const shTok=()=>S.tok||'';
 const shOn=()=>!!(apiBase()&&shTok()&&shMe());
 UI.sh=UI.sh||{hash:{},busy:false,last:0,state:'idle',err:''};
@@ -3925,6 +3925,19 @@ const dlP=new URLSearchParams(location.search);UI.dl=UI.dl||{p:dlP.get('player')
 {const f0=render;render=function(){if(!UI.dl.done&&S.user&&UI.stage==='app'&&(UI.dl.p||UI.dl.m)&&!UI.rg.aid){UI.dl.done=1;setTimeout(()=>{if(UI.dl.m){if(S.matches.some(x=>x.id===UI.dl.m)){UI.mid=UI.dl.m;UI.view='match';render()}else{try{shPull().then(()=>{if(S.matches.some(x=>x.id===UI.dl.m)){UI.mid=UI.dl.m;UI.view='match'}else toast('This match was not found. It may be private or not shared yet.',4000);render()})}catch(e){}}}
  else if(P(UI.dl.p)){UI.pp={id:UI.dl.p,tab:'info'};UI.view='player';render()}else toast('This player profile is not available on this device.',4000)},300)}return f0()}}
 {const f0=A.ppShare;A.ppShare=function(d){const p=P(d.id);if(!p)return;const a=ppAgg(d.id,{fmt:'all',yr:'all',comp:'all'}),link=location.origin+location.pathname+'?player='+d.id,t=p.name+' on Scoring Heroes: '+a.m.size+' matches, '+a.r+' runs, '+a.w+' wickets (matches scored in the app). '+link;if(navigator.share)navigator.share({text:t}).catch(()=>{});else{try{navigator.clipboard.writeText(t);toast('Share text copied')}catch(e){window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank')}}}}
+/* ---------------- LOGIN / REGISTER WITH MOBILE OR EMAIL (PIN based; neither is verified by OTP yet) ---------------- */
+UI.idm=UI.idm||'phone';
+{const v1=vAuth;vAuth=function(){let o=v1.apply(this,arguments);
+  const tog=`<div class="seg" style="margin:0 0 10px"><button type="button" class="${UI.idm==='phone'?'on':''}" data-a="idm" data-v="phone">Mobile</button><button type="button" class="${UI.idm==='email'?'on':''}" data-a="idm" data-v="email">Email</button></div>`;
+  if(UI.idm==='email'){
+    o=o.replace(/<label>(Mobile number[^<]*)<span class="ccrow">[\s\S]*?<\/span><\/label>/g,()=>`<label>Email<input name="phone" type="email" required maxlength="100" placeholder="name@email.com" autocomplete="username" value="${esc((UI.login&&UI.login.phone&&String(UI.login.phone).includes('@'))?UI.login.phone:'')}"></label>`);
+    o=o.replace(/<label>Email \(optional, private\)<input type="email" name="email"[^>]*><\/label><div class="mu sm"[^>]*>[\s\S]*?<\/div>/,'<input type="hidden" name="email" value="">');
+    o=o.replace('My mobile number and email stay private.','My email stays private.')}
+  return o.replace('<form data-f="login">',tog+'<form data-f="login">').replace('<form data-f="register">',tog+'<form data-f="register">')}}
+Object.assign(A,{idm(d){UI.idm=d.v;UI.login={step:1};render()}});
+{const l1=F.login,r1=F.register;
+ F.login=function(fd){if(UI.idm==='email'&&(!apiBase()||!pinMode()))return toast('Email accounts need the online server in PIN mode',3500);return l1(fd)};
+ F.register=function(fd){if(UI.idm==='email'&&(!apiBase()||!pinMode()))return toast('Email accounts need the online server in PIN mode',3500);return r1(fd)}}
 /* ---------------- THE HUNDRED (100 balls, 5-ball sets) ---------------- */
 {const f0=newMatch;newMatch=function(d){const h=String(d.overs)==='20.5';const m=f0(h?Object.assign({},d,{overs:20}):d);if(h){m.bpo=5;m.nbp=2;m.fmt='hundred';m.rules=Object.assign(m.rules||{},{ppb:25})}return m}}
 {const f0=vScore;vScore=function(){const o=f0();const m=S.matches.find(x=>x.id===UI.sid)||S.matches.filter(x=>x.status!=='done').slice(-1)[0];

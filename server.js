@@ -59,10 +59,11 @@ const sends = new Map();     // key -> [timestamps]
 const digits = s => String(s || '').replace(/\D/g, '').slice(-10);
 const validPhone = p => /^[6-9]\d{9}$/.test(p);   // India only: used by the SMS-to-number (MO) flow
 // International numbers: the account key is the 10-digit number for India (so existing accounts keep working) and country code + number elsewhere.
-const pk = b => { const cc = String(b.cc || '').replace(/\D/g, '').slice(0, 4) || COUNTRY; let nat = String(b.phone || '').replace(/\D/g, '').replace(/^0+/, ''); if (cc === '91') nat = nat.slice(-10); else { if (nat.startsWith(cc) && nat.length > 10) nat = nat.slice(cc.length); nat = nat.slice(0, 14); } return { cc, nat, key: cc === '91' ? nat : cc + nat }; };
-const validIntl = ({ cc, nat }) => cc === '91' ? /^[6-9]\d{9}$/.test(nat) : (/^\d{6,14}$/.test(nat) && cc.length + nat.length <= 15);
+const validEmail = e => /^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(e) && e.length <= 100;
+const pk = b => { const raw = String(b.phone || '').trim(); if (raw.includes('@')) { const em = raw.replace(/^e:/i, '').toLowerCase(); return { cc: '', nat: '', key: 'e:' + em, email: em, isEmail: true }; } const cc = String(b.cc || '').replace(/\D/g, '').slice(0, 4) || COUNTRY; let nat = String(b.phone || '').replace(/\D/g, '').replace(/^0+/, ''); if (cc === '91') nat = nat.slice(-10); else { if (nat.startsWith(cc) && nat.length > 10) nat = nat.slice(cc.length); nat = nat.slice(0, 14); } return { cc, nat, key: cc === '91' ? nat : cc + nat }; };
+const validIntl = ({ cc, nat, isEmail, email }) => isEmail ? validEmail(email) : cc === '91' ? /^[6-9]\d{9}$/.test(nat) : (/^\d{6,14}$/.test(nat) && cc.length + nat.length <= 15);
 const BADNUM = 'Enter a valid mobile number for the selected country';
-const e164 = ({ cc, nat }) => '+' + cc + nat;   // canonical international form, kept private (never shown publicly)
+const e164 = ({ cc, nat, isEmail }) => isEmail ? '' : '+' + cc + nat;   // canonical international form, kept private (never shown publicly)
 // Countries where OTP SMS is actually delivered. SMS_REGIONS="91,1,44" lists calling codes; unset means every code with the console provider, and only the home country with MSG91.
 const SMS_REGIONS = E.SMS_REGIONS ? E.SMS_REGIONS.split(',').map(x => x.replace(/\D/g, '')).filter(Boolean) : null;
 const smsOk = cc => SMS_REGIONS ? SMS_REGIONS.includes(cc) : (SMS_PROVIDER === 'msg91' ? cc === COUNTRY : true);
@@ -174,7 +175,7 @@ const routes = {
     if (!smsOk(P.cc)) return [200, { ok: false, unsupported: true, error: 'SMS codes are not available for +' + P.cc + ' yet. Please use the PIN option instead.' }];
     const mode = body.mode === 'reg' ? 'reg' : body.mode === 'login' ? 'login' : 'plain', existing = db.users[phone];
     if (mode === 'reg' && existing) return [200, { ok: true, exists: true }];
-    if (mode === 'login' && !existing) return [200, { ok: false, noAccount: true, error: 'No account for this number. Please register.' }];
+    if (mode === 'login' && !existing) return [200, { ok: false, noAccount: true, error: phone.startsWith('e:') ? 'No account for this email. Please register.' : 'No account for this number. Please register.' }];
     let profile = null;
     if (mode === 'reg') {
       const c = cleanProfile(body.profile);
@@ -334,11 +335,11 @@ function locked(phone) { const f = fails.get(phone); return f && f.n >= 5 && Dat
 function bad(phone) { const f = fails.get(phone) || { n: 0, t: 0 }; if (Date.now() - f.t > 15 * 60e3) f.n = 0; f.n++; f.t = Date.now(); fails.set(phone, f); }
 routes['POST /api/auth/register'] = async (req, body, ip) => {
   const P = pk(body), phone = P.key;
-  if (!validIntl(P)) return [400, { ok: false, error: BADNUM }];
+  if (!validIntl(P)) return [400, { ok: false, error: P.isEmail ? 'Enter a valid email address' : BADNUM }];
   if (!validPin(body.pin)) return [400, { ok: false, error: 'PIN must be 4 to 6 digits' }];
   if (limited('reg:' + ip, 20, 36e5)) return [429, { ok: false, error: 'Too many sign-ups from this device. Try later.' }];
-  if (db.users[phone]) return [200, { ok: false, exists: true, error: 'This number is already registered. Please login.' }];
-  const c = cleanProfile(body.profile);
+  if (db.users[phone]) return [200, { ok: false, exists: true, error: P.isEmail ? 'This email is already registered. Please login.' : 'This number is already registered. Please login.' }];
+  const c = cleanProfile(P.isEmail ? Object.assign({}, body.profile, { email: P.email }) : body.profile);
   if (c.error) return [400, { ok: false, error: c.error }];
   if (Object.values(db.users).some(u => u.nick.toLowerCase() === c.profile.nick.toLowerCase())) return [400, { ok: false, error: 'That nickname is taken' }];
   const salt = crypto.randomBytes(8).toString('hex');

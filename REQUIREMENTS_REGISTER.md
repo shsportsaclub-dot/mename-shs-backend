@@ -56,5 +56,6 @@ Requirements are kept separate from implementation status. Conflicts: latest exp
 | R47 | Shared graphics package (templates, assets, render engine, data contract, versioned updates) used by Broadcast Companion and Windows/Web Studio | Ticker pack 8 | - | - | - | - | NOT BUILT |
 
 Build order (latest user instruction): 1 Existing SMS gateway preserved/integrated -> 2 Main App: Welcome + OTP + Profile + Home -> 3 Scorer: cricket complete, then sport-specific modules -> 4 Broadcast Companion -> 5 remaining ecosystem modules in Main App.
+| R48 | Register/login with mobile OR email (PIN), neither OTP-verified | User 2026-10-14 | Register/Login (Mobile/Email toggle) | account key e:<email> | Public | Playwright: email register, wrong PIN rejected, login, duplicate and bad email rejected, phone unchanged, shared auction ownership | BUILT-TESTED for PIN mode with the online server. Not built: PIN reset for email users, email verification, merge of one person's mobile and email accounts (they are separate accounts today) |
 
 Open flags: first registered user becomes admin; PIN login does not prove number ownership; legacy OTP client mode is India-only.
