@@ -62,6 +62,10 @@ const validPhone = p => /^[6-9]\d{9}$/.test(p);   // India only: used by the SMS
 const pk = b => { const cc = String(b.cc || '').replace(/\D/g, '').slice(0, 4) || COUNTRY; let nat = String(b.phone || '').replace(/\D/g, '').replace(/^0+/, ''); if (cc === '91') nat = nat.slice(-10); else { if (nat.startsWith(cc) && nat.length > 10) nat = nat.slice(cc.length); nat = nat.slice(0, 14); } return { cc, nat, key: cc === '91' ? nat : cc + nat }; };
 const validIntl = ({ cc, nat }) => cc === '91' ? /^[6-9]\d{9}$/.test(nat) : (/^\d{6,14}$/.test(nat) && cc.length + nat.length <= 15);
 const BADNUM = 'Enter a valid mobile number for the selected country';
+const e164 = ({ cc, nat }) => '+' + cc + nat;   // canonical international form, kept private (never shown publicly)
+// Countries where OTP SMS is actually delivered. SMS_REGIONS="91,1,44" lists calling codes; unset means every code with the console provider, and only the home country with MSG91.
+const SMS_REGIONS = E.SMS_REGIONS ? E.SMS_REGIONS.split(',').map(x => x.replace(/\D/g, '')).filter(Boolean) : null;
+const smsOk = cc => SMS_REGIONS ? SMS_REGIONS.includes(cc) : (SMS_PROVIDER === 'msg91' ? cc === COUNTRY : true);
 const hashCode = (code, salt) => crypto.createHash('sha256').update(salt + code).digest('hex');
 const safeEq = (a, b) => a.length === b.length && crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b));
 const b64 = o => Buffer.from(JSON.stringify(o)).toString('base64url');
@@ -116,7 +120,7 @@ function complete(phone, p) {
   pending.delete(phone); links.delete(p.linkToken);
   let u = db.users[phone];
   if (!u && p.mode === 'reg' && p.profile) {
-    u = db.users[phone] = { ...p.profile, phone, role: roleFor(phone, p.profile.kind), created: Date.now() };
+    u = db.users[phone] = { ...p.profile, phone, e164: p.e164, role: roleFor(phone, p.profile.kind), created: Date.now() };
     saveDb();
   }
   const session = sign(phone);
@@ -167,6 +171,7 @@ const routes = {
   'POST /api/otp/send': async (req, body, ip) => {
     const P = pk(body), phone = P.key;
     if (!validIntl(P)) return [400, { ok: false, error: BADNUM }];
+    if (!smsOk(P.cc)) return [200, { ok: false, unsupported: true, error: 'SMS codes are not available for +' + P.cc + ' yet. Please use the PIN option instead.' }];
     const mode = body.mode === 'reg' ? 'reg' : body.mode === 'login' ? 'login' : 'plain', existing = db.users[phone];
     if (mode === 'reg' && existing) return [200, { ok: true, exists: true }];
     if (mode === 'login' && !existing) return [200, { ok: false, noAccount: true, error: 'No account for this number. Please register.' }];
@@ -180,7 +185,7 @@ const routes = {
     if (limited('p:' + phone + ':30s', 1, 30e3)) return [429, { ok: false, error: 'Please wait 30 seconds before asking for another code' }];
     if (limited('p:' + phone, 5, 36e5) || limited('ip:' + ip, 30, 36e5)) return [429, { ok: false, error: 'Too many requests. Try again later.' }];
     const code = String(crypto.randomInt(100000, 1000000)), salt = crypto.randomBytes(8).toString('hex'), linkToken = crypto.randomBytes(16).toString('hex');
-    pending.set(phone, { hash: hashCode(code, salt), salt, exp: Date.now() + 5 * 60e3, tries: 0, mode, profile, linkToken });
+    pending.set(phone, { e164: e164(P), hash: hashCode(code, salt), salt, exp: Date.now() + 5 * 60e3, tries: 0, mode, profile, linkToken });
     links.set(linkToken, { phone, exp: Date.now() + 10 * 60e3 });
     try { await sendSms(P.nat, code, `${APP_URL}/#v=${linkToken}`, P.cc); }
     catch (e) { console.error(e.message); return [502, { ok: false, error: 'SMS provider error' }]; }
@@ -337,7 +342,7 @@ routes['POST /api/auth/register'] = async (req, body, ip) => {
   if (c.error) return [400, { ok: false, error: c.error }];
   if (Object.values(db.users).some(u => u.nick.toLowerCase() === c.profile.nick.toLowerCase())) return [400, { ok: false, error: 'That nickname is taken' }];
   const salt = crypto.randomBytes(8).toString('hex');
-  const u = db.users[phone] = { ...c.profile, phone, role: roleFor(phone, c.profile.kind), created: Date.now(), salt, ph: pinHash(body.pin, salt) };
+  const u = db.users[phone] = { ...c.profile, phone, e164: e164(P), role: roleFor(phone, c.profile.kind), created: Date.now(), salt, ph: pinHash(body.pin, salt) };
   saveDb();
   return [200, { ok: true, profile: pub(u), token: sign(phone) }];
 };
