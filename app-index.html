@@ -3575,7 +3575,7 @@ function s2Sum(m){if(m.sport==='football'){const[a,b]=fbScore(m);return a+' - '+
   if(m.sport==='carrom')return crState(m).sc.join(' - ');
   if(m.sport==='generic')return gnSc(m).join(' - ');return ''}
 XV.sgames=function(){const L=S.sg.slice().reverse(),B=(k,l)=>`<button class="btn sm ghost" data-a="sgNew" data-v="${k}">${l}</button>`;
-  return `<div class="bar"><h2>Other sports scorers</h2></div><div class="card"><div class="b">Start a new match</div><div class="row" style="gap:6px;flex-wrap:wrap;margin-top:6px">${shHubKeys().map(k=>B(k,shLab(k))).join('')}</div></div>
+  return `<div class="bar"><h2>Other sports scorers</h2></div><div class="card"><div class="b">Start a new match</div><div class="row" style="gap:6px;flex-wrap:wrap;margin-top:6px">${shHubKeys().map(k=>B(k,shLab(k))).join('')||'<span class="sub">No other sport selected.</span> <button class="btn" data-a="go" data-v="mysports">Choose sports</button>'}</div></div>
   ${L.length?L.map(m=>`<div class="mcm" data-a="sgOpen" data-id="${m.id}"><div class="b">${s2ic(m)} ${m.sport==='golf'||m.sport==='generic'&&!m.tn?esc(m.cfg&&m.cfg.course||S2N[m.sport]):esc(m.tn[0])+' vs '+esc(m.tn[1])}</div><div class="mu sm">${esc(s2Sum(m))} | ${esc(m.date)}${m.result?' | '+esc(m.result):''}</div></div>`).join(''):'<div class="empty">No matches yet. Start one above.</div>'}`};
 {const f0=XV.sgnew;XV.sgnew=function(){const sp=UI.sgnew||'football';if(sp==='football'||sp==='tennis')return f0();
   const nm=`<div class="row"><label style="flex:1">${sp==='tt'||sp==='bd'||sp==='bd15'||sp==='pb'?'Player or pair 1':'Team 1'}<input name="n0" placeholder="name"></label><label style="flex:1">${sp==='tt'||sp==='bd'||sp==='bd15'||sp==='pb'?'Player or pair 2':'Team 2'}<input name="n1" placeholder="name"></label></div>`;
@@ -3654,8 +3654,7 @@ const shSuggest=()=>{try{return TZC[Intl.DateTimeFormat().resolvedOptions().time
 function shAudit(t){S.cataudit.unshift({t:Date.now(),by:S.user?S.user.name:'',x:t});S.cataudit=S.cataudit.slice(0,100)}
 function shDefaults(){const c=S.prefs.country;return (S.cdef[c]||S.cdef['*']||[]).filter(id=>shGet(id)&&shGet(id).on)}
 function shMine(){return S.prefs.sports.filter(id=>shGet(id)&&shGet(id).on)}
-function shRowIds(){const mine=shMine(),base=mine.length?mine.concat(shDefaults().filter(x=>!mine.includes(x))):shDefaults();const ids=['cricket'].concat(base.filter(x=>x!=='cricket'));
-  const p=S.prefs.primary;if(mine.length&&p&&p!=='cricket'&&ids.includes(p)){ids.splice(ids.indexOf(p),1);ids.splice(1,0,p)}return [...new Set(ids)]}
+function shRowIds(){const mine=shMine();const ids=mine.length?mine.slice():['cricket'];const p=S.prefs.primary;if(p&&ids.includes(p)){ids.splice(ids.indexOf(p),1);ids.unshift(p)}return [...new Set(ids)]}
 const shStCls=s=>s==='AVAILABLE'?'ok':s==='LIMITED'?'':'mu';
 const shStTxt=s=>s==='LIMITED'?'Scorer only':s==='COMING SOON'?'Coming soon':s==='DISABLED'?'Disabled':'Available';
 function shScorers(id){const st=(shGet(id)||{}).st;if(id==='cricket')return['cricket'];if(!(st==='AVAILABLE'||st==='LIMITED'))return[];return CAT_SCORER[id]||[]}
@@ -3710,9 +3709,9 @@ Object.assign(F,{catNew(fd){if(!shAdmin())return;const name=(fd.get('name')||'')
 MENU2[0][1].splice(5,0,['mysports','⭐','My sports and country'],['sportsadmin','\u{1F6E0}️','Sports catalogue (admin)']);
 {const f0=render;render=function(){if(S.user&&S.prefs&&!S.prefs.asked&&UI.stage==='app'&&UI.view==='home'&&!UI.modal){S.prefs.asked=1;UI.view='mysports';try{save()}catch(e){}}return f0()}}
 /* Start-scoring hub: only sports whose scorer exists and whose status allows it; primary sport first */
-function shHubKeys(){const keys=[];const order=[S.prefs.primary].concat(shMine(),S.cat.map(c=>c.id));[...new Set(order)].forEach(id=>{if(id!=='cricket')shScorers(id).forEach(k=>keys.push(k))});return keys}
+function shHubKeys(){const keys=[];const mine=shMine();const order=[S.prefs.primary].concat(mine).filter(id=>id&&mine.includes(id));[...new Set(order)].forEach(id=>{if(id!=='cricket')shScorers(id).forEach(k=>keys.push(k))});return keys}
 const shLab=k=>(k==='football'?'⚽ Football':k==='tennis'?'\u{1F3BE} Tennis':(RS[k]?RS[k].ic:S2I[k]||'')+' '+S2N[k]);
-{const f0=XV.sgnew;XV.sgnew=function(){const sp=UI.sgnew||'football';return `<div class="card"><label>Sport<select data-c="sgsp">${shHubKeys().map(k=>`<option value="${k}" ${k===sp?'selected':''}>${esc(S2N[k]||k.charAt(0).toUpperCase()+k.slice(1))}</option>`).join('')}</select></label></div>`+f0()}}
+{const f0=XV.sgnew;XV.sgnew=function(){const hk=shHubKeys();if(!hk.length)return `<div class="card"><div class="b">No sport selected</div><div class="sub">Pick your sports first — only selected sports are shown.</div><button class="btn" data-a="go" data-v="mysports">Choose sports</button></div>`;const sp=hk.includes(UI.sgnew)?UI.sgnew:hk[0];UI.sgnew=sp;return `<div class="card"><label>Sport<select data-c="sgsp">${shHubKeys().map(k=>`<option value="${k}" ${k===sp?'selected':''}>${esc(S2N[k]||k.charAt(0).toUpperCase()+k.slice(1))}</option>`).join('')}</select></label></div>`+f0()}}
 Object.assign(C,{sgsp(v){UI.sgnew=v;render()}});
 /* ---------------- SERVER SYNC FOR PREFERENCES AND CATALOGUE, SH ID, SUPPORT PAGES ---------------- */
 UI.shs=UI.shs||{prefHash:'',catHash:'',pm:'',cm:'',busy:0};
