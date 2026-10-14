@@ -941,7 +941,7 @@ const logoSrc=()=>S.settings.appLogo||HELMET;
 const IC={home:'<path d="M3 11l9-8 9 8v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/>',matches:'<circle cx="12" cy="12" r="9"/><path d="M5 7c4 2 10 2 14 0M5 17c4-2 10-2 14 0"/>',plus:'<path d="M12 5v14M5 12h14"/>',academy:'<path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2 9 2 12 0v-5"/>',profile:'<circle cx="12" cy="8" r="4"/><path d="M4 21c1-5 15-5 16 0"/>',menu:'<path d="M4 6h16M4 12h16M4 18h16"/>',bell:'<path d="M6 16v-5a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 21h4"/>'};
 const ic=n=>`<svg viewBox="0 0 24 24" aria-hidden="true">${IC[n]}</svg>`;
 const money=L=>L>=100?'\u20B9'+(L/100).toFixed(2)+' Cr':'\u20B9'+L+' L';
-const digits=s=>String(s||'').replace(/\D/g,'').slice(-10);
+const digits=s=>{const d=String(s||'').replace(/\D/g,'').replace(/^0+/,'');return (UI&&UI.cc&&UI.cc!=='91')?d.slice(0,14):d.slice(-10)};
 let av=p=>p.photo?`<img src="${p.photo}" alt="">`:(p.avatar||esc(p.name[0]));
 const MENU=[['home','Home'],['matches','Matches'],['match','Match centre'],['score','Scorer'],['players','Players'],['teams','Teams'],['auction','Auction'],['dream','Team 11'],['academy','Academy'],['book','Ground bookings'],['stream','Stream and OBS'],['reports','Reports'],['profile','My profile'],['settings','Settings']];
 const SPORTS=[['cricket','Cricket','\u{1F3CF}',1],['football','Football','\u26BD'],['hockey','Hockey','\u{1F3D1}'],['kabaddi','Kabaddi','\u{1F93C}'],['badminton','Badminton','\u{1F3F8}'],['volleyball','Volleyball','\u{1F3D0}'],['basketball','Basketball','\u{1F3C0}']];
@@ -983,9 +983,9 @@ function vAuth(){
   if(L.step===2)return `<div class="auth"><div class="card"><h3>Verify your mobile</h3><p class="mu">${L.real?(L.sending?'Sending SMS from SH Sports...':(L.dev?'Enter the 6-digit code for '+esc(L.phone)+'.':'SMS sent from SH Sports to '+esc(L.phone)+'. Enter the 6-digit code, or tap the link in the SMS.')):'Enter the 6-digit code for '+esc(L.phone)}</p>${L.dev?`<div class="card" style="border-color:var(--ac);margin:8px 0"><div class="b">Test mode: no SMS was sent</div><div class="mu sm">The SMS service is not set up on the server yet, so your code is shown here: <b style="font-size:22px;letter-spacing:4px">${esc(String(L.dev))}</b></div></div>`:''}<form data-f="verifyOtp"><input name="otp" inputmode="numeric" maxlength="6" required class="otp" autocomplete="one-time-code" aria-label="OTP code"><button class="btn wide">Verify and continue</button></form><button class="btn ghost wide" data-a="otpBack">Back</button>${L.real?'<button class="btn ghost wide" data-a="resendOtp">Resend SMS</button><p class="mu sm">On Android, tap Allow when Chrome offers to read the code. On iPhone, tap the code above the keyboard.</p>':'<p class="mu sm">Demo mode: the code is shown on screen. Set the OTP server URL in Settings (or DEFAULT_API) to send real SMS.</p>'}</div></div>`;
   return `<div class="auth"><div class="hero"><h2>Play. Score. Rise.</h2><div>Your sports career, tracked from academy to pro.</div><div class="pill ok" style="margin-top:10px;font-size:12px">${freeText()}</div></div>
   <div class="seg"><button class="${tab==='login'?'on':''}" data-a="authTab" data-v="login">Login</button><button class="${tab==='register'?'on':''}" data-a="authTab" data-v="register">Register</button></div><div class="card">`+
-  (tab==='login'?`<form data-f="login"><label>Mobile number<input name="phone" inputmode="tel" required pattern="[0-9+ ]{10,15}" placeholder="+91 98765 43210" value="${esc(L.phone||'')}"></label><button class="btn wide">Send OTP</button></form>`
+  (tab==='login'?`<form data-f="login"><label>Mobile number<input name="phone" inputmode="tel" required pattern="[0-9+ ()\-]{6,20}" placeholder="+91 98765 43210" value="${esc(L.phone||'')}"></label><button class="btn wide">Send OTP</button></form>`
   :`<form data-f="register"><label>Nickname (public)<input name="nick" required minlength="3" maxlength="20" pattern="[A-Za-z0-9_.]+" title="Letters, numbers, dot and underscore" placeholder="Rohit_45"></label>
-  <label>Mobile number (private)<input name="phone" inputmode="tel" required pattern="[0-9+ ]{10,15}" placeholder="+91 98765 43210" value="${esc(L.phone||'')}"></label>
+  <label>Mobile number (private)<input name="phone" inputmode="tel" required pattern="[0-9+ ()\-]{6,20}" placeholder="+91 98765 43210" value="${esc(L.phone||'')}"></label>
   <label>Email (optional, private)<input type="email" name="email" placeholder="name@email.com"></label><div class="mu sm" style="margin:-4px 0 8px">Not needed to join. Add it if you want to connect social media later for posting posters.</div>
   <div class="row"><label style="flex:1">Age<input type="number" name="age" min="5" max="90" required></label><label style="flex:1">City<input name="loc" required></label></div>
   <label>I am a<select name="kind">${opt([['Player','Player'],['Fan','Fan'],['Scorer','Scorer'],['Organiser','Organiser']],'Player')}</select></label>
@@ -1518,10 +1518,10 @@ function enter(u){
   const tab=UI.authTab||'login',L=UI.login||{};
   return `<div class="auth"><div class="hero"><h2>Play. Score. Rise.</h2><div>Free to join. Your sports career, tracked from academy to pro.</div><div class="pill ok" style="margin-top:10px;font-size:12px">${freeText()}</div></div>
   <div class="seg"><button class="${tab==='login'?'on':''}" data-a="authTab" data-v="login">Login</button><button class="${tab==='register'?'on':''}" data-a="authTab" data-v="register">Register</button></div><div class="card">`+
-  (tab==='login'?`<form data-f="login"><label>Mobile number<input name="phone" inputmode="tel" required pattern="[0-9+ ]{10,15}" placeholder="+91 98765 43210" value="${esc(L.phone||'')}" autocomplete="username"></label>
+  (tab==='login'?`<form data-f="login"><label>Mobile number<input name="phone" inputmode="tel" required pattern="[0-9+ ()\-]{6,20}" placeholder="+91 98765 43210" value="${esc(L.phone||'')}" autocomplete="username"></label>
    <label>PIN<input name="pin" type="password" inputmode="numeric" required pattern="[0-9]{4,6}" maxlength="6" placeholder="4 to 6 digits" autocomplete="current-password"></label><button class="btn wide">Login</button></form><p class="mu sm" style="margin-top:10px">Forgot your PIN? Ask your organiser to reset it.</p>`
   :`<form data-f="register"><label>Nickname (public)<input name="nick" required minlength="3" maxlength="20" pattern="[A-Za-z0-9_.]+" title="Letters, numbers, dot and underscore" placeholder="Rohit_45"></label>
-   <label>Mobile number (private)<input name="phone" inputmode="tel" required pattern="[0-9+ ]{10,15}" placeholder="+91 98765 43210" value="${esc(L.phone||'')}" autocomplete="username"></label>
+   <label>Mobile number (private)<input name="phone" inputmode="tel" required pattern="[0-9+ ()\-]{6,20}" placeholder="+91 98765 43210" value="${esc(L.phone||'')}" autocomplete="username"></label>
    <label>Email (optional, private)<input type="email" name="email" placeholder="name@email.com"></label><div class="mu sm" style="margin:-4px 0 8px">Not needed to join. Add it if you want to connect social media later for posting posters.</div>
    <div class="row"><label style="flex:1">Age<input type="number" name="age" min="5" max="90" required></label><label style="flex:1">City<input name="loc" required></label></div>
    <div class="row"><label style="flex:1">Create PIN<input name="pin" type="password" inputmode="numeric" required pattern="[0-9]{4,6}" maxlength="6" placeholder="4 to 6 digits" autocomplete="new-password"></label><label style="flex:1">Confirm PIN<input name="pin2" type="password" inputmode="numeric" required pattern="[0-9]{4,6}" maxlength="6" autocomplete="new-password"></label></div>
@@ -1535,7 +1535,7 @@ Object.assign(F,{
     if(apiBase()){const j=await post('/auth/login',{phone,pin});
       if(j.noAccount){UI.authTab='register';UI.login={step:1,phone};render();return toast(j.error,3500)}
       if(!j.ok)return toast(j.error||'Login failed',3500);
-      S.tok=j.token||'';const p=j.profile;return enter({nick:p.nick,phone,email:p.email,age:p.age,loc:p.loc,kind:p.kind,role:p.role})}
+      S.tok=j.token||'';const p=j.profile;return enter({nick:p.nick,phone:p.phone||phone,email:p.email,age:p.age,loc:p.loc,kind:p.kind,role:p.role})}
     const u=S.users.find(x=>x.phone===digits(phone));
     if(!u){UI.authTab='register';UI.login={step:1,phone};render();return toast('No account for this number. Please register.',3500)}
     if(!u.ph||u.ph!==await sha(digits(phone)+':'+pin))return toast('Wrong PIN',3000);
@@ -1549,7 +1549,7 @@ Object.assign(F,{
     if(apiBase()){const j=await post('/auth/register',{phone,pin,profile:prof});
       if(j.exists){UI.authTab='login';UI.login={step:1,phone};render();return toast(j.error,3500)}
       if(!j.ok)return toast(j.error||'Could not register',3500);
-      S.tok=j.token||'';return enter(Object.assign({},prof,{phone,role:j.profile.role}))}
+      S.tok=j.token||'';return enter(Object.assign({},prof,{phone:j.profile.phone||phone,role:j.profile.role}))}
     if(S.users.some(x=>x.nick.toLowerCase()===nick.toLowerCase()))return toast('That nickname is taken');
     if(S.users.some(x=>x.phone===digits(phone)))return toast('This number is already registered. Please login.',3500);
     const first=S.users.length===0;

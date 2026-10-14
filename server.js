@@ -14,8 +14,9 @@ const COUNTRY = E.COUNTRY_CODE || '91';
 const CRIC_KEY = E.CRIC_API_KEY || '';
 const CRIC_BASE = E.CRIC_BASE || 'https://api.cricapi.com/v1';
 const LIVE_TTL = (+E.LIVE_CACHE_SECONDS || 60) * 1000;
-const ADMINS = (E.ADMIN_PHONES || '').split(',').map(s => s.replace(/\D/g, '').slice(-10)).filter(Boolean);
-const SCORERS = (E.SCORER_PHONES || '').split(',').map(s => s.replace(/\D/g, '').slice(-10)).filter(Boolean);
+const envKey = s => { const d = String(s).replace(/\D/g, ''); return d.length === 10 ? d : (d.startsWith('91') && d.length === 12 ? d.slice(2) : d); };
+const ADMINS = (E.ADMIN_PHONES || '').split(',').map(envKey).filter(Boolean);
+const SCORERS = (E.SCORER_PHONES || '').split(',').map(envKey).filter(Boolean);
 const MO_NUMBER = E.MO_NUMBER || '';            // the SH Sports number users send the SMS to, e.g. +919XXXXXXXXX
 const MO_KEYWORD = (E.MO_KEYWORD || 'SH').toUpperCase();
 const WEBHOOK_SECRET = E.WEBHOOK_SECRET || '';
@@ -56,7 +57,11 @@ const links = new Map();     // linkToken -> {phone,exp}
 const sends = new Map();     // key -> [timestamps]
 
 const digits = s => String(s || '').replace(/\D/g, '').slice(-10);
-const validPhone = p => /^[6-9]\d{9}$/.test(p);
+const validPhone = p => /^[6-9]\d{9}$/.test(p);   // India only: used by the SMS-to-number (MO) flow
+// International numbers: the account key is the 10-digit number for India (so existing accounts keep working) and country code + number elsewhere.
+const pk = b => { const cc = String(b.cc || '').replace(/\D/g, '').slice(0, 4) || COUNTRY; let nat = String(b.phone || '').replace(/\D/g, '').replace(/^0+/, ''); if (cc === '91') nat = nat.slice(-10); else { if (nat.startsWith(cc) && nat.length > 10) nat = nat.slice(cc.length); nat = nat.slice(0, 14); } return { cc, nat, key: cc === '91' ? nat : cc + nat }; };
+const validIntl = ({ cc, nat }) => cc === '91' ? /^[6-9]\d{9}$/.test(nat) : (/^\d{6,14}$/.test(nat) && cc.length + nat.length <= 15);
+const BADNUM = 'Enter a valid mobile number for the selected country';
 const hashCode = (code, salt) => crypto.createHash('sha256').update(salt + code).digest('hex');
 const safeEq = (a, b) => a.length === b.length && crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b));
 const b64 = o => Buffer.from(JSON.stringify(o)).toString('base64url');
@@ -160,8 +165,8 @@ async function liveMatches() {
 
 const routes = {
   'POST /api/otp/send': async (req, body, ip) => {
-    const phone = digits(body.phone);
-    if (!validPhone(phone)) return [400, { ok: false, error: 'Enter a valid 10-digit mobile number' }];
+    const P = pk(body), phone = P.key;
+    if (!validIntl(P)) return [400, { ok: false, error: BADNUM }];
     const mode = body.mode === 'reg' ? 'reg' : body.mode === 'login' ? 'login' : 'plain', existing = db.users[phone];
     if (mode === 'reg' && existing) return [200, { ok: true, exists: true }];
     if (mode === 'login' && !existing) return [200, { ok: false, noAccount: true, error: 'No account for this number. Please register.' }];
@@ -177,12 +182,12 @@ const routes = {
     const code = String(crypto.randomInt(100000, 1000000)), salt = crypto.randomBytes(8).toString('hex'), linkToken = crypto.randomBytes(16).toString('hex');
     pending.set(phone, { hash: hashCode(code, salt), salt, exp: Date.now() + 5 * 60e3, tries: 0, mode, profile, linkToken });
     links.set(linkToken, { phone, exp: Date.now() + 10 * 60e3 });
-    try { await sendSms(phone, code, `${APP_URL}/#v=${linkToken}`, body.cc); }
+    try { await sendSms(P.nat, code, `${APP_URL}/#v=${linkToken}`, P.cc); }
     catch (e) { console.error(e.message); return [502, { ok: false, error: 'SMS provider error' }]; }
     return [200, { ok: true, exists: false, ...(SMS_PROVIDER === 'console' ? { devCode: code, devOtp: code } : {}) }];
   },
   'POST /api/otp/verify': async (req, body) => {
-    const phone = digits(body.phone), p = pending.get(phone);
+    const phone = pk(body).key, p = pending.get(phone);
     if (!p || p.exp < Date.now()) return [400, { ok: false, error: 'Code expired. Please request a new one.' }];
     if (p.tries >= 5) { pending.delete(phone); return [429, { ok: false, error: 'Too many wrong attempts. Request a new code.' }]; }
     p.tries++;
@@ -323,8 +328,8 @@ const fails = new Map();
 function locked(phone) { const f = fails.get(phone); return f && f.n >= 5 && Date.now() - f.t < 15 * 60e3; }
 function bad(phone) { const f = fails.get(phone) || { n: 0, t: 0 }; if (Date.now() - f.t > 15 * 60e3) f.n = 0; f.n++; f.t = Date.now(); fails.set(phone, f); }
 routes['POST /api/auth/register'] = async (req, body, ip) => {
-  const phone = digits(body.phone);
-  if (!validPhone(phone)) return [400, { ok: false, error: 'Enter a valid 10-digit mobile number' }];
+  const P = pk(body), phone = P.key;
+  if (!validIntl(P)) return [400, { ok: false, error: BADNUM }];
   if (!validPin(body.pin)) return [400, { ok: false, error: 'PIN must be 4 to 6 digits' }];
   if (limited('reg:' + ip, 20, 36e5)) return [429, { ok: false, error: 'Too many sign-ups from this device. Try later.' }];
   if (db.users[phone]) return [200, { ok: false, exists: true, error: 'This number is already registered. Please login.' }];
@@ -337,7 +342,7 @@ routes['POST /api/auth/register'] = async (req, body, ip) => {
   return [200, { ok: true, profile: pub(u), token: sign(phone) }];
 };
 routes['POST /api/auth/login'] = async (req, body) => {
-  const phone = digits(body.phone), u = db.users[phone];
+  const phone = pk(body).key, u = db.users[phone];
   if (locked(phone)) return [429, { ok: false, error: 'Too many wrong PINs. Try again in 15 minutes.' }];
   if (!u) return [200, { ok: false, noAccount: true, error: 'No account for this number. Please register.' }];
   if (!u.ph) return [200, { ok: false, error: 'This account has no PIN yet. Ask the admin to reset it.' }];
@@ -346,7 +351,7 @@ routes['POST /api/auth/login'] = async (req, body) => {
   return [200, { ok: true, profile: pub(u), token: sign(phone) }];
 };
 routes['POST /api/auth/pin'] = async (req, body) => {
-  const phone = digits(body.phone), u = db.users[phone];
+  const phone = pk(body).key, u = db.users[phone];
   if (!u || !u.ph || locked(phone)) return [400, { ok: false, error: 'Not allowed' }];
   if (!safeEq(pinHash(body.pin || '', u.salt), u.ph)) { bad(phone); return [200, { ok: false, error: 'Current PIN is wrong' }]; }
   if (!validPin(body.newPin)) return [400, { ok: false, error: 'New PIN must be 4 to 6 digits' }];
