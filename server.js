@@ -408,6 +408,68 @@ http.createServer(async (req, res) => {
     bag[id] = { id, owner: cur ? cur.owner : phone, ownerName: u.nick || u.name || '', updated: Date.now(), data: b.data };
     saveDb(); return out(200, { ok: true, updated: bag[id].updated });
   }
+  if (path.startsWith('/api/aucreg/')) {   // auction player registrations: players submit, organiser reviews (server decides status)
+    const [, , , aid, rid] = path.split('/');
+    const tok = String(req.headers.authorization || '').replace(/^Bearer\s+/i, ''), phone = readSession(tok), u = phone && db.users[phone];
+    if (!u) return out(401, { ok: false, error: 'Please sign in first' });
+    if (!aid || !/^[\w-]{3,40}$/.test(aid)) return out(400, { ok: false, error: 'Bad auction' });
+    const au = db.shared && db.shared.auc && db.shared.auc[aid];
+    if (!au) return out(404, { ok: false, error: 'This auction is not published yet' });
+    const cfg = au.data && au.data.a && au.data.a.reg;
+    const bag = (db.aucreg = db.aucreg || {}), regs = (bag[aid] = bag[aid] || {});
+    const isOrg = au.owner === phone || u.role === 'admin';
+    if (!u.shid) { let id; do { id = 'SH-' + crypto.randomBytes(5).toString('hex').slice(0, 8).toUpperCase(); } while (Object.values(db.users).some(x => x.shid === id)); u.shid = id; }
+    const view = r => ({ id: r.id, pid: r.pid, status: r.status, form: r.form, cat: r.cat, base: r.base, max: r.max, fee: r.fee, paid: r.paid, note: r.note, created: r.created, updated: r.updated, audit: r.audit });
+    const mine = Object.values(regs).find(r => r.owner === phone);
+    if (req.method === 'GET') {
+      if (isOrg && !rid) return out(200, { ok: true, org: true, regs: Object.values(regs).map(view) });
+      return out(200, { ok: true, org: false, reg: mine ? view(mine) : null });
+    }
+    let raw = ''; for await (const c of req) { raw += c; if (raw.length > 300000) return out(413, { ok: false, error: 'Photo or form too large' }); }
+    let b; try { b = JSON.parse(raw); } catch { return out(400, { ok: false, error: 'Bad body' }); }
+    if (limited('areg:' + phone, 120, 36e5)) return out(429, { ok: false, error: 'Too many requests, slow down' });
+    const now = Date.now();
+    if (req.method === 'POST' && !rid) {   // player submits or re-submits own registration
+      if (!cfg || !cfg.open) return out(400, { ok: false, error: 'Registration is not open for this auction' });
+      const today = new Date().toISOString().slice(0, 10);
+      if (cfg.from && today < cfg.from) return out(400, { ok: false, error: 'Registration opens on ' + cfg.from });
+      if (cfg.to && today > cfg.to) return out(400, { ok: false, error: 'Registration closed on ' + cfg.to });
+      const f = b.form || {}, str = (v, n) => String(v == null ? '' : v).trim().slice(0, n);
+      const form = { name: str(f.name, 60), dob: str(f.dob, 10), city: str(f.city, 60), role: str(f.role, 30), bat: str(f.bat, 30), bowl: str(f.bowl, 40), team: str(f.team, 60), link: str(f.link, 300), avail: str(f.avail, 120), prefCat: str(f.prefCat, 30), photo: str(f.photo, 200000), decl: !!f.decl, srcKind: str(f.srcKind, 30), srcNote: str(f.srcNote, 200) };
+      if (!form.name) return out(400, { ok: false, error: 'Display name is required' });
+      if (!/^data:image\/(png|jpe?g|webp);base64,/.test(form.photo)) return out(400, { ok: false, error: 'A player photo is required for this auction' });
+      if (!form.decl) return out(400, { ok: false, error: 'Please accept the declaration' });
+      if (form.dob && !/^\d{4}-\d{2}-\d{2}$/.test(form.dob)) return out(400, { ok: false, error: 'Date of birth looks wrong' });
+      const fee = +cfg.fee || 0;
+      if (mine) {
+        if (!['CHANGES_REQUIRED', 'PAYMENT_PENDING'].includes(mine.status)) return out(409, { ok: false, error: 'You already registered (' + mine.status.replace(/_/g, ' ') + '). Edits are allowed only when changes are requested.' });
+        mine.form = form; mine.updated = now; if (mine.status === 'CHANGES_REQUIRED') mine.status = (fee && !mine.paid) ? 'PAYMENT_PENDING' : 'SUBMITTED'; mine.audit.push({ t: now, by: 'player', a: 'resubmitted' });
+      } else {
+        const id = 'RG-' + crypto.randomBytes(4).toString('hex').toUpperCase();
+        regs[id] = { id, owner: phone, pid: u.shid, form, fee, paid: fee === 0, status: fee ? 'PAYMENT_PENDING' : 'SUBMITTED', created: now, updated: now, audit: [{ t: now, by: 'player', a: 'submitted' }] };
+      }
+      saveDb(); return out(200, { ok: true, reg: view(mine || Object.values(regs).find(r => r.owner === phone)) });
+    }
+    if (req.method === 'PUT' && rid) {   // organiser decision
+      if (!isOrg) return out(403, { ok: false, error: 'Only the auction organiser can review registrations' });
+      const r = regs[rid]; if (!r) return out(404, { ok: false, error: 'Registration not found' });
+      const act = String(b.action || ''), note = String(b.note || '').slice(0, 300);
+      if (act === 'paid') { r.paid = true; if (r.status === 'PAYMENT_PENDING') r.status = 'SUBMITTED'; r.audit.push({ t: now, by: 'organiser', a: 'payment recorded by organiser' }); }
+      else if (act === 'review') { if (r.status === 'SUBMITTED') r.status = 'UNDER_REVIEW'; r.audit.push({ t: now, by: 'organiser', a: 'under review' }); }
+      else if (act === 'approve') {
+        if (!r.paid) return out(400, { ok: false, error: 'Fee is not recorded as paid yet' });
+        const cat = String(b.cat || '').slice(0, 30), base = +b.base, max = b.max === '' || b.max == null ? null : +b.max;
+        if (!cat || !(base > 0)) return out(400, { ok: false, error: 'Choose a category and a base price first' });
+        if (max != null && !(max >= base)) return out(400, { ok: false, error: 'Maximum must not be below the base price' });
+        r.status = 'APPROVED'; r.cat = cat; r.base = base; r.max = max; r.note = note; r.audit.push({ t: now, by: 'organiser', a: 'approved: ' + cat + ' base ' + base });
+      } else if (act === 'changes' || act === 'reject') {
+        if (!note) return out(400, { ok: false, error: 'Add a short reason for the player' });
+        r.status = act === 'changes' ? 'CHANGES_REQUIRED' : 'REJECTED'; r.note = note; r.audit.push({ t: now, by: 'organiser', a: r.status.toLowerCase().replace(/_/g, ' ') + ': ' + note });
+      } else return out(400, { ok: false, error: 'Unknown action' });
+      r.updated = now; saveDb(); return out(200, { ok: true, reg: view(r) });
+    }
+    return out(405, { ok: false, error: 'Method not allowed' });
+  }
   if (path === '/api/prefs' || path === '/api/catalogue') {   // account preferences (country, sports, primary sport) and the admin-managed sports catalogue
     const tok = String(req.headers.authorization || '').replace(/^Bearer\s+/i, ''), phone = readSession(tok), u = phone && db.users[phone];
     if (path === '/api/catalogue') {

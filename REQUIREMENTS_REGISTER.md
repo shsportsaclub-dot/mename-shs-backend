@@ -38,5 +38,13 @@ Requirements are kept separate from implementation status. Conflicts: latest exp
 | R29 | Voice AI integration | Rem. 11 | - | - | - | - | SOURCE/DEFINITION REQUIRED (source code + contract) |
 | R30 | Approved logo/icon/background assets | Rem. 11 | - | - | - | - | SOURCE/DEFINITION REQUIRED |
 | R31 | Welcome screen with language + country | Workflow | Entry | - | - | - | NOT BUILT |
+| R32 | Auction public-link registration: organiser setup (categories, base prices, fee, dates), player form with mandatory photo, status flow, duplicate prevention, organiser review, approve to pool, per-player base/max in bidding | Auction reg doc | Auction > Register tab; ?reg= link | /api/aucreg/* (server decides status) | Player / organiser / admin | Playwright 2-user test: photo required, duplicate blocked, unpaid cannot be approved, changes-required loop, approve adds to pool, player cannot approve | PARTIAL: BUILT-TESTED core; NOT BUILT: online fee payment + server verification (only organiser-recorded), QR, OTP step, eligibility rules/extra required fields, tournament linkage, notify player on SOLD, re-auction |
+| R33 | External profile link import (CricHeroes, CrickBro, CricGiri Live, CricLabs) | Import doc | Registration form | link + provenance | Player | Source detection tested for CricHeroes | PARTIAL: link attached as self-declared/unverified only. Automatic fetch/preview NOT BUILT: no verified public API or permission route; sandbox cannot reach those sites; QR scan not built |
+| R34 | Media engine: automatic posters (13 types, presets), editable, publish workflow | Media doc 1-3 | - | - | Editorial approval | - | NOT BUILT (assets/branding SOURCE REQUIRED) |
+| R35 | Articles (8 types), canonical article + translations, correction history | Media doc 4, Social doc 5-6 | - | - | Editor | - | NOT BUILT |
+| R36 | ePaper (English/Hindi/Telugu, local-to-global editions, archive) | Media doc 5, Social doc 4 | - | - | - | - | NOT BUILT |
+| R37 | Broadcast graphics, auction live screen, OBS/vMix output | Media doc 6 | - | - | - | Existing OBS overlay + auction live screen (earlier work) | PARTIAL |
+| R38 | Player social accounts: profile link vs authorised connection, tagging/auto-publish permissions, guardian permission for minors | Social doc 1-3 | Player > Social | - | Player | - | NOT BUILT (needs platform API authorisation) |
+| R39 | Player media portfolio + publishing dashboard (per-destination status, retry, withdrawal, real metrics only) | Social doc 7-8 | Player > Media/Press | - | - | - | NOT BUILT |
 
 Open flags: first registered user becomes admin; PIN login does not prove number ownership; legacy OTP client mode is India-only.
