@@ -4056,11 +4056,30 @@ const cbCard=m=>{const A_=T(m.a),B_=T(m.b),live=m.status==='live',done=m.status=
  const row=(t,T_)=>{const i=idx(t);return `<div class="tr">${logo(T_,28)}<span>${esc(T_.name)}</span><span class="sc">${i>=0?sc(t,i):''}</span></div>`};
  const stx=m.result||(live?liveStatus(m):m.status==='break'?'Innings break':'Toss: '+T(m.toss).name+' chose to '+m.dec);
  return `<div class="card cbm"><div class="bd"><div class="sr">${esc(m.cat||m.type||'Match')} | ${esc(m.venue||'Venue TBA')} | ${esc(m.date)} | ${m.overs} overs</div>${row(m.a,A_)}${row(m.b,B_)}<div class="stt ${live?'lv':done?'dn':''}">${esc(stx)}</div></div><div class="ft"><a data-a="open" data-id="${m.id}">MATCH CENTRE</a>${can()&&!done?`<a data-a="scoreIt" data-id="${m.id}">SCORE</a>`:''}</div></div>`};
+const wCard=m=>{const tm=(m.teams||[]).slice(0,2),live=m.started&&!m.ended,done=m.ended;
+ const sc=t=>{const x=(m.score||[]).filter(z=>String(z.inning||'').toLowerCase().startsWith(String(t.name||'').toLowerCase()));return x.map(z=>`${z.r}-${z.w} (${z.o})`).join(' & ')};
+ const when=m.time?new Date(m.time.length<=19&&!/Z$/.test(m.time)?m.time+'Z':m.time):null;
+ const row=t=>`<div class="tr">${t.img?`<img src="${esc(t.img)}" alt="" style="width:28px;height:28px;border-radius:50%;object-fit:cover">`:`<span class="dcrest">${esc(String(t.short||t.name).slice(0,3))}</span>`}<span>${esc(t.name)}</span><span class="sc">${esc(sc(t))}</span></div>`;
+ const stx=m.status||(when?when.toLocaleString([],{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'');
+ const body=`<div class="bd"><div class="sr">${esc(m.name||'')} | ${esc(m.venue||'')}</div>${tm.map(row).join('')}<div class="stt ${live?'lv':done?'dn':''}">${esc(stx)}</div></div>`;
+ return sk()==='ca'?`<div class="card cacard"><div class="row"><span class="mu sm" style="text-transform:uppercase">${esc(m.type||'')} | ${esc(m.venue||'')}</span><div class="grow"></div><span class="pill ${live?'live':done?'ok':''}">${live?'LIVE':done?'RESULT':'UPCOMING'}</span></div>${tm.map(t=>`<div class="row" style="justify-content:space-between;margin-top:8px"><span class="tm">${esc(t.short||t.name)}</span><span class="big" style="font-size:22px">${esc(sc(t))}</span></div>`).join('')}<div class="st">${esc(stx)}</div></div>`:`<div class="card cbm">${body}</div>`};
 const fM=XV.matches||vMatches,fM1=XV.match||vMatch;
-XV.matches=function(){const ms=S.matches.slice().reverse();
+XV.matches=function(){
+ const tab=UI.mtab||'all',ms=S.matches.slice().reverse(),F2=wFilter(),j=UI.live;
+ const L={live:ms.filter(m=>m.status==='live'||m.status==='break'),up:ms.filter(m=>m.status!=='live'&&m.status!=='break'&&m.status!=='done'),rec:ms.filter(m=>m.status==='done')};
+ const W={live:F2.live,up:F2.up,rec:F2.rec};
+ const keys=tab==='all'?['live','up','rec']:[tab];
+ const cnt=k=>(k==='all'?['live','up','rec'].reduce((n,x)=>n+L[x].length+W[x].length,0):L[k].length+W[k].length);
+ const TT=[['all','Fixtures'],['live','Live'],['up','Schedule'],['rec','Results']];
+ const NM={live:'Live',up:'Upcoming',rec:'Results'};
+ const card=m=>sk()==='ca'?caCard(m):cbCard(m);
+ const sec=keys.map(k=>{const sh=L[k],wd=W[k].slice(0,k==='rec'?20:30);if(!sh.length&&!wd.length)return tab==='all'?'':`<div class="empty">No ${NM[k].toLowerCase()} matches right now.</div>`;
+  return `<div class="sec"><h3>${NM[k]} <span class="mu sm">${sh.length+W[k].length}</span></h3></div>${sh.length?`<div class="mu sm" style="margin:2px 0 6px">SH matches</div>`+sh.map(card).join(''):''}${wd.length?`<div class="mu sm" style="margin:8px 0 6px">World cricket</div><div style="display:flex;flex-direction:column;gap:10px">${wd.map(wCard).join('')}</div>`:''}`}).join('');
+ const feed=!j?'<div class="mu sm">Loading world matches...</div>':!j.ok?`<div class="mu sm" style="margin:6px 0">World feed unavailable here (${esc(j.error||'')}). Open the real app link for live data. SH matches below still work.</div>`:`<div class="mu sm" style="margin:6px 0">World data updated ${j.updated?new Date(j.updated).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'-'}${j.stale?' (older data)':''}</div>`;
+ const empty=!ms.length&&cnt('all')===0?'<div class="empty">No matches yet. Create a match, or load the demo match to see every screen working.</div>':'';
  const head=`<div class="bar"><h2>Matches</h2><div class="grow"></div>${can()?'<button class="btn" data-a="newMatch">+ New match</button>':''}<button class="btn ghost" data-a="demo">Load demo match</button></div>`;
- const list=ms.length?(sk()==='ca'?ms.map(caCard).join(''):ms.map(cbCard).join('')):'<div class="empty">No matches yet. Create a match, or load the demo match to see every screen working.</div>';
- return head+`<div class="msk msk-${sk()}">${bar()}${list}</div>`};
+ return head+`<div class="msk msk-${sk()}">${bar()}<div class="tabs" style="margin-bottom:8px">${TT.map(([k,l])=>`<button class="${tab===k?'on':''}" data-a="mtab" data-v="${k}">${l} <span class="mu sm">${cnt(k)}</span></button>`).join('')}</div>${feed}${sec||''}${empty}</div>`};
+A.mtab=function(d){UI.mtab=d.v;render()};
 XV.match=function(){const o=fM1();return `<div class="msk msk-${sk()}">${bar()}${o}</div>`};
 A.mskin=function(d){S.settings.mskin=d.v==='ca'?'ca':'cb';commit()};
 }
