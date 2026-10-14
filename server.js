@@ -13,6 +13,7 @@ const APP_URL = (E.APP_URL || 'http://localhost:5500').replace(/\/$/, '');   // 
 const ORIGINS = (E.ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean); // empty = allow any origin (dev only)
 const SMS_PROVIDER = E.SMS_PROVIDER || 'console';           // console | msg91 | textbee
 // Allow a 50-user OTP burst behind a shared network; per-number and gateway quotas still apply.
+const SMS_TOTAL_BUDGET = Math.max(0, parseInt(E.SMS_TOTAL_BUDGET, 10) || 0);   // trial pack cap (0 = unlimited)
 const SMS_OTP_IP_HOURLY_LIMIT = Number.isInteger(Number(E.SMS_OTP_IP_HOURLY_LIMIT)) && Number(E.SMS_OTP_IP_HOURLY_LIMIT) >= 50 && Number(E.SMS_OTP_IP_HOURLY_LIMIT) <= 1000 ? Number(E.SMS_OTP_IP_HOURLY_LIMIT) : 100;
 const EMAIL_PROVIDER = E.EMAIL_PROVIDER || 'console';       // console | resend | smtp (Gmail app password works)
 const EMAIL_FROM = E.EMAIL_FROM || E.SMTP_USER || 'SH Sports <no-reply@example.com>';
@@ -226,6 +227,10 @@ const routes = {
     const code = String(crypto.randomInt(100000, 1000000)), salt = crypto.randomBytes(8).toString('hex'), linkToken = crypto.randomBytes(16).toString('hex');
     pending.set(phone, { e164: e164(P), hash: hashCode(code, salt), salt, exp: Date.now() + 5 * 60e3, tries: 0, mode, profile, linkToken });
     links.set(linkToken, { phone, exp: Date.now() + 10 * 60e3 });
+    if (SMS_PROVIDER !== 'console' && SMS_TOTAL_BUDGET && (db.smsSent || 0) >= SMS_TOTAL_BUDGET) {
+      pending.delete(phone); links.delete(linkToken);
+      return [429, { ok: false, error: 'SMS trial quota is finished. Please use email to sign in.' }];
+    }
     let transport;
     try { transport = await sendSms(P.nat, code, `${APP_URL}/#v=${linkToken}`, P.cc); }
     catch (e) {
@@ -234,6 +239,7 @@ const routes = {
       console.error(e.message);
       return [e.statusCode || 502, { ok: false, error: e.publicMessage || 'SMS provider error' }];
     }
+    if (SMS_PROVIDER !== 'console') { db.smsSent = (db.smsSent || 0) + 1; saveDb(); }
     return [200, { ok: true, exists: false, ...(transport || {}), ...(SMS_PROVIDER === 'console' ? { devCode: code, devOtp: code } : {}) }];
   },
   'POST /api/otp/verify': async (req, body) => {
