@@ -11,7 +11,7 @@ const E = process.env;
 const PORT = +E.PORT || 8080;
 const APP_URL = (E.APP_URL || 'http://localhost:5500').replace(/\/$/, '');   // where the Scoring Heroes web app is hosted (HTTPS in production)
 const ORIGINS = (E.ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean); // empty = allow any origin (dev only)
-const SMS_PROVIDER = E.SMS_PROVIDER || 'console';           // console | msg91
+const SMS_PROVIDER = E.SMS_PROVIDER || 'console';           // console | msg91 | textbee
 const EMAIL_PROVIDER = E.EMAIL_PROVIDER || 'console';       // console | resend | smtp (Gmail app password works)
 const EMAIL_FROM = E.EMAIL_FROM || E.SMTP_USER || 'SH Sports <no-reply@example.com>';
 const COUNTRY = E.COUNTRY_CODE || '91';
@@ -70,7 +70,7 @@ const BADNUM = 'Enter a valid mobile number for the selected country';
 const e164 = ({ cc, nat, isEmail }) => isEmail ? '' : '+' + cc + nat;   // canonical international form, kept private (never shown publicly)
 // Countries where OTP SMS is actually delivered. SMS_REGIONS="91,1,44" lists calling codes; unset means every code with the console provider, and only the home country with MSG91.
 const SMS_REGIONS = E.SMS_REGIONS ? E.SMS_REGIONS.split(',').map(x => x.replace(/\D/g, '')).filter(Boolean) : null;
-const smsOk = cc => SMS_REGIONS ? SMS_REGIONS.includes(cc) : (SMS_PROVIDER === 'msg91' ? cc === COUNTRY : true);
+const smsOk = cc => SMS_REGIONS ? SMS_REGIONS.includes(cc) : (['msg91', 'textbee'].includes(SMS_PROVIDER) ? cc === COUNTRY : true);
 const hashCode = (code, salt) => crypto.createHash('sha256').update(salt + code).digest('hex');
 const safeEq = (a, b) => a.length === b.length && crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b));
 const b64 = o => Buffer.from(JSON.stringify(o)).toString('base64url');
@@ -117,6 +117,38 @@ async function sendSms(phone, code, link, cc) {
     const j = await r.json().catch(() => ({}));
     if (!r.ok || j.type === 'error') throw new Error('MSG91 ' + JSON.stringify(j));
     return;
+  }
+  if (SMS_PROVIDER === 'textbee') {
+    if (!E.TEXTBEE_API_KEY || !E.TEXTBEE_DEVICE_ID) {
+      throw Object.assign(new Error('TextBee API key and device ID are required'), { statusCode: 503, publicMessage: 'SMS gateway is not configured yet' });
+    }
+    const body = {
+      recipients: ['+' + cc + phone],
+      message: 'Your Scoring Heroes OTP is ' + code + '. Valid for 5 minutes. Do not share this code. - SH Sports',
+      deviceId: E.TEXTBEE_DEVICE_ID
+    };
+    if (E.TEXTBEE_SIM_SUBSCRIPTION_ID) {
+      const sim = Number(E.TEXTBEE_SIM_SUBSCRIPTION_ID);
+      if (!Number.isInteger(sim) || sim < 0) throw Object.assign(new Error('Invalid TextBee SIM setting'), { statusCode: 503, publicMessage: 'SMS gateway SIM configuration is invalid' });
+      body.simSubscriptionId = sim;
+    }
+    let r;
+    try {
+      r = await fetch('https://api.textbee.dev/api/v1/gateway/send-sms', {
+        method: 'POST',
+        headers: { 'x-api-key': E.TEXTBEE_API_KEY, 'content-type': 'application/json' },
+        body: JSON.stringify(body),
+        signal: AbortSignal.timeout(15000)
+      });
+    } catch {
+      throw Object.assign(new Error('TextBee connection timed out or failed'), { statusCode: 502, publicMessage: 'SMS gateway did not confirm the request. Please try again later.' });
+    }
+    const j = await r.json().catch(() => null);
+    if (r.status === 429) throw Object.assign(new Error('TextBee quota/rate limit reached'), { statusCode: 429, publicMessage: 'SMS gateway limit reached. Check the daily/monthly quota.' });
+    if (!r.ok || j?.data?.success !== true || !j.data.smsBatchId) {
+      throw Object.assign(new Error('TextBee rejected request: HTTP ' + r.status), { statusCode: 502, publicMessage: 'SMS gateway rejected the request. Check device connection and configuration.' });
+    }
+    return { deliveryStatus: 'queued', smsBatchId: j.data.smsBatchId, provider: 'textbee' };
   }
   throw new Error('Unknown SMS_PROVIDER');
 }
@@ -192,9 +224,15 @@ const routes = {
     const code = String(crypto.randomInt(100000, 1000000)), salt = crypto.randomBytes(8).toString('hex'), linkToken = crypto.randomBytes(16).toString('hex');
     pending.set(phone, { e164: e164(P), hash: hashCode(code, salt), salt, exp: Date.now() + 5 * 60e3, tries: 0, mode, profile, linkToken });
     links.set(linkToken, { phone, exp: Date.now() + 10 * 60e3 });
-    try { await sendSms(P.nat, code, `${APP_URL}/#v=${linkToken}`, P.cc); }
-    catch (e) { console.error(e.message); return [502, { ok: false, error: 'SMS provider error' }]; }
-    return [200, { ok: true, exists: false, ...(SMS_PROVIDER === 'console' ? { devCode: code, devOtp: code } : {}) }];
+    let transport;
+    try { transport = await sendSms(P.nat, code, `${APP_URL}/#v=${linkToken}`, P.cc); }
+    catch (e) {
+      if (pending.get(phone)?.salt === salt) pending.delete(phone);
+      links.delete(linkToken);
+      console.error(e.message);
+      return [e.statusCode || 502, { ok: false, error: e.publicMessage || 'SMS provider error' }];
+    }
+    return [200, { ok: true, exists: false, ...(transport || {}), ...(SMS_PROVIDER === 'console' ? { devCode: code, devOtp: code } : {}) }];
   },
   'POST /api/otp/verify': async (req, body) => {
     const phone = pk(body).key, p = pending.get(phone);
