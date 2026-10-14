@@ -46,5 +46,15 @@ Requirements are kept separate from implementation status. Conflicts: latest exp
 | R37 | Broadcast graphics, auction live screen, OBS/vMix output | Media doc 6 | - | - | - | Existing OBS overlay + auction live screen (earlier work) | PARTIAL |
 | R38 | Player social accounts: profile link vs authorised connection, tagging/auto-publish permissions, guardian permission for minors | Social doc 1-3 | Player > Social | - | Player | - | NOT BUILT (needs platform API authorisation) |
 | R39 | Player media portfolio + publishing dashboard (per-destination status, retry, withdrawal, real metrics only) | Social doc 7-8 | Player > Media/Press | - | - | - | NOT BUILT |
+| R40 | Live score tickers: scorebug, bottom strip, ball-by-ball, recent overs, target + RRR, status/result, other live scores | Ticker pack 1 | Overlay (#overlay) | S match data | Operator | Earlier work: basic scoreboard overlay, OBS browser source | PARTIAL (exact coverage per item not re-verified this session) |
+| R41 | Player/team graphics: intros, photo/avatar, career stats, XI, partnership/FOW, scorecard | Ticker pack 2 | Overlay | - | Operator | - | NOT BUILT (verify what overlay already has) |
+| R42 | Competition tickers: fixtures, points table, leaders, qualification, awards, auction bid/wallet, SOLD/UNSOLD, final squads | Ticker pack 3 | Overlay | - | Operator | Auction live screen exists in app only | NOT BUILT as overlay |
+| R43 | News/sponsor tickers, registration link + QR, labelled ads | Ticker pack 4 | Overlay | - | Operator | - | NOT BUILT (sponsor assets SOURCE REQUIRED) |
+| R44 | Effects pack (FOUR/SIX/WICKET, milestones, POM, trophy, replay IN/OUT, sound cues), per-sport event names | Ticker pack 5 | Overlay | - | Operator | - | NOT BUILT |
+| R45 | Operator controls: on/off, position/size, language, template, speed, duration, queue/priority, Preview-Program, auto/manual | Ticker pack 6 | Overlay controls | - | Operator | - | NOT BUILT (basic overlay settings exist) |
+| R46 | Outputs: App/Web/TV/Big screen, OBS browser source, vMix overlay, transparent background, safe margins; manual announcements separate from official scores | Ticker pack 7 | Overlay | - | - | OBS browser source existed earlier | PARTIAL |
+| R47 | Shared graphics package (templates, assets, render engine, data contract, versioned updates) used by Broadcast Companion and Windows/Web Studio | Ticker pack 8 | - | - | - | - | NOT BUILT |
+
+Build order (latest user instruction): 1 Existing SMS gateway preserved/integrated -> 2 Main App: Welcome + OTP + Profile + Home -> 3 Scorer: cricket complete, then sport-specific modules -> 4 Broadcast Companion -> 5 remaining ecosystem modules in Main App.
 
 Open flags: first registered user becomes admin; PIN login does not prove number ownership; legacy OTP client mode is India-only.
