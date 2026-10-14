@@ -1986,7 +1986,7 @@ S.tours=S.tours||[];UI.ttab=UI.ttab||'fix';
 const trObj=id=>S.tours.find(x=>x.id===id);
 const ptsRule=t=>Object.assign({win:2,tie:1,nr:1,loss:0},t.rules||{});
 function tourMatches(t){return S.matches.filter(m=>m.tid===t.id&&m.status==='done'&&!isDemo(m))}
-function oversFaced(m,i){const k=calc(m,i),inn=m.innings[i];const allOut=k.wk>=maxWk(m,i);return (allOut||(i===1&&k.runs>=m.target&&false)?mx(m):k.lg)}
+function oversFaced(m,i){const k=calc(m,i),inn=m.innings[i];const allOut=k.wk>=maxWk(m,i);return (allOut||(i===1&&k.runs>=m.target&&false)?mxi(m,i):k.lg)}
 function standings(t,grp){
   const R=ptsRule(t),row={};const tm=grp?grp.teams:t.teams;
   tm.forEach(id=>row[id]={id,p:0,w:0,l:0,t:0,nr:0,pts:0,rf:0,bf:0,ra:0,bb:0,form:[]});
@@ -1995,7 +1995,7 @@ function standings(t,grp){
     if(m.win){const W=row[m.win],L=row[m.win===m.a?m.b:m.a];W.w++;L.l++;W.pts+=R.win;L.pts+=R.loss;W.form.push('W');L.form.push('L')}
     else if(/tied/i.test(m.result)){A.t++;B.t++;A.pts+=R.tie;B.pts+=R.tie;A.form.push('T');B.form.push('T')}
     else{A.nr++;B.nr++;A.pts+=R.nr;B.pts+=R.nr;A.form.push('N');B.form.push('N');return}
-    m.innings.forEach((inn,i)=>{const k=calc(m,i),bat=row[inn.bat],bow=row[inn.bowl];if(!bat||!bow)return;const ov=oversFaced(m,i);bat.rf+=k.runs;bat.bf+=ov;bow.ra+=k.runs;bow.bb+=ov})});
+    m.innings.forEach((inn,i)=>{const k=nrrIn(m,i),bat=row[inn.bat],bow=row[inn.bowl];if(!bat||!bow)return;bat.rf+=k.r;bat.bf+=k.b;bow.ra+=k.r;bow.bb+=k.b})});
   const L=Object.values(row);L.forEach(r=>{r.nrr=(r.bf?r.rf/(r.bf/BPO):0)-(r.bb?r.ra/(r.bb/BPO):0)});
   return L.sort((x,y)=>y.pts-x.pts||y.nrr-x.nrr||y.w-x.w)}
 function roundRobin(ids,dbl){const L=ids.slice(),out=[];if(L.length%2)L.push(null);const n=L.length;
@@ -3168,7 +3168,7 @@ function shChip(){const off=typeof navigator!=='undefined'&&navigator.onLine===f
   else if(off){const n=shPend();t='Offline: scoring is saved on this phone'+(n?' ('+n+' match'+(n>1?'es':'')+' waiting to sync)':'')+'. It will sync when you are back online.';c='#d97706'}
   else{const n=shPend();t=n?'Saved on phone, syncing...':'Saved and synced';c=n?'#2563eb':'#16a34a'}
   return `<div class="mu sm" style="display:flex;gap:6px;align-items:center;margin:6px 2px"><span style="width:9px;height:9px;border-radius:50%;background:${c};flex:none"></span>${t}</div>`}
-{const f0=scoreConsole;scoreConsole=function(m){return shChip()+f0(m)+(can()?`<div class="row" style="margin-top:8px"><button class="btn sm ghost" data-a="rulesOpen" data-id="${m.id}">Match rules: powerplay</button><button class="btn sm ghost" data-a="penOpen" data-id="${m.id}">Penalty runs</button></div>`:'')}}
+{const f0=scoreConsole;scoreConsole=function(m){return shChip()+f0(m)+(can()?`<div class="row" style="margin-top:8px"><button class="btn sm ghost" data-a="rulesOpen" data-id="${m.id}">Match rules: powerplay</button><button class="btn sm ghost" data-a="penOpen" data-id="${m.id}">Penalty runs</button><button class="btn sm ghost" data-a="rainOpen" data-id="${m.id}">Rain / interruption</button></div>`:'')}}
 {const f0=vScore;vScore=function(){const o=f0();const m=S.matches.find(x=>x.id===UI.sid)||S.matches.filter(x=>x.status!=='done').slice(-1)[0];
   if(m&&m.status==='done'&&can()&&!m.so&&/tied/i.test(m.result||''))return o+`<div class="card"><b>Match tied.</b><div class="mu sm" style="margin:4px 0 8px">${m.bpo===5?'Knockout tie: Super Five. 5 balls and 2 wickets each, the team that batted second bats first.':'Knockout or final tie: Super Over. 6 balls and 2 wickets each, the team that batted second bats first. League ties are shared.'}</div><button class="btn sm" data-a="soOpen" data-id="${m.id}">Record Super Over</button></div>`;
   if(m&&m.so&&can())return o+`<div class="card"><b>Super Over recorded</b><div class="mu sm" style="margin:4px 0 8px">${esc(m.so.text)}</div><button class="btn sm ghost" data-a="soDel" data-id="${m.id}">Remove Super Over</button></div>`;
@@ -3205,30 +3205,56 @@ function dlsCalc(x){const g=x.g50,S=x.s1,i1=dlsInn(x.t1,x.o1),i2=dlsInn(x.t2,x.o
   return{S,R1,R2,g,T,par,o2:x.o2,o1:x.o1}}
 const dlsNum=(fd,k)=>+fd.get(k)||0;
 const dlsInts=(fd,p)=>[1,2].map(n=>({left:dlsOv(fd.get(p+'l'+n)),wk:dlsNum(fd,p+'w'+n),lost:dlsOv(fd.get(p+'x'+n))})).filter(q=>q.left>0&&q.lost>0);
-function dlsRow(p,n,l){return `<div class="row"><label style="flex:1">${l} overs left<input name="${p}l${n}" placeholder="e.g. 14.2"></label><label style="flex:1">Wickets down<input name="${p}w${n}" type="number" min="0" max="9"></label><label style="flex:1">Overs lost<input name="${p}x${n}" placeholder="e.g. 5"></label></div>`}
-{const old=tDLS;tDLS=function(m){
-  if(m.bpo===5)return old(m)+'<div class="mu sm">DLS is not defined for The Hundred. Record the official figure from the match officials above.</div>';
-  const o=UI.dlsOut&&UI.dlsOut.mid===m.id?UI.dlsOut:null,s1=m.innings[0]?calc(m,0).runs:0;
+const dlsMin=m=>m.bpo===5?0:(m.overs>=40?20:5);
+const mxi=(m,i)=>(i===1&&m.ovr2?m.ovr2:m.overs)*(m.bpo||6);
+function dlsRow(p,n,l,v){v=v||{};return `<div class="row"><label style="flex:1">${l} overs left<input name="${p}l${n}" placeholder="e.g. 14.2" value="${v.left!=null?v.left:''}"></label><label style="flex:1">Wickets down<input name="${p}w${n}" type="number" min="0" max="9" value="${v.wk!=null?v.wk:''}"></label><label style="flex:1">Overs lost<input name="${p}x${n}" placeholder="e.g. 5" value="${v.lost!=null?v.lost:''}"></label></div>`}
+const ovTxt2=u=>{const o=Math.floor(u+1e-9),b=Math.round((u-o)*6);return o+(b?'.'+b:'')};
+function dlsPre(m,inn){return (m.ints||[]).filter(q=>q.inn===inn).slice(0,2).map(q=>({left:ovTxt2(q.left),wk:q.wk,lost:ovTxt2(q.lost)}))}
+function dlsFormHtml(m,tool){const o=UI.dlsOut&&UI.dlsOut.mid===m.id?UI.dlsOut:null,s1=(!tool&&m.innings&&m.innings[0])?calc(m,0).runs:0,a=dlsPre(m,0),b=dlsPre(m,1);
   const res=o?`<div class="card" style="border:1px solid var(--ac)"><div class="b" style="font-size:18px">Revised target: ${o.T} from ${o.o2} overs</div>
-    <div class="mu sm" style="margin:6px 0">Par score (a tie): ${o.par}. Team 1 scored ${o.S} with ${o.R1.toFixed(1)}% resources. Team 2 has ${o.R2.toFixed(1)}% resources. G50 = ${o.g}.</div>
-    ${can()?`<div class="row" style="gap:8px;margin-top:6px"><button class="btn sm" data-a="dlsApply">Apply to this match</button><button class="btn sm ghost" data-a="dlsSave">Save record only</button></div>`:''}</div>`:'';
-  return old(m)+`<div class="card"><h3>DLS calculator (Standard Edition)</h3>
-  <div class="mu sm" style="margin:4px 0 8px">Uses the ICC's published Standard Edition resource table. ICC international matches use the Professional Edition, so an official figure from the umpires always overrides this one. Part overs are interpolated between table rows.</div>
-  <form data-f="dlsCalc"><div class="row"><label style="flex:1">Team 1 score<input name="s1" type="number" min="0" value="${s1}"></label><label style="flex:1">Team 1 overs at start<input name="o1" value="${m.overs}"></label><label style="flex:1">Team 2 overs at start<input name="o2" value="${m.overs}"></label></div>
-  <div class="b" style="margin:8px 0 2px">Team 1 interruptions</div>${dlsRow('a',1,'Stopped with')}${dlsRow('a',2,'Stopped with')}
-  <div class="b" style="margin:8px 0 2px">Team 2 interruptions</div>${dlsRow('b',1,'Stopped with')}${dlsRow('b',2,'Stopped with')}
+    <div class="mu sm" style="margin:6px 0">Par score (one run less is a tie): ${o.par}. Team 1 scored ${o.S} with ${o.R1.toFixed(1)}% resources. Team 2 has ${o.R2.toFixed(1)}% resources. G50 = ${o.g}.</div>
+    ${!tool&&can()?`<div class="row" style="gap:8px;margin-top:6px"><button class="btn sm" data-a="dlsApply">Apply to this match</button><button class="btn sm ghost" data-a="dlsSave">Save record only</button></div>`:''}</div>`:'';
+  return `<div class="card"><h3>DLS calculator (Standard Edition)</h3>
+  <div class="mu sm" style="margin:4px 0 8px">Uses the ICC's published Standard Edition resource table. ICC international matches use the Professional Edition, so an official figure from the umpires always overrides this one. Part overs are interpolated between table rows. The same rules run for single matches and tournament matches.</div>
+  <form data-f="dlsCalc">${tool?'<input type="hidden" name="tool" value="1">':''}<div class="row"><label style="flex:1">Team 1 score<input name="s1" type="number" min="0" value="${s1}"></label><label style="flex:1">Team 1 overs at start<input name="o1" value="${m.overs}"></label><label style="flex:1">Team 2 overs at start<input name="o2" value="${m.overs}"></label></div>
+  <div class="b" style="margin:8px 0 2px">Team 1 interruptions</div>${dlsRow('a',1,'Stopped with',a[0])}${dlsRow('a',2,'Stopped with',a[1])}
+  <div class="b" style="margin:8px 0 2px">Team 2 interruptions</div>${dlsRow('b',1,'Stopped with',b[0])}${dlsRow('b',2,'Stopped with',b[1])}
   <div class="row"><label style="flex:1">Team 2 innings ended early: overs left<input name="bel" placeholder="blank if not"></label><label style="flex:1">Wickets down<input name="bew" type="number" min="0" max="9"></label></div>
   <label>Level of cricket<select name="g50"><option value="200">Club, school, women's, associate (G50 200)</option><option value="245">Full members, first-class (G50 245)</option></select></label>
-  <button class="btn wide" style="margin-top:8px">Calculate target</button></form></div>${res}`}}
-Object.assign(F,{dlsCalc(fd){const m=curM();if(!m)return;
+  <button class="btn wide" style="margin-top:8px">Calculate target</button></form></div>${res}`}
+{const old=tDLS;tDLS=function(m){
+  if(m.bpo===5)return old(m)+'<div class="mu sm">DLS is not defined for The Hundred. Record the official figure from the match officials above.</div>';
+  return old(m)+dlsFormHtml(m,false)}}
+XV.dlstool=function(){return `<div class="bar"><h2>DLS calculator</h2></div><div class="mu sm" style="margin:0 2px 8px">Works for any match, including matches you only follow. Enter the scores and interruptions by hand.</div>`+dlsFormHtml({id:'tool',overs:20,innings:[]},true)};
+MENU2[0][1].splice(3,0,['dlstool','\u{1F327}️','DLS calculator']);
+Object.assign(F,{dlsCalc(fd){const m=fd.get('tool')?{id:'tool',overs:20}:curM();if(!m)return;
   const be=dlsOv(fd.get('bel')),x={s1:+fd.get('s1')||0,o1:dlsOv(fd.get('o1'))||m.overs,o2:dlsOv(fd.get('o2'))||m.overs,g50:+fd.get('g50')||200,
    t1:{ints:dlsInts(fd,'a')},t2:{ints:dlsInts(fd,'b'),end:be>0?{left:be,wk:dlsNum(fd,'bew')}:null}};x.g=x.g50;
-  const r=dlsCalc(x);r.mid=m.id;const eff=Math.max(0,x.o2-x.t2.ints.reduce((a,q)=>a+q.lost,0));r.o2=Math.round(eff*10)/10;UI.dlsOut=r;render()}});
+  const r=dlsCalc(x);r.ints=[...x.t1.ints.map(q=>({inn:0,left:q.left,wk:q.wk,lost:q.lost})),...x.t2.ints.map(q=>({inn:1,left:q.left,wk:q.wk,lost:q.lost}))];r.o2s=x.o2;r.mid=m.id;const eff=Math.max(0,x.o2-x.t2.ints.reduce((a,q)=>a+q.lost,0));r.o2=Math.round(eff*10)/10;UI.dlsOut=r;render()}});
 Object.assign(A,{
   dlsSave(){const m=curM(),o=UI.dlsOut;if(!can()||!m||!o)return;(m.dlsRec=m.dlsRec||[]).push({id:uid(),target:o.T,overs:o.o2,note:'DLS Standard Edition, calculated. Par '+o.par+', R1 '+o.R1.toFixed(1)+'%, R2 '+o.R2.toFixed(1)+'%, G50 '+o.g,calc:1,t:Date.now()});commit();toast('DLS saved')},
-  dlsApply(){const m=curM(),o=UI.dlsOut;if(!can()||!m||!o)return;m.target=o.T;m.ovr2=Math.ceil(o.o2);m.dlsApplied={T:o.T,par:o.par,o2:o.o2,t:Date.now()};(m.dlsRec=m.dlsRec||[]).push({id:uid(),target:o.T,overs:o.o2,note:'DLS Standard Edition, applied to the chase. Par '+o.par,calc:1,t:Date.now()});
+  dlsApply(){const m=curM(),o=UI.dlsOut;if(!can()||!m||!o)return;m.target=o.T;m.ovr2=Math.ceil(o.o2);m.dlsApplied={T:o.T,par:o.par,o2:o.o2,t:Date.now()};m.ints=(o.ints||[]);m.dlsIn={o1:o.o1,o2:o.o2s,g50:o.g};(m.dlsRec=m.dlsRec||[]).push({id:uid(),target:o.T,overs:o.o2,note:'DLS Standard Edition, applied to the chase. Par '+o.par,calc:1,t:Date.now()});
     if(m.innings[1]&&m.status==='done'&&false){}if(m.innings[1])checkEnd(m);commit();toast('Revised target '+o.T+' applied')}});
 {const f0=checkEnd;checkEnd=function(m){f0(m);if(m.status==='done'&&m.dlsApplied&&m.result&&!/DLS/.test(m.result))m.result+=' (DLS method)'}}
+function nrrIn(m,i){const k=calc(m,i),b6=m.bpo||6,allOut=k.wk>=maxWk(m,i);
+  if(m.dlsApplied&&i===0&&m.innings[1]){if(m.dlsPar!=null)return{r:m.dlsPar,b:calc(m,1).lg};return{r:Math.max(0,m.target-1),b:(m.ovr2||m.overs)*b6}}
+  return{r:k.runs,b:allOut?mxi(m,i):k.lg}}
+function dlsAuto(m,end){const base=m.dlsIn||{o1:m.overs,o2:m.overs,g50:200},ii=n=>(m.ints||[]).filter(q=>q.inn===n).map(q=>({left:q.left,wk:q.wk,lost:q.lost}));
+  return dlsCalc({s1:calc(m,0).runs,o1:base.o1,o2:base.o2,g50:base.g50,g:base.g50,t1:{ints:ii(0)},t2:{ints:ii(1),end:end||null}})}
+function dlsTerminate(m){const A=T(m.innings[m.cur].bat),mn=dlsMin(m);
+  if(m.cur===0||!m.innings[1]){m.status='done';m.result='No result (rain: play could not resume)';m.win=null;return}
+  const k=calc(m,1),faced=k.lg/6,f0=calc(m,0),t1ok=f0.wk>=maxWk(m,0)||f0.lg/6>=mn;
+  if(faced<mn||!t1ok){m.status='done';m.result='No result (rain: minimum '+mn+' overs not bowled)';m.win=null;return}
+  const left=Math.max(0,(mxi(m,1)-k.lg)/6),r=dlsAuto(m,{left,wk:k.wk}),t1=T(m.innings[0].bat),t2=T(m.innings[1].bat);
+  m.dlsApplied=m.dlsApplied||{T:r.T,par:r.par,o2:r.o2,t:Date.now()};m.dlsPar=r.par;m.status='done';
+  if(k.runs>r.par){m.result=`${t2.name} won by ${k.runs-r.par} runs (DLS method)`;m.win=m.innings[1].bat}
+  else if(k.runs===r.par){m.result='Match tied (DLS par score level)';m.win=null}
+  else{m.result=`${t1.name} won by ${r.par-k.runs} runs (DLS method)`;m.win=m.innings[0].bat}}
+Object.assign(A,{rainOpen(d){const m=S.matches.find(x=>x.id===d.id);if(!m||m.status!=='live')return;const inn=m.innings[m.cur],left=Math.max(0,(mxi(m,m.cur)-inn.lg)/(m.bpo||6));
+  UI.modal={t:'html',html:`<h3>Rain / interruption</h3><form data-f="rain" data-id="${m.id}"><div class="mu sm" style="margin-bottom:8px">Now: ${calc(m,m.cur).runs}/${calc(m,m.cur).wk}, ${ovTxt2(left)} overs left. The ICC result rules apply: a result needs at least ${dlsMin(m)||'the full'} overs for each side unless a team is all out or the chase is complete.</div><label>Overs lost<input name="lost" placeholder="e.g. 5 (blank if none)"></label><label class="ck"><input type="checkbox" name="end"> Play cannot resume: decide the match now</label><button class="btn wide">Save</button></form>`};renderModal()}});
+Object.assign(F,{rain(fd,el){const m=S.matches.find(x=>x.id===(el&&el.dataset?el.dataset.id:UI.sid));if(!m)return;const inn=m.innings[m.cur],k=calc(m,m.cur),lost=dlsOv(fd.get('lost'));
+  if(lost>0)(m.ints=m.ints||[]).push({inn:m.cur,left:Math.max(0,(mxi(m,m.cur)-inn.lg)/(m.bpo||6)),wk:k.wk,lost});
+  UI.modal=null;if(fd.get('end')){dlsTerminate(m);commit();toast(m.result,5000)}else{commit();toast('Interruption saved. Open the DLS tab to get the revised target.',4500)}}});
 /* ---------------- THE HUNDRED (100 balls, 5-ball sets) ---------------- */
 {const f0=newMatch;newMatch=function(d){const h=String(d.overs)==='20.5';const m=f0(h?Object.assign({},d,{overs:20}):d);if(h){m.bpo=5;m.nbp=2;m.fmt='hundred';m.rules=Object.assign(m.rules||{},{ppb:25})}return m}}
 {const f0=vScore;vScore=function(){const o=f0();const m=S.matches.find(x=>x.id===UI.sid)||S.matches.filter(x=>x.status!=='done').slice(-1)[0];
