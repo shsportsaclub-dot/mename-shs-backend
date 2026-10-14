@@ -4026,6 +4026,7 @@ const st0=document.createElement('style');st0.textContent=
 '.msk-cb{--bg:#eef1f4;--card:#ffffff;--c2:#f3f5f8;--tx:#10161c;--mu:#5d6b78;--ac:#cb2030;--bd:#d6dce3;--on:#ffffff;--grad:linear-gradient(90deg,#cb2030,#cb2030);background:#eef1f4;color:#10161c}'+
 '.msk-cb .tabs button{color:#3a4652}.msk-cb .tabs button.on{color:#cb2030;border-color:#cb2030}.msk-cb .mu{color:#5d6b78}'+
 '.msk-cb .card{box-shadow:0 1px 2px rgba(0,0,0,.08);border-radius:6px}'+
+'.cbm{padding:0;overflow:hidden;border-radius:6px!important}.cbm .bd{padding:12px 14px}.cbm .sr{color:#6b7782;font-size:13px;margin-bottom:8px}.cbm .tr{display:flex;align-items:center;gap:12px;margin:10px 0;font-size:17px}.cbm .tr .sc{margin-left:auto;font-weight:600;font-variant-numeric:tabular-nums}.cbm .stt{font-size:15px;margin-top:6px;color:#a15c00}.cbm .stt.lv{color:#cb2030}.cbm .stt.dn{color:#1d6fa5}.cbm .ft{display:flex;gap:22px;justify-content:flex-end;background:#ececec;padding:13px 16px;font-size:13px;font-weight:700;letter-spacing:.3px;color:#555}.cbm .ft a{cursor:pointer;color:inherit}'+
 '.msk-ca{--bg:#07182d;--card:#0c2542;--c2:#123459;--tx:#ffffff;--mu:#9db7d1;--ac:#c4f000;--bd:#1d4670;--on:#07182d;--grad:linear-gradient(90deg,#c4f000,#2fd1a0);background:#07182d;color:#fff}'+
 '.msk-ca .card{border-radius:18px;border:1px solid var(--bd);border-left:6px solid var(--ac)}'+
 '.msk-ca .btn:not(.ghost){background:var(--ac);color:var(--on)}'+
@@ -4044,10 +4045,16 @@ const caCard=m=>{const A_=T(m.a),B_=T(m.b);
  ${m.innings.length?row(0)+row(1):`<div class="row" style="margin-top:10px;gap:10px;align-items:center">${logo(A_,34)}<span class="tm">${esc(A_.name)}</span><span class="mu">v</span>${logo(B_,34)}<span class="tm">${esc(B_.name)}</span></div>`}
  <div class="st">${esc(m.result||(live?liveStatus(m):'Toss: '+T(m.toss).name+' chose to '+m.dec))}</div>
  <div class="row" style="margin-top:10px"><button class="btn sm" data-a="open" data-id="${m.id}">Match centre</button>${can()&&m.status!=='done'?`<button class="btn sm ghost" data-a="scoreIt" data-id="${m.id}">Score</button>`:''}</div></div>`};
+const cbCard=m=>{const A_=T(m.a),B_=T(m.b),live=m.status==='live',done=m.status==='done';
+ const sc=(tm,i)=>{const inn=m.innings[i];if(!inn)return'';const k=calc(m,i);return `${k.runs}-${k.wk} (${fmtOv(k.lg)})`};
+ const idx=t=>m.innings.findIndex(x=>x.bat===t);
+ const row=(t,T_)=>{const i=idx(t);return `<div class="tr">${logo(T_,28)}<span>${esc(T_.name)}</span><span class="sc">${i>=0?sc(t,i):''}</span></div>`};
+ const stx=m.result||(live?liveStatus(m):m.status==='break'?'Innings break':'Toss: '+T(m.toss).name+' chose to '+m.dec);
+ return `<div class="card cbm"><div class="bd"><div class="sr">${esc(m.cat||m.type||'Match')} | ${esc(m.venue||'Venue TBA')} | ${esc(m.date)} | ${m.overs} overs</div>${row(m.a,A_)}${row(m.b,B_)}<div class="stt ${live?'lv':done?'dn':''}">${esc(stx)}</div></div><div class="ft"><a data-a="open" data-id="${m.id}">MATCH CENTRE</a>${can()&&!done?`<a data-a="scoreIt" data-id="${m.id}">SCORE</a>`:''}</div></div>`};
 const fM=XV.matches||vMatches,fM1=XV.match||vMatch;
 XV.matches=function(){const ms=S.matches.slice().reverse();
  const head=`<div class="bar"><h2>Matches</h2><div class="grow"></div>${can()?'<button class="btn" data-a="newMatch">+ New match</button>':''}<button class="btn ghost" data-a="demo">Load demo match</button></div>`;
- const list=ms.length?(sk()==='ca'?ms.map(caCard).join(''):ms.map(mcard).join('')):'<div class="empty">No matches yet. Create a match, or load the demo match to see every screen working.</div>';
+ const list=ms.length?(sk()==='ca'?ms.map(caCard).join(''):ms.map(cbCard).join('')):'<div class="empty">No matches yet. Create a match, or load the demo match to see every screen working.</div>';
  return head+`<div class="msk msk-${sk()}">${bar()}${list}</div>`};
 XV.match=function(){const o=fM1();return `<div class="msk msk-${sk()}">${bar()}${o}</div>`};
 A.mskin=function(d){S.settings.mskin=d.v==='ca'?'ca':'cb';commit()};
