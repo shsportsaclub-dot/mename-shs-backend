@@ -356,7 +356,9 @@ function calc(m,i){
   if(!inn)return o;
   const gb=id=>o.bat[id]||(o.bat[id]={r:0,b:0,f4:0,f6:0,out:'',outw:''});
   const gw=id=>o.bowl[id]||(o.bowl[id]={b:0,r:0,w:0,m:0,wd:0,nb:0});
-  inn.ev.forEach(e=>{
+  const applyDis=d=>{const O=gb(d.id);O.out=d.w==='Timed out'?'timed out':'retired out';O.outw=d.w;o.wk++;o.fow.push({r:o.runs,w:o.wk,id:d.id,ov:fmtOv(o.lg)});o.part={r:0,b:0}};
+  (inn.dis||[]).filter(d=>d.t<0).forEach(applyDis);
+  inn.ev.forEach((e,idx)=>{
     const pen=e.x==='wd'?1:e.x==='nb'?NBP:0,tot=e.r+pen,legal=!pen,ov=Math.floor(o.lg/BPO);
     o.runs+=tot;if(e.x)o.ex[e.x]+=pen?tot:e.r;
     const B=gb(e.bt),W=gw(e.bl);
@@ -371,7 +373,7 @@ function calc(m,i){
       if(!NOBOWL.includes(e.w))W.w++;
       const O=gb(e.out);O.out=howOut(e);O.outw=e.w;
       o.fow.push({r:o.runs,w:o.wk,id:e.out,ov:fmtOv(o.lg)});o.part={r:0,b:0}}
-    o.cum.push(o.runs)});
+    o.cum.push(o.runs);(inn.dis||[]).filter(d=>d.t===idx).forEach(applyDis)});
   (inn.pen||[]).forEach(q=>{o.runs+=q.r;o.ex.pen=(o.ex.pen||0)+q.r});
   o.pov.forEach(q=>{if(q&&q.lg===BPO&&q.bc===0)gw(q.bl).m++});
   (inn.used||[]).forEach(id=>gb(id));o.ord=inn.used||[];
@@ -1340,9 +1342,22 @@ avail=function(m){const inn=m.innings[m.cur],cur=[inn.cur.s,inn.cur.n];return(m.
 {const sc0=scoreConsole;scoreConsole=function(m){
   let o=sc0(m);const inn=m.innings[m.cur],last=inn.ev[inn.ev.length-1],free=last&&last.x==='nb'&&m.status==='live';
   o=o.replace('<button class="six" data-a="run" data-v="6">6</button>','<button data-a="run" data-v="5">5</button><button class="six" data-a="run" data-v="6">6</button>');
-  if(free)o=o.replace('<div class="card"><div class="exr">','<div class="card"><div class="fh">FREE HIT: only run out counts</div><div class="exr">');
-  const x=`<div class="xrow"><button class="btn sm ghost" data-a="retire" data-v="s">Retire striker</button><button class="btn sm ghost" data-a="retire" data-v="n">Retire non-striker</button><button class="btn sm ghost" data-a="chgBowl">Change bowler</button><button class="btn sm ghost" data-a="share">Share score</button><button class="btn sm ghost" data-a="abandon">Abandon match</button></div>`;
+  if(free)o=o.replace('<div class="card"><div class="exr">','<div class="card"><div class="fh">FREE HIT: only run out, obstructing the field or hit the ball twice</div><div class="exr">');
+  const x=`<div class="xrow"><button class="btn sm ghost" data-a="retire" data-v="s">Retire hurt: striker</button><button class="btn sm ghost" data-a="retire" data-v="n">Retire hurt: non-striker</button><button class="btn sm ghost" data-a="retOut" data-v="s">Retired out: striker</button><button class="btn sm ghost" data-a="retOut" data-v="n">Retired out: non-striker</button><button class="btn sm ghost" data-a="timedOut">Timed out</button><button class="btn sm ghost" data-a="chgBowl">Change bowler</button><button class="btn sm ghost" data-a="share">Share score</button><button class="btn sm ghost" data-a="abandon">Abandon match</button></div>`;
   return o.replace('data-a="endInn">End innings</button></div>','data-a="endInn">End innings</button></div>'+x)}}
+
+/* retired out (Law 25) and timed out (Law 40): a wicket with no ball bowled and no credit to the bowler */
+{const u0=undo;undo=function(m){const inn=m.innings[m.cur],d=inn&&inn.dis&&inn.dis[inn.dis.length-1];
+  if(d&&d.t===inn.ev.length-1){inn.dis.pop();Object.assign(inn.cur,d.pre.cur);inn.used=d.pre.used;inn.ret=d.pre.ret;inn.done=false;m.status='live';m.result='';m.win=null;return true}return u0(m)}}
+function disAdd(m,id,w){const inn=m.innings[m.cur];(inn.dis=inn.dis||[]).push({id,w,t:inn.ev.length-1,pre:{cur:Object.assign({},inn.cur),used:inn.used.slice(),ret:(inn.ret||[]).slice()}});checkEnd(m)}
+Object.assign(A,{retOut(d){const m=scM(),inn=m.innings[m.cur],c=inn.cur,id=c[d.v];if(!id||m.status!=='live')return;
+    if(!confirm(nm(id)+' retired out? This is a wicket. Use "Retire hurt" if he may return (Law 25.4).'))return;
+    disAdd(m,id,'Retired out');if(c[d.v]===id)c[d.v]=null;commit();toast(nm(id)+' is out (retired out). No credit to the bowler.',3500)},
+  timedOut(){const m=scM(),inn=m.innings[m.cur],c=inn.cur;if(m.status!=='live')return;
+    if(c.s!==null&&c.n!==null)return toast('Timed out applies when a new batter has not come in after a wicket. Record the wicket first.',4000);
+    const L=avail(m);if(!L.length)return toast('No batter left to bat');
+    UI.modal={t:'html',html:`<h3>Timed out</h3><form data-f="timedOut"><label>Incoming batter who was not ready<select name="id">${L.map(id=>`<option value="${id}">${esc(nm(id))}</option>`).join('')}</select></label><div class="mu sm" style="margin:6px 0">Law 40: the incoming batter must be ready to face within 3 minutes of the wicket falling (the umpire decides; some competitions use 2). This is a wicket, with no credit to the bowler and no ball bowled.</div><button class="btn red wide">Confirm timed out</button></form>`};renderModal()}});
+Object.assign(F,{timedOut(fd){const m=scM(),inn=m.innings[m.cur],id=fd.get('id');if(!id||inn.used.includes(id))return;inn.used.push(id);disAdd(m,id,'Timed out');UI.modal=null;commit();toast(nm(id)+' is out (timed out).',3500)}});
 function shareText(m){const L=[`${T(m.a).name} vs ${T(m.b).name} (${m.overs} overs)`];
   m.innings.forEach((inn,i)=>{const k=calc(m,i);L.push(`${T(inn.bat).name}: ${k.runs}/${k.wk} (${fmtOv(k.lg)})`)});
   L.push(m.result||liveStatus(m));L.push('Scored live on Scoring Heroes');return L.join('\n')}
@@ -3961,6 +3976,22 @@ Object.assign(A,{async emSend(d){const em=d.v==='reset'?String((document.getElem
   o=o.replace('Forgot your PIN? Ask your organiser to reset it.','Forgot your PIN? <a role="button" tabindex="0" data-a="emForgot" style="color:#7fb0ff;cursor:pointer;text-decoration:underline">Reset it with your email</a>.');return o}}
 {const p0=post;post=function(path,body){if(path==='/auth/register'&&UI.idm==='email'&&body&&UI.em.proof)body=Object.assign({},body,{proof:UI.em.proof});return p0.call(this,path,body)}}
 {const r1=F.register;F.register=function(fd){if(UI.idm==='email'){const em=String(fd.get('phone')||'').trim().toLowerCase();if(!UI.em.proof||UI.em.email!==em)return toast('Verify your email with the code first',3500)}return r1(fd)}}
+/* ---------------- EMAIL LOGIN ON A NEW DEVICE: emailed code, then this device stays signed in ---------------- */
+{const v1=vAuth;vAuth=function(){let o=v1.apply(this,arguments);if(UI.idm!=='email'||o.indexOf('<form data-f="login">')<0)return o;
+  const keep=(UI.login&&UI.login.phone&&String(UI.login.phone).includes('@'))?UI.login.phone:'';
+  return o.replace(/<form data-f="login">[\s\S]*?<\/form>/,`<div><label>Email<input id="em-l-mail" type="email" maxlength="100" placeholder="name@email.com" autocomplete="username" value="${esc(keep)}"></label>
+   <div class="row" style="margin:-2px 0 6px;gap:6px;align-items:flex-end"><label style="flex:1">6 digit code<input id="em-l-code" inputmode="numeric" maxlength="6" placeholder="From your email" autocomplete="one-time-code"></label><button type="button" class="btn sm" data-a="emLSend">Send code</button></div>
+   <div id="em-l-st" class="mu sm" style="margin:0 0 8px">We email a code when you log in on a new device. After that this device stays logged in.</div><button type="button" class="btn wide" data-a="emLogin">Login</button></div>`)}}
+Object.assign(A,{async emLSend(){const em=String((document.getElementById('em-l-mail')||{}).value||'').trim().toLowerCase();
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(em))return emSet('em-l-st','Enter a valid email first');emSet('em-l-st','Sending...',1);
+  const j=await emPost('/api/email/send',{email:em,purpose:'login'});
+  if(j.noAccount){UI.authTab='register';UI.login={step:1,phone:em};render();return toast(j.error,3500)}
+  if(j.ok)emSet('em-l-st','Code sent to '+em+'. It works for 10 minutes. Check spam too.'+(j.devCode?' (test mode code: '+j.devCode+')':''),1);else emSet('em-l-st',j.error||'Could not send',0)},
+ async emLogin(){const em=String((document.getElementById('em-l-mail')||{}).value||'').trim().toLowerCase(),code=String((document.getElementById('em-l-code')||{}).value||'').trim();
+  if(!/^\d{6}$/.test(code))return emSet('em-l-st','Enter the 6 digit code');
+  const v=await emPost('/api/email/verify',{email:em,code,purpose:'login'});if(!v.ok)return emSet('em-l-st',v.error||'Wrong code',0);
+  const j=await emPost('/api/auth/email-login',{email:em,proof:v.proof});if(!j.ok)return emSet('em-l-st',j.error||'Could not log in',0);
+  S.tok=j.token||'';const p=j.profile;enter({nick:p.nick,phone:p.phone,email:p.email,age:p.age,loc:p.loc,kind:p.kind,role:p.role})}});
 /* ---------------- THE HUNDRED (100 balls, 5-ball sets) ---------------- */
 {const f0=newMatch;newMatch=function(d){const h=String(d.overs)==='20.5';const m=f0(h?Object.assign({},d,{overs:20}):d);if(h){m.bpo=5;m.nbp=2;m.fmt='hundred';m.rules=Object.assign(m.rules||{},{ppb:25})}return m}}
 {const f0=vScore;vScore=function(){const o=f0();const m=S.matches.find(x=>x.id===UI.sid)||S.matches.filter(x=>x.status!=='done').slice(-1)[0];

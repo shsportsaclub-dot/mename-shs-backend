@@ -74,7 +74,7 @@ const smsOk = cc => SMS_REGIONS ? SMS_REGIONS.includes(cc) : (['msg91', 'textbee
 const hashCode = (code, salt) => crypto.createHash('sha256').update(salt + code).digest('hex');
 const safeEq = (a, b) => a.length === b.length && crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b));
 const b64 = o => Buffer.from(JSON.stringify(o)).toString('base64url');
-const sign = phone => { const body = b64({ p: phone, e: Date.now() + 30 * 864e5 }); return body + '.' + crypto.createHmac('sha256', SECRET).update(body).digest('base64url'); };
+const sign = phone => { const body = b64({ p: phone, e: Date.now() + 3650 * 864e5 }); return body + '.' + crypto.createHmac('sha256', SECRET).update(body).digest('base64url'); };
 function readSession(tok) {
   const [body, sig] = String(tok || '').split('.');
   if (!body || !sig) return null;
@@ -413,9 +413,9 @@ const mailOtp = new Map(), mailProof = new Map();   // email -> {hash,salt,exp,t
 routes['POST /api/email/send'] = async (req, body, ip) => {
   const email = String(body.email || '').trim().toLowerCase();
   if (!validEmail(email)) return [400, { ok: false, error: 'Enter a valid email address' }];
-  const purpose = body.purpose === 'reset' ? 'reset' : 'register', existing = db.users['e:' + email];
+  const purpose = ['reset', 'login'].includes(body.purpose) ? body.purpose : 'register', existing = db.users['e:' + email];
   if (purpose === 'register' && existing) return [200, { ok: false, exists: true, error: 'This email is already registered. Please login.' }];
-  if (purpose === 'reset' && !existing) return [200, { ok: false, noAccount: true, error: 'No account for this email.' }];
+  if (purpose !== 'register' && !existing) return [200, { ok: false, noAccount: true, error: 'No account for this email. Please register.' }];
   if (limited('m:' + email + ':30s', 1, 30e3)) return [429, { ok: false, error: 'Please wait 30 seconds before asking for another code' }];
   if (limited('m:' + email, 5, 36e5) || limited('mip:' + ip, 30, 36e5)) return [429, { ok: false, error: 'Too many requests. Try again later.' }];
   const code = createEmailOtp(), salt = crypto.randomBytes(8).toString('hex');
@@ -425,7 +425,7 @@ routes['POST /api/email/send'] = async (req, body, ip) => {
   return [200, { ok: true, digits: EMAIL_OTP_DIGITS, expiresInSeconds: EMAIL_OTP_TTL_SECONDS, ...(EMAIL_PROVIDER === 'console' ? { devCode: code } : {}) }];
 };
 routes['POST /api/email/verify'] = async (req, body) => {
-  const email = String(body.email || '').trim().toLowerCase(), purpose = body.purpose === 'reset' ? 'reset' : 'register', k = email + ':' + purpose, p = mailOtp.get(k);
+  const email = String(body.email || '').trim().toLowerCase(), purpose = ['reset', 'login'].includes(body.purpose) ? body.purpose : 'register', k = email + ':' + purpose, p = mailOtp.get(k);
   if (!p || p.exp < Date.now()) return [400, { ok: false, error: 'Code expired. Please request a new one.' }];
   if (p.tries >= 5) { mailOtp.delete(k); return [429, { ok: false, error: 'Too many wrong attempts. Request a new code.' }]; }
   const code = String(body.code ?? body.otp ?? '').trim();
@@ -437,6 +437,11 @@ routes['POST /api/email/verify'] = async (req, body) => {
   return [200, { ok: true, proof }];
 };
 const useProof = (proof, email, purpose) => { const p = mailProof.get(String(proof || '')); if (!p) return false; mailProof.delete(String(proof)); return p.exp > Date.now() && p.email === email && p.purpose === purpose; };
+routes['POST /api/auth/email-login'] = async (req, body) => {   // new device: the emailed code is the login. The returned token keeps this device signed in.
+  const email = String(body.email || '').trim().toLowerCase(), u = db.users['e:' + email];
+  if (!u || !useProof(body.proof, email, 'login')) return [400, { ok: false, error: 'Verify your email with the code first' }];
+  return [200, { ok: true, profile: pub(u), token: sign('e:' + email) }];
+};
 routes['POST /api/auth/reset'] = async (req, body) => {   // forgot PIN for email accounts: the emailed code is the proof
   const email = String(body.email || '').trim().toLowerCase(), u = db.users['e:' + email];
   if (!u || !useProof(body.proof, email, 'reset')) return [400, { ok: false, error: 'Verify your email first' }];
