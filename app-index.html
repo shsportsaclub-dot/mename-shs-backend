@@ -339,7 +339,7 @@ function seed(){
     stream:{mid:'',bg:'transparent',theme:'cb',sponsor:true,gfx:'',auto:8}}}
 
 /* ---------------- 3 ENGINE ---------------- */
-let BPO=6,NBP=1;const setFmt=m=>{if(m){BPO=+m.bpo||6;NBP=+m.nbp||1}};const fmtOv=l=>Math.floor(l/BPO)+'.'+l%BPO;
+const NOBOWL=['Run out','Obstructing the field','Hit the ball twice'];let BPO=6,NBP=1;const setFmt=m=>{if(m){BPO=+m.bpo||6;NBP=+m.nbp||1}};const fmtOv=l=>Math.floor(l/BPO)+'.'+l%BPO;
 const P=id=>S.players.find(p=>p.id===id)||(S.rt&&S.rt.players[id]);
 const T=id=>S.teams.find(t=>t.id===id)||(S.rt&&S.rt.teams[id]);
 const nm=id=>(P(id)||{}).name||'-';
@@ -349,7 +349,7 @@ const maxWk=(m,i)=>Math.min(10,((m.xi[m.innings[i].bat]||[]).length)-1);
 const can=()=>S.user&&(S.user.role==='admin'||S.user.role==='scorer');
 const isAdmin=()=>S.user&&S.user.role==='admin';
 function howOut(e){const b=nm(e.bl),f=e.fld||'fielder';
-  return ({Bowled:'b '+b,Caught:'c '+f+' b '+b,LBW:'lbw b '+b,Stumped:'st '+f+' b '+b,'Run out':'run out ('+f+')','Hit wicket':'hit wkt b '+b}[e.w])||e.w}
+  return ({Bowled:'b '+b,Caught:'c '+f+' b '+b,LBW:'lbw b '+b,Stumped:'st '+f+' b '+b,'Run out':'run out ('+f+')','Hit wicket':'hit wkt b '+b,'Obstructing the field':'obstructing the field','Hit the ball twice':'hit the ball twice'}[e.w])||e.w}
 function calc(m,i){
   setFmt(m);const inn=m.innings[i];
   const o={runs:0,wk:0,lg:0,ex:{wd:0,nb:0,b:0,lb:0},bat:{},bowl:{},fow:[],pov:[],cum:[],part:{r:0,b:0},ord:[]};
@@ -368,7 +368,7 @@ function calc(m,i){
     q.runs+=tot;q.bc+=(e.x==='b'||e.x==='lb')?0:tot;if(legal)q.lg++;
     o.part.r+=tot;if(e.x!=='wd')o.part.b++;
     if(e.w){o.wk++;q.wk++;
-      if(e.w!=='Run out')W.w++;
+      if(!NOBOWL.includes(e.w))W.w++;
       const O=gb(e.out);O.out=howOut(e);O.outw=e.w;
       o.fow.push({r:o.runs,w:o.wk,id:e.out,ov:fmtOv(o.lg)});o.part={r:0,b:0}}
     o.cum.push(o.runs)});
@@ -483,7 +483,7 @@ function overList(m,i){
   return L.filter(Boolean)}
 function cText(e){
   const b=sh(e.bl),a=sh(e.bt),v=(arr)=>arr[(e.r+hash(e.bt)+(e.pre?e.pre.used.length:0))%arr.length];
-  if(e.w){const t={Bowled:'BOWLED! Through the gate.',Caught:'CAUGHT! '+(e.fld?'Taken by '+e.fld+'.':'In the deep.'),LBW:'LBW! Plumb in front.',Stumped:'STUMPED! Beaten in flight.','Run out':'RUN OUT! '+(e.fld?'Direct hit from '+e.fld+'.':''),'Hit wicket':'HIT WICKET!'}[e.w]||e.w;
+  if(e.w){const t={Bowled:'BOWLED! Through the gate.',Caught:'CAUGHT! '+(e.fld?'Taken by '+e.fld+'.':'In the deep.'),LBW:'LBW! Plumb in front.',Stumped:'STUMPED! Beaten in flight.','Run out':'RUN OUT! '+(e.fld?'Direct hit from '+e.fld+'.':''),'Hit wicket':'HIT WICKET!','Obstructing the field':'OUT! Obstructing the field.','Hit the ball twice':'OUT! Hit the ball twice.'}[e.w]||e.w;
     return `${b} to ${a}, OUT. ${t} ${sh(e.out)} walks back.`}
   if(e.x==='wd')return `${b} to ${a}, WIDE${e.r?' +'+e.r:''}. Too far outside.`;
   if(e.x==='nb')return `${b} to ${a}, NO BALL${e.r?', '+e.r+' off the bat':''}. Overstepped.`;
@@ -828,7 +828,7 @@ function newMatchModal(){
   ${xi(d.a)}${xi(d.b)}<button class="btn wide">Create match</button></form>`}
 function wicketModal(m){
   const c=m.innings[m.cur].cur;
-  return `<h3>Wicket</h3><form data-f="wicket"><label>How out<select name="w">${opt(['Bowled','Caught','LBW','Run out','Stumped','Hit wicket'].map(x=>[x,x]),'Caught')}</select></label>
+  return `<h3>Wicket</h3><form data-f="wicket"><label>How out<select name="w">${opt(['Bowled','Caught','LBW','Run out','Stumped','Hit wicket','Obstructing the field','Hit the ball twice'].map(x=>[x,x]),'Caught')}</select></label><div class="mu sm" style="margin:-4px 0 6px">Run out, Obstructing the field (includes handling the ball) and Hit the ball twice give the bowler no credit. Obstructing: if it stopped a catch, enter 0 completed runs (Law 37.5.2).</div>
   <label>Batter out<select name="out">${opt([[c.s,nm(c.s)+' (striker)'],[c.n,nm(c.n)+' (non-striker)']],c.s)}</select></label>
   <label>Fielder (catch, run out, stumping)<input name="fld" placeholder="Optional"></label><label>Runs completed before the wicket<select name="r">${opt([0,1,2,3].map(x=>[String(x),String(x)]),'0')}</select></label>
   <button class="btn red wide">Confirm wicket</button></form>`}
@@ -1265,7 +1265,7 @@ setInterval(async()=>{
 /* ---------------- AUTO COMMENTARY: speaks every ball (English / Telugu / Hindi) + live feed ---------------- */
 const VL={en:{n:'English',tag:'en-IN'},te:{n:'Telugu',tag:'te-IN'},hi:{n:'Hindi',tag:'hi-IN'}};
 const NUMW={te:['పరుగు లేదు','ఒక పరుగు','రెండు పరుగులు','మూడు పరుగులు','నాలుగు పరుగులు','ఐదు పరుగులు','ఆరు పరుగులు'],hi:['कोई रन नहीं','एक रन','दो रन','तीन रन','चार रन','पाँच रन','छह रन']};
-const WK={te:{Bowled:'బౌల్డ్',Caught:'క్యాచ్ అవుట్',LBW:'ఎల్బీడబ్ల్యూ',Stumped:'స్టంప్డ్','Run out':'రనౌట్','Hit wicket':'హిట్ వికెట్'},hi:{Bowled:'बोल्ड',Caught:'कैच आउट',LBW:'एलबीडब्ल्यू',Stumped:'स्टंप',"Run out":'रन आउट','Hit wicket':'हिट विकेट'}};
+const WK={te:{Bowled:'బౌల్డ్',Caught:'క్యాచ్ అవుట్',LBW:'ఎల్బీడబ్ల్యూ',Stumped:'స్టంప్డ్','Run out':'రనౌట్','Hit wicket':'హిట్ వికెట్','Obstructing the field':'అడ్డుకోవడం (అవుట్)','Hit the ball twice':'బంతిని రెండుసార్లు కొట్టడం'},hi:{Bowled:'बोल्ड',Caught:'कैच आउट',LBW:'एलबीडब्ल्यू',Stumped:'स्टंप',"Run out":'रन आउट','Hit wicket':'हिट विकेट','Obstructing the field':'क्षेत्ररक्षण में बाधा','Hit the ball twice':'गेंद दो बार मारी'}};
 function cLine(e,lang){
   if(lang==='en'||!NUMW[lang])return cText(e);
   const te=lang==='te',b=sh(e.bl),a=sh(e.bt);
@@ -1332,7 +1332,7 @@ try{window.speechSynthesis&&window.speechSynthesis.getVoices()}catch(e){}
 /* free hit: only run out counts; haptic tap on every score */
 {const b1=ball;ball=function(m,s){
   const inn=m.innings[m.cur],last=inn&&inn.ev[inn.ev.length-1];
-  if(last&&last.x==='nb'&&s&&s.w&&s.w!=='Run out'){toast('Free hit: this wicket does not count',3000);s=Object.assign({},s,{w:'',out:null})}
+  if(((last&&last.x==='nb')||(s&&s.x==='nb'))&&s&&s.w&&!NOBOWL.includes(s.w)){toast('No-ball or free hit: only run out, obstructing the field or hit the ball twice can count',3500);s=Object.assign({},s,{w:'',out:null})}
   try{if(navigator.vibrate)navigator.vibrate(15)}catch(e){}
   return b1.call(this,m,s)}}
 /* retired batters can come back later */
