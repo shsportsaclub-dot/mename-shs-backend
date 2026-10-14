@@ -19,6 +19,7 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: node --check server.js
       - run: node tests/sports-live.cjs
+      - run: node scripts/check-deployed-sports.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:

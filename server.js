@@ -523,6 +523,7 @@ http.createServer(async (req, res) => {
     if (req.method === 'GET') return bag[id] ? out(200, { ok: true, item: bag[id] }) : out(404, { ok: false, error: 'Not found' });
     const tok = String(req.headers.authorization || '').replace(/^Bearer\s+/i, ''), phone = readSession(tok), u = phone && db.users[phone];
     if (!u) return out(401, { ok: false, error: 'Please sign in again' });
+    if (col === 'sports' && !['admin','scorer'].includes(u.role)) return out(403, { ok: false, error: 'Only an authorised scorer can publish or change sport matches' });
     if (!id || !/^[\w-]{3,40}$/.test(id)) return out(400, { ok: false, error: 'Bad id' });
     const cur = bag[id];
     if (cur && cur.owner !== phone && u.role !== 'admin') return out(403, { ok: false, error: 'Only the owner can change this' });
