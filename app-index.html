@@ -3149,6 +3149,45 @@ setTimeout(()=>{if(S.user){shPull();shPush()}},2500);
 {const g=(f)=>function(d){const m=S.matches.find(x=>x.id===d.id);if(m&&m.rm)return toast('This match belongs to '+(m.by||'another scorer')+'. You can watch it but not change it.',3500);return f.apply(this,arguments)};
  A.scoreIt=g(A.scoreIt);A.delMatch=g(A.delMatch)}
 {const t0=vScore;vScore=function(){const m=S.matches.find(x=>x.id===UI.sid);if(m&&m.rm){UI.sid=null}return t0()}}
+/* ---------------- RULES: POWERPLAY, SUPER OVER, SYNC STATUS ---------------- */
+const ppDef=m=>m.overs>=50?10:m.overs>=20?6:m.overs>=10?3:0;
+const ppOv=m=>m.rules&&m.rules.pp!=null?+m.rules.pp:ppDef(m);
+function ppStat(m,i){const inn=m.innings[i],n=ppOv(m);if(!inn||!n)return null;let lg=0,r=0,w=0,b=0;
+  for(const e of inn.ev){if(lg>=n*6&&!(e.x==='wd'||e.x==='nb'))break;const pen=(e.x==='wd'||e.x==='nb')?1:0;r+=e.r+pen;if(e.w)w++;if(!pen){lg++;b++}}
+  return{r,w,b,n,live:inn.lg<n*6&&!inn.done}}
+function ppCard(m){if(!m||!m.innings||!m.innings.length||!ppOv(m))return'';
+  const rows=m.innings.map((inn,i)=>{const p=ppStat(m,i);return p?`<div class="item"><div style="flex:1"><div class="b">${esc(T(inn.bat).name)}</div><div class="mu sm">Powerplay, overs 1-${p.n}${p.live?' (in progress)':''}</div></div><b>${p.r}/${p.w}</b></div>`:''}).join('');
+  return rows?`<div class="card"><div class="b" style="margin-bottom:6px">Powerplay</div>${rows}</div>`:''}
+function shPend(){let n=0;if(!shOn())return 0;
+  S.matches.filter(m=>!m.rm&&!isDemo(m)&&m.status!=='setup').forEach(m=>{if(UI.sh.hash['matches'+m.id]!==JSON.stringify(shPack('matches',m)))n++});return n}
+function shChip(){const off=typeof navigator!=='undefined'&&navigator.onLine===false||UI.sh.state==='offline';
+  let t,c;if(!shOn()){t='Saved on this phone. Log in to share live.';c='#64748b'}
+  else if(off){const n=shPend();t='Offline: scoring is saved on this phone'+(n?' ('+n+' match'+(n>1?'es':'')+' waiting to sync)':'')+'. It will sync when you are back online.';c='#d97706'}
+  else{const n=shPend();t=n?'Saved on phone, syncing...':'Saved and synced';c=n?'#2563eb':'#16a34a'}
+  return `<div class="mu sm" style="display:flex;gap:6px;align-items:center;margin:6px 2px"><span style="width:9px;height:9px;border-radius:50%;background:${c};flex:none"></span>${t}</div>`}
+{const f0=scoreConsole;scoreConsole=function(m){return shChip()+f0(m)+(can()?`<div class="row" style="margin-top:8px"><button class="btn sm ghost" data-a="rulesOpen" data-id="${m.id}">Match rules: powerplay</button></div>`:'')}}
+{const f0=vScore;vScore=function(){const o=f0();const m=S.matches.find(x=>x.id===UI.sid)||S.matches.filter(x=>x.status!=='done').slice(-1)[0];
+  if(m&&m.status==='done'&&can()&&!m.so&&/tied/i.test(m.result||''))return o+`<div class="card"><b>Match tied.</b><div class="mu sm" style="margin:4px 0 8px">Settle it with a Super Over: one over each, the team that batted second bats first.</div><button class="btn sm" data-a="soOpen" data-id="${m.id}">Record Super Over</button></div>`;
+  if(m&&m.so&&can())return o+`<div class="card"><b>Super Over recorded</b><div class="mu sm" style="margin:4px 0 8px">${esc(m.so.text)}</div><button class="btn sm ghost" data-a="soDel" data-id="${m.id}">Remove Super Over</button></div>`;
+  return o}}
+{const t0=tLive;tLive=function(m){return t0(m)+ppCard(m)}}
+{const t0=tSum;tSum=function(m){return t0(m)+ppCard(m)+((m.so)?`<div class="card"><div class="b">Super Over</div><div class="mu sm">${esc(m.so.text)}</div></div>`:'')}}
+Object.assign(A,{
+  rulesOpen(d){const m=S.matches.find(x=>x.id===d.id);if(!m)return;UI.modal={t:'html',html:`<h3>Match rules</h3><form data-f="rules" data-id="${m.id}"><label>Powerplay overs (0 = none)<input name="pp" type="number" min="0" max="${m.overs}" value="${ppOv(m)}"></label><div class="mu sm" style="margin:6px 0">Default: T10 3 overs, T20 6 overs, ODI 10 overs. Local rules can change this.</div><button class="btn wide">Save</button></form>`};renderModal()},
+  soOpen(d){const m=S.matches.find(x=>x.id===d.id);if(!m)return;const inn=m.innings,f=inn[1].bat,s=inn[0].bat;
+    const blk=(id,l)=>`<div class="card" style="margin:6px 0"><div class="b">${esc(T(id).name)} ${l}</div><div class="row"><label style="flex:1">Runs<input name="r_${id}" type="number" min="0" value="0"></label><label style="flex:1">Wickets<input name="w_${id}" type="number" min="0" max="2" value="0"></label></div></div>`;
+    UI.modal={t:'html',html:`<h3>Super Over</h3><form data-f="so" data-id="${m.id}">${blk(f,'(batted first)')}${blk(s,'(batted second)')}<label class="ck"><input type="checkbox" name="win"> Counts as a win in the points table (knockout)</label><button class="btn wide">Save result</button></form>`};renderModal()},
+  soDel(d){const m=S.matches.find(x=>x.id===d.id);if(!m)return;delete m.so;m.result='Match tied';m.win=null;commit()}});
+Object.assign(F,{
+  rules(fd,el){const m=S.matches.find(x=>x.id===(el&&el.dataset?el.dataset.id:UI.sid));if(!m)return;m.rules=Object.assign(m.rules||{},{pp:Math.max(0,Math.min(m.overs,+fd.get('pp')||0))});UI.modal=null;commit();toast('Rules saved')},
+  so(fd,el){const id=el&&el.dataset?el.dataset.id:UI.sid,m=S.matches.find(x=>x.id===id);if(!m)return;const f=m.innings[1].bat,s=m.innings[0].bat;
+    const rf=+fd.get('r_'+f)||0,wf=+fd.get('w_'+f)||0,rs=+fd.get('r_'+s)||0,ws=+fd.get('w_'+s)||0,txt=`${T(f).name} ${rf}/${wf}, ${T(s).name} ${rs}/${ws}`;
+    if(rf===rs){m.so={text:'Super Over tied: '+txt};m.result='Match tied (Super Over also tied)';m.win=null}
+    else{const w=rf>rs?f:s;m.so={text:txt,win:w};m.result=`${T(w).name} won the Super Over (${txt})`;m.win=fd.get('win')?w:null}
+    UI.modal=null;commit();toast(m.result,4000)}});
+window.addEventListener('online',()=>{UI.sh.state='idle';shPush();render()});window.addEventListener('offline',()=>render());
+setInterval(()=>{if(navigator.onLine!==false&&UI.sh.state==='offline')shPush()},30000);
+
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});
