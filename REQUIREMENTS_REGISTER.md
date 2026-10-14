@@ -63,3 +63,7 @@ Build order (latest user instruction): 1 Existing SMS gateway preserved/integrat
 | R52 | Guest access: no restrictions for now (guest has local admin rights), but guest-created matches, auctions and tournaments are kept 24 hours on the device, then removed; never synced to the server; kept if the guest logs in or registers | User 2026-10-14 | Login screen > Continue as guest | local only | Guest | Playwright: guest scores a match, 23h kept, 25h removed, earlier records untouched, reload purges, login keeps guest records, banner shown | BUILT-TESTED. Teams/players/venues made as a guest are not purged. A different account logging in on the same device also inherits the guest records |
 
 Open flags: first registered user becomes admin; PIN login does not prove number ownership; legacy OTP client mode is India-only.
+
+
+## Match skins (Oct 2026)
+- Matches list and match page now have a visible 2-skin switch: Cricbuzz style / Cricket Australia style (setting `mskin`). Styled after the reference apps' look in the SH colours scheme; not pixel copies. BUILT, tested in browser.

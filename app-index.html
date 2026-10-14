@@ -4019,6 +4019,40 @@ setInterval(()=>{if(guestPurge()){try{save()}catch(e){}render()}},60000);
 {const e0=enter;enter=function(){const r=e0.apply(this,arguments);gCols().forEach(L=>(L||[]).forEach(x=>{if(x&&x.gts&&!x.keep){delete x.gts;delete x.guest}}));try{save()}catch(e){}return r}}
 {const m0=mHead;mHead=function(m){const o=m0(m);return m&&m.gts?`<div class="mu sm" style="margin:2px 0 6px;color:#ffd27a">Guest match: kept on this device for 24 hours only (about ${guestLeft(m)} left). Log in or register before it is removed if you want to keep it.</div>`+o:o}}
 {const h0=vHome;vHome=function(){const o=h0.apply(this,arguments);return S.user&&S.user.guest?`<div class="card"><div class="mu sm">You are using the app as a guest. Matches you score are kept for 24 hours, then removed. Guest data is not saved to the server.</div></div>`+o:o}}
+/* ---------------- MATCH SKINS: every match list and match page can be shown in 2 skins (Cricbuzz style / Cricket Australia style) ---------------- */
+{const MSK=[['cb','Cricbuzz style'],['ca','Cricket Australia style']];
+const st0=document.createElement('style');st0.textContent=
+'.msk{border-radius:14px;padding:10px;margin:0 -2px}'+
+'.msk-cb{--bg:#eef1f4;--card:#ffffff;--c2:#f3f5f8;--tx:#10161c;--mu:#5d6b78;--ac:#cb2030;--bd:#d6dce3;--on:#ffffff;--grad:linear-gradient(90deg,#cb2030,#cb2030);background:#eef1f4;color:#10161c}'+
+'.msk-cb .tabs button{color:#3a4652}.msk-cb .tabs button.on{color:#cb2030;border-color:#cb2030}.msk-cb .mu{color:#5d6b78}'+
+'.msk-cb .card{box-shadow:0 1px 2px rgba(0,0,0,.08);border-radius:6px}'+
+'.msk-ca{--bg:#07182d;--card:#0c2542;--c2:#123459;--tx:#ffffff;--mu:#9db7d1;--ac:#c4f000;--bd:#1d4670;--on:#07182d;--grad:linear-gradient(90deg,#c4f000,#2fd1a0);background:#07182d;color:#fff}'+
+'.msk-ca .card{border-radius:18px;border:1px solid var(--bd);border-left:6px solid var(--ac)}'+
+'.msk-ca .btn:not(.ghost){background:var(--ac);color:var(--on)}'+
+'.mskbar{display:flex;gap:0;margin:0 0 10px;border:1px solid var(--bd,#888);border-radius:999px;overflow:hidden;width:100%}'+
+'.mskbar button{flex:1;padding:9px 6px;border:0;background:transparent;color:inherit;font-weight:700;cursor:pointer;font-size:13px}'+
+'.mskbar button.on{background:#cb2030;color:#fff}.msk-ca .mskbar button.on{background:#c4f000;color:#07182d}'+
+'.cacard .big{font-size:30px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.5px}.cacard .tm{font-size:15px;font-weight:700;letter-spacing:.3px;text-transform:uppercase}'+
+'.cacard .st{color:var(--ac);font-weight:700;margin-top:8px}';
+document.head.appendChild(st0);
+const sk=()=>(S.settings&&S.settings.mskin)==='ca'?'ca':'cb';
+const bar=()=>`<div class="mskbar" role="tablist" aria-label="Match view">${MSK.map(([k,l])=>`<button type="button" class="${sk()===k?'on':''}" data-a="mskin" data-v="${k}">${l}</button>`).join('')}</div>`;
+const caCard=m=>{const A_=T(m.a),B_=T(m.b);
+ const row=i=>{const inn=m.innings[i];if(!inn)return'';const k=calc(m,i);return `<div class="row" style="justify-content:space-between;align-items:center;margin-top:8px"><span class="row" style="gap:8px">${logo(T(inn.bat),30)}<span class="tm">${esc(T(inn.bat).short||T(inn.bat).name)}</span></span><span class="big">${k.runs}/${k.wk} <span class="mu sm" style="font-size:13px;font-weight:600">(${fmtOv(k.lg)})</span></span></div>`};
+ const live=m.status==='live',done=m.status==='done';
+ return `<div class="card cacard"><div class="row" style="align-items:center"><span class="mu sm" style="text-transform:uppercase;letter-spacing:.8px">${m.overs} overs | ${esc(m.venue||'Venue TBA')} | ${esc(m.date)}</span><div class="grow"></div><span class="pill ${live?'live':done?'ok':''}">${live?'LIVE':done?'RESULT':m.status==='break'?'BREAK':'UPCOMING'}</span></div>
+ ${m.innings.length?row(0)+row(1):`<div class="row" style="margin-top:10px;gap:10px;align-items:center">${logo(A_,34)}<span class="tm">${esc(A_.name)}</span><span class="mu">v</span>${logo(B_,34)}<span class="tm">${esc(B_.name)}</span></div>`}
+ <div class="st">${esc(m.result||(live?liveStatus(m):'Toss: '+T(m.toss).name+' chose to '+m.dec))}</div>
+ <div class="row" style="margin-top:10px"><button class="btn sm" data-a="open" data-id="${m.id}">Match centre</button>${can()&&m.status!=='done'?`<button class="btn sm ghost" data-a="scoreIt" data-id="${m.id}">Score</button>`:''}</div></div>`};
+const fM=XV.matches||vMatches,fM1=XV.match||vMatch;
+XV.matches=function(){const ms=S.matches.slice().reverse();
+ const head=`<div class="bar"><h2>Matches</h2><div class="grow"></div>${can()?'<button class="btn" data-a="newMatch">+ New match</button>':''}<button class="btn ghost" data-a="demo">Load demo match</button></div>`;
+ const list=ms.length?(sk()==='ca'?ms.map(caCard).join(''):ms.map(mcard).join('')):'<div class="empty">No matches yet. Create a match, or load the demo match to see every screen working.</div>';
+ return head+`<div class="msk msk-${sk()}">${bar()}${list}</div>`};
+XV.match=function(){const o=fM1();return `<div class="msk msk-${sk()}">${bar()}${o}</div>`};
+A.mskin=function(d){S.settings.mskin=d.v==='ca'?'ca':'cb';commit()};
+}
+
 /* ---------------- THE HUNDRED (100 balls, 5-ball sets) ---------------- */
 {const f0=newMatch;newMatch=function(d){const h=String(d.overs)==='20.5';const m=f0(h?Object.assign({},d,{overs:20}):d);if(h){m.bpo=5;m.nbp=2;m.fmt='hundred';m.rules=Object.assign(m.rules||{},{ppb:25})}return m}}
 {const f0=vScore;vScore=function(){const o=f0();const m=S.matches.find(x=>x.id===UI.sid)||S.matches.filter(x=>x.status!=='done').slice(-1)[0];
