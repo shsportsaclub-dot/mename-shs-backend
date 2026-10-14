@@ -368,6 +368,9 @@ async function sendMail(to, subject, text) {
   if (EMAIL_PROVIDER === 'smtp') { const port = +E.SMTP_PORT || 465; return smtpSend({ host: E.SMTP_HOST || 'smtp.gmail.com', port, user: E.SMTP_USER, pass: E.SMTP_PASS, from: EMAIL_FROM, to, subject, text, mode: E.SMTP_TLS || (port === 465 ? 'ssl' : 'starttls') }); }
   throw new Error('Unknown EMAIL_PROVIDER');
 }
+const EMAIL_OTP_DIGITS = 6;
+const EMAIL_OTP_TTL_SECONDS = 10 * 60;
+const createEmailOtp = () => String(crypto.randomInt(0, 10 ** EMAIL_OTP_DIGITS)).padStart(EMAIL_OTP_DIGITS, '0');
 const mailOtp = new Map(), mailProof = new Map();   // email -> {hash,salt,exp,tries}; proof -> {email,exp}
 routes['POST /api/email/send'] = async (req, body, ip) => {
   const email = String(body.email || '').trim().toLowerCase();
@@ -377,18 +380,20 @@ routes['POST /api/email/send'] = async (req, body, ip) => {
   if (purpose === 'reset' && !existing) return [200, { ok: false, noAccount: true, error: 'No account for this email.' }];
   if (limited('m:' + email + ':30s', 1, 30e3)) return [429, { ok: false, error: 'Please wait 30 seconds before asking for another code' }];
   if (limited('m:' + email, 5, 36e5) || limited('mip:' + ip, 30, 36e5)) return [429, { ok: false, error: 'Too many requests. Try again later.' }];
-  const code = String(crypto.randomInt(100000, 1000000)), salt = crypto.randomBytes(8).toString('hex');
-  mailOtp.set(email + ':' + purpose, { hash: hashCode(code, salt), salt, exp: Date.now() + 10 * 60e3, tries: 0 });
+  const code = createEmailOtp(), salt = crypto.randomBytes(8).toString('hex');
+  mailOtp.set(email + ':' + purpose, { hash: hashCode(code, salt), salt, exp: Date.now() + EMAIL_OTP_TTL_SECONDS * 1000, tries: 0 });
   try { await sendMail(email, 'Your SH Sports code: ' + code, `Your Scoring Heroes code is ${code}. It works for 10 minutes. If you did not ask for it, ignore this email.`); }
-  catch (e) { console.error('mail:', e.message); return [502, { ok: false, error: 'Could not send the email right now. Try again later.' }]; }
-  return [200, { ok: true, ...(EMAIL_PROVIDER === 'console' ? { devCode: code } : {}) }];
+  catch (e) { if (mailOtp.get(email + ':' + purpose)?.salt === salt) mailOtp.delete(email + ':' + purpose); console.error('mail:', e.message); return [502, { ok: false, error: 'Could not send the email right now. Try again later.' }]; }
+  return [200, { ok: true, digits: EMAIL_OTP_DIGITS, expiresInSeconds: EMAIL_OTP_TTL_SECONDS, ...(EMAIL_PROVIDER === 'console' ? { devCode: code } : {}) }];
 };
 routes['POST /api/email/verify'] = async (req, body) => {
   const email = String(body.email || '').trim().toLowerCase(), purpose = body.purpose === 'reset' ? 'reset' : 'register', k = email + ':' + purpose, p = mailOtp.get(k);
   if (!p || p.exp < Date.now()) return [400, { ok: false, error: 'Code expired. Please request a new one.' }];
   if (p.tries >= 5) { mailOtp.delete(k); return [429, { ok: false, error: 'Too many wrong attempts. Request a new code.' }]; }
+  const code = String(body.code ?? body.otp ?? '').trim();
+  if (!/^\d{6}$/.test(code)) return [400, { ok: false, error: 'Enter the 6-digit email OTP' }];
   p.tries++;
-  if (!safeEq(hashCode(String(body.code || ''), p.salt), p.hash)) return [400, { ok: false, error: 'Wrong code, try again' }];
+  if (!safeEq(hashCode(code, p.salt), p.hash)) return [400, { ok: false, error: 'Wrong code, try again' }];
   mailOtp.delete(k);
   const proof = crypto.randomBytes(20).toString('hex'); mailProof.set(proof, { email, purpose, exp: Date.now() + 15 * 60e3 });
   return [200, { ok: true, proof }];
