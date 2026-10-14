@@ -4,12 +4,16 @@ import http from 'node:http';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
+import net from 'node:net';
+import tls from 'node:tls';
 
 const E = process.env;
 const PORT = +E.PORT || 8080;
 const APP_URL = (E.APP_URL || 'http://localhost:5500').replace(/\/$/, '');   // where the Scoring Heroes web app is hosted (HTTPS in production)
 const ORIGINS = (E.ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean); // empty = allow any origin (dev only)
 const SMS_PROVIDER = E.SMS_PROVIDER || 'console';           // console | msg91
+const EMAIL_PROVIDER = E.EMAIL_PROVIDER || 'console';       // console | resend | smtp (Gmail app password works)
+const EMAIL_FROM = E.EMAIL_FROM || E.SMTP_USER || 'SH Sports <no-reply@example.com>';
 const COUNTRY = E.COUNTRY_CODE || '91';
 const CRIC_KEY = E.CRIC_API_KEY || '';
 const CRIC_BASE = E.CRIC_BASE || 'https://api.cricapi.com/v1';
@@ -333,17 +337,82 @@ const pinHash = (pin, salt) => crypto.scryptSync(String(pin), salt, 32).toString
 const fails = new Map();
 function locked(phone) { const f = fails.get(phone); return f && f.n >= 5 && Date.now() - f.t < 15 * 60e3; }
 function bad(phone) { const f = fails.get(phone) || { n: 0, t: 0 }; if (Date.now() - f.t > 15 * 60e3) f.n = 0; f.n++; f.t = Date.now(); fails.set(phone, f); }
+
+// ---- Email OTP: one code mailed to the address proves the person can read it. No SMS or phone network needed. ----
+function smtpSend({ host, port, user, pass, from, to, subject, text, mode }) {   // minimal SMTP client (implicit TLS on 465, STARTTLS on 587, plain only for local tests)
+  return new Promise((resolve, reject) => {
+    let sock = mode === 'ssl' ? tls.connect({ host, port, servername: host }) : net.connect({ host, port });
+    let buf = '', waiting = null, done = false;
+    const fail = e => { if (!done) { done = true; try { sock.destroy(); } catch {} reject(e instanceof Error ? e : new Error(String(e))); } };
+    const hook = s => { s.setEncoding('utf8'); s.on('data', d => { buf += d; const lines = buf.split('\r\n'); buf = lines.pop(); for (const l of lines) if (/^\d{3} /.test(l) && waiting) { const w = waiting; waiting = null; w(l); } }); s.on('error', fail); };
+    hook(sock); const timer = setTimeout(() => fail(new Error('SMTP timeout')), 20000);
+    const read = () => new Promise(r => { waiting = r; });
+    const cmd = async (c, ok) => { if (c) sock.write(c + '\r\n'); const l = await read(); if (!ok.includes(l.slice(0, 3))) throw new Error('SMTP ' + l); return l; };
+    (async () => {
+      await cmd(null, ['220']); await cmd('EHLO sh', ['250']);
+      if (mode === 'starttls') { await cmd('STARTTLS', ['220']); sock.removeAllListeners('data'); sock = tls.connect({ socket: sock, servername: host }); hook(sock); await cmd('EHLO sh', ['250']); }
+      if (user) { await cmd('AUTH LOGIN', ['334']); await cmd(Buffer.from(user).toString('base64'), ['334']); await cmd(Buffer.from(pass).toString('base64'), ['235']); }
+      const addr = x => (/<([^>]+)>/.exec(x) || [0, x])[1];
+      await cmd('MAIL FROM:<' + addr(from) + '>', ['250']); await cmd('RCPT TO:<' + to + '>', ['250', '251']); await cmd('DATA', ['354']);
+      const msg = ['From: ' + from, 'To: ' + to, 'Subject: ' + subject, 'MIME-Version: 1.0', 'Content-Type: text/plain; charset=utf-8', '', text.replace(/^\./gm, '..')].join('\r\n');
+      await cmd(msg + '\r\n.', ['250']); try { sock.write('QUIT\r\n'); } catch {} done = true; clearTimeout(timer); sock.end(); resolve();
+    })().catch(e => { clearTimeout(timer); fail(e); });
+  });
+}
+async function sendMail(to, subject, text) {
+  if (EMAIL_PROVIDER === 'console') { console.log(`[EMAIL to ${to}] ${subject}: ${text}`); return; }
+  if (EMAIL_PROVIDER === 'resend') {
+    const r = await fetch('https://api.resend.com/emails', { method: 'POST', headers: { authorization: 'Bearer ' + (E.RESEND_API_KEY || ''), 'content-type': 'application/json' }, body: JSON.stringify({ from: EMAIL_FROM, to: [to], subject, text }) });
+    if (!r.ok) throw new Error('Resend ' + r.status + ' ' + (await r.text()).slice(0, 200)); return;
+  }
+  if (EMAIL_PROVIDER === 'smtp') { const port = +E.SMTP_PORT || 465; return smtpSend({ host: E.SMTP_HOST || 'smtp.gmail.com', port, user: E.SMTP_USER, pass: E.SMTP_PASS, from: EMAIL_FROM, to, subject, text, mode: E.SMTP_TLS || (port === 465 ? 'ssl' : 'starttls') }); }
+  throw new Error('Unknown EMAIL_PROVIDER');
+}
+const mailOtp = new Map(), mailProof = new Map();   // email -> {hash,salt,exp,tries}; proof -> {email,exp}
+routes['POST /api/email/send'] = async (req, body, ip) => {
+  const email = String(body.email || '').trim().toLowerCase();
+  if (!validEmail(email)) return [400, { ok: false, error: 'Enter a valid email address' }];
+  const purpose = body.purpose === 'reset' ? 'reset' : 'register', existing = db.users['e:' + email];
+  if (purpose === 'register' && existing) return [200, { ok: false, exists: true, error: 'This email is already registered. Please login.' }];
+  if (purpose === 'reset' && !existing) return [200, { ok: false, noAccount: true, error: 'No account for this email.' }];
+  if (limited('m:' + email + ':30s', 1, 30e3)) return [429, { ok: false, error: 'Please wait 30 seconds before asking for another code' }];
+  if (limited('m:' + email, 5, 36e5) || limited('mip:' + ip, 30, 36e5)) return [429, { ok: false, error: 'Too many requests. Try again later.' }];
+  const code = String(crypto.randomInt(100000, 1000000)), salt = crypto.randomBytes(8).toString('hex');
+  mailOtp.set(email + ':' + purpose, { hash: hashCode(code, salt), salt, exp: Date.now() + 10 * 60e3, tries: 0 });
+  try { await sendMail(email, 'Your SH Sports code: ' + code, `Your Scoring Heroes code is ${code}. It works for 10 minutes. If you did not ask for it, ignore this email.`); }
+  catch (e) { console.error('mail:', e.message); return [502, { ok: false, error: 'Could not send the email right now. Try again later.' }]; }
+  return [200, { ok: true, ...(EMAIL_PROVIDER === 'console' ? { devCode: code } : {}) }];
+};
+routes['POST /api/email/verify'] = async (req, body) => {
+  const email = String(body.email || '').trim().toLowerCase(), purpose = body.purpose === 'reset' ? 'reset' : 'register', k = email + ':' + purpose, p = mailOtp.get(k);
+  if (!p || p.exp < Date.now()) return [400, { ok: false, error: 'Code expired. Please request a new one.' }];
+  if (p.tries >= 5) { mailOtp.delete(k); return [429, { ok: false, error: 'Too many wrong attempts. Request a new code.' }]; }
+  p.tries++;
+  if (!safeEq(hashCode(String(body.code || ''), p.salt), p.hash)) return [400, { ok: false, error: 'Wrong code, try again' }];
+  mailOtp.delete(k);
+  const proof = crypto.randomBytes(20).toString('hex'); mailProof.set(proof, { email, purpose, exp: Date.now() + 15 * 60e3 });
+  return [200, { ok: true, proof }];
+};
+const useProof = (proof, email, purpose) => { const p = mailProof.get(String(proof || '')); if (!p) return false; mailProof.delete(String(proof)); return p.exp > Date.now() && p.email === email && p.purpose === purpose; };
+routes['POST /api/auth/reset'] = async (req, body) => {   // forgot PIN for email accounts: the emailed code is the proof
+  const email = String(body.email || '').trim().toLowerCase(), u = db.users['e:' + email];
+  if (!u || !useProof(body.proof, email, 'reset')) return [400, { ok: false, error: 'Verify your email first' }];
+  if (!validPin(body.newPin)) return [400, { ok: false, error: 'New PIN must be 4 to 6 digits' }];
+  u.salt = crypto.randomBytes(8).toString('hex'); u.ph = pinHash(body.newPin, u.salt); u.emailVerified = true; fails.delete('e:' + email); saveDb();
+  return [200, { ok: true }];
+};
 routes['POST /api/auth/register'] = async (req, body, ip) => {
   const P = pk(body), phone = P.key;
   if (!validIntl(P)) return [400, { ok: false, error: P.isEmail ? 'Enter a valid email address' : BADNUM }];
   if (!validPin(body.pin)) return [400, { ok: false, error: 'PIN must be 4 to 6 digits' }];
   if (limited('reg:' + ip, 20, 36e5)) return [429, { ok: false, error: 'Too many sign-ups from this device. Try later.' }];
   if (db.users[phone]) return [200, { ok: false, exists: true, error: P.isEmail ? 'This email is already registered. Please login.' : 'This number is already registered. Please login.' }];
+  if (P.isEmail && !useProof(body.proof, P.email, 'register')) return [400, { ok: false, needCode: true, error: 'Verify your email with the code we send you first' }];
   const c = cleanProfile(P.isEmail ? Object.assign({}, body.profile, { email: P.email }) : body.profile);
   if (c.error) return [400, { ok: false, error: c.error }];
   if (Object.values(db.users).some(u => u.nick.toLowerCase() === c.profile.nick.toLowerCase())) return [400, { ok: false, error: 'That nickname is taken' }];
   const salt = crypto.randomBytes(8).toString('hex');
-  const u = db.users[phone] = { ...c.profile, phone, e164: e164(P), role: roleFor(phone, c.profile.kind), created: Date.now(), salt, ph: pinHash(body.pin, salt) };
+  const u = db.users[phone] = { ...c.profile, phone, e164: e164(P), role: roleFor(phone, c.profile.kind), created: Date.now(), salt, ph: pinHash(body.pin, salt), ...(P.isEmail ? { emailVerified: true } : {}) };
   saveDb();
   return [200, { ok: true, profile: pub(u), token: sign(phone) }];
 };
