@@ -3867,6 +3867,21 @@ Object.assign(A,{rgOpen(d){UI.rg.aid=d.v;UI.rg.info=null;UI.rg.reg=null;UI.view=
 {const f0=A.auSold,f1=A.auUns;A.auSold=function(){const a=aucOf(UI.au.open);f0();if(a)a.cbase=null};A.auUns=function(){const a=aucOf(UI.au.open);f1();if(a)a.cbase=null}}
 {const f0=A.auBid;A.auBid=function(d){const a=aucOf(UI.au.open),p=a&&a.players.find(x=>x.id===a.cur);if(p&&p.max){const nb=a.bid?a.bid+a.inc:(a.cbase||a.base);if(nb>p.max)return toast('Above this player\'s maximum price ('+p.max+')')}return f0(d)}}
 {const f0=render;render=function(){if(S.user&&S.tok&&UI.rg.aid&&!UI.rg.shown&&UI.stage==='app'){UI.rg.shown=1;UI.view='aucreg';setTimeout(()=>rgLoad(UI.rg.aid),50)}return f0()}}
+/* ---------------- WELCOME: country + language (first launch, before login) ---------------- */
+const WEL_LANGS=[['en','English'],['te','Telugu'],['hi','Hindi']];
+function vWelcome2(){const sg=shSuggest(),w=UI.wel=UI.wel||{c:(S.prefs&&S.prefs.country)||sg||'',l:(S.prefs&&S.prefs.lang)||'en'};
+  return `<div class="splash" style="position:relative;min-height:100vh;height:auto;padding:24px 16px;justify-content:flex-start"><div class="streaks"><span style="top:20%"></span><span style="top:62%;animation-delay:1.3s"></span></div>
+  <div class="slogo" style="--logo:url('${logoSrc()}');width:min(40vw,170px);margin-top:12px"><img src="${logoSrc()}" alt="Sports Sky High"></div>
+  <div class="sname" style="font-size:26px;opacity:1;animation:none;transform:none">SCORING HEROES</div><div class="stag" style="opacity:1;animation:none;transform:none">Welcome. Set your country and language first.</div>
+  <div class="card" style="width:100%;max-width:420px;margin-top:16px;text-align:left">
+   <label>Country / region<select data-c="welC"><option value="">Not set (global default)</option>${COUNTRIES.map(([k,n,d])=>`<option value="${k}" ${w.c===k?'selected':''}>${n} (${d})</option>`).join('')}</select></label>
+   ${sg&&!w.c?`<div class="mu sm" style="margin-top:6px">Your device time zone suggests ${esc((COUNTRIES.find(x=>x[0]===sg)||[0,sg])[1])}. Pick it above if correct.</div>`:''}
+   <div class="b" style="margin-top:12px">Language</div><div class="row" style="gap:8px;flex-wrap:wrap;margin-top:6px">${WEL_LANGS.map(([k,n])=>`<button class="btn sm ${w.l===k?'':'ghost'}" data-a="welL" data-v="${k}">${n}</button>`).join('')}</div>
+   <div class="mu sm" style="margin-top:8px">Country only changes suggestions (sports, news, location filters). Language is saved to your account and used for commentary. Most screens are still English: full translation of the app is not done yet.</div>
+   <button class="btn wide" style="margin-top:12px" data-a="welGo">Continue</button></div></div>`}
+Object.assign(A,{welL(d){UI.wel.l=d.v;render()},welGo(){const w=UI.wel||{};S.prefs.country=w.c||'';S.prefs.lang=w.l||'en';S.prefs.welcomed=1;const c=COUNTRIES.find(x=>x[0]===w.c);if(c){const cc=c[2].replace('+','');if(CCS.some(x=>x[2]===cc)){UI.cc=cc;try{ccStore.set(cc)}catch(e){}}}try{save()}catch(e){}render()}});
+Object.assign(C,{welC(v){UI.wel.c=v}});
+{const f0=render;render=function(){if(UI.stage==='app'&&!S.user&&S.prefs&&!S.prefs.welcomed&&location.hash!=='#overlay'&&!UI.rg.aid){document.getElementById('app').innerHTML=vWelcome2();return}return f0()}}
 /* ---------------- THE HUNDRED (100 balls, 5-ball sets) ---------------- */
 {const f0=newMatch;newMatch=function(d){const h=String(d.overs)==='20.5';const m=f0(h?Object.assign({},d,{overs:20}):d);if(h){m.bpo=5;m.nbp=2;m.fmt='hundred';m.rules=Object.assign(m.rules||{},{ppb:25})}return m}}
 {const f0=vScore;vScore=function(){const o=f0();const m=S.matches.find(x=>x.id===UI.sid)||S.matches.filter(x=>x.status!=='done').slice(-1)[0];
