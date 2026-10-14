@@ -470,6 +470,36 @@ http.createServer(async (req, res) => {
     }
     return out(405, { ok: false, error: 'Method not allowed' });
   }
+  if (path === '/api/cases' || path.startsWith('/api/cases/')) {   // support / dispute cases: user files, admin decides, everything audited
+    const tok = String(req.headers.authorization || '').replace(/^Bearer\s+/i, ''), phone = readSession(tok), u = phone && db.users[phone];
+    if (!u) return out(401, { ok: false, error: 'Please sign in first' });
+    const cs = (db.cases = db.cases || {}), TYPES = ['identity', 'duplicate', 'career', 'score', 'ranking', 'payment', 'order'];
+    const view = c => ({ id: c.id, type: c.type, ref: c.ref, text: c.text, evidence: c.evidence, status: c.status, decision: c.decision, role: c.role, created: c.created, updated: c.updated, audit: c.audit, by: c.byName });
+    const rid = path.split('/')[3];
+    if (req.method === 'GET') return out(200, { ok: true, admin: u.role === 'admin', cases: Object.values(cs).filter(c => u.role === 'admin' || c.owner === phone).sort((a, b) => b.created - a.created).slice(0, 200).map(view) });
+    let raw = ''; for await (const c of req) { raw += c; if (raw.length > 20000) return out(413, { ok: false, error: 'Too large' }); }
+    let b; try { b = JSON.parse(raw); } catch { return out(400, { ok: false, error: 'Bad body' }); }
+    if (limited('case:' + phone, 60, 36e5)) return out(429, { ok: false, error: 'Too many requests, slow down' });
+    const now = Date.now(), str = (v, n) => String(v == null ? '' : v).trim().slice(0, n);
+    if (req.method === 'POST' && !rid) {
+      const type = str(b.type, 20), text = str(b.text, 1500);
+      if (!TYPES.includes(type)) return out(400, { ok: false, error: 'Choose what the problem is about' });
+      if (text.length < 10) return out(400, { ok: false, error: 'Describe the problem in a few words (at least 10 characters)' });
+      const id = 'CS-' + crypto.randomBytes(4).toString('hex').toUpperCase();
+      cs[id] = { id, owner: phone, byName: u.nick || u.name || '', type, ref: str(b.ref, 200), text, evidence: str(b.evidence, 500), status: 'OPEN', role: type === 'payment' || type === 'order' ? 'admin (finance)' : 'admin', created: now, updated: now, audit: [{ t: now, by: u.nick || 'user', a: 'filed' }] };
+      saveDb(); return out(200, { ok: true, case: view(cs[id]) });
+    }
+    if (req.method === 'PUT' && rid) {
+      if (u.role !== 'admin') return out(403, { ok: false, error: 'Only an admin can decide cases' });
+      const c = cs[rid]; if (!c) return out(404, { ok: false, error: 'Case not found' });
+      const st = str(b.status, 20), dec = str(b.decision, 600);
+      if (!['IN_REVIEW', 'RESOLVED', 'REJECTED'].includes(st)) return out(400, { ok: false, error: 'Bad status' });
+      if (st !== 'IN_REVIEW' && !dec) return out(400, { ok: false, error: 'Write the decision and reason' });
+      c.status = st; if (dec) c.decision = dec; c.updated = now; c.audit.push({ t: now, by: u.nick || 'admin', a: st.toLowerCase().replace('_', ' ') + (dec ? ': ' + dec : '') });
+      saveDb(); return out(200, { ok: true, case: view(c) });
+    }
+    return out(405, { ok: false, error: 'Method not allowed' });
+  }
   if (path === '/api/prefs' || path === '/api/catalogue') {   // account preferences (country, sports, primary sport) and the admin-managed sports catalogue
     const tok = String(req.headers.authorization || '').replace(/^Bearer\s+/i, ''), phone = readSession(tok), u = phone && db.users[phone];
     if (path === '/api/catalogue') {

@@ -31,8 +31,8 @@ Requirements are kept separate from implementation status. Conflicts: latest exp
 | R22 | Formulas: ranking, auction category, MVP, Team 11, Best Team (each separate) | Rem. 5 | - | - | - | - | SOURCE/DEFINITION REQUIRED |
 | R23 | Tournament leaders, caps, awards, certificates | Rem. 6 | Tournament | - | - | Existing basic leaders only | PARTIAL |
 | R24 | Venue local time + viewer local time; neutral weather if missing | Rem. 7 | Match | - | - | - | NOT BUILT |
-| R25 | Support/dispute flows (7 types) with audit | Rem. 8 | Support | - | Role-based | Support page exists; no case flows | PARTIAL (policy text SOURCE REQUIRED) |
-| R26 | Canonical share links/QR and notification deep links | Rem. 9 | Share | - | - | Share text only | PARTIAL |
+| R25 | Support/dispute flows (7 types) with audit | Rem. 8 | Support > Report a problem | /api/cases | User files; admin decides | 2-user Playwright: validation, case number, admin needs reason, user cannot decide (403), history shown | PARTIAL: request, decision and audit built; evidence is text/link only; a decision does NOT auto-correct scores/stats/rankings (admin edits the record separately); no notifications; Privacy/Terms/Refund text SOURCE REQUIRED |
+| R26 | Canonical share links/QR and notification deep links | Rem. 9 | Share | ?player= ?match= | - | Playwright: both links open the record | PARTIAL: links built; player records are not on the server so ?player= opens only where the record exists on that device; match links need the match shared to the server; QR and notification deep links NOT BUILT |
 | R27 | Accessibility, reduced motion, sessions/devices, account closure | Rem. 10 | Settings | - | - | - | NOT BUILT |
 | R28 | Email optional | User | Register | cleanProfile | - | Tested | BUILT-TESTED |
 | R29 | Voice AI integration | Rem. 11 | - | - | - | - | SOURCE/DEFINITION REQUIRED (source code + contract) |
@@ -44,7 +44,7 @@ Requirements are kept separate from implementation status. Conflicts: latest exp
 | R35 | Articles (8 types), canonical article + translations, correction history | Media doc 4, Social doc 5-6 | - | - | Editor | - | NOT BUILT |
 | R36 | ePaper (English/Hindi/Telugu, local-to-global editions, archive) | Media doc 5, Social doc 4 | - | - | - | - | NOT BUILT |
 | R37 | Broadcast graphics, auction live screen, OBS/vMix output | Media doc 6 | - | - | - | Existing OBS overlay + auction live screen (earlier work) | PARTIAL |
-| R38 | Player social accounts: profile link vs authorised connection, tagging/auto-publish permissions, guardian permission for minors | Social doc 1-3 | Player > Social | - | Player | - | NOT BUILT (needs platform API authorisation) |
+| R38 | Player social accounts: profile link vs authorised connection | Social doc 1-3 | Player > Social | S.psoc (device only) | Own profile/admin | Playwright: host check, add/hide/remove | PARTIAL: profile links only (https, platform host check, show/hide). Authorised connection, tagging, auto-publish NOT BUILT (needs platform authorisation). Links are not yet synced to the server |
 | R39 | Player media portfolio + publishing dashboard (per-destination status, retry, withdrawal, real metrics only) | Social doc 7-8 | Player > Media/Press | - | - | - | NOT BUILT |
 | R40 | Live score tickers: scorebug, bottom strip, ball-by-ball, recent overs, target + RRR, status/result, other live scores | Ticker pack 1 | Overlay (#overlay) | S match data | Operator | Earlier work: basic scoreboard overlay, OBS browser source | PARTIAL (exact coverage per item not re-verified this session) |
 | R41 | Player/team graphics: intros, photo/avatar, career stats, XI, partnership/FOW, scorecard | Ticker pack 2 | Overlay | - | Operator | - | NOT BUILT (verify what overlay already has) |
