@@ -512,7 +512,7 @@ http.createServer(async (req, res) => {
     } catch { /* fall through to 404 */ }
   }
   if (path.startsWith('/api/shared/')) {   // shared public data: matches, tournaments, auctions (anyone reads, the owner writes)
-    const [, , , col, id] = path.split('/'), COLS = ['matches', 'tours', 'auc'];
+    const [, , , col, id] = path.split('/'), COLS = ['matches', 'sports', 'tours', 'auc'];
     if (!COLS.includes(col)) return out(404, { ok: false, error: 'Unknown collection' });
     const bag = db.shared[col] = db.shared[col] || {};
     if (req.method === 'GET' && !id) {
@@ -530,6 +530,15 @@ http.createServer(async (req, res) => {
     if (req.method !== 'PUT') return out(405, { ok: false, error: 'Method not allowed' });
     let raw = ''; for await (const c of req) { raw += c; if (raw.length > 400000) return out(413, { ok: false, error: 'Too large' }); }
     let b; try { b = JSON.parse(raw); } catch { return out(400, { ok: false, error: 'Bad body' }); }
+    if (col === 'sports') {
+      const m = b.data && b.data.m;
+      if (!m || m.id !== id || !['football','kabaddi','bd','bd15','vb','vbb'].includes(m.sport) ||
+          !Array.isArray(m.tn) || m.tn.length !== 2 || m.tn.some(n => typeof n !== 'string' || !n.trim() || n.length > 100) ||
+          (m.ev != null && !Array.isArray(m.ev)) || (m.log != null && !Array.isArray(m.log))) {
+        return out(400, { ok: false, error: 'Invalid sport match' });
+      }
+      delete m.rm; delete m._sh;
+    }
     if (limited('shw:' + phone, 600, 36e5)) return out(429, { ok: false, error: 'Too many saves, slow down' });
     bag[id] = { id, owner: cur ? cur.owner : phone, ownerName: u.nick || u.name || '', updated: Date.now(), data: b.data };
     saveDb(); return out(200, { ok: true, updated: bag[id].updated });

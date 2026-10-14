@@ -346,7 +346,7 @@ const nm=id=>(P(id)||{}).name||'-';
 const sh=id=>{const n=nm(id).split(' ');return n.length>1?n[0][0]+'. '+n.slice(1).join(' '):n[0]};
 const mx=m=>{setFmt(m);return (m.cur===1&&m.ovr2?m.ovr2:m.overs)*BPO};
 const maxWk=(m,i)=>Math.min(10,((m.xi[m.innings[i].bat]||[]).length)-1);
-const can=()=>S.user&&(S.user.role==='admin'||S.user.role==='scorer');
+let can=()=>S.user&&(S.user.role==='admin'||S.user.role==='scorer');
 const isAdmin=()=>S.user&&S.user.role==='admin';
 function howOut(e){const b=nm(e.bl),f=e.fld||'fielder';
   return ({Bowled:'b '+b,Caught:'c '+f+' b '+b,LBW:'lbw b '+b,Stumped:'st '+f+' b '+b,'Run out':'run out ('+f+')','Hit wicket':'hit wkt b '+b,'Obstructing the field':'obstructing the field','Hit the ball twice':'hit the ball twice'}[e.w])||e.w}
@@ -3128,6 +3128,7 @@ const shTok=()=>S.tok||'';
 const shOn=()=>!!(apiBase()&&shTok()&&shMe());
 UI.sh=UI.sh||{hash:{},busy:false,last:0,state:'idle',err:''};
 function shPack(col,o){
+  if(col==='sports'){const m=JSON.parse(JSON.stringify(o));delete m.rm;delete m._sh;return {m}}
   if(col==='matches'){const t={},pl={};[o.a,o.b].forEach(id=>{const x=T(id);if(x){t[id]={id:x.id,name:x.name,short:x.short,color:x.color,state:x.state,country:x.country,level:x.level,players:x.players}}});
     Object.values(o.xi||{}).flat().forEach(id=>{const x=P(id);if(x)pl[id]={id:x.id,name:x.name,role:x.role,jersey:x.jersey,team:x.team,bat:x.bat,bowl:x.bowl,avatar:x.avatar}});return {m:o,teams:t,players:pl}}
   if(col==='tours'){const t={};o.teams.forEach(id=>{const x=T(id);if(x)t[id]={id:x.id,name:x.name,short:x.short,color:x.color,players:[]}});return {t:o,teams:t}}
@@ -3137,6 +3138,7 @@ async function shPush(){
   try{
     const jobs=[];
     S.matches.filter(m=>!m.rm&&!m.gts&&!isDemo(m)&&m.status!=='setup').forEach(m=>jobs.push(['matches',m.id,shPack('matches',m)]));
+    (S.sg||[]).filter(m=>!m.rm&&['football','kabaddi','bd','bd15','vb','vbb'].includes(m.sport)).forEach(m=>jobs.push(['sports',m.id,shPack('sports',m)]));
     (S.tours||[]).filter(t=>!t.rm&&!t.gts).forEach(t=>jobs.push(['tours',t.id,shPack('tours',t)]));
     (S.auc||[]).filter(a=>!a.rm&&!a.gts).forEach(a=>jobs.push(['auc',a.id,shPack('auc',a)]));
     for(const [col,id,data] of jobs){const h=JSON.stringify(data);if(UI.sh.hash[col+id]===h)continue;
@@ -3149,7 +3151,7 @@ async function shPull(){
   if(!apiBase())return;let changed=false;
   try{
     const me=shMe();
-    for(const col of ['matches','tours','auc']){
+    for(const col of ['matches','sports','tours','auc']){
       const r=await fetch(apiBase()+'/api/shared/'+col);const j=await r.json();if(!j.ok)continue;
       for(const it of j.items){const d=it.data||{},mine=it.owner===me;
         const h=JSON.stringify(d);
@@ -3159,6 +3161,12 @@ async function shPull(){
           if(mine&&i<0){Object.values(d.teams||{}).forEach(t=>{if(!S.teams.some(x=>x.id===t.id))S.teams.push(Object.assign({logo:null,preset:null},t))});Object.values(d.players||{}).forEach(p=>{if(!S.players.some(x=>x.id===p.id))S.players.push(p)})}
           else{Object.assign(S.rt.teams,d.teams||{});Object.assign(S.rt.players,d.players||{})}
           if(i>=0)S.matches[i]=m;else S.matches.push(m);changed=true}
+        else if(col==='sports'&&d.m){
+          S.sg=S.sg||[];const i=S.sg.findIndex(x=>x.id===it.id);
+          if(i>=0&&!S.sg[i].rm)continue;
+          if(i>=0&&S.sg[i]._sh===it.updated)continue;
+          const m=Object.assign({},d.m,{rm:mine?0:1,_sh:it.updated,by:it.ownerName});
+          if(i>=0)S.sg[i]=m;else S.sg.push(m);changed=true}
         else if(col==='tours'&&d.t){if(mine&&S.tours.some(x=>x.id===it.id))continue;const i=S.tours.findIndex(x=>x.id===it.id);if(i>=0&&S.tours[i]._sh===it.updated)continue;
           Object.assign(S.rt.teams,d.teams||{});const t=Object.assign({},d.t,{rm:mine?0:1,_sh:it.updated,by:it.ownerName});if(i>=0)S.tours[i]=t;else S.tours.push(t);changed=true}
         else if(col==='auc'&&d.a){if(mine&&S.auc.some(x=>x.id===it.id))continue;const i=S.auc.findIndex(x=>x.id===it.id);if(i>=0&&S.auc[i]._sh===it.updated)continue;
@@ -3168,7 +3176,7 @@ async function shPull(){
   if(changed){save();render()}}
 {const sv=save;save=function(){sv.apply(this,arguments);clearTimeout(UI.sh.t);UI.sh.t=setTimeout(shPush,2500)}}
 {const fl=finishLogin;finishLogin=function(){const L=UI.login;if(L&&L.session)S.tok=L.session;const r=fl.apply(this,arguments);setTimeout(()=>{shPush();shPull()},1500);return r}}
-setInterval(()=>{if(document.visibilityState==='visible'&&S.user)shPull()},25000);
+setInterval(()=>{if(document.visibilityState==='visible'&&S.user){shPull();shPush()}},5000);
 setTimeout(()=>{if(S.user){shPull();shPush()}},2500);
 /* remote items are read-only */
 {const g=(f)=>function(d){const m=S.matches.find(x=>x.id===d.id);if(m&&m.rm)return toast('This match belongs to '+(m.by||'another scorer')+'. You can watch it but not change it.',3500);return f.apply(this,arguments)};
@@ -3185,7 +3193,7 @@ function ppCard(m){if(!m||!m.innings||!m.innings.length||!ppOv(m))return'';
   const rows=m.innings.map((inn,i)=>{const p=ppStat(m,i);return p?`<div class="item"><div style="flex:1"><div class="b">${esc(T(inn.bat).name)}</div><div class="mu sm">Powerplay, first ${p.n} balls${p.live?' (in progress)':''}</div></div><b>${p.r}/${p.w}</b></div>`:''}).join('');
   return rows?`<div class="card"><div class="b" style="margin-bottom:6px">Powerplay</div>${rows}<div class="mu sm" style="margin-top:6px">${ppFld(m)}</div></div>`:''}
 function shPend(){let n=0;if(!shOn())return 0;
-  S.matches.filter(m=>!m.rm&&!isDemo(m)&&m.status!=='setup').forEach(m=>{if(UI.sh.hash['matches'+m.id]!==JSON.stringify(shPack('matches',m)))n++});return n}
+  S.matches.filter(m=>!m.rm&&!isDemo(m)&&m.status!=='setup').forEach(m=>{if(UI.sh.hash['matches'+m.id]!==JSON.stringify(shPack('matches',m)))n++});(S.sg||[]).filter(m=>!m.rm&&['football','kabaddi','bd','bd15','vb','vbb'].includes(m.sport)).forEach(m=>{if(UI.sh.hash['sports'+m.id]!==JSON.stringify(shPack('sports',m)))n++});return n}
 function shChip(){const off=typeof navigator!=='undefined'&&navigator.onLine===false||UI.sh.state==='offline';
   let t,c;if(!shOn()){t='Saved on this phone. Log in to share live.';c='#64748b'}
   else if(off){const n=shPend();t='Offline: scoring is saved on this phone'+(n?' ('+n+' match'+(n>1?'es':'')+' waiting to sync)':'')+'. It will sync when you are back online.';c='#d97706'}
@@ -4020,6 +4028,40 @@ window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay')
 setInterval(()=>{if(location.hash==='#overlay'){if(S.settings.syncUrl)syncPull();else{S=load();render()}}},1500);
 document.addEventListener('DOMContentLoaded',()=>{});
 render();
+
+/* Multi-sport live sharing: server-owned records, read-only remote scoring and links. */
+{const previousCan=can;can=function(){const m=UI.view==='sgame'?sgCur():null;return m&&m.rm?false:previousCan.apply(this,arguments)}}
+{const view=XV.sgame;XV.sgame=function(){
+ const m=sgCur(),body=view.apply(this,arguments);if(!m)return body;
+ return (m.rm?'<div class="mu sm">Live shared match • read-only • Last sync '+esc(new Date(m._sh).toLocaleTimeString())+'</div>':shChip())+body+
+ '<div class="row"><button class="btn sm ghost" data-a="sgShare" data-id="'+esc(m.id)+'">Share live score</button><button class="btn sm ghost" data-a="sgRefresh">Refresh live score</button></div>';
+}}
+Object.assign(A,{
+ sgShare(d){const m=sgGet(d.id);if(!m)return;
+  if(!m.rm&&!shOn())return toast('Log in to publish this match before sharing.',3500);
+  const link=location.origin+location.pathname+'?sportmatch='+encodeURIComponent(m.id);
+  exportBox('Live score link',link);},
+ sgRefresh(){shPull();},
+ async sgDel(d){const m=sgGet(d.id);if(!m)return;
+  if(m.rm)return toast('Only the match owner can delete this match.',3500);
+  if(!confirm('Delete this match?'))return;
+  if(shOn()){try{const r=await fetch(apiBase()+'/api/shared/sports/'+encodeURIComponent(m.id),{method:'DELETE',headers:shHdr()});const j=await r.json();if(!j.ok)return toast(j.error||'Delete failed',3500);}catch{return toast('Offline: reconnect before deleting a shared match.',3500)}}
+  S.sg=S.sg.filter(x=>x.id!==d.id);delete UI.sh.hash['sports'+d.id];UI.view='sgames';commit();
+ }
+});
+UI.sportLink=new URLSearchParams(location.search).get('sportmatch')||'';
+{const view=render;render=function(){
+ if(UI.sportLink&&S.user&&UI.stage==='app'&&!UI.sportLinkBusy){
+  UI.sportLinkBusy=true;shPull().then(()=>{const m=sgGet(UI.sportLink);if(m){UI.sgid=m.id;UI.view='sgame';UI.sportLink='';}else toast('Shared sport match not found.',3500);UI.sportLinkBusy=false;view();});
+ }
+ return view.apply(this,arguments);
+}}
+{const querySport=new URLSearchParams(location.search).get('sport');
+ if(['cricket','football','kabaddi','badminton','volleyball'].includes(querySport)){
+  S.prefs=S.prefs||{};S.prefs.sports=Array.from(new Set([...(S.prefs.sports||[]),querySport]));S.prefs.primary=querySport;
+ }
+}
+
 </script>
 </body>
 </html>
