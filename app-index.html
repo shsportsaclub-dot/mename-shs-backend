@@ -3135,9 +3135,9 @@ async function shPush(){
   if(!shOn()||UI.sh.busy)return;UI.sh.busy=true;
   try{
     const jobs=[];
-    S.matches.filter(m=>!m.rm&&!isDemo(m)&&m.status!=='setup').forEach(m=>jobs.push(['matches',m.id,shPack('matches',m)]));
-    (S.tours||[]).filter(t=>!t.rm).forEach(t=>jobs.push(['tours',t.id,shPack('tours',t)]));
-    (S.auc||[]).filter(a=>!a.rm).forEach(a=>jobs.push(['auc',a.id,shPack('auc',a)]));
+    S.matches.filter(m=>!m.rm&&!m.gts&&!isDemo(m)&&m.status!=='setup').forEach(m=>jobs.push(['matches',m.id,shPack('matches',m)]));
+    (S.tours||[]).filter(t=>!t.rm&&!t.gts).forEach(t=>jobs.push(['tours',t.id,shPack('tours',t)]));
+    (S.auc||[]).filter(a=>!a.rm&&!a.gts).forEach(a=>jobs.push(['auc',a.id,shPack('auc',a)]));
     for(const [col,id,data] of jobs){const h=JSON.stringify(data);if(UI.sh.hash[col+id]===h)continue;
       const r=await fetch(apiBase()+'/api/shared/'+col+'/'+id,{method:'PUT',headers:{'Authorization':'Bearer '+shTok(),'Content-Type':'application/json'},body:JSON.stringify({data})});
       const j=await r.json();if(j.ok)UI.sh.hash[col+id]=h;else{UI.sh.err=j.error||'';if(r.status===401){UI.sh.state='login';break}}}
@@ -3996,7 +3996,20 @@ Object.assign(A,{async emLSend(){const em=String((document.getElementById('em-l-
 /* ---------------- GUEST: browse without an account; stays on this device until the person logs in or out ---------------- */
 {const v1=vAuth;vAuth=function(){const o=v1.apply(this,arguments);if(o.indexOf('class="auth"')<0)return o;
   return o.replace(/<\/div>$/,'<div style="text-align:center;margin:14px 0 4px"><button type="button" class="btn ghost" data-a="guestGo">Continue as guest</button><div class="mu sm" style="margin-top:6px">See live scores, matches and news without an account. Log in to score, register for auctions, report problems or keep your profile.</div></div></div>')}}
-Object.assign(A,{guestGo(){S.user={name:'Guest',nick:'Guest',phone:'',guest:true,role:'viewer',kind:'Fan'};S.tok='';UI.view='home';UI.stage='app';UI.login={step:1};commit()}});
+Object.assign(A,{guestGo(){gCols().forEach(L=>(L||[]).forEach(x=>{if(x&&!x.gts)x.keep=1}));S.user={name:'Guest',nick:'Guest',phone:'',guest:true,role:'admin',kind:'Fan'};S.tok='';UI.view='home';UI.stage='app';UI.login={step:1};commit()}});
+
+/* guest records live for 24 hours on this device, then are removed. Guest matches are never sent to the server. */
+const GUEST_MS=864e5,gCols=()=>[S.matches,S.auc,S.tours];
+function guestStamp(){if(!(S.user&&S.user.guest))return;gCols().forEach(L=>(L||[]).forEach(x=>{if(x&&!x.gts&&!x.keep){x.gts=Date.now();x.guest=1}}))}
+function guestPurge(){const now=Date.now();let n=0;['matches','auc','tours'].forEach(k=>{const L=S[k];if(!Array.isArray(L))return;const a=L.filter(x=>!(x&&x.gts&&!x.keep&&now-x.gts>GUEST_MS));n+=L.length-a.length;if(a.length!==L.length)S[k]=a});
+  if(n){try{if(UI.mid&&!S.matches.some(m=>m.id===UI.mid))UI.mid=null;if(UI.sid&&!S.matches.some(m=>m.id===UI.sid))UI.sid=null}catch(e){}}return n}
+const guestLeft=x=>{const ms=x.gts+GUEST_MS-Date.now();return ms<=0?'now':ms>36e5?Math.ceil(ms/36e5)+' hours':Math.max(1,Math.ceil(ms/6e4))+' minutes'};
+{const sv=save;save=function(){guestStamp();return sv.apply(this,arguments)}}
+{const r0=render;render=function(){if(guestPurge()){try{save()}catch(e){}}return r0()}}
+setInterval(()=>{if(guestPurge()){try{save()}catch(e){}render()}},60000);
+{const e0=enter;enter=function(){const r=e0.apply(this,arguments);gCols().forEach(L=>(L||[]).forEach(x=>{if(x&&x.gts&&!x.keep){delete x.gts;delete x.guest}}));try{save()}catch(e){}return r}}
+{const m0=mHead;mHead=function(m){const o=m0(m);return m&&m.gts?`<div class="mu sm" style="margin:2px 0 6px;color:#ffd27a">Guest match: kept on this device for 24 hours only (about ${guestLeft(m)} left). Log in or register before it is removed if you want to keep it.</div>`+o:o}}
+{const h0=vHome;vHome=function(){const o=h0.apply(this,arguments);return S.user&&S.user.guest?`<div class="card"><div class="mu sm">You are using the app as a guest. Matches you score are kept for 24 hours, then removed. Guest data is not saved to the server.</div></div>`+o:o}}
 /* ---------------- THE HUNDRED (100 balls, 5-ball sets) ---------------- */
 {const f0=newMatch;newMatch=function(d){const h=String(d.overs)==='20.5';const m=f0(h?Object.assign({},d,{overs:20}):d);if(h){m.bpo=5;m.nbp=2;m.fmt='hundred';m.rules=Object.assign(m.rules||{},{ppb:25})}return m}}
 {const f0=vScore;vScore=function(){const o=f0();const m=S.matches.find(x=>x.id===UI.sid)||S.matches.filter(x=>x.status!=='done').slice(-1)[0];
