@@ -85,7 +85,7 @@ function cleanProfile(p) {
   const age = Math.round(+p.age);
   if (!(age >= 5 && age <= 90)) return { error: 'Enter a valid age' };
   const email = String(p.email || '').trim().slice(0, 100);
-  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return { error: 'Enter a valid email' };
+  if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return { error: 'That email does not look right. Fix it or leave it empty.' };   // optional
   return { profile: { nick, name: nick, email, age, loc: String(p.loc || '').trim().slice(0, 60), kind } };
 }
 const pub = u => ({ nick: u.nick, name: u.nick, email: u.email, age: u.age, loc: u.loc, kind: u.kind, role: u.role, phone: u.phone });
