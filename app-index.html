@@ -4065,6 +4065,61 @@ XV.match=function(){const o=fM1();return `<div class="msk msk-${sk()}">${bar()}$
 A.mskin=function(d){S.settings.mskin=d.v==='ca'?'ca':'cb';commit()};
 }
 
+/* ---------------- AVATAR STUDIO: camera/photo capture, face placed on a Scoring Heroes player avatar ---------------- */
+{const st=document.createElement('style');st.textContent='#avst{position:fixed;inset:0;z-index:99999;background:rgba(3,6,20,.92);display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:max(12px,env(safe-area-inset-top)) 12px 24px}#avst .box{background:#0c1333;color:#f2f5ff;border:1px solid #2a3a7a;border-radius:16px;max-width:420px;width:100%;padding:16px}#avst h3{margin:0 0 4px}#avst .cv{width:100%;aspect-ratio:1;border-radius:14px;background:#060a1d;touch-action:none;display:block}#avst video{width:100%;aspect-ratio:1;object-fit:cover;border-radius:14px;background:#000;transform:scaleX(-1)}#avst .r{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}#avst .r button,#avst .r label.b{flex:1;min-width:120px;padding:11px 8px;border-radius:999px;border:1px solid #3a4a9a;background:#121b45;color:#fff;font-weight:700;text-align:center;cursor:pointer;font-size:14px}#avst .r .go{background:linear-gradient(90deg,#0a1f5c,#e11d2e);border-color:#e11d2e}#avst .r .on{outline:2px solid #ffcd00}#avst .mu{color:#9aa8d6;font-size:13px}#avst input[type=range]{width:100%}';document.head.appendChild(st)}
+const AVK=[['bat','Batter'],['bowl','Bowler'],['field','Fielder']];
+const AV={kind:'bat',img:null,s:1,x:0,y:0,stream:null,cols:['#0a1f5c','#e11d2e']};
+function avDraw(cv,out){const c=cv.getContext('2d'),W=cv.width;c.clearRect(0,0,W,W);const k=W/400;c.save();c.scale(k,k);
+ const [c1,c2]=AV.cols;const g=c.createLinearGradient(0,0,400,400);g.addColorStop(0,c1);g.addColorStop(1,c2);c.fillStyle=g;c.fillRect(0,0,400,400);
+ c.fillStyle='rgba(255,255,255,.07)';c.beginPath();c.arc(200,210,170,0,7);c.fill();
+ // body (jersey)
+ c.fillStyle='#16224f';c.beginPath();c.moveTo(40,400);c.quadraticCurveTo(60,285,160,262);c.lineTo(240,262);c.quadraticCurveTo(340,285,360,400);c.closePath();c.fill();
+ c.fillStyle=c2;c.beginPath();c.moveTo(160,262);c.lineTo(200,320);c.lineTo(240,262);c.lineTo(228,258);c.lineTo(200,296);c.lineTo(172,258);c.closePath();c.fill();
+ c.fillStyle='#fff';c.font='bold 34px sans-serif';c.textAlign='center';c.fillText('SH',200,372);
+ c.strokeStyle='#ffffff55';c.lineWidth=5;c.beginPath();c.moveTo(60,330);c.quadraticCurveTo(52,360,48,400);c.moveTo(340,330);c.quadraticCurveTo(348,360,352,400);c.stroke();
+ // pose props
+ if(AV.kind==='bat'){c.save();c.translate(330,300);c.rotate(-0.5);c.fillStyle='#d9a45b';c.fillRect(-10,-150,20,120);c.fillStyle='#8a5a22';c.fillRect(-6,-30,12,40);c.restore()}
+ if(AV.kind==='bowl'){c.fillStyle='#16224f';c.save();c.translate(335,300);c.rotate(0.35);c.fillRect(-14,-160,28,170);c.restore();c.fillStyle='#e11d2e';c.beginPath();c.arc(360,120,16,0,7);c.fill();c.strokeStyle='#fff';c.lineWidth=2;c.beginPath();c.arc(360,120,10,0.5,2.6);c.stroke()}
+ if(AV.kind==='field'){c.fillStyle='#e8b98a55';c.beginPath();c.ellipse(120,330,26,38,0.4,0,7);c.ellipse(280,330,26,38,-0.4,0,7);c.fill()}
+ // neck
+ c.fillStyle='#c98f64';c.fillRect(176,226,48,46);
+ // face: user photo in an oval with soft edge
+ const fc=document.createElement('canvas');fc.width=fc.height=400;const f=fc.getContext('2d');
+ f.save();f.beginPath();f.ellipse(200,160,76,94,0,0,7);f.clip();f.fillStyle='#c98f64';f.fillRect(0,0,400,400);
+ if(AV.img){const im=AV.img,base=Math.max(160/im.width,190/im.height)*AV.s;const w=im.width*base,h=im.height*base;f.drawImage(im,200-w/2+AV.x,160-h/2+AV.y,w,h)}f.restore();
+ f.globalCompositeOperation='destination-in';const m=f.createRadialGradient(200,160,50,200,160,100);m.addColorStop(0,'#000');m.addColorStop(.82,'#000');m.addColorStop(1,'rgba(0,0,0,0)');f.save();f.translate(200,160);f.scale(.78,.95);f.translate(-200,-160);f.fillStyle=m;f.fillRect(0,0,400,400);f.restore();
+ c.drawImage(fc,0,0);
+ // cap
+ c.fillStyle=c1;c.beginPath();c.ellipse(200,92,82,52,0,Math.PI,0);c.lineTo(282,96);c.quadraticCurveTo(200,70,118,96);c.closePath();c.fill();
+ c.fillStyle=c2;c.beginPath();c.ellipse(200,100,92,16,0,0,Math.PI);c.fill();
+ c.fillStyle='#fff';c.font='bold 20px sans-serif';c.fillText('SH',200,78);
+ if(!out&&!AV.img){c.fillStyle='#fff';c.font='600 20px sans-serif';c.fillText('Add your photo',200,175)}
+ c.restore()}
+function avUI(){const o=document.getElementById('avst');if(!o)return;o.innerHTML=`<div class="box"><h3>Your hero photo</h3><div class="mu">Take a selfie or pick a photo, then drag and zoom so your face sits in the oval. It is placed on a Scoring Heroes player avatar. Stays on your device.</div>
+ <canvas class="cv" id="avcv" width="400" height="400" style="margin-top:10px"></canvas>
+ <div id="avvid" style="display:none;margin-top:10px"><video id="avv" autoplay playsinline muted></video><div class="r"><button class="go" id="avsnap" type="button">Capture</button><button id="avclose" type="button">Cancel camera</button></div></div>
+ <div class="r" id="avbtns"><button id="avcam" type="button">Use camera</button><label class="b">Choose photo<input type="file" accept="image/*" id="avfile" hidden></label></div>
+ <div class="mu" style="margin-top:10px">Zoom</div><input type="range" id="avz" min="0.6" max="2.5" step="0.02" value="${AV.s}">
+ <div class="r">${AVK.map(([k,l])=>`<button type="button" data-k="${k}" class="avk ${AV.kind===k?'on':''}">${l}</button>`).join('')}</div>
+ <div class="r"><button class="go" id="avsave" type="button">Save avatar</button><button id="avskip" type="button">Skip for now</button></div></div>`;
+ const cv=document.getElementById('avcv');avDraw(cv);
+ let drag=null;cv.onpointerdown=e=>{drag={x:e.clientX,y:e.clientY,ox:AV.x,oy:AV.y};cv.setPointerCapture(e.pointerId)};cv.onpointermove=e=>{if(!drag)return;const r=cv.getBoundingClientRect(),k=400/r.width;AV.x=drag.ox+(e.clientX-drag.x)*k;AV.y=drag.oy+(e.clientY-drag.y)*k;avDraw(cv)};cv.onpointerup=()=>{drag=null};
+ document.getElementById('avz').oninput=e=>{AV.s=+e.target.value;avDraw(cv)};
+ o.querySelectorAll('.avk').forEach(b=>b.onclick=()=>{AV.kind=b.dataset.k;o.querySelectorAll('.avk').forEach(x=>x.classList.toggle('on',x===b));avDraw(cv)});
+ document.getElementById('avfile').onchange=e=>{const fl=e.target.files[0];if(!fl)return;const im=new Image();im.onload=()=>{AV.img=im;AV.s=1;AV.x=0;AV.y=0;avDraw(cv);URL.revokeObjectURL(im.src)};im.src=URL.createObjectURL(fl)};
+ document.getElementById('avcam').onclick=async()=>{try{AV.stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'},audio:false});const v=document.getElementById('avv');v.srcObject=AV.stream;document.getElementById('avvid').style.display='block';document.getElementById('avbtns').style.display='none'}catch(e){toast('Camera not available or permission denied. Use Choose photo instead.',4500)}};
+ const stopCam=()=>{if(AV.stream){AV.stream.getTracks().forEach(t=>t.stop());AV.stream=null}document.getElementById('avvid').style.display='none';document.getElementById('avbtns').style.display='flex'};
+ document.getElementById('avclose').onclick=stopCam;
+ document.getElementById('avsnap').onclick=()=>{const v=document.getElementById('avv');if(!v.videoWidth){toast('Camera not ready yet');return}const t=document.createElement('canvas');t.width=v.videoWidth;t.height=v.videoHeight;const x=t.getContext('2d');x.translate(t.width,0);x.scale(-1,1);x.drawImage(v,0,0);const im=new Image();im.onload=()=>{AV.img=im;AV.s=1;AV.x=0;AV.y=0;stopCam();avDraw(cv)};im.src=t.toDataURL('image/jpeg',.9)};
+ document.getElementById('avsave').onclick=()=>{if(!AV.img){toast('Add a photo first');return}const t=document.createElement('canvas');t.width=t.height=256;avDraw(t,1);const url=t.toDataURL('image/jpeg',.85);if(S.user){S.user.avatar2=url;const p=S.user.pid&&P(S.user.pid);if(p)p.photo=url}S.prefs.avDone=1;avClose();commit();toast('Avatar saved')};
+ document.getElementById('avskip').onclick=()=>{S.prefs.avSkip=1;avClose();save()}}
+function avClose(){if(AV.stream){AV.stream.getTracks().forEach(t=>t.stop());AV.stream=null}const o=document.getElementById('avst');if(o)o.remove()}
+function avOpen(){if(document.getElementById('avst'))return;try{const t=(S.teams&&S.user&&S.user.pid&&P(S.user.pid)&&P(S.user.pid).team)?T(P(S.user.pid).team):null;if(t&&t.color)AV.cols=['#0a1f5c',t.color]}catch(e){}const o=document.createElement('div');o.id='avst';document.body.appendChild(o);avUI()}
+A.avopen=function(){avOpen()};
+{const MG=MENU2.find(x=>x[0]==='Account');if(MG&&!MG[1].some(z=>z[0]==='@avopen'))MG[1].push(['@avopen','\u{1F4F7}','Photo avatar'])}
+{const e1=enter;enter=function(){const r=e1.apply(this,arguments);try{if(S.user&&!S.user.guest&&!S.user.avatar2&&!S.prefs.avSkip&&!S.prefs.avDone)setTimeout(avOpen,900)}catch(e){}return r}}
+{const h1=hdr;hdr=function(){let o=h1();const u=S.user;if(u&&u.avatar2)o=o.replace(/(aria-label="Profile">)[\s\S]*?(<\/button>)/,'$1<span class="avatar" style="width:100%;height:100%;background:transparent"><img src="'+u.avatar2+'" alt=""></span>$2');return o}}
+
 /* ---------------- THE HUNDRED (100 balls, 5-ball sets) ---------------- */
 {const f0=newMatch;newMatch=function(d){const h=String(d.overs)==='20.5';const m=f0(h?Object.assign({},d,{overs:20}):d);if(h){m.bpo=5;m.nbp=2;m.fmt='hundred';m.rules=Object.assign(m.rules||{},{ppb:25})}return m}}
 {const f0=vScore;vScore=function(){const o=f0();const m=S.matches.find(x=>x.id===UI.sid)||S.matches.filter(x=>x.status!=='done').slice(-1)[0];

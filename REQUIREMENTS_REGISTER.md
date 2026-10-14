@@ -67,3 +67,7 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 
 ## Match skins (Oct 2026)
 - Matches list and match page now have a visible 2-skin switch: Cricbuzz style / Cricket Australia style (setting `mskin`). Styled after the reference apps' look in the SH colours scheme; not pixel copies. BUILT, tested in browser.
+
+## Avatar Studio (Oct 2026)
+- After register/login (not guest) the app offers "Your hero photo": camera selfie (getUserMedia) or photo upload, drag/zoom the face into an oval, placed on a Scoring Heroes player avatar (Batter/Bowler/Fielder, team colours). Also menu: Account > Photo avatar. Saved on-device (S.user.avatar2, player photo). BUILT, tested in browser with a fake camera.
+- NOT AI: it is manual placement with a soft-edged oval, no automatic face detection or real face-swap model. Real face-swap needs a model (verify licensing/privacy) - NOT BUILT.
