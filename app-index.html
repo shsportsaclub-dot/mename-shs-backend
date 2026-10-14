@@ -343,7 +343,7 @@ const P=id=>S.players.find(p=>p.id===id)||(S.rt&&S.rt.players[id]);
 const T=id=>S.teams.find(t=>t.id===id)||(S.rt&&S.rt.teams[id]);
 const nm=id=>(P(id)||{}).name||'-';
 const sh=id=>{const n=nm(id).split(' ');return n.length>1?n[0][0]+'. '+n.slice(1).join(' '):n[0]};
-const mx=m=>{setFmt(m);return m.overs*BPO};
+const mx=m=>{setFmt(m);return (m.cur===1&&m.ovr2?m.ovr2:m.overs)*BPO};
 const maxWk=(m,i)=>Math.min(10,((m.xi[m.innings[i].bat]||[]).length)-1);
 const can=()=>S.user&&(S.user.role==='admin'||S.user.role==='scorer');
 const isAdmin=()=>S.user&&S.user.role==='admin';
@@ -2444,7 +2444,7 @@ function tDRS(m){
   ${can()?`<div class="row" style="margin-top:10px"><span class="mu sm">Reviews per innings</span><button class="btn sm ghost" data-a="drsAllow" data-v="-1">-</button><b>${D.allow}</b><button class="btn sm ghost" data-a="drsAllow" data-v="1">+</button></div>
   <form data-f="drsRec" style="margin-top:12px"><div class="b">Record a review</div>
   <div class="row"><label style="flex:1">Asked by<select name="team">${ids.map(t=>`<option value="${t}">${esc(T(t).name)}</option>`).join('')}</select></label><label style="flex:1">Type<select name="kind"><option>LBW</option><option>Caught behind</option><option>Caught</option><option>Run out</option><option>Stumped</option><option>Other</option></select></label></div>
-  <div class="row"><label style="flex:1">On-field decision<select name="onf"><option>Out</option><option>Not out</option></select></label><label style="flex:1">Third umpire result<select name="res"><option value="over">Decision changed</option><option value="stay">Decision stays</option><option value="call">Umpire's call (stays)</option></select></label></div>
+  <div class="row"><label style="flex:1">On-field decision<select name="onf"><option>Out</option><option>Not out</option></select></label><label style="flex:1">Third umpire result<select name="res"><option value="over">Decision changed</option><option value="stay">Decision stays</option><option value="call">Umpire's call (stays)</option><option value="nb">No-ball (review kept)</option><option value="tech">Technology failure (review kept)</option></select></label></div>
   <label>Note (optional)<input name="note" placeholder="e.g. ball pitched outside leg"></label>
   <button class="btn wide" style="margin-top:8px">Save review</button></form>`:'<div class="mu sm" style="margin-top:8px">Only the scorer or organiser records reviews.</div>'}</div>
   <div class="card"><h3>Review log</h3>${here.length?here.map(x=>`<div class="item"><div style="flex:1"><div class="b">${esc(T(x.team).short)} - ${esc(x.kind)} <span class="pill">${esc(x.out)}</span></div><div class="mu sm">On-field: ${esc(x.onf)}${x.note?' | '+esc(x.note):''} | ${esc(x.at)}</div></div></div>`).join(''):'<div class="mu">No reviews in this innings.</div>'}</div>
@@ -2452,7 +2452,7 @@ function tDRS(m){
 Object.assign(A,{drsAllow(d){const m=curM();if(!can())return;const D=drsInit(m);D.allow=Math.max(0,Math.min(5,D.allow+(+d.v)));commit()}});
 Object.assign(F,{drsRec(fd){const m=curM();if(!can()||!m)return;const D=drsInit(m),s=st(m),t=fd.get('team'),res=fd.get('res');
  const lost=res==='stay';const k=t+':'+s.i;if(lost)D.used[k]=(D.used[k]||0)+1;
- const out={over:'Overturned - review kept',stay:'Not changed - review lost',call:"Umpire's call - review kept"}[res];
+ const out={over:'Overturned - review kept',stay:'Not changed - review lost',call:"Umpire's call - review kept",nb:'No-ball - review kept',tech:'Technology failure - review kept'}[res];
  const at=fmtOv(s.k.lg)+' ov';
  D.log.push({id:uid(),inn:s.i,team:t,kind:fd.get('kind'),onf:fd.get('onf'),res,out,note:fd.get('note')||'',at,t:Date.now()});
  S.messages.push({id:uid(),text:'DRS: '+T(t).short+' reviewed '+fd.get('kind')+' - '+out,kind:'alert',t:Date.now(),off:false});commit();toast('Review saved')}});
@@ -2461,13 +2461,13 @@ function tDLS(m){
   
   const recs=m.dlsRec||[];
   return `<div class="card"><h3>DLS (rain-affected matches)</h3>
-  <div class="mu sm" style="margin:4px 0 8px">Official targets come from the umpires using the ICC Duckworth-Lewis-Stern software. Enter that official figure in <b>Record official DLS</b>. SH does not guess or estimate it.</div>
+  <div class="mu sm" style="margin:4px 0 8px">If the umpires give an official figure (ICC Professional Edition software), enter it in <b>Record official DLS</b>. It overrides the calculator below.</div>
   ${can()?`<form data-f="dlsRec"><div class="b">Record official DLS</div>
   <div class="row"><label style="flex:1">Revised target<input name="target" type="number" min="1" required></label><label style="flex:1">In overs<input name="overs" type="number" step="0.1" min="1" required></label></div>
   <label>Reason / note<input name="note" placeholder="e.g. rain stopped play at 14.2 overs"></label>
   <button class="btn wide" style="margin-top:8px">Save official DLS</button></form>`:''}
   ${recs.length?recs.map(r=>`<div class="item"><div style="flex:1"><div class="b">Target ${r.target} from ${esc(String(r.overs))} overs <span class="pill">Official, entered by scorer</span></div><div class="mu sm">${esc(r.note||'')}</div></div></div>`).join(''):''}</div>
-  <div class="mu sm">SH does not calculate DLS targets. A DLS result needs the ICC's validated tables and the rules of the competition, so the umpires' official figure is recorded here.</div>`}
+  <div class="mu sm">Check the competition's own rules before using any calculated figure.</div>`}
 Object.assign(F,{
  dlsRec(fd){const m=curM();if(!can()||!m)return;(m.dlsRec=m.dlsRec||[]).push({id:uid(),target:+fd.get('target'),overs:fd.get('overs'),note:fd.get('note')||'',t:Date.now()});commit();toast('DLS saved')}});
 
@@ -3194,6 +3194,41 @@ setInterval(()=>{if(navigator.onLine!==false&&UI.sh.state==='offline')shPush()},
 Object.assign(A,{
   penOpen(d){const m=S.matches.find(x=>x.id===d.id);if(!m||m.status!=='live')return;UI.modal={t:'html',html:`<h3>Penalty runs</h3><form data-f="pen" data-id="${m.id}"><div class="mu sm" style="margin-bottom:8px">Added to ${esc(T(m.innings[m.cur].bat).name)}, the batting side. ICC: 5 penalty runs, for example for repeated time-wasting by the fielding side, deliberate ball damage, or a fielder's unfair movement.</div><label>Reason<select name="why">${opt([['Time-wasting','Time-wasting'],['Ball condition','Ball condition'],['Unfair play','Unfair play'],['Other','Other']],'Time-wasting')}</select></label><label>Runs<input name="r" type="number" min="1" max="5" value="5"></label><button class="btn wide">Add penalty</button></form>`};renderModal()}});
 Object.assign(F,{pen(fd,el){const m=S.matches.find(x=>x.id===(el&&el.dataset?el.dataset.id:UI.sid));if(!m)return;const inn=m.innings[m.cur];(inn.pen=inn.pen||[]).push({r:Math.max(1,Math.min(5,+fd.get('r')||5)),why:fd.get('why')||'',t:Date.now()});UI.modal=null;checkEnd(m);commit();toast('Penalty runs added: '+inn.pen[inn.pen.length-1].r)}});
+/* ---------------- DLS STANDARD EDITION (ICC resource table) ---------------- */
+const DLS_T=(()=>{const rows=`100.0 93.4 85.1 74.9 62.7 49.0 34.9 22.0 11.9 4.7|99.1 92.6 84.5 74.4 62.5 48.9 34.9 22.0 11.9 4.7|98.1 91.7 83.8 74.0 62.2 48.8 34.9 22.0 11.9 4.7|97.1 90.9 83.2 73.5 61.9 48.6 34.9 22.0 11.9 4.7|96.1 90.0 82.5 73.0 61.6 48.5 34.8 22.0 11.9 4.7|95.0 89.1 81.8 72.5 61.3 48.4 34.8 22.0 11.9 4.7|93.9 88.2 81.0 72.0 61.0 48.3 34.8 22.0 11.9 4.7|92.8 87.3 80.3 71.4 60.7 48.1 34.7 22.0 11.9 4.7|91.7 86.3 79.5 70.9 60.3 47.9 34.7 22.0 11.9 4.7|90.5 85.3 78.7 70.3 59.9 47.8 34.6 22.0 11.9 4.7|89.3 84.2 77.8 69.6 59.5 47.6 34.6 22.0 11.9 4.7|88.0 83.1 76.9 69.0 59.1 47.4 34.5 22.0 11.9 4.7|86.7 82.0 76.0 68.3 58.7 47.1 34.5 21.9 11.9 4.7|85.4 80.9 75.0 67.6 58.2 46.9 34.4 21.9 11.9 4.7|84.1 79.7 74.1 66.8 57.7 46.6 34.3 21.9 11.9 4.7|82.7 78.5 73.0 66.0 57.2 46.4 34.2 21.9 11.9 4.7|81.3 77.2 72.0 65.2 56.6 46.1 34.1 21.9 11.9 4.7|79.8 75.9 70.9 64.4 56.0 45.8 34.0 21.9 11.9 4.7|78.3 74.6 69.7 63.5 55.4 45.4 33.9 21.9 11.9 4.7|76.7 73.2 68.6 62.5 54.8 45.1 33.7 21.9 11.9 4.7|75.1 71.8 67.3 61.6 54.1 44.7 33.6 21.8 11.9 4.7|73.5 70.3 66.1 60.5 53.4 44.2 33.4 21.8 11.9 4.7|71.8 68.8 64.8 59.5 52.6 43.8 33.2 21.8 11.9 4.7|70.1 67.2 63.4 58.4 51.8 43.3 33.0 21.7 11.9 4.7|68.3 65.6 62.0 57.2 50.9 42.8 32.8 21.7 11.9 4.7|66.5 63.9 60.5 56.0 50.0 42.2 32.6 21.6 11.9 4.7|64.6 62.2 59.0 54.7 49.0 41.6 32.3 21.6 11.9 4.7|62.7 60.4 57.4 53.4 48.0 40.9 32.0 21.5 11.9 4.7|60.7 58.6 55.8 52.0 47.0 40.2 31.6 21.4 11.9 4.7|58.7 56.7 54.1 50.6 45.8 39.4 31.2 21.3 11.9 4.7|56.6 54.8 52.4 49.1 44.6 38.6 30.8 21.2 11.9 4.7|54.4 52.8 50.5 47.5 43.4 37.7 30.3 21.1 11.9 4.7|52.2 50.7 48.6 45.9 42.0 36.8 29.8 20.9 11.9 4.7|49.9 48.5 46.7 44.1 40.6 35.8 29.2 20.7 11.9 4.7|47.6 46.3 44.7 42.3 39.1 34.7 28.5 20.5 11.8 4.7|45.2 44.1 42.6 40.5 37.6 33.5 27.8 20.2 11.8 4.7|42.7 41.7 40.4 38.5 35.9 32.2 27.0 19.9 11.8 4.7|40.2 39.3 38.1 36.5 34.2 30.8 26.1 19.5 11.7 4.7|37.6 36.8 35.8 34.3 32.3 29.4 25.1 19.0 11.6 4.7|34.9 34.2 33.4 32.1 30.4 27.8 24.0 18.5 11.5 4.7|32.1 31.6 30.8 29.8 28.3 26.1 22.8 17.9 11.4 4.7|29.3 28.9 28.2 27.4 26.1 24.2 21.4 17.1 11.2 4.7|26.4 26.0 25.5 24.8 23.8 22.3 19.9 16.2 10.9 4.7|23.4 23.1 22.7 22.2 21.4 20.1 18.2 15.2 10.5 4.7|20.3 20.1 19.8 19.4 18.8 17.8 16.4 13.9 10.1 4.6|17.2 17.0 16.8 16.5 16.1 15.4 14.3 12.5 9.4 4.6|13.9 13.8 13.7 13.5 13.2 12.7 12.0 10.7 8.4 4.5|10.6 10.5 10.4 10.3 10.2 9.9 9.5 8.7 7.2 4.2|7.2 7.1 7.1 7.0 7.0 6.8 6.6 6.2 5.5 3.7|3.6 3.6 3.6 3.6 3.6 3.5 3.5 3.4 3.2 2.5`.split('|').map(r=>r.split(' ').map(Number));const t=[];for(let u=0;u<=50;u++)t[u]=u===0?new Array(10).fill(0):rows[50-u];return t})();
+function dlsR(u,w){u=Math.max(0,Math.min(50,u));if(w>=10)return 0;const a=Math.floor(u),b=Math.min(50,a+1),f=u-a;return DLS_T[a][w]*(1-f)+DLS_T[b][w]*f}
+const dlsOv=v=>{const [o,b]=String(v||'0').split('.');return (+o||0)+((+b||0)/6)};
+function dlsInn(P,start){let lost=0;(P.ints||[]).forEach(q=>{if(q.left>0&&q.lost>0)lost+=dlsR(q.left,q.wk)-dlsR(Math.max(0,q.left-q.lost),q.wk)});
+  let R=dlsR(start,0)-lost;if(P.end&&P.end.left>0)R-=dlsR(P.end.left,P.end.wk);return{R,lost}}
+function dlsCalc(x){const g=x.g50,S=x.s1,i1=dlsInn(x.t1,x.o1),i2=dlsInn(x.t2,x.o2),R1=i1.R,R2=i2.R;let T,par;
+  if(R2<R1){par=Math.floor(S*R2/R1);T=par+1}else if(R2===R1){par=S;T=S+1}else{par=Math.floor(S+g*(R2-R1)/100);T=par+1}
+  return{S,R1,R2,g,T,par,o2:x.o2,o1:x.o1}}
+const dlsNum=(fd,k)=>+fd.get(k)||0;
+const dlsInts=(fd,p)=>[1,2].map(n=>({left:dlsOv(fd.get(p+'l'+n)),wk:dlsNum(fd,p+'w'+n),lost:dlsOv(fd.get(p+'x'+n))})).filter(q=>q.left>0&&q.lost>0);
+function dlsRow(p,n,l){return `<div class="row"><label style="flex:1">${l} overs left<input name="${p}l${n}" placeholder="e.g. 14.2"></label><label style="flex:1">Wickets down<input name="${p}w${n}" type="number" min="0" max="9"></label><label style="flex:1">Overs lost<input name="${p}x${n}" placeholder="e.g. 5"></label></div>`}
+{const old=tDLS;tDLS=function(m){
+  if(m.bpo===5)return old(m)+'<div class="mu sm">DLS is not defined for The Hundred. Record the official figure from the match officials above.</div>';
+  const o=UI.dlsOut&&UI.dlsOut.mid===m.id?UI.dlsOut:null,s1=m.innings[0]?calc(m,0).runs:0;
+  const res=o?`<div class="card" style="border:1px solid var(--ac)"><div class="b" style="font-size:18px">Revised target: ${o.T} from ${o.o2} overs</div>
+    <div class="mu sm" style="margin:6px 0">Par score (a tie): ${o.par}. Team 1 scored ${o.S} with ${o.R1.toFixed(1)}% resources. Team 2 has ${o.R2.toFixed(1)}% resources. G50 = ${o.g}.</div>
+    ${can()?`<div class="row" style="gap:8px;margin-top:6px"><button class="btn sm" data-a="dlsApply">Apply to this match</button><button class="btn sm ghost" data-a="dlsSave">Save record only</button></div>`:''}</div>`:'';
+  return old(m)+`<div class="card"><h3>DLS calculator (Standard Edition)</h3>
+  <div class="mu sm" style="margin:4px 0 8px">Uses the ICC's published Standard Edition resource table. ICC international matches use the Professional Edition, so an official figure from the umpires always overrides this one. Part overs are interpolated between table rows.</div>
+  <form data-f="dlsCalc"><div class="row"><label style="flex:1">Team 1 score<input name="s1" type="number" min="0" value="${s1}"></label><label style="flex:1">Team 1 overs at start<input name="o1" value="${m.overs}"></label><label style="flex:1">Team 2 overs at start<input name="o2" value="${m.overs}"></label></div>
+  <div class="b" style="margin:8px 0 2px">Team 1 interruptions</div>${dlsRow('a',1,'Stopped with')}${dlsRow('a',2,'Stopped with')}
+  <div class="b" style="margin:8px 0 2px">Team 2 interruptions</div>${dlsRow('b',1,'Stopped with')}${dlsRow('b',2,'Stopped with')}
+  <div class="row"><label style="flex:1">Team 2 innings ended early: overs left<input name="bel" placeholder="blank if not"></label><label style="flex:1">Wickets down<input name="bew" type="number" min="0" max="9"></label></div>
+  <label>Level of cricket<select name="g50"><option value="200">Club, school, women's, associate (G50 200)</option><option value="245">Full members, first-class (G50 245)</option></select></label>
+  <button class="btn wide" style="margin-top:8px">Calculate target</button></form></div>${res}`}}
+Object.assign(F,{dlsCalc(fd){const m=curM();if(!m)return;
+  const be=dlsOv(fd.get('bel')),x={s1:+fd.get('s1')||0,o1:dlsOv(fd.get('o1'))||m.overs,o2:dlsOv(fd.get('o2'))||m.overs,g50:+fd.get('g50')||200,
+   t1:{ints:dlsInts(fd,'a')},t2:{ints:dlsInts(fd,'b'),end:be>0?{left:be,wk:dlsNum(fd,'bew')}:null}};x.g=x.g50;
+  const r=dlsCalc(x);r.mid=m.id;const eff=Math.max(0,x.o2-x.t2.ints.reduce((a,q)=>a+q.lost,0));r.o2=Math.round(eff*10)/10;UI.dlsOut=r;render()}});
+Object.assign(A,{
+  dlsSave(){const m=curM(),o=UI.dlsOut;if(!can()||!m||!o)return;(m.dlsRec=m.dlsRec||[]).push({id:uid(),target:o.T,overs:o.o2,note:'DLS Standard Edition, calculated. Par '+o.par+', R1 '+o.R1.toFixed(1)+'%, R2 '+o.R2.toFixed(1)+'%, G50 '+o.g,calc:1,t:Date.now()});commit();toast('DLS saved')},
+  dlsApply(){const m=curM(),o=UI.dlsOut;if(!can()||!m||!o)return;m.target=o.T;m.ovr2=Math.ceil(o.o2);m.dlsApplied={T:o.T,par:o.par,o2:o.o2,t:Date.now()};(m.dlsRec=m.dlsRec||[]).push({id:uid(),target:o.T,overs:o.o2,note:'DLS Standard Edition, applied to the chase. Par '+o.par,calc:1,t:Date.now()});
+    if(m.innings[1]&&m.status==='done'&&false){}if(m.innings[1])checkEnd(m);commit();toast('Revised target '+o.T+' applied')}});
+{const f0=checkEnd;checkEnd=function(m){f0(m);if(m.status==='done'&&m.dlsApplied&&m.result&&!/DLS/.test(m.result))m.result+=' (DLS method)'}}
 /* ---------------- THE HUNDRED (100 balls, 5-ball sets) ---------------- */
 {const f0=newMatch;newMatch=function(d){const h=String(d.overs)==='20.5';const m=f0(h?Object.assign({},d,{overs:20}):d);if(h){m.bpo=5;m.nbp=2;m.fmt='hundred';m.rules=Object.assign(m.rules||{},{ppb:25})}return m}}
 {const f0=vScore;vScore=function(){const o=f0();const m=S.matches.find(x=>x.id===UI.sid)||S.matches.filter(x=>x.status!=='done').slice(-1)[0];
