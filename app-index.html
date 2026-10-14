@@ -2526,7 +2526,7 @@ function heroHome(){
  if(real){try{const C=career();const top=Object.entries(C).filter(([id,c])=>c.r>0).sort((a,b)=>b[1].r-a[1].r).slice(0,5);pl=top.length?top.map(([id,c],i)=>`<div class="it"><span>${i+1}</span><span>${esc(nm(id))}</span><b class="v">${c.r}</b></div>`).join(''):''}catch(e){}}
  const reg=S.user?'':'<button class="hh-reg" data-a="go" data-v="login">Register now</button>';
  const feed=!j?'<div class="mu">Loading live scores...</div>':!j.ok?`<div class="mu">Live feed unavailable: ${esc(j.error||'')}</div>`:'';
- const body=sp!=='cricket'?`<div class="hh-box"><h3>${esc((HSPORTS.find(x=>x[0]===sp)||[0,0,sp])[2])}</h3><div class="mu">The ${esc(sp)} scoring pack is not built yet. SH supports cricket today. Other sports show here once their own rules and scorer are ready.</div><button class="btn sm" style="margin-top:10px" data-a="hsport" data-v="cricket">Back to Cricket</button></div>`:`
+ const body=sp!=='cricket'?shBody(sp):`
  ${feed}
  <div class="hh-grid"><div>
   <div class="hh-box"><h3>Live matches <span class="n">${live.length}</span></h3>${live.length?`<div class="hh-live">${live.map(hhCard).join('')}</div>`:'<div class="mu">No live matches in this filter right now.</div>'}</div>
@@ -2539,7 +2539,7 @@ function heroHome(){
  </div></div>`;
  return `<div class="hh-sr"><input data-c="hq" placeholder="Search teams, venues, series..." value="${esc(h.q||'')}">${reg}</div>
  <div class="hh-nav">${HNAV.map(([k,e,l])=>`<button class="${k==='home'?'on':''}" data-a="hnav" data-v="${k}"><i>${e}</i>${l}</button>`).join('')}</div>
- <div class="hh-sports">${HSPORTS.map(([k,e,l])=>`<button class="${sp===k?'on':''}" data-a="hsport" data-v="${k}"><i>${e}</i>${l}</button>`).join('')}</div>
+ ${shRow(sp)}
  <div class="hh-fil">${sel('cat','Category',[['all','All matches'],['int','International'],['lg','League'],['dom','Domestic']])}${sel('g','Gender',[['all','Both'],['men','Men'],['women','Women']])}${sel('f','Format',[['all','All formats'],['t20','T20'],['odi','ODI'],['test','Test']])}${sel('y','Year',[['all','All years'],...yrs.map(y=>[y,y])])}${sel('mo','Month',[['all','All months'],...mos.map((m,i)=>[i,m])])}${sel('loc','Location',[['all','All locations'],...locs.map(x=>[x,x])])}${sel('ser','Series',[['all','All series'],...sers.map(x=>[x,x])])}</div>
  <div class="hh-tabs">${tabs.map(([k,l])=>`<button class="${tabOn(k)?'on':''}" data-a="htab2" data-v="${k}">${l}</button>`).join('')}</div>${body}`}
 Object.assign(A,{
@@ -3553,7 +3553,7 @@ function s2Sum(m){if(m.sport==='football'){const[a,b]=fbScore(m);return a+' - '+
   if(m.sport==='carrom')return crState(m).sc.join(' - ');
   if(m.sport==='generic')return gnSc(m).join(' - ');return ''}
 XV.sgames=function(){const L=S.sg.slice().reverse(),B=(k,l)=>`<button class="btn sm ghost" data-a="sgNew" data-v="${k}">${l}</button>`;
-  return `<div class="bar"><h2>Other sports scorers</h2></div><div class="card"><div class="b">Start a new match</div><div class="row" style="gap:6px;flex-wrap:wrap;margin-top:6px">${B('football','⚽ Football')}${B('tennis','\u{1F3BE} Tennis')}${S2K.map(k=>B(k,(RS[k]?RS[k].ic:S2I[k])+' '+S2N[k])).join('')}</div></div>
+  return `<div class="bar"><h2>Other sports scorers</h2></div><div class="card"><div class="b">Start a new match</div><div class="row" style="gap:6px;flex-wrap:wrap;margin-top:6px">${shHubKeys().map(k=>B(k,shLab(k))).join('')}</div></div>
   ${L.length?L.map(m=>`<div class="mcm" data-a="sgOpen" data-id="${m.id}"><div class="b">${s2ic(m)} ${m.sport==='golf'||m.sport==='generic'&&!m.tn?esc(m.cfg&&m.cfg.course||S2N[m.sport]):esc(m.tn[0])+' vs '+esc(m.tn[1])}</div><div class="mu sm">${esc(s2Sum(m))} | ${esc(m.date)}${m.result?' | '+esc(m.result):''}</div></div>`).join(''):'<div class="empty">No matches yet. Start one above.</div>'}`};
 {const f0=XV.sgnew;XV.sgnew=function(){const sp=UI.sgnew||'football';if(sp==='football'||sp==='tennis')return f0();
   const nm=`<div class="row"><label style="flex:1">${sp==='tt'||sp==='bd'||sp==='bd15'||sp==='pb'?'Player or pair 1':'Team 1'}<input name="n0" placeholder="name"></label><label style="flex:1">${sp==='tt'||sp==='bd'||sp==='bd15'||sp==='pb'?'Player or pair 2':'Team 2'}<input name="n1" placeholder="name"></label></div>`;
@@ -3580,6 +3580,103 @@ Object.assign(F,{s2New(fd){const sp=fd.get('sp'),n0=(fd.get('n0')||'').trim()||'
 {const f0=XV.sgame;XV.sgame=function(){const m=sgCur();if(!m)return '<div class="empty">Match not found.</div>';if(m.sport==='football'||m.sport==='tennis')return f0();
   const v=RS[m.sport]?rsView(m):m.sport==='basketball'?bbView(m):m.sport==='rugby'?rgView(m):m.sport==='kabaddi'?kbView(m):m.sport==='golf'?golfView(m):m.sport==='chess'?chView(m):m.sport==='carrom'?crView(m):gnView(m);
   return `<div class="bar"><h2>${s2ic(m)} ${m.sport==='golf'?esc(m.cfg.course||'Golf round'):esc(m.tn[0])+' vs '+esc(m.tn[1])}</h2></div>`+v}}
+/* ---------------- GLOBAL SPORTS CATALOGUE + COUNTRY PERSONALISATION ---------------- */
+const CAT_ST=['AVAILABLE','LIMITED','COMING SOON','DISABLED'];
+/* [id, name, icon, category, aliases and local names, formats, status] - status is module readiness, kept apart from visibility */
+const CAT0=[['cricket','Cricket','\u{1F3CF}','Bat and ball',['क्रिकेट','క్రికెట్','crkt'],['Test','ODI','T20','T10','The Hundred'],'AVAILABLE'],
+['football','Football','⚽','Team ball',['soccer','फुटबॉल','ఫుట్‌బాల్'],['11-a-side','Extra time and penalties'],'LIMITED'],
+['tennis','Tennis','\u{1F3BE}','Racket',['टेनिस','టెన్నిస్'],['Best of 3','Best of 5','No-ad'],'LIMITED'],
+['kabaddi','Kabaddi','\u{1F93C}','Contact team',['कबड्डी','కబడ్డీ','pkl'],['Standard 7-a-side'],'LIMITED'],
+['pickleball','Pickleball','\u{1F3D3}','Racket',['पिकलबॉल','పికిల్‌బాల్'],['Singles','Doubles'],'LIMITED'],
+['hockey','Hockey','\u{1F3D1}','Team ball',['field hockey','हॉकी','హాకీ'],[],'COMING SOON'],
+['badminton','Badminton','\u{1F3F8}','Racket',['shuttle','बैडमिंटन','బ్యాడ్మింటన్'],['3x21','3x15 (BWF 2026)'],'LIMITED'],
+['volleyball','Volleyball','\u{1F3D0}','Team ball',['वॉलीबॉल','వాలీబాల్','beach volleyball'],['Indoor','Beach'],'LIMITED'],
+['basketball','Basketball','\u{1F3C0}','Team ball',['बास्केटबॉल','బాస్కెట్‌బాల్','hoops'],['FIBA','NBA'],'LIMITED'],
+['baseball','Baseball','⚾','Bat and ball',['बेसबॉल','బేస్‌బాల్'],[],'COMING SOON'],
+['rugby','Rugby','\u{1F3C9}','Contact team',['रग्बी','రగ్బీ'],['Union','Sevens','League'],'LIMITED'],
+['table-tennis','Table Tennis','\u{1F3D3}','Racket',['ping pong','tt','टेबल टेनिस','టేబుల్ టెన్నిస్'],['Best of 5','Best of 7'],'LIMITED'],
+['kho-kho','Kho-Kho','\u{1F3C3}','Chase and tag',['खो-खो','ఖో-ఖో'],[],'COMING SOON'],
+['wrestling','Wrestling / Kushti','\u{1F93C}','Combat',['kushti','कुश्ती','కుస్తీ'],[],'COMING SOON'],
+['athletics','Athletics / Running','\u{1F3C3}','Track and field',['running','track','एथलेटिक्स','అథ్లెటిక్స్'],[],'COMING SOON'],
+['swimming','Swimming','\u{1F3CA}','Water',['तैराकी','ఈత'],[],'COMING SOON'],
+['boxing','Boxing','\u{1F94A}','Combat',['मुक्केबाजी','బాక్సింగ్'],[],'COMING SOON'],
+['archery','Archery','\u{1F3F9}','Precision',['तीरंदाजी','విలువిద్య'],[],'COMING SOON'],
+['chess','Chess','♟️','Mind sport',['शतरंज','చదరంగం'],['Classical','Rapid','Blitz'],'LIMITED'],
+['handball','Handball','\u{1F93E}','Team ball',['हैंडबॉल','హ్యాండ్‌బాల్'],[],'COMING SOON'],
+['golf','Golf','⛳','Precision',['गोल्फ','గోల్ఫ్'],['Stroke play','Stableford'],'LIMITED'],
+['carrom','Carrom','\u{1F534}','Board and table',['carom','कैरम','క్యారమ్'],['Singles','Doubles'],'LIMITED']];
+const CAT_SCORER={football:['football'],tennis:['tennis'],kabaddi:['kabaddi'],pickleball:['pb'],badminton:['bd15','bd'],volleyball:['vb','vbb'],basketball:['basketball'],rugby:['rugby'],'table-tennis':['tt'],chess:['chess'],golf:['golf'],carrom:['carrom']};
+const COUNTRIES=[['IN','India','+91'],['PK','Pakistan','+92'],['BD','Bangladesh','+880'],['LK','Sri Lanka','+94'],['NP','Nepal','+977'],['AU','Australia','+61'],['NZ','New Zealand','+64'],['GB','United Kingdom','+44'],['US','United States','+1'],['AE','United Arab Emirates','+971'],['ZA','South Africa','+27'],['CA','Canada','+1']];
+const TZC={'Asia/Kolkata':'IN','Asia/Calcutta':'IN','Asia/Karachi':'PK','Asia/Dhaka':'BD','Asia/Colombo':'LK','Asia/Kathmandu':'NP','Europe/London':'GB','Asia/Dubai':'AE','Africa/Johannesburg':'ZA','Pacific/Auckland':'NZ','Australia/Sydney':'AU','Australia/Melbourne':'AU','Australia/Perth':'AU'};
+/* India starting list as approved; display puts Kabaddi and Pickleball straight after Cricket. '*' is the global default for an unknown country. */
+const CDEF0={IN:['cricket','kabaddi','pickleball','hockey','football','tennis','badminton','volleyball','basketball'],'*':['cricket','football','tennis','basketball','badminton','volleyball']};
+function shInit(){S.cat=S.cat||CAT0.map(r=>({id:r[0],name:r[1],icon:r[2],cat:r[3],al:r[4].slice(),fm:r[5].slice(),st:r[6],on:1}));S.cdef=S.cdef||JSON.parse(JSON.stringify(CDEF0));S.prefs=S.prefs||{country:'',sports:[],primary:'cricket',lang:'en',asked:0};S.cataudit=S.cataudit||[]}
+shInit();
+const shGet=id=>S.cat.find(x=>x.id===id),shAdmin=()=>S.user&&S.user.role==='admin';
+const shSuggest=()=>{try{return TZC[Intl.DateTimeFormat().resolvedOptions().timeZone]||''}catch(e){return ''}};
+function shAudit(t){S.cataudit.unshift({t:Date.now(),by:S.user?S.user.name:'',x:t});S.cataudit=S.cataudit.slice(0,100)}
+function shDefaults(){const c=S.prefs.country;return (S.cdef[c]||S.cdef['*']||[]).filter(id=>shGet(id)&&shGet(id).on)}
+function shMine(){return S.prefs.sports.filter(id=>shGet(id)&&shGet(id).on)}
+function shRowIds(){const mine=shMine(),base=mine.length?mine.concat(shDefaults().filter(x=>!mine.includes(x))):shDefaults();const ids=['cricket'].concat(base.filter(x=>x!=='cricket'));
+  const p=S.prefs.primary;if(mine.length&&p&&p!=='cricket'&&ids.includes(p)){ids.splice(ids.indexOf(p),1);ids.splice(1,0,p)}return [...new Set(ids)]}
+const shStCls=s=>s==='AVAILABLE'?'ok':s==='LIMITED'?'':'mu';
+const shStTxt=s=>s==='LIMITED'?'Scorer only':s==='COMING SOON'?'Coming soon':s==='DISABLED'?'Disabled':'Available';
+function shScorers(id){const st=(shGet(id)||{}).st;if(id==='cricket')return['cricket'];if(!(st==='AVAILABLE'||st==='LIMITED'))return[];return CAT_SCORER[id]||[]}
+{const st=document.createElement('style');st.textContent='.hh-sports{flex-wrap:wrap!important;overflow:visible!important}.hh-sports button{flex:0 0 auto}';document.head.appendChild(st)}
+function shRow(sp){const ids=shRowIds().slice(0,6);return `<div class="hh-sports">${ids.map(id=>{const c=shGet(id);return `<button class="${sp===id?'on':''}" data-a="hsport" data-v="${id}" title="${esc(shStTxt(c.st))}"><i>${c.icon}</i>${esc(c.name.split(' / ')[0])}</button>`}).join('')}<button data-a="shMore"><i>⋯</i>More</button></div>`}
+function shMatchesOf(id){const keys=CAT_SCORER[id]||[];return S.sg.filter(m=>keys.includes(m.sport))}
+function shBody(sp){const c=shGet(sp);if(!c)return '<div class="hh-box"><div class="mu">Sport not found in the catalogue.</div></div>';const ks=shScorers(sp),L=shMatchesOf(sp).slice().reverse(),go=L.filter(m=>!m.result),done=L.filter(m=>m.result);
+  return `<div class="hh-box"><h3>${c.icon} ${esc(c.name)} <span class="n">${esc(shStTxt(c.st))}</span></h3>
+  <div class="mu sm">${c.fm.length?'Formats: '+esc(c.fm.join(', ')):'No formats configured yet.'}</div>
+  ${ks.length?`<div class="row" style="gap:8px;flex-wrap:wrap;margin-top:10px">${ks.map(k=>`<button class="btn sm" data-a="sgNew" data-v="${k}">Start scoring${ks.length>1?': '+esc(S2N[k]||k):''}</button>`).join('')}<button class="btn sm ghost" data-a="go" data-v="sgames">My ${esc(c.name)} matches</button></div>`:`<div class="need" style="margin-top:10px">${c.st==='DISABLED'?'This sport is switched off by the admin.':'The '+esc(c.name)+' scorer is not built yet. Status: '+esc(shStTxt(c.st))+'. It will get its own rules-based scorer, not a renamed one.'}</div>`}</div>
+  ${ks.length?`<div class="hh-box"><h3>Live</h3><div class="mu">No live feed for ${esc(c.name)} yet. Only matches scored on this device appear below, labelled as such.</div></div>
+  <div class="hh-box"><h3>In progress (scored here) <span class="n">${go.length}</span></h3>${go.length?go.map(m=>`<div class="mcm" data-a="sgOpen" data-id="${m.id}"><div class="b">${esc(m.tn[0])} vs ${esc(m.tn[1])}</div><div class="mu sm">${esc(s2Sum(m))} | ${esc(m.date)}</div></div>`).join(''):'<div class="mu">None. Start scoring above, or open Results.</div>'}</div>
+  <div class="hh-box"><h3>Results <span class="n">${done.length}</span></h3>${done.length?done.slice(0,10).map(m=>`<div class="mcm" data-a="sgOpen" data-id="${m.id}"><div class="b">${esc(m.tn[0])} vs ${esc(m.tn[1])}</div><div class="mu sm">${esc(m.result)} | ${esc(m.date)}</div></div>`).join(''):'<div class="mu">No finished matches yet.</div>'}</div>`:''}
+  <button class="btn sm ghost" style="margin-top:8px" data-a="hsport" data-v="cricket">Back to Cricket</button>`}
+function shFind(q){q=(q||'').trim().toLowerCase();return S.cat.filter(c=>c.on&&(!q||c.name.toLowerCase().includes(q)||c.al.some(a=>a.toLowerCase().includes(q))||c.id.includes(q)))}
+function shList(q){const mine=shMine(),def=shDefaults(),all=shFind(q),has=id=>all.some(x=>x.id===id);
+  const row=c=>{const sel=mine.includes(c.id);return `<div class="item" style="gap:8px;align-items:center"><span style="font-size:22px">${c.icon}</span><div style="flex:1"><b>${esc(c.name)}</b>${S.prefs.primary===c.id&&sel?' <span class="mu sm">(primary)</span>':''}<div class="mu sm">${esc(shStTxt(c.st))}${c.al.length?' | '+esc(c.al.slice(0,3).join(', ')):''}</div></div>${sel&&S.prefs.primary!==c.id?`<button class="btn sm ghost" data-a="shPrimary" data-v="${c.id}">Make primary</button>`:''}<button class="btn sm ${sel?'ghost':''}" data-a="shTog" data-v="${c.id}">${sel?'✓ Added':'Add'}</button><button class="btn sm ghost" data-a="shOpen" data-v="${c.id}">Open</button></div>`};
+  const sec=(t,ids)=>{const L=ids.filter(has).map(shGet);return L.length?`<div class="b" style="margin:10px 0 4px">${t}</div>${L.map(row).join('')}`:''};
+  const cn=(COUNTRIES.find(x=>x[0]===S.prefs.country)||[0,'your country'])[1];
+  const rest=all.map(c=>c.id).filter(id=>!mine.includes(id)&&!def.includes(id));
+  return (sec('My sports',mine)+sec(S.prefs.country?'Suggested for '+cn:'Suggested (global default)',def.filter(x=>!mine.includes(x)))+sec('All sports',rest))||'<div class="empty">No sport matches your search.</div>'}
+function shPanel(){return `<h3>All sports</h3><input data-c="shq" id="shq" placeholder="Search sport, other name or local-language name" value="${esc(UI.shq||'')}"><div id="shl" style="max-height:55vh;overflow:auto">${shList(UI.shq)}</div>`}
+Object.assign(A,{shMore(){UI.shq='';UI.modal={t:'html',html:shPanel()};render()},
+ shTog(d){const p=S.prefs;if(p.sports.includes(d.v)){p.sports=p.sports.filter(x=>x!==d.v);if(p.primary===d.v)p.primary=p.sports[0]||'cricket'}else{p.sports.push(d.v);if(p.sports.length===1)p.primary=d.v}commit();if(UI.modal&&UI.modal.t==='html'&&UI.view!=='mysports'){UI.modal.html=shPanel();render()}},
+ shPrimary(d){S.prefs.primary=d.v;commit();if(UI.modal&&UI.modal.t==='html'&&UI.view!=='mysports'){UI.modal.html=shPanel();render()}},
+ shOpen(d){UI.modal=null;UI.sport=d.v;UI.view='home';render()},
+ shCountry(d){S.prefs.country=d.v;commit()},
+ catAdd(){},catAct(d){if(!shAdmin())return;const c=shGet(d.v);c.on=c.on?0:1;shAudit((c.on?'Enabled ':'Disabled ')+c.name);commit()}});
+Object.assign(C,{shq(v){UI.shq=v;const l=document.getElementById('shl');if(l&&UI.modal&&UI.modal.t==='html'){UI.modal.html=shPanel();l.innerHTML=shList(v)}else render();if(UI.view==='mysports'){render()}const i=document.getElementById('shq');if(i&&UI.view==='mysports'){i.focus();i.setSelectionRange(v.length,v.length)}},
+ shCtry(v){S.prefs.country=v;commit()},
+ catSt(v,el){if(!shAdmin())return;const c=shGet(el.dataset.id);shAudit(c.name+': status '+c.st+' to '+v);c.st=v;commit()}});
+XV.mysports=function(){const sg=shSuggest(),p=S.prefs;
+  return `<div class="bar"><h2>My sports and country</h2></div><div class="card"><label>Country / region<select data-c="shCtry"><option value="">Not set (global default list)</option>${COUNTRIES.map(([k,n,d])=>`<option value="${k}" ${p.country===k?'selected':''}>${n} (${d})</option>`).join('')}</select></label>
+  ${sg&&sg!==p.country?`<div class="mu sm" style="margin-top:6px">Suggestion from your device time zone: ${esc((COUNTRIES.find(x=>x[0]===sg)||[0,sg])[1])}. <button class="btn sm ghost" data-a="shCountry" data-v="${sg}">Use it</button></div>`:''}
+  <div class="mu sm" style="margin-top:6px">Country only changes the suggestions. Your chosen sports, primary sport, matches and profile are never changed by it. Country, language and physical location are separate settings.</div></div>
+  <div class="card"><div class="b">Pick your sports (primary: ${esc((shGet(p.primary)||{name:'Cricket'}).name)})</div><div class="mu sm">Nothing is selected for you. Add the sports you follow or play, then choose a primary one: it becomes the default for the scorer.</div>
+  <input data-c="shq" id="shq" placeholder="Search sport, other name or local-language name" value="${esc(UI.shq||'')}" style="margin-top:8px"><div id="shl">${shList(UI.shq)}</div></div>`};
+XV.sportsadmin=function(){if(!shAdmin())return '<div class="bar"><h2>Sports catalogue</h2></div><div class="empty">Admins only.</div>';
+  const cd=UI.cdsel||'IN',lst=(S.cdef[cd]||[]).join(', ');
+  return `<div class="bar"><h2>Sports catalogue (admin)</h2></div><div class="mu sm" style="margin-bottom:8px">${S.cat.length} sports in the catalogue. The full approved 500+ list still has to be imported; no entries have been invented to reach a count.</div>
+  <div class="card" style="overflow-x:auto"><table><tr><th></th><th>Sport</th><th>Module status</th><th>Scorer</th><th></th></tr>${S.cat.map(c=>`<tr><td>${c.icon}</td><td>${esc(c.name)}${c.on?'':' (hidden)'}</td><td><select data-c="catSt" data-id="${c.id}" style="min-width:130px">${CAT_ST.map(s=>`<option ${c.st===s?'selected':''}>${s}</option>`).join('')}</select></td><td class="mu sm">${(CAT_SCORER[c.id]||(c.id==='cricket'?['cricket']:[])).length?'yes':'none'}</td><td><button class="btn sm ghost" data-a="catAct" data-v="${c.id}">${c.on?'Disable':'Enable'}</button></td></tr>`).join('')}</table></div>
+  <form class="card" data-f="catNew"><div class="b">Add a sport</div><div class="row"><label style="flex:1">Name<input name="name" required></label><label style="width:80px">Icon<input name="icon" value="\u{1F3C5}"></label></div><label>Category<input name="cat" placeholder="e.g. Racket"></label><label>Other names (comma separated, include local-language names)<input name="al"></label><label>Formats (comma separated)<input name="fm"></label><button class="btn wide">Add sport (status: COMING SOON)</button></form>
+  <form class="card" data-f="catDef"><div class="b">Country default list and order</div><label>Country<select name="ctry" data-c="cdsel">${[['*','Global default (unknown country)']].concat(COUNTRIES.map(x=>[x[0],x[1]])).map(([k,n])=>`<option value="${k}" ${cd===k?'selected':''}>${n}</option>`).join('')}</select></label><label>Sport ids in display order<textarea name="ids" rows="2">${esc(lst)}</textarea></label><div class="mu sm">Ids: ${S.cat.map(c=>c.id).join(', ')}. Cricket is always shown first on Home. The India list is the approved starting list, not a measured popularity ranking. Other countries need sources before they are filled in.</div><button class="btn wide" style="margin-top:6px">Save list</button>
+  <div class="mu sm" style="margin-top:8px">Preview: ${(S.cdef[cd]||[]).map(id=>(shGet(id)?shGet(id).icon+' '+shGet(id).name:'?')).join(' | ')||'empty (falls back to the global default)'}</div></form>
+  <div class="card"><div class="b">Audit log</div>${S.cataudit.length?S.cataudit.slice(0,20).map(a=>`<div class="mu sm">${new Date(a.t).toLocaleString()} | ${esc(a.by)} | ${esc(a.x)}</div>`).join(''):'<div class="mu">No changes yet.</div>'}</div>
+  <div class="mu sm">Note: this configuration is stored in this browser. Server-side storage and permission checks are the next step.</div>`};
+Object.assign(C,{cdsel(v){UI.cdsel=v;render()}});
+document.addEventListener('input',e=>{if(e.target.dataset&&e.target.dataset.c==='shq')C.shq(e.target.value)});
+Object.assign(F,{catNew(fd){if(!shAdmin())return;const name=(fd.get('name')||'').trim();if(!name)return;const id=name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');if(shGet(id)||S.cat.some(c=>c.name.toLowerCase()===name.toLowerCase())){toast('That sport already exists',3000);return}
+  const l=s=>(fd.get(s)||'').split(',').map(x=>x.trim()).filter(Boolean);S.cat.push({id,name,icon:(fd.get('icon')||'\u{1F3C5}').trim(),cat:(fd.get('cat')||'').trim(),al:l('al'),fm:l('fm'),st:'COMING SOON',on:1});shAudit('Added sport '+name);commit()},
+ catDef(fd){if(!shAdmin())return;const cc=fd.get('ctry'),ids=(fd.get('ids')||'').split(',').map(x=>x.trim()).filter(Boolean),bad=ids.filter(i=>!shGet(i));if(bad.length){toast('Unknown sport id: '+bad.join(', '),4000);return}S.cdef[cc]=ids;shAudit('Country list '+cc+': '+ids.join(', '));commit();toast('Saved',1500)}});
+MENU2[0][1].splice(5,0,['mysports','⭐','My sports and country'],['sportsadmin','\u{1F6E0}️','Sports catalogue (admin)']);
+{const f0=render;render=function(){if(S.user&&S.prefs&&!S.prefs.asked&&UI.stage==='app'&&UI.view==='home'&&!UI.modal){S.prefs.asked=1;UI.view='mysports';try{save()}catch(e){}}return f0()}}
+/* Start-scoring hub: only sports whose scorer exists and whose status allows it; primary sport first */
+function shHubKeys(){const keys=[];const order=[S.prefs.primary].concat(shMine(),S.cat.map(c=>c.id));[...new Set(order)].forEach(id=>{if(id!=='cricket')shScorers(id).forEach(k=>keys.push(k))});return keys}
+const shLab=k=>(k==='football'?'⚽ Football':k==='tennis'?'\u{1F3BE} Tennis':(RS[k]?RS[k].ic:S2I[k]||'')+' '+S2N[k]);
+{const f0=XV.sgnew;XV.sgnew=function(){const sp=UI.sgnew||'football';return `<div class="card"><label>Sport<select data-c="sgsp">${shHubKeys().map(k=>`<option value="${k}" ${k===sp?'selected':''}>${esc(S2N[k]||k.charAt(0).toUpperCase()+k.slice(1))}</option>`).join('')}</select></label></div>`+f0()}}
+Object.assign(C,{sgsp(v){UI.sgnew=v;render()}});
 /* ---------------- THE HUNDRED (100 balls, 5-ball sets) ---------------- */
 {const f0=newMatch;newMatch=function(d){const h=String(d.overs)==='20.5';const m=f0(h?Object.assign({},d,{overs:20}):d);if(h){m.bpo=5;m.nbp=2;m.fmt='hundred';m.rules=Object.assign(m.rules||{},{ppb:25})}return m}}
 {const f0=vScore;vScore=function(){const o=f0();const m=S.matches.find(x=>x.id===UI.sid)||S.matches.filter(x=>x.status!=='done').slice(-1)[0];
