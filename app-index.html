@@ -3255,6 +3255,113 @@ Object.assign(A,{rainOpen(d){const m=S.matches.find(x=>x.id===d.id);if(!m||m.sta
 Object.assign(F,{rain(fd,el){const m=S.matches.find(x=>x.id===(el&&el.dataset?el.dataset.id:UI.sid));if(!m)return;const inn=m.innings[m.cur],k=calc(m,m.cur),lost=dlsOv(fd.get('lost'));
   if(lost>0)(m.ints=m.ints||[]).push({inn:m.cur,left:Math.max(0,(mxi(m,m.cur)-inn.lg)/(m.bpo||6)),wk:k.wk,lost});
   UI.modal=null;if(fd.get('end')){dlsTerminate(m);commit();toast(m.result,5000)}else{commit();toast('Interruption saved. Open the DLS tab to get the revised target.',4500)}}});
+/* ---------------- OTHER SPORT SCORERS: FOOTBALL (IFAB laws) AND TENNIS (ITF rules) ---------------- */
+S.sg=S.sg||[];UI.sg=UI.sg||{};
+const sgGet=id=>S.sg.find(x=>x.id===id),sgCur=()=>sgGet(UI.sgid);
+const plNames=ti=>{const t=ti&&T(ti);return t?(t.players||[]).map(id=>(P(id)||{}).name).filter(Boolean):[]};
+/* ----- football ----- */
+const FPH={pre:'Not started',h1:'1st half',ht:'Half-time',h2:'2nd half',ft:'Full time',et1:'Extra time, 1st half',etb:'Extra time break',et2:'Extra time, 2nd half',etf:'End of extra time',pens:'Penalty shoot-out',done:'Finished'};
+function fbBase(m,ph){return ph==='h1'?0:ph==='h2'?m.half:ph==='et1'?2*m.half:ph==='et2'?2*m.half+m.et:0}
+function fbLen(m,ph){return ph==='h1'||ph==='h2'?m.half:m.et}
+function fbMin(m){const ph=m.ph;if(!(ph in {h1:1,h2:1,et1:1,et2:1}))return{n:0,lab:''};const el=Math.floor((Date.now()-m.clk)/60000),b=fbBase(m,ph),end=b+fbLen(m,ph),n=b+el+1;return n>end?{n,lab:end+'+'+(n-end)+"'"}:{n,lab:n+"'"}}
+function fbScore(m){let a=0,b=0;m.ev.forEach(e=>{if(e.ty==='goal'||e.ty==='pen')e.tm?b++:a++;else if(e.ty==='og')e.tm?a++:b++});return[a,b]}
+function fbPens(m){const k=m.ev.filter(e=>e.ty==='pk'),g=[0,0],n=[0,0];k.forEach(e=>{n[e.tm]++;if(e.ok)g[e.tm]++});
+  let done=false,win=null;const fi=m.pfirst||0,[x,y]=[g[fi],g[1-fi]],[nx,ny]=[n[fi],n[1-fi]];
+  if(nx<=5&&ny<=5){const rx=5-nx,ry=5-ny;if(x>y+ry){done=true;win=fi}else if(y>x+rx){done=true;win=1-fi}}
+  if(!done&&nx>=5&&ny>=5&&nx===ny&&x!==y){done=true;win=x>y?fi:1-fi}
+  const next=nx>ny?1-fi:fi;return{g,n,done,win,next}}
+function fbCards(m){const y=[{},{}],red=[[],[]];m.ev.forEach(e=>{if(e.ty==='yc'){y[e.tm][e.pl]=(y[e.tm][e.pl]||0)+1}if(e.ty==='rc')red[e.tm].push(e.pl)});return{y,red}}
+function fbSubs(m){const c=[0,0],w=[0,0];m.ev.forEach(e=>{if(e.ty==='sub'){c[e.tm]++;if(e.nw)w[e.tm]++}});return{c,w}}
+function fbResult(m){const[a,b]=fbScore(m),A=m.tn[0],B=m.tn[1],pp=fbPens(m);let r=a>b?A+' won '+a+'-'+b:b>a?B+' won '+b+'-'+a:'Draw '+a+'-'+b;
+  if(a===b&&m.ev.some(e=>e.ty==='pk')&&pp.done)r=(pp.win?B:A)+' won '+pp.g[pp.win]+'-'+pp.g[1-pp.win]+' on penalties after a '+a+'-'+b+' draw';return r}
+function fbClock(m){const mm=fbMin(m);return m.ph==='pre'?'0\'':(mm.lab||FPH[m.ph])}
+Object.assign(F,{fbNew(fd){const t0=fd.get('t0'),t1=fd.get('t1');const nm0=(fd.get('n0')||'').trim()||(t0&&T(t0)?T(t0).name:'Home'),nm1=(fd.get('n1')||'').trim()||(t1&&T(t1)?T(t1).name:'Away');
+  const m={id:uid(),sport:'football',tn:[nm0,nm1],ti:[t0||'',t1||''],half:Math.max(1,+fd.get('half')||45),et:Math.max(1,+fd.get('et')||15),size:Math.max(3,+fd.get('size')||11),maxSub:Math.max(0,+fd.get('subs')||5),maxWin:+fd.get('wins')||3,win:fd.get('winner')?1:0,date:new Date().toISOString().slice(0,10),ph:'pre',clk:0,ev:[],pfirst:0,by:S.user?S.user.name:''};
+  S.sg.push(m);UI.sgid=m.id;UI.view='sgame';commit()},
+ fbEv(fd){const m=sgCur();if(!m||!can())return;const ty=fd.get('ty'),tm=+fd.get('tm'),mm=fbMin(m),minute=+fd.get('min')||mm.n,lab=fd.get('min')?(fd.get('min')+"'"):(mm.lab||FPH[m.ph]);
+  const pl=(fd.get('pl')||'').trim(),e={id:uid(),ty,tm,pl,min:minute,lab,ph:m.ph};
+  if(ty==='sub'){e.on=(fd.get('on')||'').trim();const prev=[...m.ev].reverse().find(x=>x.ty==='sub'&&x.tm===tm);e.nw=!(m.ph==='ht'||(prev&&prev.min===minute&&prev.ph===m.ph));
+    const sb=fbSubs(m);if(sb.c[tm]+1>m.maxSub)toast('Warning: more than '+m.maxSub+' substitutions for this team',4000);else if(e.nw&&sb.w[tm]+1>m.maxWin)toast('Warning: more than '+m.maxWin+' substitution opportunities (IFAB: three, plus half-time)',4500)}
+  if(ty==='yc'){const cs=fbCards(m);if((cs.y[tm][pl]||0)>=1&&pl){m.ev.push(e);m.ev.push({id:uid(),ty:'rc',tm,pl,min:minute,lab,ph:m.ph,second:1});commit();toast('Second caution: red card. The player cannot be replaced.',4500);return}}
+  if(ty==='rc'){const red=fbCards(m).red[tm].length+1;if(m.size-red<Math.min(7,m.size))toast('Fewer than seven players: the match cannot continue (IFAB Law 3)',5000)}
+  m.ev.push(e);commit()},
+ fbPk(fd){const m=sgCur();if(!m||!can())return;const pp=fbPens(m);if(pp.done)return;m.ev.push({id:uid(),ty:'pk',tm:pp.next,pl:(fd.get('pl')||'').trim(),ok:fd.get('ok')==='1',min:0,lab:'PK',ph:'pens'});const q=fbPens(m);if(q.done){m.ph='done';m.result=fbResult(m)}commit()}});
+Object.assign(A,{fbPkGo(d){const el=document.getElementById('pkpl');F.fbPk({get:k=>k==='pl'?(el?el.value:''):(k==='ok'?d.v:null)})},sgNew(d){UI.sgnew=d.v;UI.view='sgnew';render()},sgOpen(d){UI.sgid=d.id;UI.view='sgame';render()},sgDel(d){if(confirm('Delete this match?')){S.sg=S.sg.filter(x=>x.id!==d.id);UI.view='sgames';commit()}},
+ fbPh(d){const m=sgCur();if(!m||!can())return;const to=d.v;m.ph=to;if(['h1','h2','et1','et2'].includes(to))m.clk=Date.now();
+  if(to==='ft'){const[a,b]=fbScore(m);if(a!==b||!m.win){m.ph='done';m.result=fbResult(m)}}
+  if(to==='etf'){const[a,b]=fbScore(m);if(a!==b){m.ph='done';m.result=fbResult(m)}}
+  if(to==='done'){m.result=fbResult(m)}commit()},
+ fbUndo(){const m=sgCur();if(!m||!can())return;const e=m.ev.pop();if(e&&e.ty==='rc'&&e.second)m.ev.pop();if(m.ph==='done'&&m.ev.length&&m.ev.some(x=>x.ty==='pk')===false){}if(m.ph==='done'&&e&&e.ty==='pk'){m.ph='pens';m.result=''}commit()}});
+function fbView(m){const[a,b]=fbScore(m),cs=fbCards(m),sb=fbSubs(m),ph=m.ph,pp=fbPens(m),on=[m.size-cs.red[0].length,m.size-cs.red[1].length],pk=m.ev.some(e=>e.ty==='pk');
+  const nxt={pre:[['h1','Start 1st half']],h1:[['ht','Half-time']],ht:[['h2','Start 2nd half']],h2:[['ft','Full time']],ft:m.win?[['et1','Extra time'],['pens','Penalties'],['done','End: draw']]:[],etf:[['pens','Penalties'],['done','End: draw']],et1:[['etb','Extra time break']],etb:[['et2','Start 2nd extra half']],et2:[['etf','End of extra time']],pens:[],done:[]}[ph]||[];
+  const teams=[0,1].map(i=>`<option value="${i}">${esc(m.tn[i])}</option>`).join('');
+  const list=m.ev.filter(e=>e.ty!=='pk').map((e,i)=>[e,i]).sort((x,y)=>(y[0].min-x[0].min)||(y[1]-x[1])).map(x=>x[0]).map(e=>{const ic={goal:'⚽',pen:'⚽ (pen)',og:'⚽ (own goal)',yc:'\u{1F7E8}',rc:'\u{1F7E5}',sub:'\u{1F501}'}[e.ty]||'';return `<div class="item"><span class="b" style="min-width:48px">${esc(e.lab)}</span><div style="flex:1"><b>${ic} ${esc(e.pl||'')}</b>${e.ty==='sub'?` <span class="mu sm">off, ${esc(e.on||'')} on</span>`:''}${e.second?' <span class="mu sm">(second caution)</span>':''}<div class="mu sm">${esc(m.tn[e.tm])}</div></div></div>`}).join('');
+  const kicks=m.ev.filter(e=>e.ty==='pk');
+  return `<div class="card" style="text-align:center"><div class="mu sm">${esc(m.date)} | ${m.half}+${m.half} min | ${FPH[ph]}</div>
+   <div class="row" style="justify-content:space-around;align-items:center;margin:8px 0"><div style="flex:1"><div class="b">${esc(m.tn[0])}</div><div class="mu sm">${on[0]} on the field</div></div><div style="font-size:38px;font-weight:800" id="sgclk-score">${a} - ${b}</div><div style="flex:1"><div class="b">${esc(m.tn[1])}</div><div class="mu sm">${on[1]} on the field</div></div></div>
+   <div class="pill ${['h1','h2','et1','et2'].includes(ph)?'live':''}" id="sgclk">${esc(fbClock(m))}</div>${pk?`<div class="b" style="margin-top:6px">Penalties ${pp.g[0]} - ${pp.g[1]}</div>`:''}
+   ${m.result?`<div class="need" style="margin-top:8px">${esc(m.result)}</div>`:''}</div>
+  ${can()&&nxt.length?`<div class="row" style="gap:8px;flex-wrap:wrap;margin:8px 0">${nxt.map(([v,l])=>`<button class="btn" data-a="fbPh" data-v="${v}">${l}</button>`).join('')}</div>`:''}
+  ${can()&&['h1','h2','et1','et2','ht','etb','ft','etf'].includes(ph)?`<div class="card"><div class="b">Add an event</div><form data-f="fbEv"><div class="row"><label style="flex:1">Team<select name="tm">${teams}</select></label><label style="flex:1">Event<select name="ty"><option value="goal">Goal</option><option value="pen">Penalty goal</option><option value="og">Own goal</option><option value="yc">Yellow card</option><option value="rc">Red card</option><option value="sub">Substitution</option></select></label></div>
+   <div class="row"><label style="flex:2">Player (or player off)<input name="pl" list="fbpl" placeholder="name"></label><label style="flex:2">Player on (substitution)<input name="on" list="fbpl"></label><label style="flex:1">Minute<input name="min" type="number" min="1" placeholder="auto"></label></div>
+   <datalist id="fbpl">${[...plNames(m.ti[0]),...plNames(m.ti[1])].map(n=>`<option value="${esc(n)}">`).join('')}</datalist><button class="btn wide" style="margin-top:8px">Add</button></form></div>`:''}
+  ${can()&&ph==='pens'?`<div class="card"><div class="b">Penalty shoot-out</div><div class="mu sm" style="margin:4px 0 8px">Kicks alternate. Next to kick: <b>${esc(m.tn[pp.next])}</b>. Five kicks each, then one kick each until a team is ahead after equal kicks (IFAB Law 10.3).</div><div><label>Kicker<input id="pkpl" list="fbpl2"></label><datalist id="fbpl2">${plNames(m.ti[pp.next]).map(n=>`<option value="${esc(n)}">`).join('')}</datalist><div class="row" style="gap:8px;margin-top:8px"><button class="btn" data-a="fbPkGo" data-v="1">Scored</button><button class="btn ghost" data-a="fbPkGo" data-v="0">Missed or saved</button></div></div></div>`:''}
+  ${kicks.length?`<div class="card"><div class="b">Shoot-out kicks</div>${[0,1].map(i=>`<div class="item"><b style="min-width:90px">${esc(m.tn[i])}</b><div>${kicks.filter(k=>k.tm===i).map(k=>`<span title="${esc(k.pl)}" style="margin-right:6px">${k.ok?'✅':'❌'}</span>`).join('')}</div></div>`).join('')}</div>`:''}
+  <div class="card"><div class="b">Match events</div>${list||'<div class="mu">No events yet.</div>'}</div>
+  <div class="card"><div class="b">Cards and substitutions</div>${[0,1].map(i=>`<div class="item"><b style="flex:1">${esc(m.tn[i])}</b><span class="mu sm">Yellow ${Object.values(cs.y[i]).reduce((x,y)=>x+y,0)} | Red ${cs.red[i].length} | Subs ${sb.c[i]}/${m.maxSub} | Opportunities ${sb.w[i]}/${m.maxWin}</span></div>`).join('')}</div>
+  ${can()?`<div class="row" style="gap:8px"><button class="btn sm ghost" data-a="fbUndo">Undo last event</button><button class="btn sm ghost" data-a="sgDel" data-id="${m.id}">Delete match</button></div>`:''}
+  <div class="mu sm" style="margin-top:8px">Rules used: IFAB Laws of the Game. Two halves of ${m.half} minutes, extra time of two periods of ${m.et} minutes when a winner is needed, then a penalty shoot-out. A second caution is a red card and the player cannot be replaced. ${m.maxSub} substitutes in ${m.maxWin} opportunities, plus half-time.</div>`}
+/* ----- tennis (ITF Rules of Tennis) ----- */
+function tnState(m){const c=m.cfg,need=Math.ceil(c.best/2);let g=[0,0],p=[0,0],sw=[0,0],sets=[],srv=m.first,tb=false,tbT=7,tbF=0,mt=false,done=false,win=null,chg=false;
+  const startSet=()=>{g=[0,0];p=[0,0];tb=false;mt=false;chg=false;if(c.final==='mtb10'&&sw[0]===need-1&&sw[1]===need-1&&need>1){mt=true;tb=true;tbT=10;tbF=srv}};
+  startSet();
+  const endSet=(w,rec)=>{sets.push(rec);sw[w]++;if(sw[w]>=need){done=true;win=w}else{srv=1-(tb?tbF:srv);startSet()}};
+  m.pts.forEach(pt=>{if(done)return;const w=pt.w;chg=false;
+    if(tb){p[w]++;const k=p[0]+p[1];if(k%6===0)chg=true;
+      if(p[w]>=tbT&&p[w]-p[1-w]>=2){if(mt){sets.push({g:[p[0],p[1]],mt:1});sw[w]++;done=true;win=w}else{g[w]++;endSet(w,{g:g.slice(),tb:[p[0],p[1]]});chg=true}}return}
+    p[w]++;const q=p[1-w],gw=c.noad?p[w]>=4:(p[w]>=4&&p[w]-q>=2);
+    if(gw){g[w]++;p=[0,0];srv=1-srv;chg=(g[0]+g[1])%2===1;
+      if(g[w]>=6&&g[w]-g[1-w]>=2){endSet(w,{g:g.slice()});chg=true}
+      else if(g[0]===6&&g[1]===6){const fin=sw[0]===need-1&&sw[1]===need-1;if(!fin||c.final==='tb7'||c.final==='tb10'||c.final==='mtb10'){tb=true;tbT=(fin&&c.final==='tb10')?10:7;tbF=srv}}}});
+  let cur=null;if(!done){const k=p[0]+p[1];let s=srv;if(tb){s=k===0?tbF:(Math.floor((k-1)/2)%2===0?1-tbF:tbF)}cur={g,p,tb,mt,tbT,srv:s}}
+  return{sets,sw,cur,done,win,chg}}
+function tnPt(st,i){const c=st.cur;if(!c)return'';if(c.tb)return String(c.p[i]);const p=c.p,o=p[1-i];if(st.noad)return['0','15','30','40'][Math.min(p[i],3)];
+  if(p[i]>=3&&o>=3)return p[i]===o?'40':(p[i]>o?'Ad':'40');return['0','15','30','40'][Math.min(p[i],3)]}
+function tnStats(m){const s=[{pt:0,ace:0,df:0,win:0,ue:0},{pt:0,ace:0,df:0,win:0,ue:0}];m.pts.forEach(x=>{s[x.w].pt++;if(x.k==='ace')s[x.w].ace++;if(x.k==='win')s[x.w].win++;if(x.k==='df')s[1-x.w].df++;if(x.k==='ue')s[1-x.w].ue++});return s}
+Object.assign(F,{tnNew(fd){const n0=(fd.get('n0')||'').trim()||'Player 1',n1=(fd.get('n1')||'').trim()||'Player 2';
+  const m={id:uid(),sport:'tennis',tn:[n0,n1],cfg:{best:+fd.get('best')||3,final:fd.get('final')||'adv',noad:!!fd.get('noad')},first:+fd.get('first')||0,pts:[],date:new Date().toISOString().slice(0,10),by:S.user?S.user.name:''};
+  S.sg.push(m);UI.sgid=m.id;UI.view='sgame';commit()}});
+Object.assign(A,{tnPt(d){const m=sgCur();if(!m||!can())return;const st=tnState(m);if(st.done)return;m.pts.push({w:+d.w,k:UI.sg.k||'pt',t:Date.now()});UI.sg.k='pt';const s2=tnState(m);if(s2.done)m.result=tnResult(m,s2);commit();if(s2.chg&&!s2.done)toast('Change ends',1800)},
+ tnK(d){UI.sg.k=UI.sg.k===d.v?'pt':d.v;render()},tnUndo(){const m=sgCur();if(!m||!can())return;m.pts.pop();m.result='';const s=tnState(m);if(s.done)m.result=tnResult(m,s);commit()}});
+function tnResult(m,s){return m.tn[s.win]+' won '+s.sets.map(x=>x.mt?'['+x.g[0]+'-'+x.g[1]+']':x.g[0]+'-'+x.g[1]+(x.tb?'('+Math.min(...x.tb)+')':'')).map((t,i,a)=>t).join(' ')}
+function tnView(m){const st=tnState(m),stt=tnStats(m),c=st.cur,fl={adv:'Final set: play until a two-game lead',tb7:'Final set: 7-point tiebreak at 6-6',tb10:'Final set: 10-point tiebreak at 6-6 (Grand Slam)',mtb10:'10-point match tiebreak instead of the final set'}[m.cfg.final];
+  const row=i=>`<div class="item" style="gap:8px"><span style="width:14px">${c&&c.srv===i?'\u{1F7E1}':''}</span><b style="flex:1">${esc(m.tn[i])}${st.done&&st.win===i?' \u{1F3C6}':''}</b>${st.sets.map(x=>`<b style="min-width:24px;text-align:center">${x.mt?'':x.g[i]}${x.mt?x.g[i]:''}${x.tb&&x.g[i]===6?`<sup style="font-size:10px">${x.tb[i]}</sup>`:''}</b>`).join('')}${c&&!c.mt?`<b style="min-width:24px;text-align:center;color:var(--ac)">${c.g[i]}</b>`:''}${c?`<b style="min-width:40px;text-align:center;background:var(--c2);border-radius:8px;padding:4px">${tnPt(Object.assign({},st,{noad:m.cfg.noad}),i)}</b>`:''}</div>`;
+  const k=UI.sg.k||'pt';
+  return `<div class="card"><div class="mu sm">${esc(m.date)} | Best of ${m.cfg.best}${m.cfg.noad?' | No-ad':''}</div>${row(0)}${row(1)}${c&&c.tb?`<div class="mu sm">${c.mt?'Match tiebreak':'Tiebreak'}: first to ${c.tbT}, two clear points.</div>`:''}${st.chg&&!st.done?'<div class="need" style="margin-top:6px">Change ends</div>':''}${m.result?`<div class="need" style="margin-top:8px">${esc(m.result)}</div>`:''}</div>
+  ${can()&&!st.done?`<div class="card"><div class="mu sm" style="margin-bottom:6px">Point type for the next point (optional)</div><div class="row" style="gap:6px;flex-wrap:wrap">${[['ace','Ace'],['win','Winner'],['df','Double fault'],['ue','Unforced error']].map(([v,l])=>`<button class="btn sm ${k===v?'':'ghost'}" data-a="tnK" data-v="${v}">${l}</button>`).join('')}</div>
+   <div class="row" style="gap:8px;margin-top:10px"><button class="btn" style="flex:1;padding:18px 6px" data-a="tnPt" data-w="0">Point ${esc(m.tn[0])}</button><button class="btn" style="flex:1;padding:18px 6px" data-a="tnPt" data-w="1">Point ${esc(m.tn[1])}</button></div>
+   <div class="mu sm" style="margin-top:6px">Ace and winner go to the player who wins the point. Double fault and unforced error go against the player who loses it.</div></div>`:''}
+  <div class="card"><div class="b">Match stats</div><table><tr><th></th><th>${esc(m.tn[0])}</th><th>${esc(m.tn[1])}</th></tr>${[['Points won','pt'],['Aces','ace'],['Winners','win'],['Double faults','df'],['Unforced errors','ue']].map(([l,k2])=>`<tr><td>${l}</td><td>${stt[0][k2]}</td><td>${stt[1][k2]}</td></tr>`).join('')}</table></div>
+  ${can()?`<div class="row" style="gap:8px"><button class="btn sm ghost" data-a="tnUndo">Undo last point</button><button class="btn sm ghost" data-a="sgDel" data-id="${m.id}">Delete match</button></div>`:''}
+  <div class="mu sm" style="margin-top:8px">Rules used: ITF Rules of Tennis. A game needs four points and a two-point lead${m.cfg.noad?' (no-ad: first to four points)':''}. A set is six games with a two-game lead, with a seven-point tiebreak at 6-6. ${fl}. Servers change every two points in a tiebreak, and players change ends after every six.</div>`}
+/* ----- hub ----- */
+XV.sgames=function(){const L=S.sg.slice().reverse();
+  return `<div class="bar"><h2>Football and tennis scorers</h2></div><div class="row" style="gap:8px;margin-bottom:10px"><button class="btn" style="flex:1" data-a="sgNew" data-v="football">⚽ New football match</button><button class="btn" style="flex:1" data-a="sgNew" data-v="tennis">\u{1F3BE} New tennis match</button></div>
+  ${L.length?L.map(m=>{let sc='';if(m.sport==='football'){const[a,b]=fbScore(m);sc=a+' - '+b+' | '+FPH[m.ph]}else{const s=tnState(m);sc=s.sets.map(x=>x.g.join('-')).join(' ')+(s.cur?' ('+tnPt({noad:m.cfg.noad,cur:s.cur},0)+'-'+tnPt({noad:m.cfg.noad,cur:s.cur},1)+')':'')}
+    return `<div class="mcm" data-a="sgOpen" data-id="${m.id}"><div class="b">${m.sport==='football'?'⚽':'\u{1F3BE}'} ${esc(m.tn[0])} vs ${esc(m.tn[1])}</div><div class="mu sm">${esc(sc)} | ${esc(m.date)}</div></div>`}).join(''):'<div class="empty">No matches yet. Start one above.</div>'}`};
+XV.sgnew=function(){const sp=UI.sgnew||'football',tm=S.teams.map(t=>[t.id,t.name]);
+  if(sp==='tennis')return `<div class="bar"><h2>New tennis match</h2></div><form class="card" data-f="tnNew"><label>Player or pair 1<input name="n0" placeholder="e.g. A. Rao / K. Reddy"></label><label>Player or pair 2<input name="n1"></label>
+   <div class="row"><label style="flex:1">Match<select name="best"><option value="3">Best of 3 sets</option><option value="5">Best of 5 sets</option></select></label><label style="flex:1">First server<select name="first"><option value="0">Player 1</option><option value="1">Player 2</option></select></label></div>
+   <label>Deciding set<select name="final"><option value="adv">Advantage set (no tiebreak)</option><option value="tb7">7-point tiebreak at 6-6</option><option value="tb10">10-point tiebreak at 6-6 (Grand Slam final set)</option><option value="mtb10">10-point match tiebreak instead of the deciding set</option></select></label>
+   <label class="ck"><input type="checkbox" name="noad"> No-ad scoring (first to four points wins the game)</label><button class="btn wide" style="margin-top:8px">Start match</button></form>`;
+  return `<div class="bar"><h2>New football match</h2></div><form class="card" data-f="fbNew"><div class="row"><label style="flex:1">Home team<select name="t0"><option value="">Type a name</option>${tm.map(([v,l])=>`<option value="${v}">${esc(l)}</option>`).join('')}</select></label><label style="flex:1">Away team<select name="t1"><option value="">Type a name</option>${tm.map(([v,l])=>`<option value="${v}">${esc(l)}</option>`).join('')}</select></label></div>
+   <div class="row"><label style="flex:1">Home name<input name="n0" placeholder="if not chosen"></label><label style="flex:1">Away name<input name="n1"></label></div>
+   <div class="row"><label style="flex:1">Half (min)<input name="half" type="number" value="45"></label><label style="flex:1">Extra period (min)<input name="et" type="number" value="15"></label><label style="flex:1">Players a side<input name="size" type="number" value="11"></label></div>
+   <div class="row"><label style="flex:1">Substitutes<input name="subs" type="number" value="5"></label><label style="flex:1">Opportunities<input name="wins" type="number" value="3"></label></div>
+   <label class="ck"><input type="checkbox" name="winner"> A winner is needed (extra time, then penalties)</label><button class="btn wide" style="margin-top:8px">Start match</button></form>`};
+XV.sgame=function(){const m=sgCur();if(!m)return '<div class="empty">Match not found.</div>';return `<div class="bar"><h2>${m.sport==='football'?'⚽':'\u{1F3BE}'} ${esc(m.tn[0])} vs ${esc(m.tn[1])}</h2></div>`+(m.sport==='football'?fbView(m):tnView(m))};
+MENU2[0][1].splice(5,0,['sgames','⚽','Football and tennis scorers']);
+setInterval(()=>{if(UI.view==='sgame'){const m=sgCur();if(m&&m.sport==='football'){const el=document.getElementById('sgclk');if(el&&['h1','h2','et1','et2'].includes(m.ph))el.textContent=fbClock(m)}}},1000);
 /* ---------------- THE HUNDRED (100 balls, 5-ball sets) ---------------- */
 {const f0=newMatch;newMatch=function(d){const h=String(d.overs)==='20.5';const m=f0(h?Object.assign({},d,{overs:20}):d);if(h){m.bpo=5;m.nbp=2;m.fmt='hundred';m.rules=Object.assign(m.rules||{},{ppb:25})}return m}}
 {const f0=vScore;vScore=function(){const o=f0();const m=S.matches.find(x=>x.id===UI.sid)||S.matches.filter(x=>x.status!=='done').slice(-1)[0];
