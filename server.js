@@ -385,6 +385,51 @@ routes['POST /api/history/import'] = async (req, body) => {
   return [202, { ok: true, started: true, years: HISTORY_YEARS }];
 };
 
+// ---- Daily paper agent: every few hours it saves the facts of finished world matches for the day (the provider drops old matches), the app writes the articles from these facts ----
+db.papers = db.papers || {};
+const istDate = (t = Date.now()) => new Date(t + 5.5 * 3600e3).toISOString().slice(0, 10);
+const PAPER_HOURS = Math.max(1, parseInt(E.PAPER_AGENT_HOURS, 10) || 3);
+const agentStatus = { last: 0, ok: null, note: 'not run yet', added: 0 };
+async function paperAgentRun() {
+  agentStatus.last = Date.now();
+  try {
+    const live = await liveMatches();
+    const day = istDate(), P = db.papers[day] = db.papers[day] || { world: [], sh: [] };
+    let added = 0;
+    for (const m of live.matches || []) {
+      if (!m.ended) continue;
+      const when = Date.parse(/Z$|[+-]\d\d:?\d\d$/.test(m.time || '') ? m.time : (m.time || '') + 'Z');
+      if (!when || istDate(when) !== day) continue;
+      const row = { id: m.id, name: m.name, type: m.type, venue: m.venue, status: m.status, time: m.time, teams: (m.teams || []).slice(0, 2), score: (m.score || []).slice(0, 4) };
+      const i = P.world.findIndex(x => x.id === m.id);
+      if (i < 0) { P.world.push(row); added++; } else P.world[i] = row;
+    }
+    for (const d of Object.keys(db.papers).sort().slice(0, -60)) delete db.papers[d];   // keep 60 days
+    if (added || true) saveDb();
+    Object.assign(agentStatus, { ok: true, note: 'saved ' + P.world.length + ' finished matches for ' + day, added });
+  } catch (e) { Object.assign(agentStatus, { ok: false, note: e.message, added: 0 }); }
+}
+if (E.PAPER_AGENT !== '0') { setTimeout(paperAgentRun, 60e3); setInterval(paperAgentRun, PAPER_HOURS * 3600e3); }
+routes['GET /api/paper'] = async (req, body) => {
+  const day = /^\d{4}-\d\d-\d\d$/.test(body.date || '') ? body.date : istDate();
+  const P = db.papers[day] || { world: [], sh: [] };
+  return [200, { ok: true, date: day, world: P.world, sh: P.sh, agent: agentStatus, days: Object.keys(db.papers).sort().slice(-14) }];
+};
+routes['POST /api/paper'] = async (req, body, ip) => {
+  const phone = readSession((req.headers.authorization || '').replace(/^Bearer /, '')), u = phone && db.users[phone];
+  if (!u) return [401, { ok: false, error: 'Please sign in again' }];
+  if (body.run === '1' || body.run === 1) { if (u.role !== 'admin') return [403, { ok: false, error: 'Only an admin can run the agent' }]; await paperAgentRun(); return [200, { ok: true, agent: agentStatus }]; }
+  if (u.role !== 'admin' && u.role !== 'scorer') return [403, { ok: false, error: 'Only scorers and admins can publish match reports' }];
+  if (limited('pp:' + phone, 60, 36e5)) return [429, { ok: false, error: 'Too many requests' }];
+  const day = /^\d{4}-\d\d-\d\d$/.test(body.date || '') ? body.date : istDate();
+  const items = Array.isArray(body.items) ? body.items.slice(0, 20) : [];
+  const t = (x, n) => String(x == null ? '' : x).slice(0, n);
+  const clean = items.map(a => ({ id: t(a.id, 60), h: t(a.h, 200), sub: t(a.sub, 300), body: (Array.isArray(a.body) ? a.body : []).slice(0, 8).map(x => t(x, 900)), card: a.card && typeof a.card === 'object' ? { a: t(a.card.a, 60), b: t(a.card.b, 60), sa: t(a.card.sa, 40), sb: t(a.card.sb, 40), res: t(a.card.res, 160), d: t(a.card.d, 20) } : null, by: t(u.nick || u.name || 'Scorer', 40), at: Date.now() })).filter(a => a.id && a.h);
+  const P = db.papers[day] = db.papers[day] || { world: [], sh: [] };
+  for (const a of clean) { const i = P.sh.findIndex(x => x.id === a.id); if (i < 0) P.sh.push(a); else P.sh[i] = a; }
+  saveDb(); return [200, { ok: true, saved: clean.length, date: day }];
+};
+
 // ---- Sports news (Google News RSS, cached 10 min) ----
 const NEWS_BASE = E.NEWS_BASE || 'https://news.google.com/rss/search';
 const NEWS_QUERY = E.NEWS_QUERY || 'cricket';
@@ -699,7 +744,7 @@ http.createServer(async (req, res) => {
   const h = routes[req.method + ' ' + pth];
   if (!h) return out(404, { ok: false, error: 'Not found' });
   let raw = '';
-  for await (const c of req) { raw += c; if (raw.length > 20000) return out(413, { ok: false, error: 'Too large' }); }
+  for await (const c of req) { raw += c; if (raw.length > (pth === '/api/paper' ? 300000 : 20000)) return out(413, { ok: false, error: 'Too large' }); }
   let body = {};
   try { body = raw ? (raw.trim().startsWith('{') ? JSON.parse(raw) : Object.fromEntries(new URLSearchParams(raw))) : {}; } catch { return out(400, { ok: false, error: 'Bad body' }); }
   if (req.method === 'GET') body = { ...Object.fromEntries(new URL(req.url, 'http://x').searchParams), ...body };

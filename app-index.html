@@ -4208,6 +4208,118 @@ async function hRun(){const f=UI.hist.mf;if(!f.type&&!f.year&&!f.team){UI.hist.m
 Object.assign(A,{async histPl(d){try{const j=await hApi('player?id='+encodeURIComponent(d.id));if(j.ok){UI.hist.pl=j.player;render();window.scrollTo(0,0)}}catch(e){toast('Could not load player')}},
  async histImport(){try{const j=await hApi('import',{method:'POST'});toast(j.ok?'Import started. This takes a few minutes.':(j.error||'Could not start'),4000);UI.hist.st=null;await hStatus()}catch(e){toast('Server not reachable')}}});
 {const MG=MENU2[0];if(MG&&!MG[1].some(z=>z[0]==='history'))MG[1].splice(3,0,['history','\u{1F4DA}','History (30 years)'])}
+/* ---------------- DAILY PAPER ENGINE: match reports written from real match data, watermarked pictures, daily agent on the server ---------------- */
+{const st=document.createElement('style');st.textContent='.epa{border-top:3px double #111;padding:10px 0;margin:10px 0}.epa h3{font:700 22px/1.2 Georgia,serif;margin:6px 0}.epa .by{font-size:12px;color:#666;margin-bottom:6px}.epa img.epi{width:100%;border-radius:4px;display:block;background:#ddd;aspect-ratio:16/9;object-fit:cover}.epa p{font:15px/1.55 Georgia,serif;margin:8px 0}.epa .sub{font-style:italic;color:#444}.epphotos{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}.epphotos img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px}';document.head.appendChild(st)}
+const epToday=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+const epLoadImg=src=>new Promise(res=>{const i=new Image();i.onload=()=>res(i);i.onerror=()=>res(null);i.src=src});
+/* watermark: logo + brand text bottom right, faint brand text across the picture. Applied to every picture the paper uses. */
+async function epMark(cv){const c=cv.getContext('2d'),W=cv.width,H=cv.height;
+ c.save();c.globalAlpha=.16;c.fillStyle='#fff';c.font='bold '+Math.round(W/16)+'px sans-serif';c.translate(W/2,H/2);c.rotate(-.35);c.textAlign='center';c.fillText('SCORING HEROES',0,0);c.restore();
+ const bh=Math.round(H*.1),g=c.createLinearGradient(0,H-bh*1.6,0,H);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,0,0,.65)');c.fillStyle=g;c.fillRect(0,H-bh*1.6,W,bh*1.6);
+ const lg=await epLoadImg(logoSrc());const pad=Math.round(W*.02);let x=W-pad;
+ c.textAlign='right';c.fillStyle='#fff';c.font='bold '+Math.round(bh*.42)+'px sans-serif';c.fillText('Scoring Heroes | SH Sports Sky High',x,H-pad-Math.round(bh*.12));
+ if(lg){const h=Math.round(bh*.9),w=Math.round(h*(lg.width/lg.height));c.drawImage(lg,pad,H-pad-h,w,h)}
+ return cv}
+async function epGraphic(k){const cv=document.createElement('canvas');cv.width=1000;cv.height=560;const c=cv.getContext('2d');
+ const g=c.createLinearGradient(0,0,1000,560);g.addColorStop(0,'#0a1f5c');g.addColorStop(1,'#e11d2e');c.fillStyle=g;c.fillRect(0,0,1000,560);
+ c.fillStyle='rgba(255,255,255,.08)';c.beginPath();c.arc(860,120,260,0,7);c.fill();
+ c.fillStyle='#fff';c.textAlign='left';c.font='600 26px sans-serif';c.fillText(String(k.d||'').toUpperCase()+'  |  MATCH REPORT',48,70);
+ const row=(t,s,y)=>{c.font='bold 54px sans-serif';c.fillText(String(t).slice(0,22),48,y);c.textAlign='right';c.font='bold 64px sans-serif';c.fillText(String(s||''),952,y);c.textAlign='left'};
+ row(k.a,k.sa,220);row(k.b,k.sb,330);
+ c.fillStyle='#ffcd00';c.font='600 32px sans-serif';const words=String(k.res||'').split(' ');let line='',y=430;for(const w of words){if(c.measureText(line+w).width>900){c.fillText(line,48,y);line='';y+=40}line+=w+' '}c.fillText(line,48,y);
+ return epMark(cv)}
+/* article writer: only uses facts that exist in the match data */
+function epSH(m){const A=T(m.a),B=T(m.b);const i0=calc(m,0),i1=m.innings[1]?calc(m,1):null;
+ const bt=m.innings.map((inn,i)=>T(inn.bat));const sc=i=>{const k=calc(m,i);return k.runs+'/'+k.wk+' ('+fmtOv(k.lg)+' ov)'};
+ const top=i=>{const k=calc(m,i);const b=Object.entries(k.bat).sort((x,y)=>y[1].r-x[1].r)[0];return b?{n:nm(b[0]),r:b[1].r,b:b[1].b,f4:b[1].f4,f6:b[1].f6,no:!b[1].out}:null};
+ const bw=i=>{const k=calc(m,i);const b=Object.entries(k.bowl).filter(x=>x[1].b>0).sort((x,y)=>y[1].w-x[1].w||x[1].r-y[1].r)[0];return b&&b[1].w>0?{n:nm(b[0]),w:b[1].w,r:b[1].r,o:fmtOv(b[1].b)}:null};
+ const res=m.result||'Result awaited';const head=res.replace(/\.$/,'');
+ const P=[];
+ P.push(`${bt[0].name} batted first against ${bt[1]?bt[1].name:(bt[0]===A?B:A).name} at ${m.venue||'the ground'} and posted ${sc(0)} in a ${m.overs}-over match.`);
+ const t0=top(0),b0=bw(0),t1=i1&&top(1),b1=i1&&bw(1);
+ if(t0)P.push(`${t0.n} led ${bt[0].name} with ${t0.r}${t0.no?' not out':''} off ${t0.b} balls${t0.f4||t0.f6?', including '+[t0.f4?t0.f4+' four'+(t0.f4>1?'s':''):'',t0.f6?t0.f6+' six'+(t0.f6>1?'es':''):''].filter(Boolean).join(' and '):''}.${b0?` ${b0.n} was the best of ${bt[1]?bt[1].name:'the fielding side'}'s bowlers with ${b0.w} for ${b0.r} in ${b0.o} overs.`:''}`);
+ if(i1)P.push(`${bt[1].name} replied with ${sc(1)}${t1?`, with ${t1.n} scoring ${t1.r}${t1.no?' not out':''}`:''}.${b1?` ${b1.n} took ${b1.w} for ${b1.r} in ${b1.o} overs for ${bt[0].name}.`:''}`);
+ P.push(res+'.');
+ return {id:'sh-'+m.id,h:head,sub:`${bt[0].name} ${sc(0)}${i1?' | '+bt[1].name+' '+sc(1):''}`,body:P,card:{a:bt[0].name,b:bt[1]?bt[1].name:'',sa:i0.runs+'/'+i0.wk,sb:i1?i1.runs+'/'+i1.wk:'',res:head,d:m.date},src:'SH',mid:m.id}}
+function epWorld(m){const t=(m.teams||[]).slice(0,2);if(t.length<2)return null;const sx=x=>svScoreTxt(m,x)||'';
+ const P=[`${t[0].name} and ${t[1].name} met${m.venue?' at '+m.venue:''}${m.type?' in a '+String(m.type).toUpperCase()+' match':''}.`];
+ const a=sx(t[0]),b=sx(t[1]);if(a||b)P.push(`${a?t[0].name+' made '+a:''}${a&&b?', while ':''}${b?t[1].name+' made '+b:''}.`);
+ if(m.status)P.push(String(m.status).replace(/\.?$/,'.'));
+ return {id:'w-'+m.id,h:String(m.status||m.name||'').replace(/\.$/,'')||m.name,sub:m.name||'',body:P,card:{a:t[0].name,b:t[1].name,sa:a.replace(/ \(.*/,''),sb:b.replace(/ \(.*/,''),res:String(m.status||''),d:(m.time||'').slice(0,10)||epToday()},src:'W'}}
+UI.epSrv=UI.epSrv||null;
+async function epFetch(){if(!apiBase())return;try{const r=await fetch(apiBase()+'/paper');UI.epSrv=await r.json()}catch(e){UI.epSrv={ok:false,error:e.message}}if(UI.view==='epaper')render()}
+function epArticles(){const day=epToday(),out=[],seen=new Set();
+ S.matches.filter(m=>!isDemo(m)&&m.status==='done'&&m.date===day).forEach(m=>{try{const a=epSH(m);out.push(a);seen.add(a.id)}catch(e){}});
+ const sv=UI.epSrv&&UI.epSrv.ok?UI.epSrv:null;
+ if(sv)(sv.sh||[]).forEach(a=>{if(!seen.has(a.id)){out.push(Object.assign({src:'SH'},a));seen.add(a.id)}});
+ const wl=[];const f=wFilter();f.rec.forEach(m=>{if(wTm(m)&&new Date(wTm(m)).toDateString()===new Date().toDateString())wl.push(m)});
+ if(sv)(sv.world||[]).forEach(m=>{if(!wl.some(x=>x.id===m.id))wl.push(m)});
+ wl.forEach(m=>{const a=epWorld(m);if(a&&!seen.has(a.id)){out.push(a);seen.add(a.id)}});
+ return out}
+UI.epImg=UI.epImg||{};
+async function epImages(list){for(const a of list){const el=document.querySelector('img[data-epid="'+a.id+'"]');if(!el)continue;
+  if(!UI.epImg[a.id]){const m=a.mid&&S.matches.find(x=>x.id===a.mid);const ph=m&&m.photos&&m.photos[0];
+   try{if(ph){UI.epImg[a.id]=ph}else if(a.card){UI.epImg[a.id]=(await epGraphic(a.card)).toDataURL('image/jpeg',.85)}}catch(e){}}
+  if(UI.epImg[a.id])el.src=UI.epImg[a.id]}}
+{const e0=XV.epaper;XV.epaper=function(){const o=e0();if(!UI.epSrv&&apiBase()){UI.epSrv={ok:false,loading:true};epFetch()}
+ const L=epArticles();
+ const ag=UI.epSrv&&UI.epSrv.agent,isA=S.user&&S.user.role==='admin',canP=S.user&&(S.user.role==='admin'||S.user.role==='scorer');
+ const html=`<div class="box"><h3>Match reports of the day <span class="src">written automatically from match data</span></h3>${L.length?L.map(a=>`<div class="epa"><img class="epi" data-epid="${esc(a.id)}" alt="" src="${UI.epImg[a.id]||''}"><h3>${esc(a.h)}</h3><div class="by">By Scoring Heroes Desk | ${a.src==='SH'?'scored in Scoring Heroes':'cricket data provider'}</div>${a.sub?`<p class="sub">${esc(a.sub)}</p>`:''}${a.body.map(p=>`<p>${esc(p)}</p>`).join('')}</div>`).join(''):'<div class="src">No finished matches for today yet. Reports appear here as soon as matches finish.</div>'}
+ <div class="noprint" style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">${canP&&L.some(a=>a.src==='SH'&&a.mid)?'<button class="btn sm" data-a="epPublish">Publish today\'s reports</button>':''}${isA?'<button class="btn sm ghost" data-a="epAgent" style="color:#111;border-color:#111">Run paper agent now</button>':''}</div>
+ ${ag?`<div class="src noprint" style="margin-top:6px">Paper agent: ${esc(ag.note||'')}${ag.last?' | last run '+new Date(ag.last).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):''}</div>`:''}</div>`;
+ setTimeout(()=>epImages(L),30);
+ return o.replace('<div class="cols"><div class="col">',html+'<div class="cols"><div class="col">')}}
+Object.assign(A,{async epPublish(){const L=epArticles().filter(a=>a.src==='SH'&&a.mid);try{const r=await fetch(apiBase()+'/paper',{method:'POST',headers:{'content-type':'application/json',authorization:'Bearer '+S.tok},body:JSON.stringify({date:epToday(),items:L.map(({id,h,sub,body,card})=>({id,h,sub,body,card}))})});const j=await r.json();toast(j.ok?'Published '+j.saved+' reports':(j.error||'Could not publish'),3500);UI.epSrv=null;render()}catch(e){toast('Server not reachable')}},
+ async epAgent(){try{const r=await fetch(apiBase()+'/paper',{method:'POST',headers:{'content-type':'application/json',authorization:'Bearer '+S.tok},body:JSON.stringify({run:'1'})});const j=await r.json();toast(j.ok?(j.agent&&j.agent.note)||'Done':(j.error||'Failed'),4000);UI.epSrv=null;render()}catch(e){toast('Server not reachable')}}});
+/* match photos: scorers add pictures to a match; each is resized and watermarked when saved */
+{const resize=(file)=>new Promise(res=>{const r=new FileReader();r.onload=async()=>{const im=await epLoadImg(r.result);if(!im)return res(null);const w=Math.min(1000,im.width),h=Math.round(im.height*w/im.width);const cv=document.createElement('canvas');cv.width=w;cv.height=h;cv.getContext('2d').drawImage(im,0,0,w,h);await epMark(cv);res(cv.toDataURL('image/jpeg',.82))};r.readAsDataURL(file)});
+ tGal=function(m){const ph=m.photos||[];return `<div class="card"><div class="b">Match photos</div>${ph.length?`<div class="epphotos">${ph.map((x,i)=>`<img src="${x}" alt="Match photo ${i+1}">`).join('')}</div>`:'<div class="mu sm" style="margin-top:6px">No photos yet.</div>'}${can()&&ph.length<6?`<label class="btn sm" style="display:inline-block;margin-top:10px;cursor:pointer">Add photo<input type="file" accept="image/*" data-c="mph" hidden></label><div class="mu sm" style="margin-top:6px">Only upload pictures you took or have the right to use. The Scoring Heroes watermark is added automatically. The first photo is used in the match report.</div>`:''}</div>`};
+ Object.assign(C,{async mph(v,el){const m=curM();const f=el&&el.files&&el.files[0];if(!m||!f)return;toast('Adding watermark...',1500);const u=await resize(f);if(!u){toast('Could not read that picture');return}m.photos=(m.photos||[]).concat(u).slice(0,6);UI.epImg={};commit()}})}
+
+/* ---------------- POST MANAGER: every social post (match reports, posters, custom) in one place: draft, schedule, post, track ---------------- */
+S.posts=S.posts||[];UI.pm=UI.pm||{tab:'all'};
+const PM_PL=[['wa','WhatsApp'],['fb','Facebook'],['x','X'],['tg','Telegram'],['ig','Instagram'],['yt','YouTube']];
+const pmSt=p=>p.status==='posted'?'posted':(p.status==='scheduled'?'scheduled':'draft');
+const pmDue=p=>p.status==='scheduled'&&p.when&&new Date(p.when).getTime()<=Date.now();
+const pmShrink=async(src)=>{const im=await epLoadImg(src);if(!im)return '';const w=Math.min(800,im.width),h=Math.round(im.height*w/im.width);const cv=document.createElement('canvas');cv.width=w;cv.height=h;cv.getContext('2d').drawImage(im,0,0,w,h);return cv.toDataURL('image/jpeg',.72)};
+function pmAdd(o){const p=Object.assign({id:uid(),title:'',caption:'',img:'',pl:['wa','fb'],status:'draft',when:'',created:Date.now(),posted:{},src:'custom',ref:''},o);S.posts.unshift(p);if(S.posts.length>60)S.posts=S.posts.slice(0,60);return p}
+{const sd=socDraw;socDraw=function(cv){const r=sd.apply(this,arguments);try{epMark(cv)}catch(e){}return r}}
+XV.posts=function(){const tab=UI.pm.tab,all=S.posts,L=all.filter(p=>tab==='all'||pmSt(p)===tab||(tab==='due'&&pmDue(p)));
+ const cnt=k=>k==='all'?all.length:k==='due'?all.filter(pmDue).length:all.filter(p=>pmSt(p)===k).length;
+ const TT=[['all','All'],['draft','Drafts'],['scheduled','Scheduled'],['posted','Posted']];
+ const card=p=>`<div class="card" data-pid="${p.id}">${p.img?`<img src="${p.img}" alt="" style="width:100%;border-radius:10px;display:block">`:''}
+ <div class="row" style="margin-top:8px;align-items:center"><b style="flex:1">${esc(p.title||'Untitled post')}</b><span class="pill ${pmSt(p)==='posted'?'ok':pmDue(p)?'live':''}">${pmDue(p)?'DUE NOW':pmSt(p).toUpperCase()}</span></div>
+ <label>Caption<textarea data-c="pmCap" data-id="${p.id}" rows="4" maxlength="2000">${esc(p.caption)}</textarea></label>
+ <div class="mu sm" style="margin:6px 0 2px">Platforms</div><div class="hscroll" style="gap:6px">${PM_PL.map(([k,l])=>`<button type="button" class="btn sm ${p.pl.includes(k)?'':'ghost'}" data-a="pmPl" data-id="${p.id}" data-v="${k}" style="flex:none">${l}${p.posted[k]?' ✓':''}</button>`).join('')}</div>
+ <label>Schedule (reminder)<input type="datetime-local" data-c="pmWhen" data-id="${p.id}" value="${esc(p.when||'')}"></label>
+ <div class="row" style="gap:6px;flex-wrap:wrap;margin-top:8px">${p.pl.map(k=>`<button class="btn sm" data-a="pmGo" data-id="${p.id}" data-v="${k}">Post to ${(PM_PL.find(x=>x[0]===k)||[0,k])[1]}</button>`).join('')}</div>
+ <div class="row" style="gap:6px;flex-wrap:wrap;margin-top:8px"><button class="btn sm ghost" data-a="pmSched" data-id="${p.id}">${p.status==='scheduled'?'Unschedule':'Schedule'}</button><button class="btn sm ghost" data-a="pmDone" data-id="${p.id}">${p.status==='posted'?'Back to draft':'Mark posted'}</button>${p.img?`<button class="btn sm ghost" data-a="pmDl" data-id="${p.id}">Download image</button>`:''}<button class="btn sm ghost" data-a="pmDup" data-id="${p.id}">Duplicate</button><button class="btn sm ghost" data-a="pmDel" data-id="${p.id}">Delete</button></div>
+ <div class="mu sm" style="margin-top:6px">Created ${new Date(p.created).toLocaleString([],{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})} | ${p.src==='report'?'from a match report':p.src==='poster'?'from Social studio':'custom'}</div></div>`;
+ return `<div class="bar"><h2>Post manager</h2><div class="grow"></div><button class="btn sm" data-a="pmNew">+ New post</button></div>
+ <div class="mu sm" style="margin-bottom:8px">All your social posts in one place. Posting opens the platform's share screen with your caption; the app cannot post by itself because each platform needs its own approved connection. Scheduled posts remind you when they are due (while the app is open).</div>
+ <div class="row" style="gap:8px;flex-wrap:wrap;margin-bottom:8px"><button class="btn sm ghost" data-a="pmReports">Create posts from today's reports</button><button class="btn sm ghost" data-a="go" data-v="social">Open Social studio</button></div>
+<details class="card" style="margin-bottom:8px"><summary style="cursor:pointer;font-weight:700">Channels to follow (for ideas only)</summary><div class="mu sm" style="margin:6px 0">Open these in WhatsApp to see what is being covered. Their photos and text belong to their owners: do not copy them into Scoring Heroes posts without written permission.</div>${[['Cricinfo','https://whatsapp.com/channel/0029Va5oNnUKGGGLrFKvkH3E'],['Cricket with Ansh','https://whatsapp.com/channel/0029VaEtjL38fewweOpH6g17'],['IPL 2027 Cricket News','https://whatsapp.com/channel/0029VaDeKtwF1YlV0UVzzD0h'],['IPL Cricket News','https://whatsapp.com/channel/0029VaJWno3JENxssY7qSy23']].map(([n,u])=>`<a class="btn sm ghost" href="${u}" target="_blank" rel="noopener" style="display:inline-block;margin:3px 4px 3px 0;text-decoration:none">${n}</a>`).join('')}</details>
+  <div class="tabs">${TT.map(([k,l])=>`<button class="${tab===k?'on':''}" data-a="pmTab" data-v="${k}">${l} <span class="mu sm">${cnt(k)}</span></button>`).join('')}</div>
+ ${cnt('due')?`<div class="card" style="border-color:var(--ac)"><b>${cnt('due')} post(s) due now</b></div>`:''}
+ ${L.length?L.map(card).join(''):'<div class="empty">No posts here yet. Create one from today\'s reports, the Social studio, or tap + New post.</div>'}`};
+const pmGet=id=>S.posts.find(x=>x.id===id);
+const pmUrl=(k,p)=>{const t=encodeURIComponent(p.caption||p.title||''),u=encodeURIComponent(location.origin&&/^https?:/.test(location.origin)?location.origin:'https://scoring-heroes-api.onrender.com');return {wa:'https://wa.me/?text='+t,fb:'https://www.facebook.com/sharer/sharer.php?u='+u+'&quote='+t,x:'https://twitter.com/intent/tweet?text='+t,tg:'https://t.me/share/url?url='+u+'&text='+t}[k]||''};
+Object.assign(C,{pmCap(v,el){const p=pmGet(el.dataset.id);if(p){p.caption=v;save()}},pmWhen(v,el){const p=pmGet(el.dataset.id);if(p){p.when=v;if(!v&&p.status==='scheduled')p.status='draft';commit()}}});
+Object.assign(A,{pmTab(d){UI.pm.tab=d.v;render()},pmNew(){const p=pmAdd({title:'New post',caption:''});UI.pm.tab='all';commit()},
+ pmPl(d){const p=pmGet(d.id);if(!p)return;p.pl=p.pl.includes(d.v)?p.pl.filter(x=>x!==d.v):p.pl.concat(d.v);commit()},
+ pmSched(d){const p=pmGet(d.id);if(!p)return;if(p.status==='scheduled'){p.status='draft'}else{if(!p.when){toast('Pick a date and time first');return}p.status='scheduled'}commit()},
+ pmDone(d){const p=pmGet(d.id);if(!p)return;p.status=p.status==='posted'?'draft':'posted';commit()},
+ pmDup(d){const p=pmGet(d.id);if(!p)return;pmAdd(Object.assign({},p,{id:uid(),status:'draft',posted:{},when:'',created:Date.now(),title:p.title+' (copy)'}));commit()},
+ pmDel(d){S.posts=S.posts.filter(x=>x.id!==d.id);commit()},
+ pmDl(d){const p=pmGet(d.id);if(!p||!p.img)return;const a=document.createElement('a');a.href=p.img;a.download='post.jpg';document.body.appendChild(a);a.click();a.remove()},
+ pmGo(d){const p=pmGet(d.id);if(!p)return;const u=pmUrl(d.v,p);if(u)window.open(u,'_blank','noopener');else{try{navigator.clipboard&&navigator.clipboard.writeText(p.caption||'')}catch(e){}toast('Caption copied. Download the image, then open '+((PM_PL.find(x=>x[0]===d.v)||[0,d.v])[1])+' and post.',5000)}
+  p.posted[d.v]=Date.now();if(p.pl.every(k=>p.posted[k]))p.status='posted';commit()},
+ async pmReports(){const L=epArticles();let n=0;for(const a of L){if(S.posts.some(p=>p.ref===a.id))continue;const img=a.card?await pmShrink((await epGraphic(a.card)).toDataURL('image/jpeg',.85)):'';pmAdd({title:a.h,caption:a.h+'\n\n'+(a.body[0]||'')+'\n\n#ScoringHeroes #SHSportsSkyHigh',img,src:'report',ref:a.id});n++}toast(n?n+' posts created':'No new reports to turn into posts',3000);UI.pm.tab='draft';commit()},
+ async socToPm(){const cv=document.getElementById('socCv');if(!cv)return;const cap=(document.getElementById('socCap')||{}).value||'';const img=await pmShrink(cv.toDataURL('image/png'));pmAdd({title:(cap.split('\n')[0]||'Poster').slice(0,80),caption:cap,img,src:'poster'});toast('Saved to Post manager');save()}});
+{const s0=XV.social;XV.social=function(){return s0().replace('<button class="btn ghost" data-a="socCopy">Copy caption</button>','<button class="btn ghost" data-a="socCopy">Copy caption</button><button class="btn" data-a="socToPm">Save to Post manager</button>').replace('Free, no watermark.','Free. Every picture carries the Scoring Heroes watermark.')}}
+{const MG=MENU2.find(x=>x[0]==='Media');if(MG&&!MG[1].some(z=>z[0]==='posts'))MG[1].splice(3,0,['posts','\u{1F5C2}️','Post manager'])}
+setInterval(()=>{try{if(!S.user)return;let n=0;S.posts.forEach(p=>{if(pmDue(p)&&!p.noted){p.noted=1;n++}});if(n){save();toast(n+' scheduled post'+(n>1?'s are':' is')+' due now. Open Post manager.',6000);if(UI.view==='posts')render()}}catch(e){}},30000);
+
 /* ---------------- THE HUNDRED (100 balls, 5-ball sets) ---------------- */
 {const f0=newMatch;newMatch=function(d){const h=String(d.overs)==='20.5';const m=f0(h?Object.assign({},d,{overs:20}):d);if(h){m.bpo=5;m.nbp=2;m.fmt='hundred';m.rules=Object.assign(m.rules||{},{ppb:25})}return m}}
 {const f0=vScore;vScore=function(){const o=f0();const m=S.matches.find(x=>x.id===UI.sid)||S.matches.filter(x=>x.status!=='done').slice(-1)[0];

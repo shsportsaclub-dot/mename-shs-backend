@@ -78,3 +78,11 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 - LIMIT: Cricsheet ball-by-ball coverage starts around the early 2000s, so 30 years (1996 on) cannot be complete from this source. Earlier years need another source (e.g. licensed data) - NOT BUILT.
 - LIMIT: Render Free erases the disk on restart: use HISTORY_AUTOIMPORT=1 (re-imports on start) or a persistent disk.
 - Career figures are computed from ball-by-ball data and can differ from official records (e.g. boundary and not-out edge cases, super overs excluded).
+
+## Daily paper, watermark and Post manager (Oct 2026)
+- BUILT: match-report engine (writes only from match data: SH ball-by-ball matches and provider results), graphic cards + uploaded match photos with the Scoring Heroes watermark, ePaper "Match reports of the day", server paper agent (saves finished world matches of the day every PAPER_AGENT_HOURS, default 3), publish of SH reports by scorers/admins (/api/paper).
+- BUILT: Post manager (drafts, schedule reminders, per-platform share links, mark posted, duplicate, delete, posts from reports and from Social studio).
+- It is a rule-based writer, NOT an AI model. Optional AI polishing needs an API key and cost: NOT BUILT.
+- NOT BUILT: automatic posting to WhatsApp/Facebook/Instagram/X/YouTube (each needs its own approved API connection). Scheduled posts only remind while the app is open.
+- NOT BUILT / REFUSED: pulling photos from other organisations' channels or news sites (copyright). Pictures come from own graphics, scorer-uploaded photos, or licensed/free-licence sources added deliberately.
+- Tested with mock provider data and synthetic photos only. Photos uploaded by scorers stay on that device (published reports share text and a regenerated graphic).
