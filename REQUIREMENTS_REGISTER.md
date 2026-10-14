@@ -13,7 +13,7 @@ Requirements are kept separate from implementation status. Conflicts: latest exp
 | R04 | Scorers: cricket + 12 other sports | App master | Score | S.sg | Scorer | Per-sport tests | BUILT-TESTED (rule fidelity per sport not independently verified) |
 | R05 | Worldwide mobile numbers, E.164, no India-only rule | Number doc | Register/Login | server pk/e164 | Public | IN/US/UK/UAE tests | PARTIAL (no maintained metadata library: npm unreachable) |
 | R06 | OTP delivery country-aware, unsupported shown honestly | Number doc 8 | OTP | SMS_REGIONS | Server | Unsupported status tested | PARTIAL (no SMS provider configured) |
-| R07 | OTP mandatory for registration | User "Ok" | Register | - | - | - | NOT BUILT (needs SMS/WhatsApp provider) |
+| R07 | OTP mandatory for registration | User "Ok", later changed | Register | - | - | - | DEFERRED by user instruction (2026-10-14): skip OTP for now; registration stays mobile + PIN. Email OTP is an alternative if wanted later (needs an email-sending provider; email is optional today). Ownership of the number is not verified until OTP exists |
 | R08 | Permanent SH ID separate from phone | Number doc 6 | Profile | server-issued | - | Tested | BUILT-TESTED |
 | R09 | Change number / recovery / merge review | Number doc 7 | Account | - | - | - | NOT BUILT |
 | R10 | Scorer private phone lookup, minimum participant profile | Number doc 5 | Scorer squad | - | Role-based | - | NOT BUILT |
