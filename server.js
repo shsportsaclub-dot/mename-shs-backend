@@ -274,7 +274,7 @@ const routes = {
 const cricCache = new Map();
 routes['GET /api/cric'] = async (req, body, ip) => {
   const ep = String(body.ep || ''), id = String(body.id || '');
-  if (!['match_scorecard', 'players_info', 'match_info'].includes(ep) || !/^[0-9a-f-]{8,40}$/i.test(id)) return [400, { ok: false, error: 'Bad request' }];
+  if (!['match_scorecard', 'players_info', 'match_info', 'match_squad'].includes(ep) || !/^[0-9a-f-]{8,40}$/i.test(id)) return [400, { ok: false, error: 'Bad request' }];
   if (!CRIC_KEY) return [503, { ok: false, error: 'CRIC_API_KEY is not set on the server' }];
   if (limited('cric:' + ip, 120, 36e5)) return [429, { ok: false, error: 'Too many requests' }];
   const k = ep + id, hit = cricCache.get(k), ttl = ep === 'players_info' ? 864e5 : 45e3;
