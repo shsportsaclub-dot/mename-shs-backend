@@ -1,8 +1,3 @@
-function cbpInningsDetails(inn,total){
- const value=v=>v==null?'Not supplied':typeof v==='object'?Object.entries(v).map(([k,x])=>k+': '+(typeof x==='object'?JSON.stringify(x):x)).join(', '):String(v);
- const f=inn.fow??inn['fall-of-wickets']??inn.fallOfWickets??inn.fallofwickets;
- return `<div class="cbp-note"><b>Extras</b>${esc(value(inn.extras))}</div><div class="cbp-note"><b>Total</b>${total?esc(total.r+'-'+total.w+' ('+total.o+' overs)'):'Not supplied'}</div><div class="cbp-note"><b>Fall of wickets</b>${esc(Array.isArray(f)?f.map(value).join(' • '):value(f))}</div>`;
-}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -4413,6 +4408,11 @@ function cbpSquads(W){const q=W.sq;if(!q&&!W.sqErr)return '<div class="mu" style
  const cnt={};q.forEach(t=>(t.players||[]).forEach(p=>{if(p.playerImg)cnt[p.playerImg]=(cnt[p.playerImg]||0)+1}));Object.keys(cnt).forEach(u=>{if(cnt[u]>=3)cbpBad.add(u)});
  const col=t=>(t.players||[]).map(p=>`<div class="cbp-sp" data-a="wPlayer" data-id="${esc(p.id)}" data-name="${esc(p.name)}"><i style="background:${shAvBg(p.name)};color:#fff">${cbpImg(p.playerImg,p.name)}</i><div><b>${esc(p.name)}</b><small>${esc(p.role||'')}</small></div></div>`).join('');
  return `<div class="cbp-cd"><div class="cbp-th"><span>${esc(A2.shortname||A2.teamName||'')}</span><span>${esc(B2.shortname||B2.teamName||'')}</span></div><div class="cbp-sq"><div>${col(A2)}</div><div>${col(B2)}</div></div></div><div class="mu sm" style="padding:0 4px 12px">Squad list from the data provider. It does not say which 11 are playing.</div>`}
+function cbpInningsDetails(inn,total){
+ const value=v=>v==null?'Not supplied':typeof v==='object'?Object.entries(v).map(([k,x])=>k+': '+(typeof x==='object'?JSON.stringify(x):x)).join(', '):String(v);
+ const f=inn.fow??inn['fall-of-wickets']??inn.fallOfWickets??inn.fallofwickets;
+ return `<div class="cbp-note"><b>Extras</b>${esc(value(inn.extras))}</div><div class="cbp-note"><b>Total</b>${total?esc(total.r+'-'+total.w+' ('+total.o+' overs)'):'Not supplied'}</div><div class="cbp-note"><b>Fall of wickets</b>${esc(Array.isArray(f)?f.map(value).join(' • '):value(f))}</div>`;
+}
 function cbpCard(W){const sc=W.sc;if(!sc&&!W.err)return '<div class="mu" style="padding:14px">Loading scorecard...</div>';
  const L=sc&&sc.scorecard||[];if(W.err||!L.length)return `<div class="cbp-cd cbp-note">${esc(W.err||'Scorecard will appear once the match starts.')}</div>`;
  const open=W.inn==null?L.length-1:W.inn,sq=(W.sq||[]);
