@@ -1486,7 +1486,7 @@ function wMatchHTML(){
   if(tab==='info'){
     body=`<div class="card">${[['Match',m.name],['Format',m.type],['Venue',m.venue],['Date',m.date],['Status',m.status]].filter(x=>x[1]).map(([a,b])=>`<div class="row" style="justify-content:space-between;padding:6px 0"><span class="mu">${a}</span><b style="text-align:right">${esc(b)}</b></div>`).join('')}</div>`;
   }else if(!sc&&!W.err)body='<div class="mu" style="padding:14px 0">Loading scorecard...</div>';
-  else if(W.err||!sc||!(sc.scorecard||[]).length)body=`<div class="card mu">${esc(W.err||'Scorecard will appear once the match starts.')}</div>`;
+  else if(W.err||!sc||!(sc.scorecard||[]).length)body=`<div class="card mu">${esc(W.err?'Scorecard is temporarily unavailable. Please try again.':'Scorecard will appear once the match starts.')}</div>`;
   else body=sc.scorecard.map(inn=>{
     const bat=inn.batting||[],bow=inn.bowling||[];
     return `<div class="sec"><h3>${esc(String(inn.inning||'').replace(/ Inning.*/,''))}</h3></div>
@@ -4413,7 +4413,7 @@ function cbpInningsDetails(inn,total){
  const f=inn.fow??inn['fall-of-wickets']??inn.fallOfWickets??inn.fallofwickets;
  return `<div class="cbp-note"><b>Extras</b>${esc(value(inn.extras))}</div><div class="cbp-note"><b>Total</b>${total?esc(total.r+'-'+total.w+' ('+total.o+' overs)'):'Not supplied'}</div><div class="cbp-note"><b>Fall of wickets</b>${esc(Array.isArray(f)?f.map(value).join(' • '):value(f))}</div>`;
 }
-function cbpCard(W){const sc=W.sc;if(!sc&&!W.err)return '<div class="mu" style="padding:14px">Loading scorecard...</div>';
+function cbpCard(W){if(!W.m.started&&!W.m.ended)return '<div class="cbp-cd cbp-note"><b>Match not started</b>The scorecard will appear when play begins.</div>';const sc=W.sc;if(!sc&&!W.err)return '<div class="mu" style="padding:14px">Loading scorecard...</div>';
  const L=sc&&sc.scorecard||[];if(W.err||!L.length)return `<div class="cbp-cd cbp-note">${esc(W.err||'Scorecard will appear once the match starts.')}</div>`;
  const open=W.inn==null?L.length-1:W.inn,sq=(W.sq||[]);
  return `<div class="cbp-cd">${L.map((inn,i)=>{const nm=String(inn.inning||'').replace(/ Inning.*/,''),sc0=(W.m.score||[]).find(x=>String(x.inning||'').startsWith(nm)),on=i===open;

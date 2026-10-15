@@ -269,7 +269,7 @@ const routes = {
     try { return [200, await liveMatches()]; }
     catch (e) { return [e.code || 502, { ok: false, error: e.message }]; }
   },
-  'GET /health': async () => [200, { ok: true, version: String(E.RENDER_GIT_COMMIT || '').slice(0, 7) || 'local' }]
+  'GET /health': async () => [200, { ok: true, version: String(E.RENDER_GIT_COMMIT || '').slice(0, 7) || 'local', commit: E.RENDER_GIT_COMMIT || null, appSha256: crypto.createHash('sha256').update(fs.readFileSync(new URL('./app-index.html', import.meta.url))).digest('hex') }]
 };
 
 // ---- Match scorecard / player profile proxy (key stays on the server) ----
@@ -722,7 +722,7 @@ http.createServer(async (req, res) => {
   if (req.method === 'GET' && (path === '/' || path === '/index.html')) {   // serve the app itself, same address as the API
     try {
       const html = fs.readFileSync(new URL('./app-index.html', import.meta.url));
-      res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache' });
+      res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store', 'x-sh-commit': String(E.RENDER_GIT_COMMIT || 'local') });
       return res.end(html);
     } catch { /* fall through to 404 */ }
   }
