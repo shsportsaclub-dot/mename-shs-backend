@@ -86,3 +86,8 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 - NOT BUILT: automatic posting to WhatsApp/Facebook/Instagram/X/YouTube (each needs its own approved API connection). Scheduled posts only remind while the app is open.
 - NOT BUILT / REFUSED: pulling photos from other organisations' channels or news sites (copyright). Pictures come from own graphics, scorer-uploaded photos, or licensed/free-licence sources added deliberately.
 - Tested with mock provider data and synthetic photos only. Photos uploaded by scorers stay on that device (published reports share text and a regenerated graphic).
+
+## Free photo finder (Oct 2026)
+- BUILT: Match > Gallery > "Find free photos" searches Openverse (Creative Commons / public domain, licence_type commercial+modification) through the server (/api/freephoto/search, /img), adds the picture with the SH watermark and keeps creator + licence as the photo credit, shown under the picture in the ePaper.
+- TESTED only against a local mock of the Openverse API. NOT tested against the real Openverse API (sandbox cannot reach it): endpoint names, parameters, response fields and rate limits are from memory and must be verified. Anonymous requests have low limits; a free API key may be needed.
+- NOT BUILT / REFUSED: scraping Google Images or other sites (terms of service and copyright). Licence conditions (e.g. CC BY-SA share-alike) must still be checked per picture.

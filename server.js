@@ -430,6 +430,42 @@ routes['POST /api/paper'] = async (req, body, ip) => {
   saveDb(); return [200, { ok: true, saved: clean.length, date: day }];
 };
 
+// ---- Free-licence photo finder (Openverse: Creative Commons / public domain images, licence and creator kept with each picture) ----
+const OV_BASE = (E.OPENVERSE_BASE || 'https://api.openverse.org/v1').replace(/\/$/, '');
+const ovCache = new Map();
+routes['GET /api/freephoto/search'] = async (req, body, ip) => {
+  const q = String(body.q || '').trim().slice(0, 80);
+  if (q.length < 2) return [400, { ok: false, error: 'Type at least 2 letters' }];
+  if (limited('fp:' + ip, 60, 36e5)) return [429, { ok: false, error: 'Too many searches, try later' }];
+  const hit = ovCache.get(q.toLowerCase());
+  if (hit && Date.now() - hit.t < 10 * 60e3) return [200, hit.d];
+  try {
+    const r = await fetch(`${OV_BASE}/images/?q=${encodeURIComponent(q)}&license_type=commercial,modification&page_size=12&mature=false`, { headers: { 'user-agent': 'ScoringHeroes/1.0 (free photo finder)' }, signal: AbortSignal.timeout(15000) });
+    if (!r.ok) return [502, { ok: false, error: 'Photo source answered ' + r.status + (r.status === 429 ? ' (rate limit, try later)' : '') }];
+    const j = await r.json();
+    const results = (j.results || []).filter(x => /^[0-9a-f-]{36}$/i.test(x.id || '')).slice(0, 12).map(x => ({
+      id: x.id, title: String(x.title || '').slice(0, 120), creator: String(x.creator || '').slice(0, 80), license: String(x.license || '').toUpperCase(), lv: String(x.license_version || ''),
+      attr: String(x.attribution || '').slice(0, 400), page: String(x.foreign_landing_url || '').slice(0, 300), source: String(x.source || x.provider || '').slice(0, 40)
+    }));
+    const d = { ok: true, q, results };
+    ovCache.set(q.toLowerCase(), { t: Date.now(), d }); if (ovCache.size > 200) ovCache.delete(ovCache.keys().next().value);
+    return [200, d];
+  } catch (e) { return [502, { ok: false, error: 'Photo source not reachable: ' + e.message }]; }
+};
+routes['GET /api/freephoto/img'] = async (req, body, ip) => {
+  const id = String(body.id || '');
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return [400, { ok: false, error: 'Bad id' }];
+  if (limited('fi:' + ip, 300, 36e5)) return [429, { ok: false, error: 'Too many requests' }];
+  try {
+    const r = await fetch(`${OV_BASE}/images/${id}/thumb/`, { headers: { 'user-agent': 'ScoringHeroes/1.0 (free photo finder)' }, signal: AbortSignal.timeout(20000) });
+    const ct = String(r.headers.get('content-type') || '');
+    if (!r.ok || !/^image\/(jpeg|png|webp|gif)/.test(ct)) return [502, { ok: false, error: 'Picture not available' }];
+    const buf = Buffer.from(await r.arrayBuffer());
+    if (buf.length > 1.5e6) return [502, { ok: false, error: 'Picture too large' }];
+    return [200, { ok: true, ct: ct.split(';')[0], b64: buf.toString('base64') }];
+  } catch (e) { return [502, { ok: false, error: 'Picture not reachable' }]; }
+};
+
 // ---- Sports news (Google News RSS, cached 10 min) ----
 const NEWS_BASE = E.NEWS_BASE || 'https://news.google.com/rss/search';
 const NEWS_QUERY = E.NEWS_QUERY || 'cricket';
