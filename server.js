@@ -390,6 +390,67 @@ db.papers = db.papers || {};
 const istDate = (t = Date.now()) => new Date(t + 5.5 * 3600e3).toISOString().slice(0, 10);
 const PAPER_HOURS = Math.max(1, parseInt(E.PAPER_AGENT_HOURS, 10) || 3);
 const agentStatus = { last: 0, ok: null, note: 'not run yet', added: 0 };
+// ---- Own newsroom: the agent writes match reports and previews itself from the live match facts (no third-party headlines). With ANTHROPIC_API_KEY set, Claude re-words each report; the facts and numbers are checked so nothing invented gets through. ----
+const NEWS_AI_KEY = E.ANTHROPIC_API_KEY || '', NEWS_AI_MODEL = E.NEWS_AI_MODEL || 'claude-haiku-5-5', NEWS_AI_BASE = (E.NEWS_AI_BASE || 'https://api.anthropic.com').replace(/\/$/, '');
+const ovBalls = o => { const [a, b] = String(o).split('.'); return (+a || 0) * 6 + (+b || 0); };
+const nm1 = (s, A, B) => { const x = String(s || '').toLowerCase().trim(); return x === String(A.name).toLowerCase() || x === String(A.short || '').toLowerCase() ? A : x === String(B.name).toLowerCase() || x === String(B.short || '').toLowerCase() ? B : null; };
+function newsFacts(m) {
+  const [A, B] = (m.teams || []).slice(0, 2); if (!A || !B || !A.name || !B.name) return null;
+  const desc = String(m.name || '').split(',').slice(1).join(',').trim(), st = String(m.status || '').trim().replace(/\.$/, '');
+  const sc = (m.score || []).map(x => ({ team: String(x.inning || '').replace(/ Inning.*/, ''), r: x.r, w: x.w, o: x.o }));
+  return { A, B, desc, st, sc, venue: m.venue || '', type: String(m.type || '').toLowerCase(), date: String(m.time || m.date || '').slice(0, 10) };
+}
+function writeResult(m) {
+  const f = newsFacts(m); if (!f) return null; const { A, B, desc, st, sc, venue, type } = f;
+  const w = /^(.+?) won by (\d+) (runs?|wkts?|wickets?)\b/i.exec(st), win = w && nm1(w[1], A, B), lose = win && (win === A ? B : A);
+  const unit = w ? (/^r/i.test(w[3]) ? 'run' : 'wicket') : '', mg = w ? `${w[2]} ${unit}${+w[2] === 1 ? '' : 's'}` : '';
+  const P = [];
+  P.push(win ? `${win.name} beat ${lose.name} by ${mg}${desc ? ' in the ' + desc : ''}${venue ? ' at ' + venue : ''}.` : `${A.name} and ${B.name} met${desc ? ' in the ' + desc : ''}${venue ? ' at ' + venue : ''}. ${st ? st + '.' : ''}`);
+  if (sc[0]) P.push(`${sc[0].team} batted first and made ${sc[0].r}/${sc[0].w} in ${sc[0].o} overs.${sc[1] ? ` ${sc[1].team} replied with ${sc[1].r}/${sc[1].w} in ${sc[1].o} overs.` : ''}`);
+  if (win && sc.length >= 2) {
+    if (unit === 'run' && win.name.toLowerCase() === sc[0].team.toLowerCase()) P.push(`${win.name} set a target of ${sc[0].r + 1}, and ${lose.name} finished ${mg} short on ${sc[1].r}/${sc[1].w}.`);
+    else if (unit === 'wicket' && win.name.toLowerCase() === sc[1].team.toLowerCase()) { const tot = type === 't20' || type === 't20i' ? 120 : type === 'odi' ? 300 : 0, left = tot ? tot - ovBalls(sc[1].o) : 0; P.push(`${win.name} chased down ${sc[0].r + 1} with ${mg} in hand${left > 0 ? ' and ' + left + ' balls to spare' : ''}.`); }
+  }
+  if (!win && st) P.push(st + '.');
+  return { id: 'n-' + m.id + '-r', mid: m.id, kind: 'result', h: win ? `${win.name} beat ${lose.name} by ${mg}` : (st || m.name), sub: sc.map(x => `${x.team} ${x.r}/${x.w}`).join(' | '), body: P, card: { a: sc[0] ? sc[0].team : A.name, b: sc[1] ? sc[1].team : B.name, sa: sc[0] ? sc[0].r + '/' + sc[0].w : '', sb: sc[1] ? sc[1].r + '/' + sc[1].w : '', res: st, d: f.date }, ai: false, by: 'Scoring Heroes desk', t: Date.parse(/Z$|[+-]\d\d:?\d\d$/.test(m.time || '') ? m.time : (m.time || '') + 'Z') || Date.now() };
+}
+function writePreview(m) {
+  const f = newsFacts(m); if (!f) return null; const { A, B, desc, venue } = f, when = Date.parse(/Z$|[+-]\d\d:?\d\d$/.test(m.time || '') ? m.time : (m.time || '') + 'Z');
+  const ist = when ? new Date(when).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', hour12: true }) : '';
+  return { id: 'n-' + m.id + '-p', mid: m.id, kind: 'preview', h: `${A.name} take on ${B.name}${desc ? ': ' + desc : ''}`, sub: ist ? ist + ' IST' + (venue ? ' | ' + venue : '') : venue, body: [`${A.name} play ${B.name}${desc ? ' in the ' + desc : ''}${venue ? ' at ' + venue : ''}.`, ist ? `The match is scheduled for ${ist} IST.` : ''].filter(Boolean), card: { a: A.name, b: B.name, sa: '', sb: '', res: ist ? ist + ' IST' : 'Upcoming', d: f.date }, ai: false, by: 'Scoring Heroes desk', t: when || Date.now() };
+}
+async function aiPolish(a) {
+  if (!NEWS_AI_KEY) return null;
+  const facts = { headline: a.h, summary: a.sub, paragraphs: a.body, card: a.card };
+  try {
+    const r = await fetch(NEWS_AI_BASE + '/v1/messages', { method: 'POST', signal: AbortSignal.timeout(25000), headers: { 'content-type': 'application/json', 'x-api-key': NEWS_AI_KEY, 'anthropic-version': '2023-06-01' }, body: JSON.stringify({ model: NEWS_AI_MODEL, max_tokens: 700, messages: [{ role: 'user', content: 'You are the sports desk of a cricket scoring app. Re-write this match item as a short news article: a headline and 2 to 4 short paragraphs (90 to 140 words in total). Use ONLY the facts below. Do not add player names, statistics, records, quotes, reasons or any number that is not in the facts. Reply with JSON only: {"h":"...","body":["...","..."]}\nFACTS:\n' + JSON.stringify(facts) }] }) });
+    const j = await r.json(), txt = (j.content || []).map(c => c.text || '').join(''), o = JSON.parse(txt.slice(txt.indexOf('{'), txt.lastIndexOf('}') + 1));
+    if (!o || typeof o.h !== 'string' || !Array.isArray(o.body) || !o.body.length || o.body.length > 5) return null;
+    const allowed = new Set((JSON.stringify(facts).match(/\d+/g) || [])), out = o.h + ' ' + o.body.join(' ');
+    if ((out.match(/\d+/g) || []).some(n => !allowed.has(n))) return null;   // an invented number: reject
+    if (/["“”]/.test(o.body.join(' '))) return null;                 // no quotes
+    return { h: o.h.slice(0, 160), body: o.body.map(x => String(x).slice(0, 700)) };
+  } catch { return null; }
+}
+async function newsroomRun(live) {
+  let made = 0, polished = 0; const now = Date.now();
+  for (const m of live.matches || []) {
+    const when = Date.parse(/Z$|[+-]\d\d:?\d\d$/.test(m.time || '') ? m.time : (m.time || '') + 'Z');
+    if (!when) continue;
+    const ended = m.ended, soon = !m.started && when > now - 36e5 && when < now + 24 * 36e5;
+    if (!ended && !soon) continue;
+    if (ended && now - when > 48 * 36e5) continue;
+    const day = istDate(when), P = db.papers[day] = db.papers[day] || { world: [], sh: [] }; P.news = P.news || [];
+    if (ended) { const pi = P.news.findIndex(x => x.id === 'n-' + m.id + '-p'); if (pi >= 0) P.news.splice(pi, 1); }
+    const id = 'n-' + m.id + (ended ? '-r' : '-p'), old = P.news.find(x => x.id === id);
+    const a = ended ? writeResult(m) : writePreview(m); if (!a) continue;
+    if (old && old.sub === a.sub && old.card && old.card.res === a.card.res && (old.ai || !NEWS_AI_KEY || polished >= 6)) continue;
+    if (polished < 6) { const p = await aiPolish(a); if (p) { a.h = p.h; a.body = p.body; a.ai = true; polished++; } }
+    const i = P.news.findIndex(x => x.id === id); if (i < 0) { P.news.push(a); made++; } else P.news[i] = a;
+  }
+  return { made, polished };
+}
+
 async function paperAgentRun() {
   agentStatus.last = Date.now();
   try {
@@ -404,6 +465,8 @@ async function paperAgentRun() {
       const i = P.world.findIndex(x => x.id === m.id);
       if (i < 0) { P.world.push(row); added++; } else P.world[i] = row;
     }
+    let nr = { made: 0, polished: 0 }; try { nr = await newsroomRun(live); } catch (e) { agentStatus.newsErr = e.message; }
+    agentStatus.news = nr; agentStatus.ai = NEWS_AI_KEY ? NEWS_AI_MODEL : 'rule-based (no ANTHROPIC_API_KEY)';
     for (const d of Object.keys(db.papers).sort().slice(0, -60)) delete db.papers[d];   // keep 60 days
     if (added || true) saveDb();
     Object.assign(agentStatus, { ok: true, note: 'saved ' + P.world.length + ' finished matches for ' + day, added });
@@ -413,7 +476,8 @@ if (E.PAPER_AGENT !== '0') { setTimeout(paperAgentRun, 60e3); setInterval(paperA
 routes['GET /api/paper'] = async (req, body) => {
   const day = /^\d{4}-\d\d-\d\d$/.test(body.date || '') ? body.date : istDate();
   const P = db.papers[day] || { world: [], sh: [] };
-  return [200, { ok: true, date: day, world: P.world, sh: P.sh, agent: agentStatus, days: Object.keys(db.papers).sort().slice(-14) }];
+  const recent = Object.keys(db.papers).sort().slice(-4).flatMap(d => (db.papers[d].news || [])).sort((x, y) => y.t - x.t).slice(0, 40);
+  return [200, { ok: true, date: day, world: P.world, sh: P.sh, news: P.news || [], recent, agent: agentStatus, days: Object.keys(db.papers).sort().slice(-14) }];
 };
 routes['POST /api/paper'] = async (req, body, ip) => {
   const phone = readSession((req.headers.authorization || '').replace(/^Bearer /, '')), u = phone && db.users[phone];
@@ -776,7 +840,7 @@ http.createServer(async (req, res) => {
     u.prefs = { country: q.country || '', sports: q.sports, primary: q.primary || 'cricket', lang: String(q.lang || 'en').slice(0, 8), updated: Date.now() };
     saveDb(); return out(200, { ok: true, updated: u.prefs.updated, shid: u.shid });
   }
-  const pth = path === '/otp/verify-link' ? '/api/otp/link' : (/^\/(otp|live|cric|streams|mo|wa|news|auth)/.test(path) ? '/api' + path : path);
+  const pth = path === '/otp/verify-link' ? '/api/otp/link' : (/^\/(otp|live|cric|streams|mo|wa|news|auth|paper|history|freephoto)/.test(path) ? '/api' + path : path);
   const h = routes[req.method + ' ' + pth];
   if (!h) return out(404, { ok: false, error: 'Not found' });
   let raw = '';
