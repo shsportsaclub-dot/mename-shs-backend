@@ -4092,7 +4092,7 @@ XV.matches=function(){
  const head=`<div class="bar"><h2>Matches</h2><div class="grow"></div>${can()?'<button class="btn" data-a="newMatch">+ New match</button>':''}<button class="btn ghost" data-a="demo">Load demo match</button></div>`;
  return head+`<div class="msk msk-${sk()}">${bar()}<div class="tabs" style="margin-bottom:8px">${TT.map(([k,l])=>`<button class="${tab===k?'on':''}" data-a="mtab" data-v="${k}">${l} <span class="mu sm">${cnt(k)}</span></button>`).join('')}</div>${(j&&j.ok)?'':liveDiagHtml()}${feed}${sec||''}${empty}</div>`};
 A.mtab=function(d){UI.mtab=d.v;render()};
-XV.match=function(){const o=fM1();return `<div class="msk msk-${sk()}">${bar()}${o}</div>`};
+XV.match=function(){const o=vMatch();return `<div class="msk msk-${sk()}">${bar()}${o}</div>`};
 A.mskin=function(d){S.settings.mskin=d.v==='ca'?'ca':'cb';commit()};
 }
 
@@ -4545,6 +4545,36 @@ Object.assign(A,{svcLoad(){UI.svc=null;render()},async svcTest(){const v=(docume
 MENU2[MENU2.length-1][1].push(['svc','\u{1F6E0}️','Server status (admin)']);
 
 try{fetch(apiBase()+'/health').then(r=>r.json()).then(j=>{UI.ver=j&&j.version||'?'}).catch(()=>{UI.ver='offline'})}catch(e){}
+/* ---------------- SCORING VIEW: 2 skins (Cricbuzz / Cricket Australia) + Cricex-style tab order and live strip ---------------- */
+{const st=document.createElement('style');st.textContent=
+'.shh{border-radius:12px;margin-bottom:10px;overflow:hidden}.shh .tp{display:flex;align-items:center;gap:8px;padding:8px 12px;font:700 12px var(--ui);letter-spacing:.5px;text-transform:uppercase}.shh .bd2{padding:12px}'+
+'.shh .tr2{display:flex;align-items:center;gap:10px;margin:6px 0}.shh .tr2 .n{font:700 16px var(--ui);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.shh .tr2 .s{font:800 24px var(--ui);font-variant-numeric:tabular-nums}.shh .tr2 .s small{font:600 13px var(--ui);opacity:.7;margin-left:4px}'+
+'.shh .res2{font:700 14px var(--ui);margin-top:6px}.shh .kp{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.shh .kp span{font:700 12px var(--ui);padding:5px 9px;border-radius:999px}'+
+'.shh .ov2{display:flex;align-items:center;gap:6px;margin-top:10px;font:600 12px var(--ui)}.shh .ov2 i{font-style:normal;min-width:26px;height:26px;border-radius:13px;display:inline-flex;align-items:center;justify-content:center;font:700 12px var(--ui)}'+
+'.shh-cb{background:#fff;color:#10161c;border:1px solid #d6dce3}.shh-cb .tp{background:linear-gradient(90deg,#0a1f5c,#cb2030);color:#fff}.shh-cb .res2{color:#cb2030}.shh-cb .kp span{background:#eef1f4;color:#10161c}.shh-cb .ov2 i{background:#eef1f4;color:#10161c}.shh-cb .ov2 i.w{background:#cb2030;color:#fff}.shh-cb .ov2 i.f{background:#ffc83d}.shh-cb .ov2 i.s{background:#0a1f5c;color:#fff}'+
+'.shh-ca{background:#0c2542;color:#fff;border:1px solid #1d4670;border-left:6px solid #c4f000;border-radius:18px}.shh-ca .tp{color:#9db7d1}.shh-ca .tr2 .s{font-size:30px}.shh-ca .res2{color:#c4f000}.shh-ca .kp span{background:#123459;color:#fff}.shh-ca .ov2 i{background:#123459;color:#fff}.shh-ca .ov2 i.w{background:#e11d2e}.shh-ca .ov2 i.f{background:#c4f000;color:#07182d}.shh-ca .ov2 i.s{background:#2fd1a0;color:#07182d}'+
+'.msk-ca .tabs{border:0;gap:6px}.msk-ca .tabs button{border:1px solid #1d4670;border-radius:999px;color:#9db7d1;padding:8px 14px}.msk-ca .tabs button.on{background:#c4f000;color:#07182d;border-color:#c4f000}'+
+'.msk-cb .tabs{position:sticky;top:0;z-index:4;background:#fff;margin:0 -10px 10px;padding:0 6px}.msk-cb .tabs button{text-transform:uppercase;font-size:12.5px;letter-spacing:.5px}'+
+'.msk-ca .cbp-h{background:#0c2542}.msk-ca .cbp-tabs button.on{border-bottom-color:#c4f000;color:#c4f000}';
+document.head.appendChild(st)}
+{const sk2=()=>(S.settings&&S.settings.mskin)==='ca'?'ca':'cb';
+ const M_TABS=[['live','Live'],['card','Scorecard'],['comm','Commentary'],['squads','Squads'],['info','Info'],['ovr','Overs'],['graphs','Graphs'],['ins','Insights'],['sum','Summary'],['mvp','MVP'],['pts','Points Table'],['act','Activity'],['gal','Gallery'],['drs','DRS'],['dls','DLS']];
+ window.SH_MTABS=M_TABS;
+ const mHead0=mHead;
+ mHead=function(m){const s=st(m);if(!s)return mHead0(m);const live=m.status==='live',k=sk2(),A=T(m.a),B=T(m.b);
+  const status=m.status==='done'?'Result':m.status==='break'?'Innings break':'Live';
+  const row=(i)=>{const inn=m.innings[i];if(!inn)return '';const t=T(inn.bat),c=calc(m,i);return `<div class="tr2" style="${i===s.i&&m.status!=='done'?'':'opacity:.7'}">${logo(t,k==='ca'?34:28)}<span class="n">${esc(k==='ca'?t.short||t.name:t.name)}</span><span class="s">${c.runs}-${c.wk}<small>(${fmtOv(c.lg)})</small></span></div>`};
+  let line='';if(m.status==='done')line=m.result||'';else if(s.i===1)line=`${s.bat.name} need ${Math.max(0,s.need)} run${s.need===1?'':'s'} from ${s.left} ball${s.left===1?'':'s'}`;else line=`Projected ${Math.round(s.k.runs+s.left/BPO*s.crr)} at current rate`;
+  let ov='';try{const L=overList(m,s.i).slice(-1)[0];if(L&&m.status==='live')ov=`<div class="ov2"><span>This over</span>${L.b.map(c=>`<i class="${c.cls||''}">${c.lab}</i>`).join('')}<b>= ${L.t}</b></div>`}catch(e){}
+  const chips=`<span>CRR ${s.crr.toFixed(2)}</span>${s.rrr!=null?`<span>RRR ${s.rrr.toFixed(2)}</span>`:''}<span>Overs left ${fmtOv(s.left)}</span><span>P'ship ${s.k.part.r} (${s.k.part.b})</span>`;
+  return `<div class="shh shh-${k}"><div class="tp"><span>${esc(A.short)} v ${esc(B.short)}</span><span style="flex:1"></span><span>${m.overs||''} ov | ${status}</span></div><div class="bd2">${row(0)}${row(1)}<div class="res2">${esc(line)}</div>${ov}<div class="kp">${chips}</div></div></div>`};
+ vMatch=function(){const m=curM();if(!m)return'<div class="empty">No match selected. Create or load a match from the Matches tab.</div>';
+  const tabs=M_TABS;if(!tabs.some(t=>t[0]===UI.tab))UI.tab=(m.status==='live'||m.status==='break')?'live':'sum';
+  const sel=S.matches.length>1?`<select data-c="mid" aria-label="Select match">${opt(S.matches.map(x=>[x.id,T(x.a).short+' vs '+T(x.b).short+' ('+x.date+')']),m.id)}</select>`:'';
+  const V={info:tInfo,ovr:tOvr,act:tAct,sum:tSum,ins:tIns,mvp:tMvp,gal:tGal,pts:tPts,live:tLive,comm:tComm,card:tCard,graphs:tGraphs,drs:tDRS,dls:tDLS,squads:tSquads};
+  return sel+mHead(m)+tickerHTML()+`<div class="tabs">${tabs.map(([k,l])=>`<button class="${UI.tab===k?'on':''}" data-a="tab" data-v="${k}">${l}</button>`).join('')}</div>`+V[UI.tab](m)};
+ const x0=XV.wmatch;XV.wmatch=function(){return `<div class="msk msk-${sk2()}" style="padding:0;margin:0"><div class="mskbar" style="margin:0 0 8px">${[['cb','Cricbuzz'],['ca','Cricket Australia']].map(([k,l])=>`<button type="button" class="${sk2()===k?'on':''}" data-a="mskin" data-v="${k}">${l}</button>`).join('')}</div>${x0()}</div>`};
+}
 /* ---------------- THE HUNDRED (100 balls, 5-ball sets) ---------------- */
 {const f0=newMatch;newMatch=function(d){const h=String(d.overs)==='20.5';const m=f0(h?Object.assign({},d,{overs:20}):d);if(h){m.bpo=5;m.nbp=2;m.fmt='hundred';m.rules=Object.assign(m.rules||{},{ppb:25})}return m}}
 {const f0=vScore;vScore=function(){const o=f0();const m=S.matches.find(x=>x.id===UI.sid)||S.matches.filter(x=>x.status!=='done').slice(-1)[0];
