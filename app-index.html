@@ -1422,7 +1422,7 @@ const wFilter=()=>{const j=UI.live;if(!j||!j.ok)return{live:[],up:[],rec:[]};con
 const wWhen=m=>{try{const t=m.time?new Date(m.time+(/Z|\+/.test(m.time)?'':'Z')):null;return t&&!isNaN(t)?t.toLocaleString('en-IN',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'}):(m.date||'')}catch(e){return m.date||''}};
 function wSplit(m){const p=String(m.name||'').split(',').map(x=>x.trim());return{teams:p[0]||m.name,desc:p.slice(1,-1).join(', '),series:p.length>2?p[p.length-1]:(p[1]||m.type||'')}}
 function wTeamScore(m,t){const n=String(t.name||'').toLowerCase();const x=(m.score||[]).filter(z=>String(z.inning||'').toLowerCase().replace(/ inning.*/,'')===n);return x.length?x.map(z=>z.r+'/'+z.w+' <span class="mu">('+z.o+')</span>').join(' &amp; '):''}
-function wBadge(t){const i=String(t.short||t.name||'?').slice(0,3).toUpperCase();return t.img?`<img class="logo" src="${esc(t.img)}" width="26" height="26" alt="">`:`<span class="tbadge">${esc(i)}</span>`}
+function wBadge(t){const i=String(t.short||t.name||'?').slice(0,3).toUpperCase();return t.img&&!/placeholder|default|icon512|icon192|cricapi\.com\/img\/icon/i.test(t.img)?`<img class="logo" src="${esc(t.img)}" width="26" height="26" alt="${esc(i)}" onerror="this.outerHTML='<span class=&quot;tbadge&quot;>'+this.alt+'</span>'">`:`<span class="tbadge">${esc(i)}</span>`}
 function wCard(m){
   const sp=wSplit(m),live=m.started&&!m.ended,tm=(m.teams||[]).slice(0,2);
   const stCls=live?'wlive':m.ended?'wres':'wup';
@@ -3987,7 +3987,7 @@ async function emPost(path,body){try{const r=await fetch(apiBase()+path,{method:
 Object.assign(A,{async emSend(d){const em=d.v==='reset'?String((document.getElementById('em-r-mail')||{}).value||'').trim().toLowerCase():emVal();const st=d.v==='reset'?'em-r-st':'em-st';
   if(!/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(em))return emSet(st,'Enter a valid email first');emSet(st,'Sending...',1);
   const j=await emPost('/api/email/send',{email:em,purpose:d.v==='reset'?'reset':'register'});UI.em.email=em;UI.em.proof='';
-  if(j.ok)emSet(st,'Code sent to '+em+'. It works for 10 minutes. Check spam too.'+(j.devCode?' (test mode code: '+j.devCode+')':''),1);else emSet(st,j.error||'Could not send',0)},
+  if(j.ok)emSet(st,'Code sent to '+em+'. It works for 10 minutes. Check spam too.'+(j.devCode?' NOTE: email sending is NOT set up on the server, so no email was sent. Test code: '+j.devCode:''),1);else emSet(st,j.error||'Could not send',0)},
  async emVerify(d){const reset=d.v==='reset',em=reset?String((document.getElementById('em-r-mail')||{}).value||'').trim().toLowerCase():emVal(),st=reset?'em-r-st':'em-st',code=String((document.getElementById(reset?'em-r-code':'em-code')||{}).value||'').trim();
   if(!/^\d{6}$/.test(code))return emSet(st,'Enter the 6 digit code');
   const j=await emPost('/api/email/verify',{email:em,code,purpose:reset?'reset':'register'});
@@ -4012,7 +4012,7 @@ Object.assign(A,{async emLSend(){const em=String((document.getElementById('em-l-
   if(!/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(em))return emSet('em-l-st','Enter a valid email first');emSet('em-l-st','Sending...',1);
   const j=await emPost('/api/email/send',{email:em,purpose:'login'});
   if(j.noAccount){UI.authTab='register';UI.login={step:1,phone:em};render();return toast(j.error,3500)}
-  if(j.ok)emSet('em-l-st','Code sent to '+em+'. It works for 10 minutes. Check spam too.'+(j.devCode?' (test mode code: '+j.devCode+')':''),1);else emSet('em-l-st',j.error||'Could not send',0)},
+  if(j.ok)emSet('em-l-st','Code sent to '+em+'. It works for 10 minutes. Check spam too.'+(j.devCode?' NOTE: email sending is NOT set up on the server, so no email was sent. Test code: '+j.devCode:''),1);else emSet('em-l-st',j.error||'Could not send',0)},
  async emLogin(){const em=String((document.getElementById('em-l-mail')||{}).value||'').trim().toLowerCase(),code=String((document.getElementById('em-l-code')||{}).value||'').trim();
   if(!/^\d{6}$/.test(code))return emSet('em-l-st','Enter the 6 digit code');
   const v=await emPost('/api/email/verify',{email:em,code,purpose:'login'});if(!v.ok)return emSet('em-l-st',v.error||'Wrong code',0);
@@ -4392,11 +4392,17 @@ document.addEventListener('scroll',e=>{const t=e.target;if(!t||t.id!=='igsl')ret
 const cbpBack=()=>UI.wmFrom||'home';
 function cbpHead(title,tabs,cur,act){return `<div class="cbp-h"><div class="cbp-t"><button data-a="wBack" aria-label="Back">&larr;</button><span>${esc(title)}</span></div><div class="cbp-tabs">${tabs.map(([k,l])=>`<button class="${cur===k?'on':''}" data-a="${act}" data-v="${k}">${l}</button>`).join('')}</div></div>`}
 const cbpIni=n=>String(n||'?').split(/\s+/).map(x=>x[0]).slice(0,2).join('').toUpperCase();
-const cbpImg=(u,n)=>u&&!/placeholder|default|icon-?player|no.?image/i.test(u)?`<img src="${esc(u)}" alt="" onerror="this.remove()">`:esc(cbpIni(n));
+const SH_PH=/placeholder|default|icon-?player|no.?[-_]?image|icon512|icon192|cricapi\.com\/img\/icon|blank|silhouette|avatar-?default/i;
+const shHue=n=>{let h=0;for(const c of String(n||'?'))h=(h*31+c.charCodeAt(0))>>>0;return h};
+const shAvBg=n=>{const P=[['#0a1f5c','#e11d2e'],['#12266a','#6a1b54'],['#0b3d6e','#3f7bff'],['#3b1a6b','#e11d6a'],['#0b2a5c','#0f8a4f'],['#5c1a2e','#e11d2e']],c=P[shHue(n)%P.length];return `linear-gradient(135deg,${c[0]},${c[1]})`};
+window.shAv=n=>cbpIni(n);
+const cbpBad=new Set();
+const cbpImg=(u,n)=>u&&!SH_PH.test(u)&&!cbpBad.has(u)?`<img src="${esc(u)}" alt="${esc(n||'')}" referrerpolicy="no-referrer" onerror="this.outerHTML=window.shAv(this.alt)">`:esc(cbpIni(n));
 function cbpSquads(W){const q=W.sq;if(!q&&!W.sqErr)return '<div class="mu" style="padding:14px">Loading squads...</div>';
  if(W.sqErr||!Array.isArray(q)||!q.length)return `<div class="cbp-cd cbp-note">${esc(W.sqErr||'Squads are not published for this match yet.')}</div>`;
  const A2=q[0],B2=q[1]||{players:[]},n=Math.max((A2.players||[]).length,(B2.players||[]).length);
- const col=t=>(t.players||[]).map(p=>`<div class="cbp-sp" data-a="wPlayer" data-id="${esc(p.id)}" data-name="${esc(p.name)}"><i>${cbpImg(p.playerImg,p.name)}</i><div><b>${esc(p.name)}</b><small>${esc(p.role||'')}</small></div></div>`).join('');
+ const cnt={};q.forEach(t=>(t.players||[]).forEach(p=>{if(p.playerImg)cnt[p.playerImg]=(cnt[p.playerImg]||0)+1}));Object.keys(cnt).forEach(u=>{if(cnt[u]>=3)cbpBad.add(u)});
+ const col=t=>(t.players||[]).map(p=>`<div class="cbp-sp" data-a="wPlayer" data-id="${esc(p.id)}" data-name="${esc(p.name)}"><i style="background:${shAvBg(p.name)};color:#fff">${cbpImg(p.playerImg,p.name)}</i><div><b>${esc(p.name)}</b><small>${esc(p.role||'')}</small></div></div>`).join('');
  return `<div class="cbp-cd"><div class="cbp-th"><span>${esc(A2.shortname||A2.teamName||'')}</span><span>${esc(B2.shortname||B2.teamName||'')}</span></div><div class="cbp-sq"><div>${col(A2)}</div><div>${col(B2)}</div></div></div><div class="mu sm" style="padding:0 4px 12px">Squad list from the data provider. It does not say which 11 are playing.</div>`}
 function cbpCard(W){const sc=W.sc;if(!sc&&!W.err)return '<div class="mu" style="padding:14px">Loading scorecard...</div>';
  const L=sc&&sc.scorecard||[];if(W.err||!L.length)return `<div class="cbp-cd cbp-note">${esc(W.err||'Scorecard will appear once the match starts.')}</div>`;
@@ -4420,7 +4426,7 @@ function cbpStats(d,fn){const S2=(d&&d.stats||[]).filter(x=>String(x.fn||'').toL
  const g=(f,k)=>{const x=S2.find(s=>String(s.matchtype||'').toLowerCase()===f&&String(s.stat||'').toLowerCase()===k);return x&&x.value!==''&&x.value!=null?x.value:'-'};
  return `<div class="cbp-cd" style="overflow-x:auto"><table class="cbp-tb"><tr><th>${fn==='bat'?'Batting':'Bowling'}</th>${F.map(f=>`<th>${esc(f.toUpperCase())}</th>`).join('')}</tr>${CBP_ROWS[fn==='bat'?'bat':'bowl'].map(([l,k])=>`<tr><td>${l}</td>${F.map(f=>`<td>${esc(String(g(f,k)))}</td>`).join('')}</tr>`).join('')}</table></div>`}
 XV.wplayer=function(){const P=UI.wp;if(!P)return '<div class="empty">No player selected.</div>';const d=P.data,tab=P.tab||'info';
- const hd=`<div class="cbp-h"><div class="cbp-t"><button data-a="wpBack" aria-label="Back">&larr;</button><span></span></div><div class="cbp-pp"><i>${cbpImg(d&&d.playerImg,P.name)}</i><div><h2>${esc(d&&d.name||P.name)}</h2>${d&&d.country?`<span>${esc(d.country)}</span>`:''}</div></div><div class="cbp-tabs">${[['info','Info'],['bat','Batting'],['bowl','Bowling']].map(([k,l])=>`<button class="${tab===k?'on':''}" data-a="wpTab" data-v="${k}">${l}</button>`).join('')}</div></div>`;
+ const hd=`<div class="cbp-h"><div class="cbp-t"><button data-a="wpBack" aria-label="Back">&larr;</button><span></span></div><div class="cbp-pp"><i style="background:${shAvBg(P.name)}">${cbpImg(d&&d.playerImg,P.name)}</i><div><h2>${esc(d&&d.name||P.name)}</h2>${d&&d.country?`<span>${esc(d.country)}</span>`:''}</div></div><div class="cbp-tabs">${[['info','Info'],['bat','Batting'],['bowl','Bowling']].map(([k,l])=>`<button class="${tab===k?'on':''}" data-a="wpTab" data-v="${k}">${l}</button>`).join('')}</div></div>`;
  if(!d&&!P.err)return hd+'<div class="mu" style="padding:14px">Loading profile...</div>';
  if(P.err)return hd+`<div class="cbp-cd cbp-note">${esc(P.err)}</div>`;
  if(tab==='bat'||tab==='bowl')return hd+cbpStats(d,tab);
@@ -4459,6 +4465,75 @@ Object.assign(A,{artOpen(d){UI.artK=d.k;UI.artFrom=UI.view==='article'?UI.artFro
  artShare(d){let L=[];try{L=ownNews()}catch(e){}const a=L.find(x=>x.key===d.k);if(!a)return;const t=a.title+'\n'+(a.body[0]||'')+'\nScoring Heroes';if(navigator.share)navigator.share({text:t}).catch(()=>{});else window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank')}});
 document.addEventListener('click',e=>{const a=e.target.closest&&e.target.closest('a[href^="#art/"]');if(!a)return;e.preventDefault();e.stopPropagation();A.artOpen({k:decodeURIComponent(a.getAttribute('href').slice(5))})},true);
 ownNewsRefresh().then(()=>{if(S.user&&UI.view==='home')render()});
+
+/* ---------------- MATCH PAGE 2: Info (toss, winner), Live (at the crease, run-rate outlook), Commentary, Scorecard details, Graphs; admin Server status ---------------- */
+{const st=document.createElement('style');st.textContent='.gr-row{display:grid;grid-template-columns:96px 1fr 44px;gap:8px;align-items:center;padding:7px 12px;font:500 13px var(--ui)}.gr-row>span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.gr-bar{display:flex;height:16px;border-radius:8px;overflow:hidden;background:var(--c2)}.gr-bar i{display:block;height:100%}.gr-bar .o{background:#3f7bff}.gr-bar .f{background:#ffc83d}.gr-bar .s{background:#e11d2e}.gr-bar .w{background:#e11d2e}.gr-bar .r{background:#3f7bff}.gr-row b{text-align:right;font-variant-numeric:tabular-nums}.gr-key{display:flex;gap:14px;padding:6px 14px;color:var(--mu);font:500 12px var(--ui)}.gr-key i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}.cm-i{display:flex;gap:12px;padding:11px 14px;border-bottom:1px solid var(--bd);font:500 14px/1.45 var(--ui)}.cm-o{flex:none;width:38px;font:700 13px var(--ui);color:var(--mu)}.cm-r{flex:none;min-width:26px;height:26px;border-radius:13px;background:var(--c2);display:flex;align-items:center;justify-content:center;font:700 12px var(--ui)}.cm-r.w{background:#e11d2e;color:#fff}.cm-r.f{background:#ffc83d;color:#222}.cm-r.s{background:#3f7bff;color:#fff}.sv-k{display:flex;justify-content:space-between;gap:10px;padding:11px 14px;border-bottom:1px dashed var(--bd);font:500 14px var(--ui)}.sv-k:last-child{border:0}.sv-ok{color:#22c55e;font-weight:700}.sv-no{color:#ff5d6c;font-weight:700}.sv-h{font:500 12.5px/1.5 var(--ui);color:var(--mu);padding:0 14px 11px}';document.head.appendChild(st)}
+const shShort=n=>{const a=String(n||'').trim().split(/\s+/);return a.length>1?a[0][0]+' '+a.slice(1).join(' '):a[0]||''};
+const cbpTot=t=>({t20:20,t20i:20,odi:50,odm:50}[String(t||'').toLowerCase()]||0);
+const cbpOv=o=>{const [a,b]=String(o).split('.');return (+a||0)*6+(+b||0)};
+function cbpOutlook(m){const sc=m.score||[];if(!m.started||m.ended||!sc.length)return '';const tot=cbpTot(m.type);if(!tot)return '';
+ const c=sc[sc.length-1],b=cbpOv(c.o);if(!b)return '';const crr=c.r/(b/6),rows=[['Current run rate',crr.toFixed(2)]];
+ if(sc.length===1){rows.push(['Projected total at this rate',String(Math.round(crr*tot))],['Overs left',((tot*6-b)/6).toFixed(1)])}
+ else{const tg=sc[0].r+1,need=tg-c.r,left=tot*6-b;rows.push(['Target',String(tg)]);if(need>0&&left>0)rows.push(['Need',need+' from '+left+' balls'],['Required run rate',(need/(left/6)).toFixed(2)])}
+ return `<div class="cbp-lb">Run-rate outlook</div><div class="cbp-cd">${rows.map(([a,v])=>`<div class="cbp-kv"><span>${a}</span><b>${esc(v)}</b></div>`).join('')}</div><div class="mu sm" style="padding:0 4px 10px">Worked out from the current score. It is arithmetic, not a win-chance forecast.</div>`}
+function cbpCrease(W){const L=W.sc&&W.sc.scorecard||[];if(!L.length||!W.m.started||W.m.ended)return '';const inn=L[L.length-1],bat=(inn.batting||[]).filter(b=>/not out|batting/i.test(b['dismissal-text']||b.dismissal||'')||!(b['dismissal-text']||b.dismissal)),bow=inn.bowling||[];
+ return (bat.length?`<div class="cbp-lb">At the crease</div><div class="cbp-cd"><table class="cbp-tb"><tr><th>Batter</th><th>R</th><th>B</th><th>4s</th><th>6s</th><th>SR</th></tr>${bat.map(b=>{const bm=b.batsman||{};return `<tr><td class="pl" data-a="wPlayer" data-id="${esc(bm.id||'')}" data-name="${esc(bm.name||'')}" style="cursor:pointer">${esc(bm.name||'')}</td><td><b>${b.r??''}</b></td><td>${b.b??''}</td><td>${b['4s']??''}</td><td>${b['6s']??''}</td><td>${b.sr??''}</td></tr>`}).join('')}</table></div>`:'')+
+ (bow.length?`<div class="cbp-lb">Bowling</div><div class="cbp-cd"><table class="cbp-tb"><tr><th>Bowler</th><th>O</th><th>M</th><th>R</th><th>W</th><th>ER</th></tr>${bow.map(b=>{const bm=b.bowler||{};return `<tr><td class="pl" data-a="wPlayer" data-id="${esc(bm.id||'')}" data-name="${esc(bm.name||'')}" style="cursor:pointer">${esc(bm.name||'')}</td><td>${b.o??''}</td><td>${b.m??''}</td><td>${b.r??''}</td><td><b>${b.w??''}</b></td><td>${b.eco??''}</td></tr>`}).join('')}</table></div>`:'')}
+function cbpInfo(W){const m=W.m,i=W.mi||{},sp=wSplit(m),ist=Date.parse((i.dateTimeGMT||m.time||'')+((i.dateTimeGMT||m.time||'').match(/Z|\+/)?'':'Z')),when=ist?new Date(ist).toLocaleString('en-IN',{timeZone:'Asia/Kolkata',day:'numeric',month:'short',year:'numeric',hour:'numeric',minute:'2-digit',hour12:true})+' IST':m.date;
+ const toss=i.tossWinner?i.tossWinner+(i.tossChoice?' won the toss and chose to '+i.tossChoice:' won the toss'):'';
+ const rows=[['Match',m.name],['Series',sp.series],['Format',String(m.type||'').toUpperCase()],['Date',when],['Venue',m.venue],['Toss',toss],['Result',i.matchWinner&&m.ended?i.matchWinner+' won':''],['Status',m.status]].filter(x=>x[1]);
+ return `<div class="cbp-cd">${rows.map(([a,b])=>`<div class="cbp-kv"><span>${a}</span><b>${esc(b)}</b></div>`).join('')}</div>${W.miErr?`<div class="mu sm" style="padding:0 4px 10px">More match details are not available: ${esc(W.miErr)}</div>`:!W.mi?'<div class="mu sm" style="padding:0 4px">Loading more details...</div>':''}<div class="mu sm" style="padding:0 4px 12px">Umpires, referee and pitch notes are not in this data feed.</div>`}
+function cbpBbb(W){if(W.bb==null&&!W.bbErr)return '<div class="mu" style="padding:14px">Loading commentary...</div>';
+ if(W.bbErr)return `<div class="cbp-cd cbp-note"><b>No ball-by-ball for this match</b>${esc(W.bbErr)}. The provider gives ball-by-ball only for some matches and plans. Scores and the scorecard above are still live.</div>`;
+ const L=cbpBbbList(W.bb);if(!L.length)return '<div class="cbp-cd cbp-note"><b>Commentary not available</b>The provider returned no ball-by-ball for this match yet.</div>';
+ return `<div class="cbp-cd">${L.slice(0,150).map(x=>`<div class="cm-i"><span class="cm-o">${esc(x.ov)}</span>${x.run!==''?`<span class="cm-r ${x.cls}">${esc(String(x.run))}</span>`:''}<span>${esc(x.txt)}</span></div>`).join('')}</div>`}
+function cbpBbbList(d){const arr=Array.isArray(d)?d:Array.isArray(d&&d.bbb)?d.bbb:Array.isArray(d&&d.balls)?d.balls:[];const nm=x=>x&&typeof x==='object'?(x.name||''):String(x||'');
+ return arr.map(it=>{if(!it||typeof it!=='object')return null;const ov=it.over!=null&&it.ball!=null?it.over+'.'+it.ball:(it.n!=null?String(it.n):(it.ball_number||it.overs||'')),run=it.runs!=null?it.runs:(it.run!=null?it.run:''),wk=!!(it.wicket||it.isWicket||it.out||/wicket|out/i.test(String(it.event||it.type||''))),txt=String(it.commentary||it.text||it.comment||it.desc||it.description||(nm(it.bowler)&&nm(it.batsman)?nm(it.bowler)+' to '+nm(it.batsman)+(run!==''?', '+run+(+run===1?' run':' runs'):''):'')||'').trim();
+  if(!txt&&ov==='')return null;const n=+run;return{ov:String(ov),run:wk?'W':run,cls:wk?'w':n===4?'f':n===6?'s':'',txt,r:isFinite(n)?n:0,o:it.over}}).filter(Boolean).reverse()}
+function cbpGraphs(W){const L=W.sc&&W.sc.scorecard||[];if(!L.length)return W.err?`<div class="cbp-cd cbp-note">${esc(W.err)}</div>`:'<div class="mu" style="padding:14px">Loading...</div>';
+ const key=a=>`<div class="gr-key">${a.map(([c,l])=>`<span><i class="${c}" style="background:${({o:'#3f7bff',f:'#ffc83d',s:'#e11d2e',w:'#e11d2e',r:'#3f7bff'})[c]}"></i>${l}</span>`).join('')}</div>`;
+ return L.map(inn=>{const nm=String(inn.inning||'').replace(/ Inning.*/,''),bat=(inn.batting||[]).filter(b=>+b.b>0||+b.r>0),bow=(inn.bowling||[]).filter(b=>b.o!=null),mx=Math.max(1,...bat.map(b=>+b.r||0)),mr=Math.max(1,...bow.map(b=>+b.r||0));
+  const row=b=>{const r=+b.r||0,f=(+b['4s']||0)*4,s=(+b['6s']||0)*6,o=Math.max(0,r-f-s),bm=b.batsman||{};return `<div class="gr-row"><span>${esc(shShort(bm.name))}</span><div class="gr-bar" style="width:${r/mx*100}%;min-width:4px"><i class="o" style="width:${r?o/r*100:100}%"></i><i class="f" style="width:${r?f/r*100:0}%"></i><i class="s" style="width:${r?s/r*100:0}%"></i></div><b>${r}</b></div>`};
+  const brow=b=>{const bm=b.bowler||{},w=+b.w||0,r=+b.r||0;return `<div class="gr-row"><span>${esc(shShort(bm.name))}</span><div class="gr-bar" style="width:${r/mr*100}%;min-width:4px"><i class="r" style="width:100%"></i></div><b>${w}/${r}</b></div>`};
+  return `<div class="cbp-lb">${esc(nm)}: runs by batter</div><div class="cbp-cd">${bat.map(row).join('')||'<div class="cbp-note">No batting yet.</div>'}${key([['o','Other runs'],['f','Fours'],['s','Sixes']])}</div>${bow.length?`<div class="cbp-lb">${esc(nm)}: bowlers (wickets/runs conceded)</div><div class="cbp-cd">${bow.map(brow).join('')}</div>`:''}`}).join('')+cbpOvers(W)}
+function cbpOvers(W){const L=W.bb?cbpBbbList(W.bb):[];const by={};L.forEach(x=>{if(x.o!=null&&x.o!==''&&isFinite(+x.o)&&x.run!==''&&x.run!=='W'){by[+x.o]=(by[+x.o]||0)+(+x.run||0)}});const ks=Object.keys(by).map(Number).sort((a,b)=>a-b);
+ if(!ks.length)return '<div class="mu sm" style="padding:0 4px 12px">Run progression (worm) and runs-per-over graphs appear only when the provider sends ball-by-ball data for this match.</div>';
+ const mx=Math.max(1,...ks.map(k=>by[k]));return `<div class="cbp-lb">Runs per over</div><div class="cbp-cd">${ks.map(k=>`<div class="gr-row"><span>Over ${k+1}</span><div class="gr-bar" style="width:${by[k]/mx*100}%;min-width:4px"><i class="r" style="width:100%"></i></div><b>${by[k]}</b></div>`).join('')}</div>`}
+/* scorecard: bowler table with NB / WD when the feed has them */
+{const c0=cbpCard;cbpCard=function(W){let o=c0(W);const L=W.sc&&W.sc.scorecard||[];if(!L.length)return o;
+  const hasNW=L.some(i=>(i.bowling||[]).some(b=>b.nb!=null||b.wd!=null));
+  if(hasNW){const inn=L[W.inn==null?L.length-1:W.inn];if(inn)o=o.replace(/<tr><th>Bowler<\/th>[\s\S]*?<\/table>/,`<tr><th>Bowler</th><th>O</th><th>M</th><th>R</th><th>W</th><th>NB</th><th>WD</th><th>ER</th></tr>${(inn.bowling||[]).map(b=>{const bm=b.bowler||{};return `<tr><td class="pl" data-a="wPlayer" data-id="${esc(bm.id||'')}" data-name="${esc(bm.name||'')}" style="cursor:pointer">${esc(bm.name||'')}</td><td>${b.o??''}</td><td>${b.m??''}</td><td>${b.r??''}</td><td><b>${b.w??''}</b></td><td>${b.nb??'-'}</td><td>${b.wd??'-'}</td><td>${b.eco??''}</td></tr>`}).join('')}</table>`)}
+  const fow=L.some(i=>i.fow||i['fall-of-wickets']);
+  return o+(fow?'':'<div class="mu sm" style="padding:0 4px 12px">Fall of wickets and partnerships are not sent by the provider for this match.</div>')}}
+XV.wmatch=function(){const W=UI.wm;if(!W)return '<div class="empty">Open a match from Home or Matches.</div>';
+ const m=W.m,live=m.started&&!m.ended,tab=W.tab||'live',tm=(m.teams||[]).slice(0,2),sp=wSplit(m),ttl=tm.map(t=>t.short||t.name).join(' v ')||m.name;
+ const sum=`<div class="cbp-sc">${(m.score||[]).map((x,i,a)=>`<div class="r ${live&&i<a.length-1?'dim':''}"><span>${esc(String(x.inning||'').replace(/ Inning.*/,'').slice(0,12))}</span>${x.r}-${x.w} <small style="font-size:15px;color:var(--mu)">(${x.o})</small></div>`).join('')||`<div class="cbp-res" style="color:var(--mu)">${esc(m.started?'':wIn(m))}</div>`}<div class="cbp-res">${esc(m.status||'')}</div></div>`;
+ let body='';
+ if(tab==='live')body=sum+streamCard('w'+m.id,live)+cbpCrease(W)+cbpOutlook(m)+(!live&&!m.ended?'<div class="cbp-cd cbp-note"><b>Match not started</b>Live score, batters and bowlers appear here when play begins.</div>':'');
+ else if(tab==='cm')body=sum+cbpBbb(W);
+ else if(tab==='sc')body=sum+cbpCard(W);
+ else if(tab==='gr')body=sum+cbpGraphs(W);
+ else if(tab==='sq')body=cbpSquads(W);
+ else body=cbpInfo(W);
+ return cbpHead(ttl,[['info','Info'],['live','Live'],['cm','Commentary'],['sc','Scorecard'],['gr','Graphs'],['sq','Squads']],tab,'wmTab')+body};
+{const o0=A.wOpen;A.wOpen=function(d){o0.apply(this,arguments);const id=d.id;
+  wLoad('match_info',id).then(j=>{if(!UI.wm||UI.wm.m.id!==id)return;if(j.ok)UI.wm.mi=j.data||{};else UI.wm.miErr=j.error||'unavailable';if(UI.view==='wmatch')render()})};
+ const t0=A.wmTab;A.wmTab=function(d){t0.apply(this,arguments);const W=UI.wm;if(W&&(d.v==='cm'||d.v==='gr')&&W.bb==null&&!W.bbErr&&!W.bbBusy){W.bbBusy=1;const id=W.m.id;wLoad('match_bbb',id).then(j=>{if(!UI.wm||UI.wm.m.id!==id)return;UI.wm.bbBusy=0;if(j.ok)UI.wm.bb=j.data==null?[]:j.data;else UI.wm.bbErr=j.error||'Not available';if(UI.view==='wmatch')render()})}}}
+/* admin: server status (what is really switched on) + test email */
+XV.svc=function(){const adm=S.user&&S.user.role==='admin';if(!adm)return '<div class="empty">Only an admin can see the server status.</div>';
+ const V=UI.svc;if(!V){UI.svc={loading:1};svcLoad();return '<div class="mu" style="padding:14px">Checking the server...</div>'}
+ if(V.loading)return '<div class="mu" style="padding:14px">Checking the server...</div>';if(V.err)return `<div class="bar"><h2>Server status</h2></div><div class="cbp-cd cbp-note"><b>Could not read the server</b>${esc(V.err)}</div><button class="btn" data-a="svcLoad">Try again</button>`;
+ const s=V.status,ln=(t,ok,sub,extra)=>`<div class="cbp-cd"><div class="sv-k"><b>${t}</b><span class="${ok?'sv-ok':'sv-no'}">${ok?'ON':'NOT SET UP'}</span></div>${sub?`<div class="sv-k"><span>${esc(sub)}</span></div>`:''}${extra||''}</div>`,last=l=>l?`<div class="sv-k"><span>Last real attempt</span><b class="${l.ok?'sv-ok':'sv-no'}">${l.ok?'sent':'failed'}</b></div>${l.err?`<div class="sv-h">${esc(l.err)}</div>`:''}`:'';
+ return `<div class="bar"><h2>Server status</h2></div>
+ ${ln('Email codes (OTP)',s.email.ready,s.email.ready?'Provider: '+s.email.provider+' | From: '+s.email.from:s.email.problem,last(s.email.last))}
+ <div class="cbp-cd" style="padding:12px 14px"><div style="font:600 14px var(--ui);margin-bottom:8px">Send a test email</div><input id="svc-mail" type="email" placeholder="your email" style="width:100%;box-sizing:border-box;margin-bottom:8px"><button class="btn sm" data-a="svcTest">Send test</button><div id="svc-res" class="mu sm" style="margin-top:8px">${V.test?(V.test.ok?'<span class="sv-ok">Test email sent. Check inbox and spam.</span>':'<span class="sv-no">'+esc(V.test.error)+'</span>'):''}</div></div>
+ ${ln('SMS codes (OTP)',s.sms.ready,s.sms.ready?'Provider: '+s.sms.provider+' | used '+s.sms.sent+(s.sms.cap?' of '+s.sms.cap:''):s.sms.problem,last(s.sms.last))}
+ ${ln('Live cricket feed',s.live.ready,s.live.problem)}
+ ${ln('AI article writer',s.ai.ready,s.ai.ready?'Model: '+s.ai.model:s.ai.problem)}
+ <div class="mu sm" style="padding:4px 4px 12px">Settings live in Render: open scoring-heroes-api, Environment, add the values, then Manual Deploy.</div>`};
+async function svcLoad(body){UI.svc=Object.assign({},UI.svc||{},{loading:!body});try{const r=await fetch(apiBase()+'/api/admin/status',{method:'POST',headers:{'content-type':'application/json',authorization:'Bearer '+(S.tok||'')},body:JSON.stringify(body||{})});const j=await r.json();if(!j.ok)UI.svc={err:j.error||'Failed'};else UI.svc={status:j.status,test:j.test||(UI.svc&&UI.svc.test)}}catch(e){UI.svc={err:'Cannot reach the server ('+e.message+')'}}if(UI.view==='svc')render()}
+Object.assign(A,{svcLoad(){UI.svc=null;render()},async svcTest(){const v=(document.getElementById('svc-mail')||{}).value||'';if(!v)return toast('Type an email first');const e=document.getElementById('svc-res');if(e)e.textContent='Sending...';await svcLoad({testEmail:v})}});
+MENU2[MENU2.length-1][1].push(['svc','\u{1F6E0}️','Server status (admin)']);
 
 /* ---------------- THE HUNDRED (100 balls, 5-ball sets) ---------------- */
 {const f0=newMatch;newMatch=function(d){const h=String(d.overs)==='20.5';const m=f0(h?Object.assign({},d,{overs:20}):d);if(h){m.bpo=5;m.nbp=2;m.fmt='hundred';m.rules=Object.assign(m.rules||{},{ppb:25})}return m}}

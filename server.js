@@ -12,6 +12,7 @@ const E = process.env;
 const PORT = +E.PORT || 8080;
 const APP_URL = (E.APP_URL || 'http://localhost:5500').replace(/\/$/, '');   // where the Scoring Heroes web app is hosted (HTTPS in production)
 const ORIGINS = (E.ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean); // empty = allow any origin (dev only)
+const svcLast = { email: null, sms: null };
 const SMS_PROVIDER = E.SMS_PROVIDER || 'console';           // console | msg91 | textbee
 // Allow a 50-user OTP burst behind a shared network; per-number and gateway quotas still apply.
 const SMS_TOTAL_BUDGET = Math.max(0, parseInt(E.SMS_TOTAL_BUDGET, 10) || 0);   // trial pack cap (0 = unlimited)
@@ -109,6 +110,9 @@ function cleanProfile(p) {
 const pub = u => ({ nick: u.nick, name: u.nick, email: u.email, age: u.age, loc: u.loc, kind: u.kind, role: u.role, phone: u.phone });
 
 async function sendSms(phone, code, link, cc) {
+  try { const r = await sendSms0(phone, code, link, cc); svcLast.sms = SMS_PROVIDER === 'console' ? { ok: false, at: Date.now(), err: 'console mode: the code was only printed in the server log, no SMS was sent' } : { ok: true, at: Date.now() }; return r; } catch (e) { svcLast.sms = { ok: false, at: Date.now(), err: String(e.message).slice(0, 300) }; throw e; }
+}
+async function sendSms0(phone, code, link, cc) {
   cc = String(cc || '').replace(/\D/g, '').slice(0, 4) || COUNTRY;
   if (SMS_PROVIDER === 'console') { console.log(`[SMS to ${phone}] code ${code}  link ${link}`); return; }
   if (SMS_PROVIDER === 'msg91') {
@@ -274,7 +278,7 @@ const routes = {
 const cricCache = new Map();
 routes['GET /api/cric'] = async (req, body, ip) => {
   const ep = String(body.ep || ''), id = String(body.id || '');
-  if (!['match_scorecard', 'players_info', 'match_info', 'match_squad'].includes(ep) || !/^[0-9a-f-]{8,40}$/i.test(id)) return [400, { ok: false, error: 'Bad request' }];
+  if (!['match_scorecard', 'players_info', 'match_info', 'match_squad', 'match_bbb'].includes(ep) || !/^[0-9a-f-]{8,40}$/i.test(id)) return [400, { ok: false, error: 'Bad request' }];
   if (!CRIC_KEY) return [503, { ok: false, error: 'CRIC_API_KEY is not set on the server' }];
   if (limited('cric:' + ip, 120, 36e5)) return [429, { ok: false, error: 'Too many requests' }];
   const k = ep + id, hit = cricCache.get(k), ttl = ep === 'players_info' ? 864e5 : 45e3;
@@ -451,6 +455,34 @@ async function newsroomRun(live) {
   return { made, polished };
 }
 
+
+// ---- Server status for the admin: which services are really switched on, and the last real error from the email/SMS provider ----
+function svcStatus() {
+  const emailKey = EMAIL_PROVIDER === 'resend' ? !!E.RESEND_API_KEY : EMAIL_PROVIDER === 'smtp' ? !!(E.SMTP_USER && E.SMTP_PASS) : false;
+  const smsKey = SMS_PROVIDER === 'msg91' ? !!(E.MSG91_AUTHKEY && E.MSG91_TEMPLATE_ID) : SMS_PROVIDER === 'textbee' ? !!(E.TEXTBEE_API_KEY && E.TEXTBEE_DEVICE_ID) : false;
+  const need = (p, ok, names) => p === 'console' ? 'Not switched on: set ' + names.join(' / ') : ok ? '' : 'Provider chosen but its key is missing';
+  return {
+    email: { provider: EMAIL_PROVIDER, ready: emailKey, from: EMAIL_PROVIDER === 'console' ? '' : EMAIL_FROM, problem: need(EMAIL_PROVIDER, emailKey, ['EMAIL_PROVIDER=resend + RESEND_API_KEY', 'EMAIL_PROVIDER=smtp + SMTP_USER + SMTP_PASS']), last: svcLast.email },
+    sms: { provider: SMS_PROVIDER, ready: smsKey, sent: db.smsSent || 0, cap: SMS_TOTAL_BUDGET || 0, problem: need(SMS_PROVIDER, smsKey, ['SMS_PROVIDER=textbee + TEXTBEE_API_KEY + TEXTBEE_DEVICE_ID', 'SMS_PROVIDER=msg91 + MSG91_AUTHKEY + MSG91_TEMPLATE_ID']), last: svcLast.sms },
+    live: { ready: !!CRIC_KEY, problem: CRIC_KEY ? '' : 'Set CRIC_API_KEY' },
+    ai: { ready: !!NEWS_AI_KEY, model: NEWS_AI_KEY ? NEWS_AI_MODEL : '', problem: NEWS_AI_KEY ? '' : 'Optional: set ANTHROPIC_API_KEY for AI-polished articles (articles are still written without it)' },
+    history: { autoimport: E.HISTORY_AUTOIMPORT === '1' }
+  };
+}
+routes['GET /api/status'] = async () => { const x = svcStatus(); return [200, { ok: true, emailReady: x.email.ready, smsReady: x.sms.ready, liveReady: x.live.ready }]; };
+routes['POST /api/admin/status'] = async (req, body) => {
+  const phone = readSession((req.headers.authorization || '').replace(/^Bearer /, '')), u = phone && db.users[phone];
+  if (!u) return [401, { ok: false, error: 'Please sign in again' }];
+  if (u.role !== 'admin') return [403, { ok: false, error: 'Only an admin can see this' }];
+  const out = { ok: true, status: svcStatus() };
+  const to = String(body.testEmail || '').trim().toLowerCase();
+  if (to) { if (!validEmail(to)) return [400, { ok: false, error: 'Enter a valid email address' }]; if (limited('te:' + phone, 5, 36e5)) return [429, { ok: false, error: 'Too many tests. Try later.' }];
+    try { await sendMail(to, 'Scoring Heroes test email', 'This is a test email from your Scoring Heroes server. If you can read this, email codes will reach people.'); out.test = EMAIL_PROVIDER === 'console' ? { ok: false, error: 'EMAIL_PROVIDER is "console": nothing was sent. Set EMAIL_PROVIDER and its key in Render > Environment.' } : { ok: true }; }
+    catch (e) { out.test = { ok: false, error: e.message }; }
+    out.status = svcStatus(); }
+  return [200, out];
+};
+
 async function paperAgentRun() {
   agentStatus.last = Date.now();
   try {
@@ -581,6 +613,9 @@ function smtpSend({ host, port, user, pass, from, to, subject, text, mode }) {  
   });
 }
 async function sendMail(to, subject, text) {
+  try { await sendMail0(to, subject, text); svcLast.email = EMAIL_PROVIDER === 'console' ? { ok: false, at: Date.now(), err: 'console mode: the code was only printed in the server log, nothing was emailed' } : { ok: true, at: Date.now() }; } catch (e) { svcLast.email = { ok: false, at: Date.now(), err: String(e.message).slice(0, 300) }; throw e; }
+}
+async function sendMail0(to, subject, text) {
   if (EMAIL_PROVIDER === 'console') { console.log(`[EMAIL to ${to}] ${subject}: ${text}`); return; }
   if (EMAIL_PROVIDER === 'resend') {
     const r = await fetch('https://api.resend.com/emails', { method: 'POST', headers: { authorization: 'Bearer ' + (E.RESEND_API_KEY || ''), 'content-type': 'application/json' }, body: JSON.stringify({ from: EMAIL_FROM, to: [to], subject, text }) });

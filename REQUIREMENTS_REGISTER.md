@@ -97,3 +97,10 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 - `.github/workflows/android.yml` builds it on GitHub's servers and publishes the APK as a GitHub Release (run 1 built OK: ScoringHeroes-test.apk, debug-signed). Runs on every change inside `android/`, or by hand from the Actions tab.
 - NOT VERIFIED: installing and running the APK on a real phone (no device here). Play Store needs a release key: save ANDROID_KEYSTORE_BASE64, ANDROID_STORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD in repository secrets, then the workflow also makes a signed APK and an AAB.
 - The shell loads the website, so the app needs the Render service running; a new APK is needed only when the shell itself changes.
+
+## Match page 2 and OTP diagnosis (2026-10-15)
+- Match page tabs: Info (toss/winner from match_info), Live (batters at the crease, bowlers, run-rate outlook = arithmetic only), Commentary (match_bbb), Scorecard (+NB/WD when sent), Graphs (runs by batter with 4s/6s, bowlers; runs-per-over only if ball-by-ball arrives), Squads.
+- NOT VERIFIED against the real provider: the match_bbb field names (the reader guesses common names and says so when it cannot read them). Ball-by-ball may need a paid CricketData plan; each match page costs about 4 API calls (cached 45 s).
+- NOT IN THE FEED (not shown, not invented): fall of wickets, partnerships, umpires, Player of the Match, win-probability forecast.
+- Missing player photos: the provider's placeholder logo is detected (keyword and 3+ repeats) and replaced by an initials avatar; broken pictures fall back the same way.
+- OTP: Render runs with SMS_PROVIDER=console and no EMAIL_PROVIDER, so no real email or SMS is sent. Admin > More > Server status shows what is switched on, sends a test email and shows the provider's real error. Needs the owner to set Render Environment values.
