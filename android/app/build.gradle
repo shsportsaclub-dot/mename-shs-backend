@@ -1,0 +1,40 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.shsports.scoringheroes'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'com.shsports.scoringheroes'
+        minSdk 24
+        targetSdk 34
+        versionCode((System.getenv('GITHUB_RUN_NUMBER') ?: '1') as int)
+        versionName '1.0.' + (System.getenv('GITHUB_RUN_NUMBER') ?: '0')
+    }
+
+    signingConfigs {
+        // Release signing is used only when the key is supplied (GitHub secrets). Otherwise the APK is signed with the debug key (fine for testing and sideloading).
+        if (System.getenv('SH_KEYSTORE')) {
+            release {
+                storeFile file(System.getenv('SH_KEYSTORE'))
+                storePassword System.getenv('SH_STORE_PASS')
+                keyAlias System.getenv('SH_KEY_ALIAS')
+                keyPassword System.getenv('SH_KEY_PASS')
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig System.getenv('SH_KEYSTORE') ? signingConfigs.release : signingConfigs.debug
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}

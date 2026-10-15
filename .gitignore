@@ -3,3 +3,8 @@ data.json
 node_modules
 
 history-data
+android/.gradle/
+android/build/
+android/app/build/
+*.jks
+local.properties

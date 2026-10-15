@@ -1,0 +1,65 @@
+# Builds the Scoring Heroes Android app (APK) on GitHub's own servers. No third-party app-builder is used.
+# Runs by itself whenever the android/ folder changes, or by hand: GitHub > Actions > "Build Android app" > Run workflow.
+name: Build Android app
+
+on:
+  push:
+    branches: [main]
+    paths: ['android/**', '.github/workflows/android.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    env:
+      HAS_KEY: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+      KS_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Build debug APK (installable on any phone)
+        working-directory: android
+        run: gradle --no-daemon assembleDebug
+
+      - name: Build signed release APK and Play Store bundle (only if the signing key is saved in repository secrets)
+        if: ${{ env.HAS_KEY == 'true' }}
+        env:
+          SH_STORE_PASS: ${{ secrets.ANDROID_STORE_PASSWORD }}
+          SH_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          SH_KEY_PASS: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        working-directory: android
+        run: |
+          echo "$KS_B64" | base64 -d > "$RUNNER_TEMP/sh.jks"
+          export SH_KEYSTORE="$RUNNER_TEMP/sh.jks"
+          gradle --no-daemon assembleRelease bundleRelease
+
+      - name: Collect files
+        run: |
+          mkdir -p out
+          cp android/app/build/outputs/apk/debug/app-debug.apk out/ScoringHeroes-test.apk
+          if [ -f android/app/build/outputs/apk/release/app-release.apk ]; then cp android/app/build/outputs/apk/release/app-release.apk out/ScoringHeroes.apk; fi
+          if [ -f android/app/build/outputs/bundle/release/app-release.aab ]; then cp android/app/build/outputs/bundle/release/app-release.aab out/ScoringHeroes.aab; fi
+          ls -la out
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ScoringHeroes-android
+          path: out/*
+
+      - name: Publish a download page (GitHub Release)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "android-${{ github.run_number }}" out/* --title "Scoring Heroes Android build ${{ github.run_number }}" --notes "Open this page on your phone, tap ScoringHeroes-test.apk (or ScoringHeroes.apk when the signing key is set), and install. Allow 'install from this source' when Android asks." --latest
