@@ -4374,7 +4374,7 @@ heroHome=function(){
  const h=UI.hf,j=UI.live,L=hhMatches()||[],sp=UI.sport||'cricket',all=j&&j.ok?j.matches:[];
  const tabs=[['all','All'],['live','Live'],['up','Upcoming'],['rec','Results']];
  const reg=S.user?'':'<button data-a="go" data-v="login">Register</button>';
- const feed=!j?'<div class="mu sm">Loading live scores...</div>':!j.ok?`<div class="hh-box" style="border-color:var(--ac)"><div class="b">Live scores load only on the real app link</div><div class="mu sm" style="margin:4px 0 8px">${esc(j.error||'')}</div><a class="btn" href="${DEFAULT_API}" target="_blank" rel="noopener" style="display:inline-block;text-decoration:none">Open live app</a></div>`:`<div class="mu sm" style="margin:0 0 8px">Updated ${j.updated?new Date(j.updated).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'-'}${j.stale?' | <b style="color:var(--ac)">older data: '+esc(j.note||'API limit')+'</b>':''} <a data-a="refreshLive" role="button" style="color:var(--ac);cursor:pointer">Refresh</a></div>`;
+ const feed=!j?'<div class="mu sm">Loading live scores...</div>':!j.ok?`<div class="hh-box" style="border-color:var(--ac)"><div class="b">Live scores load only on the real app link</div><div class="mu sm" style="margin:4px 0 8px">${esc(j.error||'')}</div><a class="btn" href="${DEFAULT_API}" target="_blank" rel="noopener" style="display:inline-block;text-decoration:none">Open live app</a></div>`:`<div class="mu sm" style="margin:0 0 8px">Updated ${j.updated?new Date(j.updated).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'-'} | v${esc(UI.ver||'...')}${j.stale?' | <b style="color:var(--ac)">older data: '+esc(j.note||'API limit')+'</b>':''} <a data-a="refreshLive" role="button" style="color:var(--ac);cursor:pointer">Refresh</a></div>`;
  const ord=L.slice().sort((a,b)=>((b.started&&!b.ended)-(a.started&&!a.ended)));
  const cards=ord.slice(0,30);
  let R=[];try{R=reelItems()}catch(e){}if(R.length&&R[0].kind==='empty')R=[];
@@ -4544,6 +4544,7 @@ async function svcLoad(body){UI.svc=Object.assign({},UI.svc||{},{loading:!body})
 Object.assign(A,{svcLoad(){UI.svc=null;render()},async svcTest(){const v=(document.getElementById('svc-mail')||{}).value||'';if(!v)return toast('Type an email first');const e=document.getElementById('svc-res');if(e)e.textContent='Sending...';await svcLoad({testEmail:v})}});
 MENU2[MENU2.length-1][1].push(['svc','\u{1F6E0}️','Server status (admin)']);
 
+try{fetch(apiBase()+'/health').then(r=>r.json()).then(j=>{UI.ver=j&&j.version||'?'}).catch(()=>{UI.ver='offline'})}catch(e){}
 /* ---------------- THE HUNDRED (100 balls, 5-ball sets) ---------------- */
 {const f0=newMatch;newMatch=function(d){const h=String(d.overs)==='20.5';const m=f0(h?Object.assign({},d,{overs:20}):d);if(h){m.bpo=5;m.nbp=2;m.fmt='hundred';m.rules=Object.assign(m.rules||{},{ppb:25})}return m}}
 {const f0=vScore;vScore=function(){const o=f0();const m=S.matches.find(x=>x.id===UI.sid)||S.matches.filter(x=>x.status!=='done').slice(-1)[0];

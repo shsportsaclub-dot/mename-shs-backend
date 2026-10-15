@@ -269,7 +269,7 @@ const routes = {
     try { return [200, await liveMatches()]; }
     catch (e) { return [e.code || 502, { ok: false, error: e.message }]; }
   },
-  'GET /health': async () => [200, { ok: true }]
+  'GET /health': async () => [200, { ok: true, version: String(E.RENDER_GIT_COMMIT || '').slice(0, 7) || 'local' }]
 };
 
 // ---- Match scorecard / player profile proxy (key stays on the server) ----
