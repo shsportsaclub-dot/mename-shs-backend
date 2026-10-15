@@ -110,9 +110,6 @@ function cleanProfile(p) {
 const pub = u => ({ nick: u.nick, name: u.nick, email: u.email, age: u.age, loc: u.loc, kind: u.kind, role: u.role, phone: u.phone });
 
 async function sendSms(phone, code, link, cc) {
-  try { const r = await sendSms0(phone, code, link, cc); svcLast.sms = SMS_PROVIDER === 'console' ? { ok: false, at: Date.now(), err: 'console mode: the code was only printed in the server log, no SMS was sent' } : { ok: true, at: Date.now() }; return r; } catch (e) { svcLast.sms = { ok: false, at: Date.now(), err: String(e.message).slice(0, 300) }; throw e; }
-}
-async function sendSms0(phone, code, link, cc) {
   cc = String(cc || '').replace(/\D/g, '').slice(0, 4) || COUNTRY;
   if (SMS_PROVIDER === 'console') { console.log(`[SMS to ${phone}] code ${code}  link ${link}`); return; }
   if (SMS_PROVIDER === 'msg91') {
@@ -237,8 +234,9 @@ const routes = {
       return [429, { ok: false, error: 'SMS trial quota is finished. Please use email to sign in.' }];
     }
     let transport;
-    try { transport = await sendSms(P.nat, code, `${APP_URL}/#v=${linkToken}`, P.cc); }
+    try { transport = await sendSms(P.nat, code, `${APP_URL}/#v=${linkToken}`, P.cc); svcLast.sms = SMS_PROVIDER === 'console' ? { ok: false, at: Date.now(), err: 'console mode: the code was only printed in the server log, no SMS was sent' } : { ok: true, at: Date.now() }; }
     catch (e) {
+      svcLast.sms = { ok: false, at: Date.now(), err: String(e.message).slice(0, 300) };
       if (pending.get(phone)?.salt === salt) pending.delete(phone);
       links.delete(linkToken);
       console.error(e.message);
