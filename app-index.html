@@ -4365,18 +4365,23 @@ XV.wseries=function(){const all=UI.live&&UI.live.ok?UI.live.matches:[],ser={};al
  const L=Object.entries(ser).sort((a,b)=>b[1].live-a[1].live||b[1].n-a[1].n);
  return `<div class="bar"><h2>Browse series</h2></div>${L.length?L.map(([k,v])=>`<button class="ig-ser" data-a="hser" data-v="${esc(k)}"><b>${esc(k)}</b><span>${v.n} match${v.n>1?'es':''}${v.live?' | '+v.live+' live':''}</span></button>`).join(''):'<div class="empty">Series appear when the live feed has matches.</div>'}`};
 {const st=document.createElement('style');st.textContent='.ig-lead{display:block;text-decoration:none;color:#fff;background:linear-gradient(155deg,#0a1f5c,#e11d2e);border-radius:16px;padding:16px;margin-bottom:10px}.ig-lead small{opacity:.85;font:700 11px var(--ui);letter-spacing:.6px;text-transform:uppercase}.ig-lead b{display:block;font:800 21px/1.2 var(--ui);margin:6px 0}.ig-lead span{font:500 13.5px/1.4 var(--ui);opacity:.95;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}.ig-st{display:block;text-decoration:none;color:var(--tx);background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px 14px;margin-bottom:8px}.ig-st b{display:block;font:600 15px/1.3 var(--ui)}.ig-st small{color:var(--mu);font-size:12px}.ig-ser{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;text-align:left;background:var(--card);border:1px solid var(--bd);color:var(--tx);border-radius:12px;padding:14px;margin-bottom:8px;cursor:pointer}.ig-ser b{font:600 15px var(--ui);min-width:0}.ig-ser span{color:var(--mu);font-size:12px;flex:none}';document.head.appendChild(st)}
+const igShSq=m=>{const A_=T(m.a),B_=T(m.b),live=m.status==='live'||m.status==='break',done=m.status==='done';
+ const row=t=>{const i=m.innings.findIndex(x=>x.bat===t.id);const k=i>=0?calc(m,i):null;return `<div class="tr">${logo(t,26)}<b>${esc(t.name.length>11&&t.short?t.short:t.name)}</b><span>${k?k.runs+'-'+k.wk+' ('+fmtOv(k.lg)+')':''}</span></div>`};
+ return `<div class="ig-sq" data-a="open" data-id="${m.id}"><div><div class="tg"><span>${m.overs} OV</span><em class="${live?'lv':''}">${live?'LIVE':done?'RESULT':'UPCOMING'}</em></div><div class="se">${esc(m.venue||'Scoring Heroes match')} | ${esc(m.date)}</div></div><div>${row(A_)}${row(B_)}</div><div class="ss">${esc(m.result||(live?liveStatus(m):'Toss: '+T(m.toss).name+' chose to '+m.dec))}</div><div class="ft"><span>SCORECARD</span><span>${can()&&!done?'SCORE':'DETAILS'}</span></div></div>`};
 heroHome=function(){
- const h=UI.hf,j=UI.live,L=hhMatches()||[],sp=UI.sport||'cricket',all=j&&j.ok?j.matches:[];
- const tabs=[['all','All'],['live','Live'],['up','Upcoming'],['rec','Results']];
+ const h=UI.hf,j=UI.live,sp=UI.sport||'cricket',all=j&&j.ok?j.matches:[];
+ const hx=UI.hx||(S.matches.length?'sh':'all'),shL=S.matches.slice().reverse().sort((x,y)=>((y.status==='live')-(x.status==='live')));
+ const c0=h.cat;if(hx==='int')h.cat='int';let L=[];try{L=hhMatches()||[]}finally{h.cat=c0}
+ const tabs=[['sh','Scoring Heroes'],['int','International'],['all','All'],['live','Live'],['up','Upcoming'],['rec','Results']],tOn=k=>k===hx||(hx!=='sh'&&hx!=='int'&&k===h.tab&&k!=='all')||(k==='all'&&hx==='all'&&h.tab==='all');
  const reg=S.user?'':'<button data-a="go" data-v="login">Register</button>';
  const feed=!j?'<div class="mu sm">Loading live scores...</div>':!j.ok?`<div class="hh-box" style="border-color:var(--ac)"><div class="b">Live scores load only on the real app link</div><div class="mu sm" style="margin:4px 0 8px">${esc(j.error||'')}</div><a class="btn" href="${DEFAULT_API}" target="_blank" rel="noopener" style="display:inline-block;text-decoration:none">Open live app</a></div>`:`<div class="mu sm" style="margin:0 0 8px">Updated ${j.updated?new Date(j.updated).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'-'} | v${esc(UI.ver||'...')}${j.stale?' | <b style="color:var(--ac)">older data: '+esc(j.note||'API limit')+'</b>':''} <a data-a="refreshLive" role="button" style="color:var(--ac);cursor:pointer">Refresh</a></div>`;
  const ord=L.slice().sort((a,b)=>((b.started&&!b.ended)-(a.started&&!a.ended)));
- const cards=ord.slice(0,30);
+ const cards=hx==='sh'?shL:ord.slice(0,30);
  let R=[];try{R=reelItems()}catch(e){}if(R.length&&R[0].kind==='empty')R=[];
  const guest=S.user&&S.user.guest?'<div class="ig-guest">Guest mode: matches you score are kept for 24 hours. <a data-a="go" data-v="login" role="button">Register</a></div>':'';
  const multi=(()=>{try{return shRowIds().length>1}catch(e){return false}})();
- const body=sp!=='cricket'?shBody(sp):`${j&&!j.ok?feed:''}<div class="hh-tabs">${tabs.map(([k,l])=>`<button class="${h.tab===k?'on':''}" data-a="htab2" data-v="${k}">${l}</button>`).join('')}</div>
- ${cards.length?`<div class="ig-sl" id="igsl">${cards.map(igSq).join('')}</div><div class="ig-dots" id="igdots">${cards.slice(0,8).map((_,i)=>`<i class="${i?'':'on'}"></i>`).join('')}</div>`:'<div class="hh-box"><div class="mu">No matches in this list right now. Try another tab.</div></div>'}
+ const body=sp!=='cricket'?shBody(sp):`${j&&!j.ok?feed:''}<div class="hh-tabs">${tabs.map(([k,l])=>`<button class="${tOn(k)?'on':''}" data-a="htab3" data-v="${k}">${l}</button>`).join('')}</div>
+ ${cards.length?`<div class="ig-sl" id="igsl">${cards.map(hx==='sh'?igShSq:igSq).join('')}</div><div class="ig-dots" id="igdots">${cards.slice(0,8).map((_,i)=>`<i class="${i?'':'on'}"></i>`).join('')}</div>`:'<div class="hh-box"><div class="mu">'+(hx==='sh'?'No Scoring Heroes matches yet. Tap Score to start one, or load the demo match from Matches.':'No matches in this list right now. Try another tab.')+'</div></div>'}
  ${j&&j.ok?feed:(!j?feed:'')}${guest}${igChips()}${liveDiagHtml()}${igStories()}${R.length?`<div class="sec"><h3>Posts</h3><button class="btn sm ghost" data-a="go" data-v="reels">Full screen</button></div>${R.slice(0,10).map(igPost).join('')}`:''}`;
  return `<div class="ig-top"><div class="hh-sr"><input data-c="hq" placeholder="Search teams, venues, series..." value="${esc(h.q||'')}"></div><button data-a="go" data-v="rankings">\u{1F3C5} Rankings</button>${reg}</div>
  ${sp!=='cricket'||multi?shRow(sp):''}${sp!=='cricket'?guest:''}${body}`};
@@ -4638,7 +4643,7 @@ function tReview(m){if(!m.innings.length)return '<div class="empty">The review i
   const map={h2h:tH2H,ven:tVenue,hl:tHigh,rev:tReview,graphs:tGraphs2};
   if(map[UI.tab])return o.replace(/(<div class="tabs">[\s\S]*?<\/div>)[\s\S]*$/,(a,t)=>t+map[UI.tab](m));
   return o};
- Object.assign(A,{hlf(d){UI.hlf=d.v;render()}});
+ Object.assign(A,{hlf(d){UI.hlf=d.v;render()},htab3(d){const v=d.v;UI.hx=v;if(v==='sh'||v==='int'||v==='all'){UI.hf.tab='all'}else UI.hf.tab=v;render()}});
 }
 /* ---------------- THE HUNDRED (100 balls, 5-ball sets) ---------------- */
 {const f0=newMatch;newMatch=function(d){const h=String(d.overs)==='20.5';const m=f0(h?Object.assign({},d,{overs:20}):d);if(h){m.bpo=5;m.nbp=2;m.fmt='hundred';m.rules=Object.assign(m.rules||{},{ppb:25})}return m}}
