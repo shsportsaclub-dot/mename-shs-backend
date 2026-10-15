@@ -4572,8 +4572,73 @@ document.head.appendChild(st)}
   const tabs=M_TABS;if(!tabs.some(t=>t[0]===UI.tab))UI.tab=(m.status==='live'||m.status==='break')?'live':'sum';
   const sel=S.matches.length>1?`<select data-c="mid" aria-label="Select match">${opt(S.matches.map(x=>[x.id,T(x.a).short+' vs '+T(x.b).short+' ('+x.date+')']),m.id)}</select>`:'';
   const V={info:tInfo,ovr:tOvr,act:tAct,sum:tSum,ins:tIns,mvp:tMvp,gal:tGal,pts:tPts,live:tLive,comm:tComm,card:tCard,graphs:tGraphs,drs:tDRS,dls:tDLS,squads:tSquads};
-  return sel+mHead(m)+tickerHTML()+`<div class="tabs">${tabs.map(([k,l])=>`<button class="${UI.tab===k?'on':''}" data-a="tab" data-v="${k}">${l}</button>`).join('')}</div>`+V[UI.tab](m)};
+  const live=m.status==='live'||m.status==='break',sc=(typeof streamCard==='function')?streamCard('m'+m.id,live):'';
+  return sel+mHead(m)+tickerHTML()+sc+`<div class="tabs">${tabs.map(([k,l])=>`<button class="${UI.tab===k?'on':''}" data-a="tab" data-v="${k}">${l}</button>`).join('')}</div>`+(V[UI.tab]||(()=>''))(m)};
  const x0=XV.wmatch;XV.wmatch=function(){return `<div class="msk msk-${sk2()}" style="padding:0;margin:0"><div class="mskbar" style="margin:0 0 8px">${[['cb','Cricbuzz'],['ca','Cricket Australia']].map(([k,l])=>`<button type="button" class="${sk2()===k?'on':''}" data-a="mskin" data-v="${k}">${l}</button>`).join('')}</div>${x0()}</div>`};
+}
+/* ---------------- SCORING VIEW 2: partnerships, over-wise runs/wkts/wides/dots, innings comparison, H2H, team strength, venue, highlights, review (all from the match's own ball-by-ball) ---------------- */
+{const st=document.createElement('style');st.textContent='.pt-r{display:grid;grid-template-columns:1fr 70px;gap:8px;align-items:center;padding:7px 12px;font:500 13px var(--ui);border-bottom:1px dashed var(--bd)}.pt-r small{display:block;color:var(--mu);font-size:11px}.pt-b{height:8px;border-radius:4px;background:var(--ac);margin-top:4px}.cmp td:nth-child(2){text-align:center;color:var(--mu);font-size:12px}.cmp td:nth-child(3){text-align:right}.cmp td:first-child{font-weight:700}.ovg{display:grid;grid-template-columns:34px repeat(4,1fr);gap:4px 6px;font:600 12px var(--ui);align-items:center}.ovg b{color:var(--mu)}.ovg i{font-style:normal;text-align:center;padding:3px 0;border-radius:6px;background:var(--c2)}.ovg i.w{background:#e11d2e;color:#fff}.ovg i.x{background:#ffc83d;color:#222}.hl-i{display:flex;gap:10px;padding:9px 12px;border-bottom:1px solid var(--bd);font:500 14px var(--ui)}.hl-i b{min-width:34px}';document.head.appendChild(st)}
+function shParts(m,i){const inn=m.innings[i];if(!inn)return[];const out=[];let cur=null,n=0;
+ inn.ev.forEach(e=>{const a=e.pre&&e.pre.s,b=e.pre&&e.pre.n;if(!cur)cur={a,b,r:0,b0:0,runs:0};
+  const pen=e.x==='wd'?1:e.x==='nb'?NBP:0;cur.r+=e.r+pen;if(e.x!=='wd')cur.b0++;
+  if(e.w){n++;out.push({n,a:cur.a,b:cur.b,r:cur.r,bl:cur.b0,out:true});cur=null}});
+ if(cur&&(cur.r||cur.b0)&&!inn.done)out.push({n:out.length+1,a:cur.a,b:cur.b,r:cur.r,bl:cur.b0,out:false});
+ else if(cur&&inn.done&&(cur.r||cur.b0))out.push({n:out.length+1,a:cur.a,b:cur.b,r:cur.r,bl:cur.b0,out:false});
+ return out}
+function shOverRows(m,i){const inn=m.innings[i];if(!inn)return[];const rows=[];let lg=0;
+ inn.ev.forEach(e=>{const ov=Math.floor(lg/BPO),q=rows[ov]||(rows[ov]={n:ov+1,r:0,w:0,wd:0,d:0});const pen=e.x==='wd'?1:e.x==='nb'?NBP:0;
+  q.r+=e.r+pen;if(e.w)q.w++;if(e.x==='wd')q.wd+=pen;if(!e.r&&!e.x)q.d++;if(!pen)lg++});
+ return rows.filter(Boolean)}
+function shInnStats(m,i){const inn=m.innings[i];if(!inn)return null;const k=calc(m,i);let f4=0,f6=0,dots=0,balls=0;
+ inn.ev.forEach(e=>{if(!e.x&&e.r===4)f4++;if(!e.x&&e.r===6)f6++;if(!e.r&&!e.x)dots++;if(e.x!=='wd'&&e.x!=='nb')balls++});
+ const ex=k.ex;return{runs:k.runs,wk:k.wk,ov:fmtOv(k.lg),rr:k.lg?(k.runs*BPO/k.lg).toFixed(2):'0.00',f4,f6,dots,dp:balls?Math.round(dots*100/balls):0,wd:ex.wd,nb:ex.nb,ext:ex.wd+ex.nb+ex.b+ex.lb+(ex.pen||0)}}
+function shDone(){return S.matches.filter(x=>x.status==='done'&&x.innings.length)}
+function shTeamRec(id){const L=shDone().filter(x=>x.a===id||x.b===id);let w=0,l=0,tf=0,ta=0,n=0,hi=0;
+ L.forEach(x=>{n++;const mine=x.innings.findIndex(z=>z.bat===id);if(mine>=0){const r=calc(x,mine).runs;tf+=r;hi=Math.max(hi,r)}const opp=x.innings.findIndex(z=>z.bat!==id);if(opp>=0)ta+=calc(x,opp).runs;
+  const rs=String(x.result||'');const tn=T(id).name;if(rs.startsWith(tn)&&/won/i.test(rs))w++;else if(/won/i.test(rs))l++});
+ return{n,w,l,avgF:n?Math.round(tf/n):0,avgA:n?Math.round(ta/n):0,hi}}
+function tGraphs2(m){if(!m.innings.length)return '<div class="empty">Graphs appear after the first over.</div>';
+ const S0=m.innings.map((_,i)=>shInnStats(m,i)),nm0=i=>T(m.innings[i].bat).short;
+ const rows=[['Runs',s=>s.runs+'/'+s.wk],['Overs',s=>s.ov],['Run rate',s=>s.rr],['Fours',s=>s.f4],['Sixes',s=>s.f6],['Dot balls',s=>s.dots+' ('+s.dp+'%)'],['Wides',s=>s.wd],['No balls',s=>s.nb],['Extras',s=>s.ext]];
+ const cmp=S0.length>1?`<div class="card scroll cmp"><div class="b" style="margin-bottom:6px">Innings comparison</div><table><tr><th>${esc(nm0(0))}</th><th></th><th style="text-align:right">${esc(nm0(1))}</th></tr>${rows.map(([l,f])=>`<tr><td>${f(S0[0])}</td><td>${l}</td><td>${f(S0[1])}</td></tr>`).join('')}</table></div>`:`<div class="card scroll cmp"><div class="b" style="margin-bottom:6px">${esc(nm0(0))} innings so far</div><table>${rows.map(([l,f])=>`<tr><td>${l}</td><td></td><td>${f(S0[0])}</td></tr>`).join('')}</table></div>`;
+ const ovr=m.innings.map((inn,i)=>{const R=shOverRows(m,i);return `<div class="card"><div class="b" style="margin-bottom:8px">${esc(nm0(i))}: over by over</div><div class="ovg"><b>Ov</b><b>Runs</b><b>Wkts</b><b>Wides</b><b>Dots</b>${R.map(q=>`<b>${q.n}</b><i>${q.r}</i><i class="${q.w?'w':''}">${q.w}</i><i class="${q.wd?'x':''}">${q.wd}</i><i>${q.d}</i>`).join('')}</div></div>`}).join('');
+ return cmp+ovr+tGraphs(m)}
+function tPart(m){if(!m.innings.length)return '';return m.innings.map((inn,i)=>{const L=shParts(m,i),mx=Math.max(1,...L.map(x=>x.r));if(!L.length)return '';
+ return `<div class="card" style="padding:0"><div class="b" style="padding:10px 12px">${esc(T(inn.bat).short)}: partnerships</div>${L.map(x=>`<div class="pt-r"><div>${x.n}${x.n===1?'st':x.n===2?'nd':x.n===3?'rd':'th'} wicket: ${esc(nm(x.a))} &amp; ${esc(nm(x.b))}${x.out?'':' (not out)'}<div class="pt-b" style="width:${x.r/mx*100}%"></div></div><div style="text-align:right"><b>${x.r}</b><small>${x.bl} balls</small></div></div>`).join('')}</div>`}).join('')}
+function tH2H(m){const A=T(m.a),B=T(m.b),others=shDone().filter(x=>x.id!==m.id&&((x.a===m.a&&x.b===m.b)||(x.a===m.b&&x.b===m.a)));
+ let wa=0,wb=0,nr=0;others.forEach(x=>{const r=String(x.result||'');if(r.startsWith(A.name)&&/won/i.test(r))wa++;else if(r.startsWith(B.name)&&/won/i.test(r))wb++;else nr++});
+ const ra=shTeamRec(m.a),rb=shTeamRec(m.b);
+ const h=others.length?`<div class="card"><div class="b">Head to head (matches in Scoring Heroes)</div><div class="row" style="justify-content:space-around;margin-top:8px;text-align:center"><div><div class="bignum">${wa}</div><div class="mu sm">${esc(A.short)} won</div></div><div><div class="bignum">${nr}</div><div class="mu sm">No result / tied</div></div><div><div class="bignum">${wb}</div><div class="mu sm">${esc(B.short)} won</div></div></div></div>`:`<div class="card"><div class="b">Head to head</div><div class="mu">These two teams have no earlier finished match in Scoring Heroes.</div></div>`;
+ const row=(l,f)=>`<tr><td>${f(ra)}</td><td class="mu sm" style="text-align:center">${l}</td><td style="text-align:right">${f(rb)}</td></tr>`;
+ return h+`<div class="card scroll"><div class="b" style="margin-bottom:6px">Team strength (from finished Scoring Heroes matches)</div><table><tr><th>${esc(A.short)}</th><th></th><th style="text-align:right">${esc(B.short)}</th></tr>${row('Matches',r=>r.n)}${row('Won',r=>r.w)}${row('Lost',r=>r.l)}${row('Avg score',r=>r.avgF||'-')}${row('Avg conceded',r=>r.avgA||'-')}${row('Highest',r=>r.hi||'-')}</table></div><div class="mu sm">Counted only from matches scored in this app. Rankings for other teams need a real data source.</div>`}
+function tVenue(m){const v=String(m.venue||'').trim();if(!v)return '<div class="card mu">No venue was entered for this match.</div>';
+ const L=shDone().filter(x=>String(x.venue||'').trim().toLowerCase()===v.toLowerCase());let f1=0,n1=0,hi=0,bf=0,df=0;
+ L.forEach(x=>{const a=calc(x,0).runs;f1+=a;n1++;hi=Math.max(hi,a,x.innings[1]?calc(x,1).runs:0);const r=String(x.result||'');const first=T(x.innings[0].bat).name;if(r.startsWith(first))bf++;else if(/won/i.test(r))df++});
+ return `<div class="card"><div class="b">${esc(v)}</div>${n1?`<div class="kv" style="margin-top:8px"><div>Finished matches here</div><div>${n1}</div><div>Average 1st innings</div><div>${Math.round(f1/n1)}</div><div>Highest score</div><div>${hi}</div><div>Won batting first</div><div>${bf}</div><div>Won chasing</div><div>${df}</div></div>`:'<div class="mu" style="margin-top:6px">No finished match at this venue yet. Numbers appear after matches are completed here.</div>'}</div><div class="mu sm">Pitch report and weather are not recorded by the app.</div>`}
+function tHigh(m){const out=[];m.innings.forEach((inn,i)=>{let lg=0;inn.ev.forEach(e=>{const ov=fmtOv(lg);const pen=e.x==='wd'||e.x==='nb';
+  if(e.w)out.push({k:'W',ov,i,t:`${nm(e.out)} out (${e.w}), ${sh(e.bl)} to ${sh(e.bt)}`});else if(!e.x&&e.r===6)out.push({k:'6',ov,i,t:`SIX! ${sh(e.bt)} off ${sh(e.bl)}`});else if(!e.x&&e.r===4)out.push({k:'4',ov,i,t:`FOUR, ${sh(e.bt)} off ${sh(e.bl)}`});if(!pen)lg++})});
+ if(!out.length)return '<div class="empty">Highlights appear after the first wicket or boundary.</div>';
+ const f=UI.hlf||'all',L=out.filter(x=>f==='all'||x.k===f);
+ return `<div class="bar">${[['all','All'],['W','Wickets'],['6','Sixes'],['4','Fours']].map(([k,l])=>`<button class="btn sm ${f===k?'':'ghost'}" data-a="hlf" data-v="${k}">${l}</button>`).join('')}</div><div class="card" style="padding:0">${L.map(x=>`<div class="hl-i"><b>${esc(T(m.innings[x.i].bat).short)} ${x.ov}</b><span>${esc(x.t)}</span></div>`).join('')||'<div class="mu" style="padding:12px">None.</div>'}</div>`}
+function tReview(m){if(!m.innings.length)return '<div class="empty">The review is written when the match has balls.</div>';
+ const A=T(m.a),B=T(m.b),L=[];const s0=shInnStats(m,0),s1=shInnStats(m,1),b0=T(m.innings[0].bat),b1=m.innings[1]?T(m.innings[1].bat):null;
+ L.push(`${b0.name} ${m.innings[1]||m.status==='done'?'made':'are'} ${s0.runs}/${s0.wk} in ${s0.ov} overs (run rate ${s0.rr}) with ${s0.f4} fours and ${s0.f6} sixes.`);
+ const k0=calc(m,0),top=Object.entries(k0.bat).sort((a,b)=>b[1].r-a[1].r)[0];if(top&&top[1].r)L.push(`${nm(top[0])} top-scored with ${top[1].r} off ${top[1].b}.`);
+ const bw0=Object.entries(k0.bowl).sort((a,b)=>b[1].w-a[1].w||a[1].r-b[1].r)[0];if(bw0&&bw0[1].w)L.push(`${nm(bw0[0])} took ${bw0[1].w}/${bw0[1].r} for the fielding side.`);
+ if(s1){L.push(`${b1.name} ${m.status==='done'?'finished on':'are'} ${s1.runs}/${s1.wk} in ${s1.ov} overs, chasing ${m.target}.`);const k1=calc(m,1),t1=Object.entries(k1.bat).sort((a,b)=>b[1].r-a[1].r)[0];if(t1&&t1[1].r)L.push(`${nm(t1[0])} led the chase with ${t1[1].r} off ${t1[1].b}.`)}
+ if(m.status==='done'&&m.result)L.push(m.result+'.');
+ return `<div class="card"><div class="b" style="margin-bottom:8px">Match review</div>${L.map(x=>`<p style="margin:0 0 10px;line-height:1.55">${esc(x)}</p>`).join('')}</div><div class="mu sm">Written automatically from this match's own scorecard. No numbers are added from outside.</div>`}
+{const nv=vMatch,T0=window.SH_MTABS;
+ T0.splice(2,0,['part','Partnerships']);T0.splice(7,0,['h2h','H2H & Strength'],['ven','Venue'],['hl','Highlights'],['rev','Review']);
+ const old={card:tCard};
+ vMatch=function(){let o=nv();const m=curM();if(!m)return o;
+  const extra={card:()=>tPart(m),graphs:null};
+  if(UI.tab==='part')return o.replace(/(<div class="tabs">[\s\S]*?<\/div>)[\s\S]*$/,(a,t)=>t+tPart(m)||t+'<div class="empty">Partnerships appear after the first ball.</div>');
+  if(UI.tab==='card')return o+tPart(m);
+  const map={h2h:tH2H,ven:tVenue,hl:tHigh,rev:tReview,graphs:tGraphs2};
+  if(map[UI.tab])return o.replace(/(<div class="tabs">[\s\S]*?<\/div>)[\s\S]*$/,(a,t)=>t+map[UI.tab](m));
+  return o};
+ Object.assign(A,{hlf(d){UI.hlf=d.v;render()}});
 }
 /* ---------------- THE HUNDRED (100 balls, 5-ball sets) ---------------- */
 {const f0=newMatch;newMatch=function(d){const h=String(d.overs)==='20.5';const m=f0(h?Object.assign({},d,{overs:20}):d);if(h){m.bpo=5;m.nbp=2;m.fmt='hundred';m.rules=Object.assign(m.rules||{},{ppb:25})}return m}}
