@@ -91,3 +91,9 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 - BUILT: Match > Gallery > "Find free photos" searches Openverse (Creative Commons / public domain, licence_type commercial+modification) through the server (/api/freephoto/search, /img), adds the picture with the SH watermark and keeps creator + licence as the photo credit, shown under the picture in the ePaper.
 - TESTED only against a local mock of the Openverse API. NOT tested against the real Openverse API (sandbox cannot reach it): endpoint names, parameters, response fields and rate limits are from memory and must be verified. Anonymous requests have low limits; a free API key may be needed.
 - NOT BUILT / REFUSED: scraping Google Images or other sites (terms of service and copyright). Licence conditions (e.g. CC BY-SA share-alike) must still be checked per picture.
+
+## Own Android build (no third-party builder)
+- `android/` is a native Android project (WebView shell that opens the live app at the Render address; camera permission for avatar capture, photo upload, Back button follows app screens, offline page).
+- `.github/workflows/android.yml` builds it on GitHub's servers and publishes the APK as a GitHub Release (run 1 built OK: ScoringHeroes-test.apk, debug-signed). Runs on every change inside `android/`, or by hand from the Actions tab.
+- NOT VERIFIED: installing and running the APK on a real phone (no device here). Play Store needs a release key: save ANDROID_KEYSTORE_BASE64, ANDROID_STORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD in repository secrets, then the workflow also makes a signed APK and an AAB.
+- The shell loads the website, so the app needs the Render service running; a new APK is needed only when the shell itself changes.
