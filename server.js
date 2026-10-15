@@ -399,7 +399,14 @@ const nm1 = (s, A, B) => { const x = String(s || '').toLowerCase().trim(); retur
 function newsFacts(m) {
   const [A, B] = (m.teams || []).slice(0, 2); if (!A || !B || !A.name || !B.name) return null;
   const desc = String(m.name || '').split(',').slice(1).join(',').trim(), st = String(m.status || '').trim().replace(/\.$/, '');
-  const sc = (m.score || []).map(x => ({ team: String(x.inning || '').replace(/ Inning.*/, ''), r: x.r, w: x.w, o: x.o }));
+  const used = new Set();   // the provider sometimes labels an innings oddly ("thailand", "Bhutan,Thailand"): match it to the real two teams
+  const sc = (m.score || []).map(x => {
+    const raw = String(x.inning || '').replace(/ Inning.*/i, '').trim();
+    let t = nm1(raw, A, B);
+    if (!t) t = raw.split(',').map(z => nm1(z, A, B)).find(z => z && !used.has(z.name)) || [A, B].find(z => !used.has(z.name));
+    if (t) used.add(t.name);
+    return { team: t ? t.name : raw, r: x.r, w: x.w, o: x.o };
+  });
   return { A, B, desc, st, sc, venue: m.venue || '', type: String(m.type || '').toLowerCase(), date: String(m.time || m.date || '').slice(0, 10) };
 }
 function writeResult(m) {
