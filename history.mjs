@@ -216,6 +216,21 @@ export function createHistory({ dir, log = console.log }) {
       (!q || (m.ev + ' ' + m.v + ' ' + m.c + ' ' + m.tm.join(' ')).toLowerCase().includes(q)));
     return { total: L.length, rows: L.slice(offset, offset + Math.min(100, limit)) };
   };
+  const venueStats = (name, type) => {
+    const k = String(name || '').split(',')[0].trim().toLowerCase();
+    if (k.length < 4) return { n: 0 };
+    const L = matches.filter(m => (m.v + ' ' + m.c).toLowerCase().includes(k) && m.sc && m.sc.length >= 1 && (!type || m.t === type));
+    if (!L.length) return { n: 0 };
+    const by = {};
+    for (const m of L) {
+      const f = by[m.t] || (by[m.t] = { t: m.t, n: 0, first: 0, hi: 0, batFirst: 0, chase: 0, nr: 0 });
+      f.n++; const a = m.sc[0].r; f.first += a; f.hi = Math.max(f.hi, ...m.sc.map(x => x.r));
+      if (m.w && m.w === m.sc[0].t) f.batFirst++; else if (m.w) f.chase++; else f.nr++;
+    }
+    const rows = Object.values(by).map(f => ({ t: f.t, n: f.n, avgFirst: Math.round(f.first / f.n), hi: f.hi, batFirst: f.batFirst, chase: f.chase, nr: f.nr })).sort((a, b) => b.n - a.n);
+    const recent = L.slice().sort((a, b) => String(b.d).localeCompare(String(a.d))).slice(0, 5).map(m => ({ d: m.d, t: m.t, tm: m.tm, res: m.w ? m.w + ' won' + (m.res && m.res !== 'won' ? ' by ' + m.res : '') : (m.res || 'No result'), sc: m.sc.map(x => x.r + '/' + x.w) }));
+    return { n: L.length, venue: L[0].v, city: L[0].c, rows, recent, from: L.reduce((a, m) => (!a || String(m.d) < a ? String(m.d) : a), ''), to: L.reduce((a, m) => (!a || String(m.d) > a ? String(m.d) : a), '') };
+  };
   load();
-  return { status, importFrom, searchPlayers, player, searchMatches, load };
+  return { status, importFrom, searchPlayers, player, searchMatches, venueStats, load };
 }

@@ -378,6 +378,10 @@ routes['GET /api/history/matches'] = async (req, body, ip) => {
   if (limited('hm:' + ip, 600, 36e5)) return [429, { ok: false, error: 'Too many requests' }];
   return [200, { ok: true, ...history.searchMatches({ q: body.q, type: body.type, year: body.year, team: body.team, gender: body.gender, limit: +body.limit || 30, offset: +body.offset || 0 }) }];
 };
+routes['GET /api/history/venue'] = async (req, body, ip) => {
+  if (limited('hv:' + ip, 600, 36e5)) return [429, { ok: false, error: 'Too many requests' }];
+  return [200, { ok: true, ...history.venueStats(String(body.name || '').slice(0, 120), body.type ? String(body.type).slice(0, 8) : '') }];
+};
 routes['POST /api/history/import'] = async (req, body) => {
   const phone = readSession((req.headers.authorization || '').replace(/^Bearer /, '')), u = phone && db.users[phone];
   if (!u) return [401, { ok: false, error: 'Please sign in again' }];
