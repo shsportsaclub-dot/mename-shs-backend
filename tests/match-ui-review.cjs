@@ -1,6 +1,7 @@
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
 const h=fs.readFileSync(process.env.SH_APP_FILE||'app-index.html','utf8');
 for(const m of h.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi))new vm.Script(m[1]);
+assert.ok(h.indexOf('/* SH MATCH CENTRE REVIEW:')>h.indexOf('<script'));
 const a=h.indexOf('/* SH MATCH CENTRE REVIEW:'),b=h.indexOf('/* END SH MATCH CENTRE REVIEW */',a),styles=[];
 const ctx={FLAGS:{canada:'ca',oman:'om',england:'gb-eng',scotland:'gb-sct'},SH_PH:/generic|icon512|default/,esc:s=>String(s??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('"','&quot;'),cbpIni:n=>String(n).split(' ').map(s=>s[0]).slice(0,2).join(''),wIn:()=> 'Starts soon',cbpInfoDate:()=> '16 October 2026',cbpVenue:()=>'',cbpInfo:()=>'',cbpCard:()=>'',cbpBbb:()=>'',wBadge:()=>'',document:{createElement:()=>({}),head:{appendChild:s=>styles.push(s)}}};
 vm.createContext(ctx);vm.runInContext(h.slice(a,b),ctx);
