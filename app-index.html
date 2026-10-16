@@ -990,7 +990,7 @@ function vAuth(){
   :`<form data-f="register"><label>Nickname (public)<input name="nick" required minlength="3" maxlength="20" pattern="[A-Za-z0-9_.]+" title="Letters, numbers, dot and underscore" placeholder="Rohit_45"></label>
   <label>Mobile number (private)<input name="phone" inputmode="tel" required pattern="[0-9+ ()\-]{6,20}" placeholder="+91 98765 43210" value="${esc(L.phone||'')}"></label>
   <label>Email (optional, private)<input type="email" name="email" placeholder="name@email.com"></label><div class="mu sm" style="margin:-4px 0 8px">Not needed to join. Add it if you want to connect social media later for posting posters.</div>
-  <div class="row"><label style="flex:1">Age<input type="number" name="age" min="5" max="90" required></label><label style="flex:1">City<input name="loc" required></label></div>
+  <div class="row"><label style="flex:1">Date of birth<input type="date" name="dob" min="1930-01-01" max="${new Date(Date.now()-5*365.25*864e5).toISOString().slice(0,10)}" required></label><label style="flex:1">City<input name="loc" required></label></div>
   <label>I am a<select name="kind">${opt([['Player','Player'],['Fan','Fan'],['Scorer','Scorer'],['Organiser','Organiser']],'Player')}</select></label>
   <label class="ck"><input type="checkbox" name="ok" required> I agree to the terms. My mobile number and email stay private.</label><button class="btn wide">Create account</button></form>`)
   +`</div></div>`}
@@ -1539,7 +1539,7 @@ function enter(u){
   :`<form data-f="register"><label>Nickname (public)<input name="nick" required minlength="3" maxlength="20" pattern="[A-Za-z0-9_.]+" title="Letters, numbers, dot and underscore" placeholder="Rohit_45"></label>
    <label>Mobile number (private)<input name="phone" inputmode="tel" required pattern="[0-9+ ()\-]{6,20}" placeholder="+91 98765 43210" value="${esc(L.phone||'')}" autocomplete="username"></label>
    <label>Email (optional, private)<input type="email" name="email" placeholder="name@email.com"></label><div class="mu sm" style="margin:-4px 0 8px">Not needed to join. Add it if you want to connect social media later for posting posters.</div>
-   <div class="row"><label style="flex:1">Age<input type="number" name="age" min="5" max="90" required></label><label style="flex:1">City<input name="loc" required></label></div>
+   <div class="row"><label style="flex:1">Date of birth<input type="date" name="dob" min="1930-01-01" max="${new Date(Date.now()-5*365.25*864e5).toISOString().slice(0,10)}" required></label><label style="flex:1">City<input name="loc" required></label></div>
    <div class="row"><label style="flex:1">Create PIN<input name="pin" type="password" inputmode="numeric" required pattern="[0-9]{4,6}" maxlength="6" placeholder="4 to 6 digits" autocomplete="new-password"></label><label style="flex:1">Confirm PIN<input name="pin2" type="password" inputmode="numeric" required pattern="[0-9]{4,6}" maxlength="6" autocomplete="new-password"></label></div>
    <label>I am a<select name="kind">${opt([['Player','Player'],['Fan','Fan'],['Scorer','Scorer'],['Organiser','Organiser']],'Player')}</select></label>
    <label class="ck"><input type="checkbox" name="ok" required> I agree to the terms. My mobile number and email stay private.</label><button class="btn wide">Create free account</button></form>`)+`</div></div>`}}
@@ -4096,6 +4096,13 @@ XV.match=function(){const o=vMatch();return `<div class="msk msk-${sk()}">${bar(
 A.mskin=function(d){S.settings.mskin=d.v==='ca'?'ca':'cb';commit()};
 }
 
+/* registration: date of birth (age is worked out from it) and the avatar / face step right after the account is created */
+function shAgeFrom(dob){const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(dob||''));if(!m)return NaN;const b=new Date(+m[1],+m[2]-1,+m[3]),n=new Date();if(isNaN(b)||b>n)return NaN;let a=n.getFullYear()-b.getFullYear();if(n.getMonth()<b.getMonth()||(n.getMonth()===b.getMonth()&&n.getDate()<b.getDate()))a--;return a}
+{const r2=F.register;F.register=function(fd){const dob=String(fd.get('dob')||''),age=shAgeFrom(dob);
+  if(!(age>=5&&age<=90))return toast('Enter your real date of birth (age 5 to 90)',3500);
+  fd.set('age',String(age));UI.regDob=dob;UI.justReg=Date.now();return r2.call(this,fd)}}
+{const l2=F.login;F.login=function(){UI.justReg=0;return l2.apply(this,arguments)}}
+{const p2=post;post=function(path,body){if(path==='/auth/register'&&body&&body.profile&&UI.regDob)body=Object.assign({},body,{profile:Object.assign({},body.profile,{dob:UI.regDob})});return p2.call(this,path,body)}}
 /* ---------------- AVATAR STUDIO: camera/photo capture, face placed on a Scoring Heroes player avatar ---------------- */
 {const st=document.createElement('style');st.textContent='#avst{position:fixed;inset:0;z-index:99999;background:rgba(3,6,20,.92);display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:max(12px,env(safe-area-inset-top)) 12px 24px}#avst .box{background:#0c1333;color:#f2f5ff;border:1px solid #2a3a7a;border-radius:16px;max-width:420px;width:100%;padding:16px}#avst h3{margin:0 0 4px}#avst .cv{width:100%;aspect-ratio:1;border-radius:14px;background:#060a1d;touch-action:none;display:block}#avst video{width:100%;aspect-ratio:1;object-fit:cover;border-radius:14px;background:#000;transform:scaleX(-1)}#avst .r{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}#avst .r button,#avst .r label.b{flex:1;min-width:120px;padding:11px 8px;border-radius:999px;border:1px solid #3a4a9a;background:#121b45;color:#fff;font-weight:700;text-align:center;cursor:pointer;font-size:14px}#avst .r .go{background:linear-gradient(90deg,#0a1f5c,#e11d2e);border-color:#e11d2e}#avst .r .on{outline:2px solid #ffcd00}#avst .mu{color:#9aa8d6;font-size:13px}#avst input[type=range]{width:100%}';document.head.appendChild(st)}
 const AVK=[['bat','Batter'],['bowl','Bowler'],['field','Fielder']];
@@ -4148,7 +4155,7 @@ function avClose(){if(AV.stream){AV.stream.getTracks().forEach(t=>t.stop());AV.s
 function avOpen(){if(document.getElementById('avst'))return;try{const t=(S.teams&&S.user&&S.user.pid&&P(S.user.pid)&&P(S.user.pid).team)?T(P(S.user.pid).team):null;if(t&&t.color)AV.cols=['#0a1f5c',t.color]}catch(e){}const o=document.createElement('div');o.id='avst';document.body.appendChild(o);avUI()}
 A.avopen=function(){avOpen()};
 {const MG=MENU2.find(x=>x[0]==='Account');if(MG&&!MG[1].some(z=>z[0]==='@avopen'))MG[1].push(['@avopen','\u{1F4F7}','Photo avatar'])}
-{const e1=enter;enter=function(){const r=e1.apply(this,arguments);try{if(S.user&&!S.user.guest&&!S.user.avatar2&&!S.prefs.avSkip&&!S.prefs.avDone)setTimeout(avOpen,900)}catch(e){}return r}}
+{const e1=enter;enter=function(){const r=e1.apply(this,arguments);try{const fresh=UI.justReg&&Date.now()-UI.justReg<18e4;if(fresh){UI.justReg=0;if(S.user&&UI.regDob){S.user.dob=UI.regDob;try{const u=S.users.find(x=>x.id===S.user.id);if(u)u.dob=UI.regDob}catch(e){}UI.regDob='';commit()}if(S.user&&!S.user.guest&&!S.user.avatar2)setTimeout(avOpen,700)}else if(S.user&&!S.user.guest&&!S.user.avatar2&&!S.prefs.avSkip&&!S.prefs.avDone)setTimeout(avOpen,900)}catch(e){}return r}}
 {const h1=hdr;hdr=function(){let o=h1();const u=S.user;if(u&&u.avatar2)o=o.replace(/(aria-label="Profile">)[\s\S]*?(<\/button>)/,'$1<span class="avatar" style="width:100%;height:100%;background:transparent"><img src="'+u.avatar2+'" alt=""></span>$2');return o}}
 
 /* bottom navigation, Cricbuzz order: HOME / MATCHES / VIDEOS / NEWS / MORE, with a floating Score button */
@@ -4695,6 +4702,31 @@ function cbpVenue(W){const m=W.m,v=String(m.venue||'').trim();if(!v)return '<div
  return `<div class="cbp-lb">Stadium</div><div class="cbp-cd">${rows.map(([a,b])=>`<div class="cbp-kv"><span>${a}</span><b>${esc(b)}</b></div>`).join('')}</div>${hs}<div class="mu sm" style="padding:0 4px 12px">Capacity, boundary size, pitch report and weather are not in any data source we can check, so they are not shown.</div>`}
 function cbpInfoDate(W){const m=W.m,i=W.mi||{},t=Date.parse((i.dateTimeGMT||m.time||'')+((i.dateTimeGMT||m.time||'').match(/Z|\+/)?'':'Z'));return t?new Date(t).toLocaleString('en-IN',{timeZone:'Asia/Kolkata',day:'numeric',month:'short',year:'numeric',hour:'numeric',minute:'2-digit',hour12:true})+' IST':(m.date||'')}
 {const st=document.createElement('style');st.textContent='html,body{max-width:100%;overflow-x:clip}.tbadge{flex:none;width:32px;height:32px;font-size:9px;letter-spacing:-.4px;overflow:hidden;text-align:center;line-height:1}img.logo{flex:none}.kv>div{min-width:0;overflow-wrap:anywhere}#app img,#app video,#app canvas{max-width:100%}#app .card,#app .hh-box{min-width:0}';document.head.appendChild(st)}
+/* provider-agnostic extras: officials, player of the match, playing XI / squad on Info; fall of wickets and partnership timeline in Graphs. Each appears only when the data feed really sends it. */
+function cbpArr(v){return Array.isArray(v)?v:(v==null||v===''?[]:[v])}
+function cbpOfficials(i){const nm=x=>x&&typeof x==='object'?(x.name||x.fullname||''):String(x||'');const R=[];
+ const ump=cbpArr(i.umpires||i.umpire||i.officials).map(nm).filter(Boolean);if(ump.length)R.push(['Umpires',ump.join(', ')]);
+ [['firstumpire','On-field umpire 1'],['secondumpire','On-field umpire 2'],['umpire1','On-field umpire 1'],['umpire2','On-field umpire 2'],['thirdUmpire','Third umpire'],['third_umpire','Third umpire'],['tvUmpire','Third umpire'],['fourthUmpire','Fourth umpire'],['referee','Match referee'],['matchReferee','Match referee']].forEach(([k,l])=>{const v=nm(i[k]);if(v&&!R.some(r=>r[0]===l))R.push([l,v])});
+ const pm=cbpArr(i.playerOfTheMatch||i.player_of_the_match||i.manofmatch||i.pom).map(nm).filter(Boolean);if(pm.length)R.push(['Player of the Match',pm.join(', ')]);
+ return R}
+function cbpXI(W){const q=W.sq;if(!Array.isArray(q)||!q.length)return '';
+ const flag=p=>p.playing===true||p.isPlaying===true||p.playingXI===true||p.inXI===true||p.lineup===true||p.is_playing===true;
+ const hasXI=q.some(t=>(t.players||[]).some(flag));
+ const col=t=>{const L=hasXI?(t.players||[]).filter(flag):(t.players||[]);return `<div><div class="cbp-th" style="margin:0 0 4px">${wBadge({name:t.teamName,short:t.shortname,img:t.img})} ${esc(t.shortname||t.teamName||'')}</div>${L.map(p=>`<div class="cbp-kv" style="padding:6px 8px"><span style="color:var(--tx)">${esc(p.name)}</span><b style="font-weight:500;color:var(--mu);font-size:12px">${esc(p.role||'')}</b></div>`).join('')}</div>`};
+ return `<div class="cbp-lb">${hasXI?'Playing XI':'Squads'}</div><div class="cbp-cd" style="padding:6px">${q.slice(0,2).map(col).join('')}</div>${hasXI?'':'<div class="mu sm" style="padding:0 4px 10px">The provider sends the squad, not the final eleven. The playing XI is shown automatically when the provider sends it.</div>'}`}
+{const i1=cbpInfo;cbpInfo=function(W){let o=i1(W);const i=W.mi||{},off=cbpOfficials(i);
+  const offH=off.length?`<div class="cbp-lb">Match officials</div><div class="cbp-cd">${off.map(([a,b])=>`<div class="cbp-kv"><span>${a}</span><b>${esc(b)}</b></div>`).join('')}</div>`:`<div class="cbp-cd cbp-note"><b>Match officials</b>The data provider on this plan does not send umpire, referee or Player of the Match names. They show here automatically when it does.</div>`;
+  o=o.replace('<div class="mu sm" style="padding:0 4px 12px">Umpires, referee and pitch notes are not in this data feed.</div>','');
+  return o+offH+cbpXI(W)}}
+function cbpFow(inn){const f=inn.fow??inn['fall-of-wickets']??inn.fallOfWickets??inn.fallofwickets;if(!Array.isArray(f))return [];
+ return f.map((x,k)=>{if(!x||typeof x!=='object')return null;const r=+(x.r??x.runs??x.score??x.fow_score??x.total),w=+(x.w??x.wicket??x.wkt??x.wicketNumber??(k+1)),pl=x.player||x.batsman||x.name||x.out||'',ov=x.over??x.overs??x.ov??x.fow_balls??'';return isFinite(r)?{r,w,pl:typeof pl==='object'?(pl.name||''):String(pl),ov:String(ov)}:null}).filter(Boolean)}
+function cbpPartGraph(W){const L=W.sc&&W.sc.scorecard||[];let out='';
+ L.forEach(inn=>{const F=cbpFow(inn);if(!F.length)return;const nm=String(inn.inning||'').replace(/ Inning.*/,''),sc=(W.m.score||[]).find(x=>String(x.inning||'').startsWith(nm)),end=sc?sc.r:F[F.length-1].r;
+  const P=[];let prev=0;F.forEach(x=>{P.push({n:x.w,r:x.r-prev,at:x.r,pl:x.pl,ov:x.ov});prev=x.r});if(end>prev&&F.length<10)P.push({n:F.length+1,r:end-prev,at:end,pl:'not out',ov:'',open:true});
+  const mx=Math.max(1,...P.map(x=>x.r)),tot=Math.max(1,end);
+  out+=`<div class="cbp-lb">${esc(nm)}: partnership timeline</div><div class="cbp-cd"><div style="display:flex;height:26px;margin:10px 10px 6px;border-radius:6px;overflow:hidden">${P.map((x,k)=>`<i title="${x.r} runs" style="display:block;width:${x.r/tot*100}%;background:${k%2?'#3f7bff':'#e11d2e'};opacity:${x.open?.6:1}"></i>`).join('')}</div>${P.map(x=>`<div class="gr-row"><span>${x.n}${x.n===1?'st':x.n===2?'nd':x.n===3?'rd':'th'} wkt</span><div class="gr-bar" style="width:${x.r/mx*100}%;min-width:4px"><i class="r" style="width:100%"></i></div><b>${x.r}</b></div>`).join('')}<div class="mu sm" style="padding:6px 12px 10px">Runs added for each wicket. ${F.map(x=>x.r+'-'+x.w+(x.pl?' ('+esc(x.pl)+(x.ov?', '+esc(x.ov)+' ov':'')+')':'')).join(', ')}</div></div>`});
+ return out||`<div class="cbp-cd cbp-note"><b>Partnership timeline</b>Needs fall-of-wickets data. This provider does not send it for this match, so nothing is drawn. It appears automatically when the provider sends fall of wickets.</div>`}
+{const g0=cbpGraphs;cbpGraphs=function(W){return cbpPartGraph(W)+g0(W)}}
 /* upcoming match: countdown + our own preview article on the Info tab */
 {const i0=cbpInfo;cbpInfo=function(W){let o=i0(W);const m=W.m;if(m.started)return o;let pv=null;try{pv=ownNews().find(a=>a.kind==='preview'&&String(a.key)===String(m.id))}catch(e){}
  return `<div class="cbp-cd cbp-note"><b>${esc(wIn(m))}</b>Commentary, over by over, graphs and win chance start when the first ball is bowled. They are not shown before that because nothing exists yet.</div>`+o+(pv?`<div class="cbp-lb">Match preview</div><div class="cbp-cd cbp-note"><b>${esc(pv.title)}</b>${esc((pv.body||[]).join(' '))}</div>`:'')}}

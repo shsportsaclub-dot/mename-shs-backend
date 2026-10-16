@@ -101,11 +101,18 @@ function cleanProfile(p) {
   p = p || {};
   const nick = String(p.nick || '').trim(), kind = ['Player', 'Fan', 'Scorer', 'Organiser'].includes(p.kind) ? p.kind : 'Fan';
   if (!/^[A-Za-z0-9_.]{3,20}$/.test(nick)) return { error: 'Nickname must be 3-20 letters, numbers, dot or underscore' };
-  const age = Math.round(+p.age);
-  if (!(age >= 5 && age <= 90)) return { error: 'Enter a valid age' };
+  let age = Math.round(+p.age), dob = '';
+  if (p.dob != null && p.dob !== '') {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(p.dob)), d = m && new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
+    if (!d || isNaN(d) || d.getUTCDate() !== +m[3] || d > new Date()) return { error: 'Enter a valid date of birth' };
+    const n = new Date(); age = n.getUTCFullYear() - d.getUTCFullYear();
+    if (n.getUTCMonth() < d.getUTCMonth() || (n.getUTCMonth() === d.getUTCMonth() && n.getUTCDate() < d.getUTCDate())) age--;
+    dob = m[0];
+  }
+  if (!(age >= 5 && age <= 90)) return { error: 'Enter a valid date of birth (age 5 to 90)' };
   const email = String(p.email || '').trim().slice(0, 100);
   if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return { error: 'That email does not look right. Fix it or leave it empty.' };   // optional
-  return { profile: { nick, name: nick, email, age, loc: String(p.loc || '').trim().slice(0, 60), kind } };
+  return { profile: { nick, name: nick, email, age, dob, loc: String(p.loc || '').trim().slice(0, 60), kind } };
 }
 const pub = u => ({ nick: u.nick, name: u.nick, email: u.email, age: u.age, loc: u.loc, kind: u.kind, role: u.role, phone: u.phone });
 
