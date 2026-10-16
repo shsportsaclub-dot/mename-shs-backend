@@ -4519,6 +4519,27 @@ function cbpOvers(W){const L=W.bb?cbpBbbList(W.bb):[];const by={};L.forEach(x=>{
   if(hasNW){const inn=L[W.inn==null?L.length-1:W.inn];if(inn)o=o.replace(/<tr><th>Bowler<\/th>[\s\S]*?<\/table>/,`<tr><th>Bowler</th><th>O</th><th>M</th><th>R</th><th>W</th><th>NB</th><th>WD</th><th>ER</th></tr>${(inn.bowling||[]).map(b=>{const bm=b.bowler||{};return `<tr><td class="pl" data-a="wPlayer" data-id="${esc(bm.id||'')}" data-name="${esc(bm.name||'')}" style="cursor:pointer">${esc(bm.name||'')}</td><td>${b.o??''}</td><td>${b.m??''}</td><td>${b.r??''}</td><td><b>${b.w??''}</b></td><td>${b.nb??'-'}</td><td>${b.wd??'-'}</td><td>${b.eco??''}</td></tr>`}).join('')}</table>`)}
   const fow=L.some(i=>i.fow||i['fall-of-wickets']);
   return o+(fow?'':'<div class="mu sm" style="padding:0 4px 12px">Fall of wickets and partnerships are not sent by the provider for this match.</div>')}}
+
+function cbpOverTab(W){const m=W.m;if(W.bb==null&&!W.bbErr)return '<div class="mu" style="padding:14px">Loading over by over...</div>';
+ if(!m.started)return `<div class="cbp-cd cbp-note"><b>${esc(wIn(m))}</b>Over by over fills in ball by ball once play starts. Nothing can be shown before the first ball.</div>`;
+ const L=W.bb&&!W.bbErr?cbpBbbList(W.bb).slice().reverse():[];
+ if(!L.length)return `<div class="cbp-cd cbp-note"><b>Over by over is not in the data feed for this match</b>${esc(W.bbErr||'The provider returned no ball-by-ball data.')} The scorecard and Graphs tabs use the figures the provider does send.</div>`;
+ const by={};L.forEach(x=>{const o=x.o!=null&&x.o!==''&&isFinite(+x.o)?+x.o:null;if(o==null)return;(by[o]=by[o]||[]).push(x)});
+ const ks=Object.keys(by).map(Number).sort((a,b)=>b-a);
+ if(!ks.length)return '<div class="cbp-cd cbp-note"><b>Over numbers missing</b>The provider sent balls without over numbers.</div>';
+ return `<div class="cbp-cd">${ks.map(k=>{const b=by[k],t=b.reduce((n,x)=>n+(x.run==='W'?0:(+x.run||0)),0);return `<div class="cm-i"><span class="cm-o">Ov ${k+1}</span><span style="flex:1;display:flex;gap:6px;flex-wrap:wrap">${b.map(x=>`<span class="cm-r ${x.cls}">${esc(String(x.run===''?'.':x.run))}</span>`).join('')}</span><b>${t}</b></div>`}).join('')}</div>`}
+function cbpPredict(W){const m=W.m,sc=m.score||[];
+ if(!m.started)return `<div class="cbp-cd cbp-note"><b>${esc(wIn(m))}</b>No prediction is made before play. Win chance is worked out from the score once the first innings is under way, so nothing is invented from nothing.</div>`;
+ const tot=cbpTot(m.type);if(!tot||!sc.length)return '<div class="cbp-cd cbp-note"><b>Prediction not available</b>It is worked out for limited-overs matches only.</div>';
+ const c=sc[sc.length-1],b=cbpOv(c.o)||0;if(!b)return '<div class="cbp-cd cbp-note"><b>Waiting for the first over</b></div>';
+ const crr=c.r/(b/6),tm=(m.teams||[]).slice(0,2);let a,bb,nA,nB,why;
+ if(sc.length===1){const pj=Math.round(crr*tot);return `<div class="cbp-lb">Projected total</div><div class="cbp-cd"><div class="cbp-kv"><span>Current run rate</span><b>${crr.toFixed(2)}</b></div><div class="cbp-kv"><span>Projected at this rate</span><b>${pj}</b></div><div class="cbp-kv"><span>Wickets down</span><b>${c.w}</b></div></div><div class="mu sm" style="padding:0 4px 12px">Win chance appears when the second innings starts.</div>`}
+ const tg=sc[0].r+1,need=tg-c.r,left=tot*6-b,wk=10-c.w;
+ if(m.ended){return '<div class="cbp-cd cbp-note"><b>Match finished</b>'+esc(m.status||'')+'</div>'}
+ const rrr=left>0?need/(left/6):99,z=(crr-rrr)*0.55+(wk-5)*0.18+(left>0?0:-3)-(need>left*2?3:0);let pc=1/(1+Math.exp(-z));if(need<=0)pc=1;
+ nA=pc*100;nB=100-nA;const chaser=sc[1]&&String(sc[1].inning||'').replace(/ Inning.*/,'');
+ const pr=Math.round(nA);
+ return `<div class="cbp-lb">Win chance (arithmetic model)</div><div class="cbp-cd" style="padding:14px"><div class="gr-bar" style="height:22px"><i style="width:${pr}%;background:#3f7bff"></i><i style="width:${100-pr}%;background:#e11d2e"></i></div><div style="display:flex;justify-content:space-between;margin-top:8px;font:700 14px var(--ui)"><span>${esc(chaser||'Chasing')} ${pr}%</span><span>${100-pr}% ${esc(String(sc[0].inning||'').replace(/ Inning.*/,''))}</span></div></div><div class="cbp-cd"><div class="cbp-kv"><span>Target</span><b>${tg}</b></div><div class="cbp-kv"><span>Need</span><b>${Math.max(0,need)} from ${left} balls</b></div><div class="cbp-kv"><span>Required rate</span><b>${rrr.toFixed(2)}</b></div><div class="cbp-kv"><span>Current rate</span><b>${crr.toFixed(2)}</b></div><div class="cbp-kv"><span>Wickets in hand</span><b>${wk}</b></div></div><div class="mu sm" style="padding:0 4px 12px">A simple model from run rates and wickets. It is not an official forecast.</div>`}
 XV.wmatch=function(){const W=UI.wm;if(!W)return '<div class="empty">Open a match from Home or Matches.</div>';
  const m=W.m,live=m.started&&!m.ended,tab=W.tab||'live',tm=(m.teams||[]).slice(0,2),sp=wSplit(m),ttl=tm.map(t=>t.short||t.name).join(' v ')||m.name;
  const sum=`<div class="cbp-sc">${(m.score||[]).map((x,i,a)=>`<div class="r ${live&&i<a.length-1?'dim':''}"><span>${esc(String(x.inning||'').replace(/ Inning.*/,'').slice(0,12))}</span>${x.r}-${x.w} <small style="font-size:15px;color:var(--mu)">(${x.o})</small></div>`).join('')||`<div class="cbp-res" style="color:var(--mu)">${esc(m.started?'':wIn(m))}</div>`}<div class="cbp-res">${esc(m.status||'')}</div></div>`;
@@ -4527,12 +4548,14 @@ XV.wmatch=function(){const W=UI.wm;if(!W)return '<div class="empty">Open a match
  else if(tab==='cm')body=sum+cbpBbb(W);
  else if(tab==='sc')body=sum+cbpCard(W);
  else if(tab==='gr')body=sum+cbpGraphs(W);
+ else if(tab==='ov')body=sum+cbpOverTab(W);
+ else if(tab==='pr')body=sum+cbpPredict(W);
  else if(tab==='sq')body=cbpSquads(W);
  else body=cbpInfo(W);
- return cbpHead(ttl,[['info','Info'],['live','Live'],['cm','Commentary'],['sc','Scorecard'],['gr','Graphs'],['sq','Squads']],tab,'wmTab')+body};
+ return cbpHead(ttl,[['info','Info'],['live','Live'],['cm','Commentary'],['ov','Overs'],['sc','Scorecard'],['gr','Graphs'],['pr','Prediction'],['sq','Squads']],tab,'wmTab')+body};
 {const o0=A.wOpen;A.wOpen=function(d){o0.apply(this,arguments);const id=d.id;
   wLoad('match_info',id).then(j=>{if(!UI.wm||UI.wm.m.id!==id)return;if(j.ok)UI.wm.mi=j.data||{};else UI.wm.miErr=j.error||'unavailable';if(UI.view==='wmatch')render()})};
- const t0=A.wmTab;A.wmTab=function(d){t0.apply(this,arguments);const W=UI.wm;if(W&&(d.v==='cm'||d.v==='gr')&&W.bb==null&&!W.bbErr&&!W.bbBusy){W.bbBusy=1;const id=W.m.id;wLoad('match_bbb',id).then(j=>{if(!UI.wm||UI.wm.m.id!==id)return;UI.wm.bbBusy=0;if(j.ok)UI.wm.bb=j.data==null?[]:j.data;else UI.wm.bbErr=j.error||'Not available';if(UI.view==='wmatch')render()})}}}
+ const t0=A.wmTab;A.wmTab=function(d){t0.apply(this,arguments);const W=UI.wm;if(W&&(d.v==='cm'||d.v==='gr'||d.v==='ov')&&W.bb==null&&!W.bbErr&&!W.bbBusy){W.bbBusy=1;const id=W.m.id;wLoad('match_bbb',id).then(j=>{if(!UI.wm||UI.wm.m.id!==id)return;UI.wm.bbBusy=0;if(j.ok)UI.wm.bb=j.data==null?[]:j.data;else UI.wm.bbErr=j.error||'Not available';if(UI.view==='wmatch')render()})}}}
 /* admin: server status (what is really switched on) + test email */
 XV.svc=function(){const adm=S.user&&S.user.role==='admin';if(!adm)return '<div class="empty">Only an admin can see the server status.</div>';
  const V=UI.svc;if(!V){UI.svc={loading:1};svcLoad();return '<div class="mu" style="padding:14px">Checking the server...</div>'}
@@ -4645,6 +4668,9 @@ function tReview(m){if(!m.innings.length)return '<div class="empty">The review i
   return o};
  Object.assign(A,{hlf(d){UI.hlf=d.v;render()},htab3(d){const v=d.v;UI.hx=v;if(v==='sh'||v==='int'||v==='all'){UI.hf.tab='all'}else UI.hf.tab=v;render()}});
 }
+/* upcoming match: countdown + our own preview article on the Info tab */
+{const i0=cbpInfo;cbpInfo=function(W){let o=i0(W);const m=W.m;if(m.started)return o;let pv=null;try{pv=ownNews().find(a=>a.kind==='preview'&&String(a.key)===String(m.id))}catch(e){}
+ return `<div class="cbp-cd cbp-note"><b>${esc(wIn(m))}</b>Commentary, over by over, graphs and win chance start when the first ball is bowled. They are not shown before that because nothing exists yet.</div>`+o+(pv?`<div class="cbp-lb">Match preview</div><div class="cbp-cd cbp-note"><b>${esc(pv.title)}</b>${esc((pv.body||[]).join(' '))}</div>`:'')}}
 /* ---------------- THE HUNDRED (100 balls, 5-ball sets) ---------------- */
 {const f0=newMatch;newMatch=function(d){const h=String(d.overs)==='20.5';const m=f0(h?Object.assign({},d,{overs:20}):d);if(h){m.bpo=5;m.nbp=2;m.fmt='hundred';m.rules=Object.assign(m.rules||{},{ppb:25})}return m}}
 {const f0=vScore;vScore=function(){const o=f0();const m=S.matches.find(x=>x.id===UI.sid)||S.matches.filter(x=>x.status!=='done').slice(-1)[0];
