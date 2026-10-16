@@ -1,3 +1,73 @@
+/* SH MATCH CENTRE REVIEW: team identity, contained charts and sourced venue details. */
+function shTeamName(t){return typeof t==='string'?t:String(t&& (t.name||t.teamName||t.short||t.shortname)||'Team not published')}
+function shCountryKey(n){return String(n||'').toLowerCase().replace(/\s+(?:women|men|under[- ]?19|u[- ]?19)(?:\s.*)?$/,'').trim()}
+function shTeamMark(t){
+ const name=shTeamName(t),key=shCountryKey(name),code=FLAGS[key];
+ if(code&&/^[a-z]{2}$/.test(code)){const flag=String.fromCodePoint(...code.toUpperCase().split('').map(c=>127397+c.charCodeAt(0)));return `<span class="sh-team-mark sh-flag" role="img" aria-label="${esc(name)} flag" title="${esc(name)}">${flag}</span>`}
+ if(code==='gb-eng'||code==='gb-sct')return `<span class="sh-team-mark" role="img" aria-label="${esc(name)} flag"><svg viewBox="0 0 60 40" aria-hidden="true">${code==='gb-eng'?'<path fill="#fff" d="M0 0h60v40H0z"/><path stroke="#c8102e" stroke-width="8" d="M30 0v40M0 20h60"/>':'<path fill="#005eb8" d="M0 0h60v40H0z"/><path stroke="#fff" stroke-width="8" d="M0 0l60 40M0 40L60 0"/>'}</svg></span>`;
+ const u=typeof t==='object'&&String(t.img||'');
+ if(u&&/^https?:\/\//i.test(u)&&!SH_PH.test(u)&&!/generic|logo-placeholder/i.test(u))return `<span class="sh-team-mark"><img src="${esc(u)}" alt="${esc(name)} emblem" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span hidden class="sh-team-initial">${esc(cbpIni(name))}</span></span>`;
+ return `<span class="sh-team-mark sh-team-initial" role="img" aria-label="${esc(name)} initials; official emblem unavailable">${esc(cbpIni(name))}</span>`;
+}
+function shInningName(s){return String(s||'').replace(/\s+innings?\s*\d*$/i,'').trim()}
+function shWorldTeams(W){const m=W.m,i=W.mi||{},raw=(m.teams||[]).length?m.teams:(i.teamInfo||i.teams||[]);return raw.slice(0,2).map(t=>typeof t==='string'?{name:t}:t)}
+function shWorldSummary(W){const m=W.m,teams=shWorldTeams(W),scores=m.score||[],norm=s=>shCountryKey(s).replace(/[^a-z0-9]/g,'');
+ return `<section class="sh-score-summary" aria-label="Match score">${teams.map(t=>{const n=shTeamName(t),mine=scores.filter(s=>norm(shInningName(s.inning))===norm(n));return `<div class="sh-score-team">${shTeamMark(t)}<span class="sh-score-name">${esc(n)}</span><span class="sh-score-value">${mine.length?mine.map(s=>`<b>${esc(s.r)}/${esc(s.w)}</b><small>(${esc(s.o)} ov)</small>`).join('<span class="sh-and">&amp;</span>'):'<small>Yet to bat</small>'}</span></div>`}).join('')}${!teams.length?`<p>${esc(m.name||'Teams not published')}</p>`:''}<p class="sh-score-status">${esc(m.status||(!m.started?wIn(m):''))}</p></section>`;
+}
+function shChartRow(name,parts,value,max){const total=parts.reduce((a,x)=>a+x[1],0),width=Math.max(0,Math.min(100,total/Math.max(1,max)*100));return `<div class="sh-chart-row"><span class="sh-chart-name" title="${esc(name)}">${esc(name)}</span><div class="sh-chart-track"><div class="sh-chart-fill" style="width:${width}%">${parts.map(([c,n])=>`<i class="${c}" style="width:${total?n/total*100:0}%"></i>`).join('')}</div></div><b>${esc(value)}</b></div>`}
+function shWorldGraphs(W){const L=W.sc&&W.sc.scorecard||[],scores=W.m.score||[];
+ if(!W.m.started)return '<div class="cbp-cd cbp-note">Graphs appear when recorded play is available.</div>';
+ if(!L.length)return '<div class="cbp-cd cbp-note">Scorecard figures are not available for graphs yet.</div>';
+ const totals=L.map((inn,i)=>{const s=scores.find(s=>shInningName(s.inning)===shInningName(inn.inning)),t=inn.totals||{};return {name:shInningName(inn.inning),r:t.R??s?.r,w:t.W??s?.w,o:t.O??s?.o}});
+ const comparison=`<div class="cbp-lb">Innings comparison</div><div class="cbp-cd sh-compare">${totals.map(t=>`<div><b>${esc(t.name)}</b><strong>${esc(t.r??'—')}/${esc(t.w??'—')}</strong><small>${esc(t.o??'—')} overs</small></div>`).join('')}</div>`;
+ return comparison+L.map(inn=>{const bat=inn.batting||[],bow=inn.bowling||[],max=Math.max(1,...bat.map(b=>+b.r||0)),bm=Math.max(1,...bow.map(b=>+b.r||0));return `<div class="cbp-lb">${esc(shInningName(inn.inning))} · Batting runs</div><div class="cbp-cd sh-chart">${bat.map(b=>{const r=+b.r||0,f=(+b['4s']||0)*4,s=(+b['6s']||0)*6;return shChartRow(b.batsman?.name||'Batter',[['other',Math.max(0,r-f-s)],['four',f],['six',s]],r,max)}).join('')}<p class="sh-chart-key">Blue: other runs · Gold: fours · Red: sixes</p></div><div class="cbp-lb">${esc(shInningName(inn.inning))} · Bowling</div><div class="cbp-cd sh-chart">${bow.map(b=>shChartRow(b.bowler?.name||'Bowler',[['other',+b.r||0]],`${b.w??'—'}/${b.r??'—'}`,bm)).join('')}<p class="sh-chart-key">Bar: runs conceded · Label: wickets/runs</p></div>`}).join('')+shWorldOverDisplay(W);
+}
+function shWorldOverData(W){const d=W.bb,arr=Array.isArray(d)?d:Array.isArray(d?.bbb)?d.bbb:Array.isArray(d?.balls)?d.balls:[],groups=new Map();let skipped=0;
+ for(const x of arr){const raw=x.inning??x.innings??x.inningsNumber;let inn=raw==null?'':String(typeof raw==='object'?raw.name||raw.id||'':raw);if(!inn&&W.sc?.scorecard?.length===1)inn=W.sc.scorecard[0].inning;
+  const over=Number(x.over),ball=Number(x.ball),total=Number(x.total_runs??(typeof x.runs==='object'?x.runs.total:x.runs));
+  // Never merge innings or guess whether a provider's over numbering is zero-based.
+  if(!inn||!Number.isInteger(over)||over<0||!Number.isInteger(ball)||ball<1||ball>6||!Number.isFinite(total)||total<0){skipped++;continue}
+  const key=inn+'|'+over;let g=groups.get(key);if(!g){g={inn,over,r:0,w:0,balls:[]};groups.set(key,g)}
+  const wicket=x.wicket===true||x.isWicket===true||x.wicket===1;g.r+=total;if(wicket)g.w++;g.balls.push({ball,r:total,w:wicket,wide:!!x.wide,noball:!!x.noball});
+ }
+ return {rows:[...groups.values()].sort((a,b)=>a.inn.localeCompare(b.inn)||a.over-b.over),skipped};
+}
+function shWorldOverDisplay(W){const {rows,skipped}=shWorldOverData(W);if(!rows.length)return '<div class="cbp-cd cbp-note"><b>Over-by-over data unavailable</b>Complete delivery records with innings identifiers are needed to separate the innings correctly.</div>';
+ return `<div class="cbp-lb">Recorded overs · innings kept separate</div>`+[...new Set(rows.map(x=>x.inn))].map(inn=>`<div class="cbp-cd"><div class="cbp-note"><b>${esc(inn)}</b></div>${rows.filter(x=>x.inn===inn).map(x=>`<div class="sh-over-row"><span>Over ${x.over}</span><div>${x.balls.sort((a,b)=>a.ball-b.ball).map(b=>`<i class="${b.w?'w':''}">${b.w?'W':b.r}${b.wide?'wd':b.noball?'nb':''}</i>`).join('')}</div><b>${x.r} runs<br><small>${x.w} wkts</small></b></div>`).join('')}</div>`).join('')+(skipped?'<p class="mu sm">Incomplete deliveries are excluded; these are recorded overs, not a complete innings graph.</p>':'');
+}
+function shWorldVenueDetails(W){const i=W.mi||{},m=W.m,v=typeof i.venue==='object'?i.venue:{},title=typeof i.venue==='string'?i.venue:typeof m.venue==='string'?m.venue:'';
+ const raw=i.pitchReport??i.pitch_report??v.pitchReport,report=typeof raw==='string'?raw:raw&&typeof raw==='object'?raw.text||raw.report:'',source=typeof raw==='object'&&raw?raw.source||'Match data provider':'Match data provider';
+ const rows=[['Stadium',v.name||title],['City',v.city||i.venueCity],['Country',v.country||i.venueCountry],['Capacity',v.capacity],['Ends',Array.isArray(v.ends)?v.ends.join(' / '):v.ends],['Surface',v.surface],['Venue time zone',v.timezone],['Match time',cbpInfoDate(W)]];
+ const missing=!title&&!v.name||/^(?:tbc|tbd|unknown)(?:\s*,\s*(?:tbc|tbd))?$/i.test(title.trim());
+ const card=`<div class="cbp-lb">Stadium details</div><div class="cbp-cd">${missing?'<div class="cbp-note">Stadium confirmation pending.</div>':rows.filter(x=>x[1]!=null&&x[1]!=='').map(([k,val])=>`<div class="cbp-kv"><span>${k}</span><b>${esc(val)}</b></div>`).join('')}</div><div class="cbp-lb">Pitch report · this match</div><div class="cbp-cd cbp-note">${report?`<p>${esc(report)}</p><small>Source: ${esc(source)}</small>`:'The match pitch report has not been published. Ground averages do not establish the condition of this match’s pitch.'}</div>`;
+ return card;
+}
+{
+ wBadge=function(t){return shTeamMark(t)};
+ cbpGraphs=shWorldGraphs;cbpOvers=shWorldOverDisplay;cbpOverTab=shWorldOverDisplay;
+ const venue=cbpVenue;cbpVenue=function(W){const old=venue(W),p=old.indexOf('<div class="cbp-lb">Ground records'),no=old.indexOf('<div class="cbp-cd cbp-note"><b>No ground records');const start=p>=0?p:no;const end=old.lastIndexOf('<div class="mu sm"');return shWorldVenueDetails(W)+(start>=0?old.slice(start,end>start?end:undefined):'')};
+ const info=cbpInfo;cbpInfo=function(W){return info(W).replace(/<div class="mu sm"[^>]*>Umpires, referee and pitch notes[^<]*<\/div>/,'')+shWorldVenueDetails(W)};
+ const style=document.createElement('style');style.textContent=`
+ .sh-team-mark{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;flex:0 0 32px;overflow:hidden;border-radius:8px;background:var(--c2,#172449)}.sh-team-mark svg,.sh-team-mark img{width:100%;height:100%;object-fit:contain}.sh-flag{font:26px/1 system-ui}.sh-team-initial{font:700 11px/1 system-ui;color:var(--tx,#fff)}
+ .sh-score-summary{border:1px solid var(--bd);background:var(--card);border-radius:12px;padding:12px;margin:0 0 12px;min-width:0}.sh-score-team{display:grid;grid-template-columns:32px minmax(0,1fr) minmax(72px,auto);gap:8px;align-items:center;margin:8px 0}.sh-score-name{font:700 15px/1.3 var(--ui);overflow-wrap:anywhere}.sh-score-value{display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:baseline;gap:4px;max-width:150px;text-align:right;font-variant-numeric:tabular-nums}.sh-score-value b{font-size:22px}.sh-score-value small{font-size:12px;opacity:.8}.sh-score-status{font:600 14px/1.4 var(--ui);color:var(--bl);margin:10px 0 0;overflow-wrap:anywhere}
+ .msk,.cbp-h,.sh-chart,.sh-compare{min-width:0;max-width:100%;box-sizing:border-box}.msk .cbp-h{margin:0 0 12px}.cbp-kv{display:grid;grid-template-columns:minmax(80px,30%) minmax(0,1fr);gap:10px}.cbp-kv>span{width:auto;min-width:0}.cbp-kv>*{overflow-wrap:anywhere}.cbp-cd p{overflow-wrap:anywhere}.cbp-sp b,.cbp-sp small{white-space:normal;overflow-wrap:anywhere}.shh .tr2 .n{white-space:normal;overflow-wrap:anywhere}.shh .tr2 .s{flex-shrink:0;font-size:clamp(19px,5vw,26px)}
+ .sh-chart-row{display:grid;grid-template-columns:minmax(72px,32%) minmax(0,1fr) 44px;gap:8px;align-items:center;padding:9px 12px}.sh-chart-name{font-size:12px;overflow-wrap:anywhere}.sh-chart-row>b{text-align:right;font-size:12px}.sh-chart-track{height:14px;background:var(--c2,#23324a);border-radius:7px;overflow:hidden;min-width:0}.sh-chart-fill{height:100%;display:flex;overflow:hidden}.sh-chart-fill i{display:block;height:100%;flex-shrink:0}.sh-chart-fill .other{background:#3f7bff}.sh-chart-fill .four{background:#ffc83d}.sh-chart-fill .six{background:#e11d2e}.sh-chart-key{font-size:11px;color:var(--mu);padding:0 12px 8px}.sh-compare{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.sh-compare>div{padding:12px;display:flex;flex-direction:column;gap:6px;overflow-wrap:anywhere}.sh-compare strong{font-size:24px}.sh-compare small{color:var(--mu)}
+ .sh-over-row{display:grid;grid-template-columns:64px minmax(0,1fr) 60px;gap:6px;align-items:center;padding:10px;font-size:12px;border-top:1px solid var(--bd)}.sh-over-row>div{display:flex;gap:4px;flex-wrap:wrap}.sh-over-row i{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:24px;padding:2px;border-radius:50%;background:var(--c2);font-style:normal}.sh-over-row i.w{background:#e11d2e;color:white}.cbp-tb{min-width:0}.hh-lc .tm{min-width:0}.hh-lc .tm b{white-space:normal;overflow-wrap:anywhere}.mskbar{display:flex;flex-wrap:wrap;gap:6px}
+ `;document.head.appendChild(style);
+}
+function shWorldOfficials(W){const i=W.mi||{},o=i.officials||{},text=v=>Array.isArray(v)?v.map(text).filter(Boolean).join(', '):typeof v==='object'&&v?v.name||'':String(v||'');
+ const rows=[['On-field umpires',text(i.umpires||o.umpires||[i.umpire1,i.umpire2])],['TV umpire',text(i.tvUmpire||i.thirdUmpire||o.tvUmpire)],['Match referee',text(i.matchReferee||i.referee||o.referee)]];
+ return '<div class="cbp-lb">Match officials</div><div class="cbp-cd">'+rows.map(([k,v])=>`<div class="cbp-kv"><span>${k}</span><b>${esc(v||'Not published')}</b></div>`).join('')+'</div>';
+}
+function shWorldLineups(W){const squads=Array.isArray(W.sq)?W.sq:[];return '<div class="cbp-lb">Playing XI / squads</div>'+(squads.length?squads.map(t=>{const p=t.players||[],xi=p.filter(x=>x.isPlaying===true||x.playingXI===true||x.playing11===true);return `<div class="cbp-cd cbp-note"><b>${shTeamMark({name:t.teamName})} ${esc(t.teamName||t.shortname||'Team')}</b><p>${xi.length?'Confirmed playing XI: '+esc(xi.map(x=>x.name).join(', ')):'Playing XI confirmation not supplied.'}</p><p>Squad: ${esc(p.map(x=>x.name).join(', ')||'Not published')}</p></div>`}).join(''):'<div class="cbp-cd cbp-note">The provider has not published the squad or confirmed XI for this match.</div>')}
+function shWorldPartnerships(W){const L=W.sc?.scorecard||[];let out='';for(const inn of L){const p=inn.partnerships??inn.partnership;if(!Array.isArray(p)||!p.length)continue;out+=`<div class="cbp-lb">${esc(shInningName(inn.inning))} · Partnerships</div><div class="cbp-cd">${p.map(x=>{const names=Array.isArray(x.batsmen)?x.batsmen.map(b=>typeof b==='object'?b.name:b).join(' & '):x.pair||x.players||'';return `<div class="cbp-kv"><span>${esc(names)}</span><b>${esc(x.runs??x.r??'—')} (${esc(x.balls??x.b??'—')} balls)</b></div>`}).join('')}</div>`}return out}
+{
+ const card=cbpCard;cbpCard=function(W){return card(W)+shWorldPartnerships(W)};
+ const info=cbpInfo;cbpInfo=function(W){return info(W)+shWorldOfficials(W)+shWorldLineups(W)};
+ const comm=cbpBbb;cbpBbb=function(W){if(W.bbErr||W.mi?.bbbEnabled===false)return '<div class="cbp-cd cbp-note"><b>Commentary unavailable for this match</b>The current provider request did not return delivery records. The scorecard is available separately.</div>';return comm(W)};
+}
+/* END SH MATCH CENTRE REVIEW */
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -4037,7 +4107,7 @@ setInterval(()=>{if(guestPurge()){try{save()}catch(e){}render()}},60000);
 {const m0=mHead;mHead=function(m){const o=m0(m);return m&&m.gts?`<div class="mu sm" style="margin:2px 0 6px;color:#ffd27a">Guest match: kept on this device for 24 hours only (about ${guestLeft(m)} left). Log in or register before it is removed if you want to keep it.</div>`+o:o}}
 {const h0=vHome;vHome=function(){const o=h0.apply(this,arguments);return S.user&&S.user.guest&&(S.settings.appTheme||'hero')!=='hero'?`<div class="card"><div class="mu sm">You are using the app as a guest. Matches you score are kept for 24 hours, then removed. Guest data is not saved to the server.</div></div>`+o:o}}
 /* ---------------- MATCH SKINS: every match list and match page can be shown in 2 skins (Cricbuzz style / Cricket Australia style) ---------------- */
-{const MSK=[['cb','Classic'],['ca','Night']];
+{const MSK=[['cb','SH Classic'],['ca','SH Stadium']];
 const st0=document.createElement('style');st0.textContent=
 '.msk{border-radius:14px;padding:10px;margin:0 -2px}'+
 '.msk-cb{--bg:#eef1f4;--card:#ffffff;--c2:#f3f5f8;--tx:#10161c;--mu:#5d6b78;--ac:#cb2030;--bd:#d6dce3;--on:#ffffff;--grad:linear-gradient(90deg,#cb2030,#cb2030);background:#eef1f4;color:#10161c}'+
@@ -4542,7 +4612,7 @@ function cbpPredict(W){const m=W.m,sc=m.score||[];
  return `<div class="cbp-lb">Win chance (arithmetic model)</div><div class="cbp-cd" style="padding:14px"><div class="gr-bar" style="height:22px"><i style="width:${pr}%;background:#3f7bff"></i><i style="width:${100-pr}%;background:#e11d2e"></i></div><div style="display:flex;justify-content:space-between;margin-top:8px;font:700 14px var(--ui)"><span>${esc(chaser||'Chasing')} ${pr}%</span><span>${100-pr}% ${esc(String(sc[0].inning||'').replace(/ Inning.*/,''))}</span></div></div><div class="cbp-cd"><div class="cbp-kv"><span>Target</span><b>${tg}</b></div><div class="cbp-kv"><span>Need</span><b>${Math.max(0,need)} from ${left} balls</b></div><div class="cbp-kv"><span>Required rate</span><b>${rrr.toFixed(2)}</b></div><div class="cbp-kv"><span>Current rate</span><b>${crr.toFixed(2)}</b></div><div class="cbp-kv"><span>Wickets in hand</span><b>${wk}</b></div></div><div class="mu sm" style="padding:0 4px 12px">A simple model from run rates and wickets. It is not an official forecast.</div>`}
 XV.wmatch=function(){const W=UI.wm;if(!W)return '<div class="empty">Open a match from Home or Matches.</div>';
  const m=W.m,live=m.started&&!m.ended,tab=W.tab||'live',tm=(m.teams||[]).slice(0,2),sp=wSplit(m),ttl=tm.map(t=>t.short||t.name).join(' v ')||m.name;
- const strip=`<div class="cbp-fl">${tm.map(t=>`<span>${wBadge(t)}<b>${esc(t.name||t.short)}</b></span>`).join('<em>v</em>')}</div>`,sum=strip+`<div class="cbp-sc">${(m.score||[]).map((x,i,a)=>`<div class="r ${live&&i<a.length-1?'dim':''}"><span>${esc(String(x.inning||'').replace(/ Inning.*/,'').slice(0,12))}</span>${x.r}-${x.w} <small style="font-size:15px;color:var(--mu)">(${x.o})</small></div>`).join('')||`<div class="cbp-res" style="color:var(--mu)">${esc(m.started?'':wIn(m))}</div>`}<div class="cbp-res">${esc(m.status||'')}</div></div>`;
+ const sum=shWorldSummary(W);
  let body='';
  if(tab==='live')body=sum+streamCard('w'+m.id,live)+cbpCrease(W)+cbpOutlook(m)+(!live&&!m.ended?'<div class="cbp-cd cbp-note"><b>Match not started</b>Live score, batters and bowlers appear here when play begins.</div>':'');
  else if(tab==='cm')body=sum+cbpBbb(W);
@@ -4604,7 +4674,7 @@ document.head.appendChild(st)}
   const V={info:tInfo,ovr:tOvr,act:tAct,sum:tSum,ins:tIns,mvp:tMvp,gal:tGal,pts:tPts,live:tLive,comm:tComm,card:tCard,graphs:tGraphs,drs:tDRS,dls:tDLS,squads:tSquads};
   const live=m.status==='live'||m.status==='break',sc=(typeof streamCard==='function')?streamCard('m'+m.id,live):'';
   return sel+mHead(m)+tickerHTML()+sc+`<div class="tabs">${tabs.map(([k,l])=>`<button class="${UI.tab===k?'on':''}" data-a="tab" data-v="${k}">${l}</button>`).join('')}</div>`+(V[UI.tab]||(()=>''))(m)};
- const x0=XV.wmatch;XV.wmatch=function(){return `<div class="msk msk-${sk2()}" style="padding:0;margin:0"><div class="mskbar" style="margin:0 0 8px">${[['cb','Classic'],['ca','Night']].map(([k,l])=>`<button type="button" class="${sk2()===k?'on':''}" data-a="mskin" data-v="${k}">${l}</button>`).join('')}</div>${x0()}</div>`};
+ const x0=XV.wmatch;XV.wmatch=function(){return `<div class="msk msk-${sk2()}" style="padding:0;margin:0"><div class="mskbar" style="margin:0 0 8px">${[['cb','SH Classic'],['ca','SH Stadium']].map(([k,l])=>`<button type="button" class="${sk2()===k?'on':''}" data-a="mskin" data-v="${k}">${l}</button>`).join('')}</div>${x0()}</div>`};
 }
 /* ---------------- SCORING VIEW 2: partnerships, over-wise runs/wkts/wides/dots, innings comparison, H2H, team strength, venue, highlights, review (all from the match's own ball-by-ball) ---------------- */
 {const st=document.createElement('style');st.textContent='.pt-r{display:grid;grid-template-columns:1fr 70px;gap:8px;align-items:center;padding:7px 12px;font:500 13px var(--ui);border-bottom:1px dashed var(--bd)}.pt-r small{display:block;color:var(--mu);font-size:11px}.pt-b{height:8px;border-radius:4px;background:var(--ac);margin-top:4px}.cmp td:nth-child(2){text-align:center;color:var(--mu);font-size:12px}.cmp td:nth-child(3){text-align:right}.cmp td:first-child{font-weight:700}.ovg{display:grid;grid-template-columns:34px repeat(4,1fr);gap:4px 6px;font:600 12px var(--ui);align-items:center}.ovg b{color:var(--mu)}.ovg i{font-style:normal;text-align:center;padding:3px 0;border-radius:6px;background:var(--c2)}.ovg i.w{background:#e11d2e;color:#fff}.ovg i.x{background:#ffc83d;color:#222}.hl-i{display:flex;gap:10px;padding:9px 12px;border-bottom:1px solid var(--bd);font:500 14px var(--ui)}.hl-i b{min-width:34px}';document.head.appendChild(st)}

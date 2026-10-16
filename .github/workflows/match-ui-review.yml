@@ -1,0 +1,22 @@
+name: Match UI review
+on:
+  push:
+    paths: ['app-index.html', 'tests/match-ui-review.cjs', 'tests/match-ui-browser.cjs', '.github/workflows/match-ui-review.yml']
+  workflow_dispatch:
+jobs:
+  layout:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node tests/match-ui-review.cjs
+      - run: npm install --no-save playwright@1.61.1
+      - run: npx playwright install --with-deps chromium
+      - run: node tests/match-ui-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: match-ui-evidence
+          path: runtime-evidence/
