@@ -1,5 +1,6 @@
 // Scoring Heroes backend: OTP SMS from "SH Sports" + magic login link + live cricket proxy.
 // Zero dependencies. Needs Node 20.6 or newer.   Run:  node --env-file=.env server.js
+import { createSportmonks } from './sportmonks.mjs';
 import http from 'node:http';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
@@ -22,6 +23,8 @@ const EMAIL_FROM = E.EMAIL_FROM || E.SMTP_USER || 'SH Sports <no-reply@example.c
 const COUNTRY = E.COUNTRY_CODE || '91';
 const CRIC_KEY = E.CRIC_API_KEY || '';
 const CRIC_BASE = E.CRIC_BASE || 'https://api.cricapi.com/v1';
+const SM_TOKEN = E.SPORTMONKS_TOKEN || '';
+const SM = SM_TOKEN ? createSportmonks({ token: SM_TOKEN, base: E.SPORTMONKS_BASE || undefined }) : null;
 const LIVE_TTL = (+E.LIVE_CACHE_SECONDS || 60) * 1000;
 const envKey = s => { const d = String(s).replace(/\D/g, ''); return d.length === 10 ? d : (d.startsWith('91') && d.length === 12 ? d.slice(2) : d); };
 const ADMINS = (E.ADMIN_PHONES || '').split(',').map(envKey).filter(Boolean);
@@ -188,6 +191,7 @@ function liveTtl(info) {
   return Math.min(60 * 60e3, Math.max(5 * 60e3, secs / left * 1000 * 1.15));
 }
 async function liveMatches() {
+  if (SM) return smLive();
   if (!CRIC_KEY) throw Object.assign(new Error('CRIC_API_KEY is not set on the server'), { code: 503 });
   if (live.data && Date.now() - live.t < live.ttl) return live.data;
   try {
@@ -216,6 +220,15 @@ async function liveMatches() {
   }
 }
 
+let smLiveC = { t: 0, data: null };
+async function smLive() {
+  if (smLiveC.data && Date.now() - smLiveC.t < 60e3) return smLiveC.data;
+  try {
+    const matches = await SM.liveMatches();
+    smLiveC = { t: Date.now(), data: { ok: true, matches, info: {}, refreshEverySec: 60, updated: new Date().toISOString() } };
+    return smLiveC.data;
+  } catch (e) { if (smLiveC.data) return { ...smLiveC.data, stale: true, note: e.message }; throw e; }
+}
 const routes = {
   'POST /api/otp/send': async (req, body, ip) => {
     const P = pk(body), phone = P.key;
@@ -283,7 +296,17 @@ const routes = {
 const cricCache = new Map();
 routes['GET /api/cric'] = async (req, body, ip) => {
   const ep = String(body.ep || ''), id = String(body.id || '');
-  if (!['match_scorecard', 'players_info', 'match_info', 'match_squad', 'match_bbb'].includes(ep) || !/^[0-9a-f-]{8,40}$/i.test(id)) return [400, { ok: false, error: 'Bad request' }];
+  if (!['match_scorecard', 'players_info', 'match_info', 'match_squad', 'match_bbb'].includes(ep) || !/^(sm)?[0-9a-z-]{1,40}$/i.test(id)) return [400, { ok: false, error: 'Bad request' }];
+  if (SM && /^sm?\d+$/i.test(id)) {
+    if (limited('cric:' + ip, 120, 36e5)) return [429, { ok: false, error: 'Too many requests' }];
+    const k0 = 'sm' + ep + id, h0 = cricCache.get(k0);
+    if (h0 && Date.now() - h0.t < (ep === 'players_info' ? 864e5 : 30e3)) return [200, h0.d];
+    const num = id.replace(/^sm/i, '');
+    try {
+      const data = ep === 'match_scorecard' ? await SM.scorecard(num) : ep === 'match_info' ? await SM.matchInfo(num) : ep === 'match_squad' ? await SM.squad(num) : ep === 'match_bbb' ? await SM.bbb(num) : await SM.player(num);
+      const d = { ok: true, data }; cricCache.set(k0, { t: Date.now(), d }); if (cricCache.size > 500) cricCache.clear(); return [200, d];
+    } catch (e) { return [502, { ok: false, error: String(e.message || 'Sportmonks error').slice(0, 160) }]; }
+  }
   if (!CRIC_KEY) return [503, { ok: false, error: 'CRIC_API_KEY is not set on the server' }];
   if (limited('cric:' + ip, 120, 36e5)) return [429, { ok: false, error: 'Too many requests' }];
   const k = ep + id, hit = cricCache.get(k), ttl = ep === 'players_info' ? 864e5 : 45e3;
@@ -480,12 +503,24 @@ function svcStatus() {
   return {
     email: { provider: EMAIL_PROVIDER, ready: emailKey, from: EMAIL_PROVIDER === 'console' ? '' : EMAIL_FROM, problem: need(EMAIL_PROVIDER, emailKey, ['EMAIL_PROVIDER=resend + RESEND_API_KEY', 'EMAIL_PROVIDER=smtp + SMTP_USER + SMTP_PASS']), last: svcLast.email },
     sms: { provider: SMS_PROVIDER, ready: smsKey, sent: db.smsSent || 0, cap: SMS_TOTAL_BUDGET || 0, problem: need(SMS_PROVIDER, smsKey, ['SMS_PROVIDER=textbee + TEXTBEE_API_KEY + TEXTBEE_DEVICE_ID', 'SMS_PROVIDER=msg91 + MSG91_AUTHKEY + MSG91_TEMPLATE_ID']), last: svcLast.sms },
-    live: { ready: !!CRIC_KEY, problem: CRIC_KEY ? '' : 'Set CRIC_API_KEY' },
+    live: { ready: !!(CRIC_KEY || SM), provider: SM ? 'sportmonks' : 'cricketdata', problem: (CRIC_KEY || SM) ? '' : 'Set CRIC_API_KEY (CricketData) or SPORTMONKS_TOKEN (Sportmonks)' },
     ai: { ready: !!NEWS_AI_KEY, model: NEWS_AI_KEY ? NEWS_AI_MODEL : '', problem: NEWS_AI_KEY ? '' : 'Optional: set ANTHROPIC_API_KEY for AI-polished articles (articles are still written without it)' },
     history: { autoimport: E.HISTORY_AUTOIMPORT === '1' }
   };
 }
 routes['GET /api/status'] = async () => { const x = svcStatus(); return [200, { ok: true, emailReady: x.email.ready, smsReady: x.sms.ready, liveReady: x.live.ready }]; };
+routes['POST /api/admin/probe'] = async (req, body) => {
+  const phone = readSession((req.headers.authorization || '').replace(/^Bearer /, '')), u = phone && db.users[phone];
+  if (!u) return [401, { ok: false, error: 'Please sign in again' }];
+  if (u.role !== 'admin') return [403, { ok: false, error: 'Only an admin can see this' }];
+  if (!SM) return [200, { ok: false, error: 'SPORTMONKS_TOKEN is not set on the server' }];
+  const id = String(body.id || '').replace(/\D/g, '');
+  try {
+    let fid = id;
+    if (!fid) { const L = await SM.liveMatches(); const m = L.find(x => x.started) || L[0]; if (!m) return [200, { ok: false, error: 'Sportmonks returned no fixtures' }]; fid = m.id.replace(/^sm/, ''); }
+    return [200, { ok: true, id: fid, ...(await SM.probe(fid)) }];
+  } catch (e) { return [200, { ok: false, error: String(e.message).slice(0, 300) }]; }
+};
 routes['POST /api/admin/status'] = async (req, body) => {
   const phone = readSession((req.headers.authorization || '').replace(/^Bearer /, '')), u = phone && db.users[phone];
   if (!u) return [401, { ok: false, error: 'Please sign in again' }];
@@ -903,4 +938,4 @@ http.createServer(async (req, res) => {
   const ip = String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
   try { const [code, obj] = await h(req, body, ip); out(code, obj); }
   catch (e) { console.error(e); out(500, { ok: false, error: 'Server error' }); }
-}).listen(PORT, () => console.log(`Scoring Heroes API on :${PORT}  (SMS: ${SMS_PROVIDER}, live feed: ${CRIC_KEY ? 'on' : 'off'})`));
+}).listen(PORT, () => console.log(`Scoring Heroes API on :${PORT}  (SMS: ${SMS_PROVIDER}, live feed: ${SM ? 'sportmonks' : CRIC_KEY ? 'cricketdata' : 'off'})`));
