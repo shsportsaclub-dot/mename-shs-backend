@@ -56,6 +56,9 @@ function bestBetter(w, r, cur) { // cur like "5/23"; higher wickets then fewer r
   return w > cw || (w === cw && r < cr);
 }
 
+const normTeam = t => String(t || '').toLowerCase().replace(/\b(women|woman|men|w|u19|u-19)\b/g, '').replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+export const sameTeamName = (a, b) => { a = normTeam(a); b = normTeam(b); return !!a && !!b && (a === b || a.includes(b) || b.includes(a)); };
+export const dayShift = (d, n) => new Date(Date.parse(d + 'T00:00:00Z') + n * 864e5).toISOString().slice(0, 10);
 // officials, toss and the eleven (kept for recent years only, to keep the store small)
 export function factsOf(info, year) {
   const o = info.officials || {}, f = {};
@@ -226,9 +229,7 @@ export function createHistory({ dir, log = console.log }) {
       (!q || (m.ev + ' ' + m.v + ' ' + m.c + ' ' + m.tm.join(' ')).toLowerCase().includes(q)));
     return { total: L.length, rows: L.slice(offset, offset + Math.min(100, limit)) };
   };
-  const normT = t => String(t || '').toLowerCase().replace(/\b(women|woman|men|w|u19|u-19)\b/g, '').replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
-  const sameT = (a, b) => { a = normT(a); b = normT(b); return !!a && !!b && (a === b || a.includes(b) || b.includes(a)); };
-  const dayShift = (d, n) => new Date(Date.parse(d + 'T00:00:00Z') + n * 864e5).toISOString().slice(0, 10);
+  const sameT = sameTeamName;
   // one finished match by its two teams and date (+-1 day for time zones); returns null when not found
   const matchFacts = (a, b, date) => {
     if (!a || !b || !/^\d{4}-\d\d-\d\d$/.test(String(date || ''))) return null;

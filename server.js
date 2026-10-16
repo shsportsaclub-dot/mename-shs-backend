@@ -7,7 +7,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import net from 'node:net';
 import tls from 'node:tls';
-import { createHistory } from './history.mjs';
+import { createHistory, sameTeamName } from './history.mjs';
+import { createRecent, buildBbb, buildFow, buildPartnerships, inningsTotals, RECENT_SOURCE } from './recent.mjs';
 
 const E = process.env;
 const PORT = +E.PORT || 8080;
@@ -295,13 +296,19 @@ const routes = {
 // ---- Match scorecard / player profile proxy (key stays on the server) ----
 const cricCache = new Map();
 // ---- Open-data fill: when the live provider does not send officials, player of the match or the eleven for a FINISHED match, take them from Cricsheet (open data, ODC-By) and say so. Never guessed: only a single exact match of both teams and the date is used. ----
-const histRow = d => { if (!d || !d.matchEnded || !history.status().ready) return null; const t = d.teams || []; return history.matchFacts(t[0], t[1], String(d.dateTimeGMT || d.date || '').slice(0, 10)); };
+const csDay = d => String(d.dateTimeGMT || d.date || '').slice(0, 10);
+const recentOf = d => (d && d.matchEnded && (d.teams || []).length >= 2) ? recent.find(d.teams[0], d.teams[1], csDay(d)) : null;
+const histRow = d => {
+  if (!d || !d.matchEnded) return null; const t = d.teams || [];
+  const rr = recentOf(d); if (rr) return recent.facts(rr);
+  return history.status().ready ? history.matchFacts(t[0], t[1], csDay(d)) : null;
+};
 function enrichInfo(d) {
   const r = histRow(d); if (!r) return d; const o = r.of || {}, out = { ...d }; let used = false;
   if (!out.umpires && o.u) { out.umpires = o.u; used = true; }
   if (!out.thirdUmpire && o.tv) { out.thirdUmpire = o.tv.join(', '); used = true; }
   if (!out.referee && o.rf) { out.referee = o.rf.join(', '); used = true; }
-  if (!out.tossWinner && r.toss && r.toss.w) { out.tossWinner = (d.teams || []).find(t => history.sameTeam(t, r.toss.w)) || r.toss.w; if (r.toss.d) out.tossChoice = r.toss.d; used = true; }
+  if (!out.tossWinner && r.toss && r.toss.w) { out.tossWinner = (d.teams || []).find(t => sameTeamName(t, r.toss.w)) || r.toss.w; if (r.toss.d) out.tossChoice = r.toss.d; used = true; }
   if (!out.playerOfTheMatch && r.pom && r.pom.length) { out.playerOfTheMatch = r.pom; used = true; }
   if (used) out.factSrc = 'Cricsheet (open data, ODC-By)';
   return out;
@@ -310,12 +317,36 @@ const nameKey = n => { const p = String(n || '').replace(/[().]/g, ' ').trim().s
 function enrichSquad(sq, info) {
   const r = histRow(info); if (!r || !r.xi || !Array.isArray(sq)) return sq;
   return sq.map(t => {
-    const key = Object.keys(r.xi).find(k => history.sameTeam(k, t.teamName)); if (!key || !Array.isArray(t.players)) return t;
+    const key = Object.keys(r.xi).find(k => sameTeamName(k, t.teamName)); if (!key || !Array.isArray(t.players)) return t;
     const xi = r.xi[key].map(nameKey), hit = new Array(t.players.length).fill(false), used = new Set();
     t.players.forEach((p, i) => { const k = nameKey(p.name), c = xi.filter(x => x === k).length; if (k && c === 1 && !used.has(k) && t.players.filter(q => nameKey(q.name) === k).length === 1) { hit[i] = true; used.add(k); } });
     if (hit.filter(Boolean).length < Math.max(9, Math.ceil(xi.length * 0.8))) return t;   // not reliable enough: show the squad only
     return { ...t, players: t.players.map((p, i) => hit[i] ? { ...p, playing: true } : p), xiSrc: 'Cricsheet (open data, ODC-By)' };
   });
+}
+async function enrichScorecard(sc, id) {
+  if (!sc || !Array.isArray(sc.scorecard) || !sc.scorecard.length) return sc;
+  const info = await infoOf(id).catch(() => null), teams = (info && info.teams) || []; if (teams.length < 2) return sc;
+  // the provider sometimes names an innings "Team A,Team B" or in lower case: give each innings its real batting team (never guessed when two teams fit)
+  const res = sc.scorecard.map(inn => { const parts = String(inn.inning || '').replace(/\s+Inning.*$/i, '').split(','); const m = teams.filter(t => parts.some(p => sameTeamName(p, t))); return m.length === 1 ? m[0] : null; });
+  const pend = res.map((t, i) => t ? -1 : i).filter(i => i >= 0), free = teams.filter(t => !res.includes(t));
+  if (pend.length === 1 && free.length === 1) res[pend[0]] = free[0];
+  const rr = recentOf(info), cs = rr ? { fow: buildFow(rr.raw), par: buildPartnerships(rr.raw), tot: inningsTotals(rr.raw) } : null, seen = {}, seenCs = {};
+  let credit = false;
+  const out = sc.scorecard.map((inn, i) => {
+    const t = res[i], o = { ...inn }; if (!t) return o;
+    seen[t] = (seen[t] || 0) + 1; o.inning = t + ' Inning ' + seen[t];
+    if (cs) {
+      const idx = cs.tot.map((x, j) => ({ x, j })).filter(z => !z.x.super_over && sameTeamName(z.x.team, t)).map(z => z.j)[(seenCs[t] = (seenCs[t] || 0) + 1) - 1];
+      const pr = inn.totals && inn.totals.R != null ? +inn.totals.R : null;
+      if (idx != null && (pr == null || pr === cs.tot[idx].r)) {   // only when the totals agree with the provider
+        if (!o.fow && cs.fow[idx].fow.length) { o.fow = cs.fow[idx].fow; credit = true; }
+        if (!o.partnerships && cs.par[idx].partnerships.length) { o.partnerships = cs.par[idx].partnerships; credit = true; }
+      }
+    }
+    return o;
+  });
+  return { ...sc, scorecard: out, ...(credit ? { factSrc: RECENT_SOURCE } : {}) };
 }
 async function infoOf(id) {
   const h = cricCache.get('match_info' + id); if (h && h.d && h.d.data) return h.d.data;
@@ -339,12 +370,15 @@ routes['GET /api/cric'] = async (req, body, ip) => {
   if (limited('cric:' + ip, 120, 36e5)) return [429, { ok: false, error: 'Too many requests' }];
   const k = ep + id, hit = cricCache.get(k), ttl = ep === 'players_info' ? 864e5 : 45e3;
   if (hit && Date.now() - hit.t < ttl) return [200, hit.d];
+  if (ep === 'match_bbb') {   // a finished match: Cricsheet has the full ball by ball
+    try { const rr = recentOf(await infoOf(id)); if (rr) { const bbb = buildBbb(rr.raw); if (bbb.length) { const d = { ok: true, data: { bbb, source: RECENT_SOURCE } }; cricCache.set(k, { t: Date.now(), d }); return [200, d]; } } } catch {}
+  }
   try {
     const r = await fetch(`${CRIC_BASE}/${ep}?apikey=${encodeURIComponent(CRIC_KEY)}&id=${encodeURIComponent(id)}`);
     const j = await r.json();
     if (j.status !== 'success') return [502, { ok: false, error: j.reason || 'Cricket API error' }];
     let data = j.data;
-    try { if (ep === 'match_info') data = enrichInfo(data); else if (ep === 'match_squad') data = enrichSquad(data, await infoOf(id)); } catch {}
+    try { if (ep === 'match_info') data = enrichInfo(data); else if (ep === 'match_squad') data = enrichSquad(data, await infoOf(id)); else if (ep === 'match_scorecard') data = await enrichScorecard(data, id); } catch {}
     const d = { ok: true, data }; cricCache.set(k, { t: Date.now(), d }); if (cricCache.size > 500) cricCache.clear();
     return [200, d];
   } catch { return [502, { ok: false, error: 'Cricket API unreachable' }]; }
@@ -422,6 +456,8 @@ setInterval(() => { const n = Date.now(); for (const [k, v] of moPending) if (v.
 const HISTORY_URL = E.HISTORY_URL || 'https://cricsheet.org/downloads/all_json.zip';
 const HISTORY_YEARS = Math.min(60, Math.max(1, parseInt(E.HISTORY_YEARS, 10) || 30));
 const history = createHistory({ dir: E.HISTORY_DIR || './history-data', log: m => console.log(m) });
+const recent = createRecent({ dir: path.join(E.HISTORY_DIR || './history-data', 'recent'), log: m => console.log(m) });
+if (E.RECENT_OPEN_DATA !== '0') { setTimeout(() => recent.refresh(), 25e3); setInterval(() => recent.refresh(), 3 * 3600e3); }
 const histSince = () => new Date().getUTCFullYear() - HISTORY_YEARS;
 const startHistory = () => history.importFrom({ url: HISTORY_URL, sinceYear: histSince() }).catch(e => console.error(e.message));
 if (E.HISTORY_AUTOIMPORT === '1' && !history.status().ready) setTimeout(startHistory, 20000);
@@ -540,7 +576,8 @@ function svcStatus() {
     sms: { provider: SMS_PROVIDER, ready: smsKey, sent: db.smsSent || 0, cap: SMS_TOTAL_BUDGET || 0, problem: need(SMS_PROVIDER, smsKey, ['SMS_PROVIDER=textbee + TEXTBEE_API_KEY + TEXTBEE_DEVICE_ID', 'SMS_PROVIDER=msg91 + MSG91_AUTHKEY + MSG91_TEMPLATE_ID']), last: svcLast.sms },
     live: { ready: !!(CRIC_KEY || SM), provider: SM ? 'sportmonks' : 'cricketdata', problem: (CRIC_KEY || SM) ? '' : 'Set CRIC_API_KEY (CricketData) or SPORTMONKS_TOKEN (Sportmonks)' },
     ai: { ready: !!NEWS_AI_KEY, model: NEWS_AI_KEY ? NEWS_AI_MODEL : '', problem: NEWS_AI_KEY ? '' : 'Optional: set ANTHROPIC_API_KEY for AI-polished articles (articles are still written without it)' },
-    history: { autoimport: E.HISTORY_AUTOIMPORT === '1' }
+    history: { autoimport: E.HISTORY_AUTOIMPORT === '1' },
+    recent: { enabled: E.RECENT_OPEN_DATA !== '0', ...recent.status() }
   };
 }
 routes['GET /api/status'] = async () => { const x = svcStatus(); return [200, { ok: true, emailReady: x.email.ready, smsReady: x.sms.ready, liveReady: x.live.ready }]; };

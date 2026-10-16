@@ -4808,6 +4808,13 @@ function shWorldPartnerships(W){const L=W.sc?.scorecard||[];let out='';for(const
  cbpInfo=function(W){const i=W.mi||{},m=W.m,rows=[['Match',m.name],['Format',String(m.type||'').toUpperCase()],['Date',cbpInfoDate(W)],['Toss',i.tossWinner?i.tossWinner+(i.tossChoice?' · '+i.tossChoice:''):'Not published'],['Result / status',m.status],['Player of the Match',(Array.isArray(i.playerOfTheMatch)?i.playerOfTheMatch:[i.playerOfTheMatch]).filter(Boolean).join(', ')]];return '<div class="cbp-cd">'+rows.filter(x=>x[1]).map(([k,v])=>'<div class="cbp-kv"><span>'+k+'</span><b>'+esc(v)+'</b></div>').join('')+'</div>'+shWorldVenueDetails(W)+shWorldOfficials(W)+shWorldLineups(W)+((cr=>cr?`<div class="mu sm" style="padding:0 4px 10px">Officials, toss, player of the match and playing XI for this finished match: ${esc(cr)}.</div>`:'')(i.factSrc||((Array.isArray(W.sq)&&W.sq.find(t=>t.xiSrc))||{}).xiSrc))};
  const comm=cbpBbb;cbpBbb=function(W){if(W.bbErr||W.mi?.bbbEnabled===false)return '<div class="cbp-cd cbp-note"><b>Commentary unavailable for this match</b>The current provider request did not return delivery records. The scorecard is available separately.</div>';return comm(W)};
 }
+{ // open-data credit: ball by ball, fall of wickets and partnerships filled for a finished match
+ const cr=src=>src?`<div class="mu sm" style="padding:0 4px 10px">Ball by ball for this finished match: ${esc(src)}.</div>`:'';
+ const c0=cbpBbb;cbpBbb=function(W){return c0(W)+cr(W.bb&&W.bb.source)};
+ const o0=cbpOverTab;cbpOverTab=cbpOvers=function(W){return o0(W)+cr(W.bb&&W.bb.source)};
+ const g0=cbpGraphs;cbpGraphs=function(W){const has=(W.sc&&W.sc.scorecard||[]).some(i=>Array.isArray(i.fow));return (has&&typeof cbpPartGraph==='function'?cbpPartGraph(W):'')+g0(W)};
+ const k0=cbpCard;cbpCard=function(W){return k0(W)+(W.sc&&W.sc.factSrc?`<div class="mu sm" style="padding:0 4px 10px">Fall of wickets and partnerships for this finished match: ${esc(W.sc.factSrc)}.</div>`:'')};
+}
 /* END SH MATCH CENTRE REVIEW */
 
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
