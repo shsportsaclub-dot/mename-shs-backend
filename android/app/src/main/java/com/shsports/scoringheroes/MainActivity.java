@@ -9,6 +9,8 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
+import android.view.WindowInsets;
+import android.os.Build;
 import android.webkit.PermissionRequest;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
@@ -37,10 +39,30 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         web = new WebView(this);
         setContentView(web);
+        // Keep the app inside the visible screen: leave room for the status bar, the navigation / gesture bar and any camera cut-out,
+        // whether or not the system draws edge-to-edge (forced on Android 15+).
+        web.setOnApplyWindowInsetsListener((v, ins) -> {
+            int l, t, r, bt;
+            if (Build.VERSION.SDK_INT >= 30) {
+                android.graphics.Insets in = ins.getInsets(WindowInsets.Type.systemBars() | WindowInsets.Type.displayCutout());
+                l = in.left; t = in.top; r = in.right; bt = in.bottom;
+            } else {
+                l = ins.getSystemWindowInsetLeft(); t = ins.getSystemWindowInsetTop();
+                r = ins.getSystemWindowInsetRight(); bt = ins.getSystemWindowInsetBottom();
+            }
+            v.setPadding(l, t, r, bt);
+            return Build.VERSION.SDK_INT >= 30 ? WindowInsets.CONSUMED : ins.consumeSystemWindowInsets();
+        });
+        web.setBackgroundColor(0xFF0A1F5C);
 
         WebSettings s = web.getSettings();
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
+        s.setUseWideViewPort(true);
+        s.setLoadWithOverviewMode(false);
+        s.setSupportZoom(false);
+        s.setBuiltInZoomControls(false);
+        s.setTextZoom(100);
         s.setMediaPlaybackRequiresUserGesture(false);
         s.setAllowFileAccess(false);
         s.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
