@@ -1,0 +1,48 @@
+{
+  "scope": "Synthetic fixtures; real app renderer; no live provider, OTP or production writes",
+  "cases": [
+    {
+      "width": 320,
+      "skin": "cb",
+      "teams": 2,
+      "flags": 2,
+      "overflow": []
+    },
+    {
+      "width": 320,
+      "skin": "ca",
+      "teams": 2,
+      "flags": 2,
+      "overflow": []
+    },
+    {
+      "width": 412,
+      "skin": "cb",
+      "teams": 2,
+      "flags": 2,
+      "overflow": []
+    },
+    {
+      "width": 412,
+      "skin": "ca",
+      "teams": 2,
+      "flags": 2,
+      "overflow": []
+    },
+    {
+      "width": 1280,
+      "skin": "cb",
+      "teams": 2,
+      "flags": 2,
+      "overflow": []
+    },
+    {
+      "width": 1280,
+      "skin": "ca",
+      "teams": 2,
+      "flags": 2,
+      "overflow": []
+    }
+  ],
+  "errors": []
+}

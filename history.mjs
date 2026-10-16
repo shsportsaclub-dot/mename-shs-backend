@@ -9,7 +9,7 @@ import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 
 export const HISTORY_SOURCE = 'Cricsheet (cricsheet.org) ball-by-ball JSON';
-export const HISTORY_LICENCE = 'Cricsheet data is published with attribution requirements. VERIFY the current licence text on cricsheet.org before public release.';
+export const HISTORY_LICENCE = 'Cricsheet match data: Open Data Commons Attribution License (cricsheet.org/licensing). Attribution is required for public use; keep the credit visible wherever this data is shown.';
 
 // ---------- minimal zip reader (central directory, stored or deflate) ----------
 export function zipEntries(fd) {
@@ -56,6 +56,15 @@ function bestBetter(w, r, cur) { // cur like "5/23"; higher wickets then fewer r
   return w > cw || (w === cw && r < cr);
 }
 
+// officials, toss and the eleven (kept for recent years only, to keep the store small)
+export function factsOf(info, year) {
+  const o = info.officials || {}, f = {};
+  const of = {}; for (const [k, a] of [['u', 'umpires'], ['tv', 'tv_umpires'], ['rf', 'match_referees'], ['ru', 'reserve_umpires']]) if (Array.isArray(o[a]) && o[a].length) of[k] = o[a].slice(0, 4);
+  if (Object.keys(of).length) f.of = of;
+  if (info.toss && info.toss.winner) f.toss = { w: info.toss.winner, d: info.toss.decision || '' };
+  if (year >= 2023 && info.players && typeof info.players === 'object') f.xi = info.players;
+  return f;
+}
 export function processMatch(j, id, players) {
   const info = j && j.info;
   if (!info || !Array.isArray(j.innings) || !info.teams) return null;
@@ -126,7 +135,8 @@ export function processMatch(j, id, players) {
   return {
     id, d: info.dates && info.dates[0], t: fmt, g: info.gender || '', tt: info.team_type || '',
     ev: (info.event && info.event.name) || '', v: info.venue || '', c: info.city || '', tm: info.teams.slice(0, 2),
-    w: oc.winner || '', res, sc, pom: info.player_of_match || [], y: year
+    w: oc.winner || '', res, sc, pom: info.player_of_match || [], y: year,
+    ...factsOf(info, year)
   };
 }
 
@@ -216,6 +226,16 @@ export function createHistory({ dir, log = console.log }) {
       (!q || (m.ev + ' ' + m.v + ' ' + m.c + ' ' + m.tm.join(' ')).toLowerCase().includes(q)));
     return { total: L.length, rows: L.slice(offset, offset + Math.min(100, limit)) };
   };
+  const normT = t => String(t || '').toLowerCase().replace(/\b(women|woman|men|w|u19|u-19)\b/g, '').replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+  const sameT = (a, b) => { a = normT(a); b = normT(b); return !!a && !!b && (a === b || a.includes(b) || b.includes(a)); };
+  const dayShift = (d, n) => new Date(Date.parse(d + 'T00:00:00Z') + n * 864e5).toISOString().slice(0, 10);
+  // one finished match by its two teams and date (+-1 day for time zones); returns null when not found
+  const matchFacts = (a, b, date) => {
+    if (!a || !b || !/^\d{4}-\d\d-\d\d$/.test(String(date || ''))) return null;
+    const ds = [dayShift(date, -1), date, dayShift(date, 1)];
+    const L = matches.filter(m => ds.includes(String(m.d)) && m.tm && m.tm.length >= 2 && ((sameT(m.tm[0], a) && sameT(m.tm[1], b)) || (sameT(m.tm[0], b) && sameT(m.tm[1], a))));
+    return L.length === 1 ? L[0] : null;   // two candidates = ambiguous: do not guess
+  };
   const venueStats = (name, type) => {
     const k = String(name || '').split(',')[0].trim().toLowerCase();
     if (k.length < 4) return { n: 0 };
@@ -232,5 +252,5 @@ export function createHistory({ dir, log = console.log }) {
     return { n: L.length, venue: L[0].v, city: L[0].c, rows, recent, from: L.reduce((a, m) => (!a || String(m.d) < a ? String(m.d) : a), ''), to: L.reduce((a, m) => (!a || String(m.d) > a ? String(m.d) : a), '') };
   };
   load();
-  return { status, importFrom, searchPlayers, player, searchMatches, venueStats, load };
+  return { status, importFrom, searchPlayers, player, searchMatches, venueStats, matchFacts, sameTeam: sameT, load };
 }

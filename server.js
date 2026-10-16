@@ -294,6 +294,34 @@ const routes = {
 
 // ---- Match scorecard / player profile proxy (key stays on the server) ----
 const cricCache = new Map();
+// ---- Open-data fill: when the live provider does not send officials, player of the match or the eleven for a FINISHED match, take them from Cricsheet (open data, ODC-By) and say so. Never guessed: only a single exact match of both teams and the date is used. ----
+const histRow = d => { if (!d || !d.matchEnded || !history.status().ready) return null; const t = d.teams || []; return history.matchFacts(t[0], t[1], String(d.dateTimeGMT || d.date || '').slice(0, 10)); };
+function enrichInfo(d) {
+  const r = histRow(d); if (!r) return d; const o = r.of || {}, out = { ...d }; let used = false;
+  if (!out.umpires && o.u) { out.umpires = o.u; used = true; }
+  if (!out.thirdUmpire && o.tv) { out.thirdUmpire = o.tv.join(', '); used = true; }
+  if (!out.referee && o.rf) { out.referee = o.rf.join(', '); used = true; }
+  if (!out.tossWinner && r.toss && r.toss.w) { out.tossWinner = (d.teams || []).find(t => history.sameTeam(t, r.toss.w)) || r.toss.w; if (r.toss.d) out.tossChoice = r.toss.d; used = true; }
+  if (!out.playerOfTheMatch && r.pom && r.pom.length) { out.playerOfTheMatch = r.pom; used = true; }
+  if (used) out.factSrc = 'Cricsheet (open data, ODC-By)';
+  return out;
+}
+const nameKey = n => { const p = String(n || '').replace(/[().]/g, ' ').trim().split(/\s+/).filter(Boolean); return p.length ? p[0][0].toLowerCase() + '|' + p[p.length - 1].toLowerCase() : ''; };
+function enrichSquad(sq, info) {
+  const r = histRow(info); if (!r || !r.xi || !Array.isArray(sq)) return sq;
+  return sq.map(t => {
+    const key = Object.keys(r.xi).find(k => history.sameTeam(k, t.teamName)); if (!key || !Array.isArray(t.players)) return t;
+    const xi = r.xi[key].map(nameKey), hit = new Array(t.players.length).fill(false), used = new Set();
+    t.players.forEach((p, i) => { const k = nameKey(p.name), c = xi.filter(x => x === k).length; if (k && c === 1 && !used.has(k) && t.players.filter(q => nameKey(q.name) === k).length === 1) { hit[i] = true; used.add(k); } });
+    if (hit.filter(Boolean).length < Math.max(9, Math.ceil(xi.length * 0.8))) return t;   // not reliable enough: show the squad only
+    return { ...t, players: t.players.map((p, i) => hit[i] ? { ...p, playing: true } : p), xiSrc: 'Cricsheet (open data, ODC-By)' };
+  });
+}
+async function infoOf(id) {
+  const h = cricCache.get('match_info' + id); if (h && h.d && h.d.data) return h.d.data;
+  const r = await fetch(`${CRIC_BASE}/match_info?apikey=${encodeURIComponent(CRIC_KEY)}&id=${encodeURIComponent(id)}`), j = await r.json();
+  return j.status === 'success' ? j.data : null;
+}
 routes['GET /api/cric'] = async (req, body, ip) => {
   const ep = String(body.ep || ''), id = String(body.id || '');
   if (!['match_scorecard', 'players_info', 'match_info', 'match_squad', 'match_bbb'].includes(ep) || !/^(sm)?[0-9a-z-]{1,40}$/i.test(id)) return [400, { ok: false, error: 'Bad request' }];
@@ -315,7 +343,9 @@ routes['GET /api/cric'] = async (req, body, ip) => {
     const r = await fetch(`${CRIC_BASE}/${ep}?apikey=${encodeURIComponent(CRIC_KEY)}&id=${encodeURIComponent(id)}`);
     const j = await r.json();
     if (j.status !== 'success') return [502, { ok: false, error: j.reason || 'Cricket API error' }];
-    const d = { ok: true, data: j.data }; cricCache.set(k, { t: Date.now(), d }); if (cricCache.size > 500) cricCache.clear();
+    let data = j.data;
+    try { if (ep === 'match_info') data = enrichInfo(data); else if (ep === 'match_squad') data = enrichSquad(data, await infoOf(id)); } catch {}
+    const d = { ok: true, data }; cricCache.set(k, { t: Date.now(), d }); if (cricCache.size > 500) cricCache.clear();
     return [200, d];
   } catch { return [502, { ok: false, error: 'Cricket API unreachable' }]; }
 };
@@ -407,6 +437,11 @@ routes['GET /api/history/player'] = async (req, body) => {
 routes['GET /api/history/matches'] = async (req, body, ip) => {
   if (limited('hm:' + ip, 600, 36e5)) return [429, { ok: false, error: 'Too many requests' }];
   return [200, { ok: true, ...history.searchMatches({ q: body.q, type: body.type, year: body.year, team: body.team, gender: body.gender, limit: +body.limit || 30, offset: +body.offset || 0 }) }];
+};
+routes['GET /api/history/match'] = async (req, body, ip) => {
+  if (limited('hm:' + ip, 120, 36e5)) return [429, { ok: false, error: 'Too many requests' }];
+  const m = history.matchFacts(String(body.a || '').slice(0, 80), String(body.b || '').slice(0, 80), String(body.date || ''));
+  return m ? [200, { ok: true, match: m, source: 'Cricsheet (open data, ODC-By)' }] : [404, { ok: false, error: 'No single matching record in the history store' }];
 };
 routes['GET /api/history/venue'] = async (req, body, ip) => {
   if (limited('hv:' + ip, 600, 36e5)) return [429, { ok: false, error: 'Too many requests' }];
