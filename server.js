@@ -19,7 +19,7 @@ const SMS_PROVIDER = E.SMS_PROVIDER || 'console';           // console | msg91 |
 // Allow a 50-user OTP burst behind a shared network; per-number and gateway quotas still apply.
 const SMS_TOTAL_BUDGET = Math.max(0, parseInt(E.SMS_TOTAL_BUDGET, 10) || 0);   // trial pack cap (0 = unlimited)
 const SMS_OTP_IP_HOURLY_LIMIT = Number.isInteger(Number(E.SMS_OTP_IP_HOURLY_LIMIT)) && Number(E.SMS_OTP_IP_HOURLY_LIMIT) >= 50 && Number(E.SMS_OTP_IP_HOURLY_LIMIT) <= 1000 ? Number(E.SMS_OTP_IP_HOURLY_LIMIT) : 100;
-const EMAIL_PROVIDER = E.EMAIL_PROVIDER || 'console';       // console | resend | smtp (Gmail app password works)
+const EMAIL_PROVIDER = E.EMAIL_PROVIDER || 'console';       // console | brevo | resend | smtp (Render free blocks SMTP ports; use brevo)
 const EMAIL_FROM = E.EMAIL_FROM || E.SMTP_USER || 'SH Sports <no-reply@example.com>';
 const COUNTRY = E.COUNTRY_CODE || '91';
 const CRIC_KEY = E.CRIC_API_KEY || '';
@@ -568,11 +568,11 @@ async function newsroomRun(live) {
 
 // ---- Server status for the admin: which services are really switched on, and the last real error from the email/SMS provider ----
 function svcStatus() {
-  const emailKey = EMAIL_PROVIDER === 'resend' ? !!E.RESEND_API_KEY : EMAIL_PROVIDER === 'smtp' ? !!(E.SMTP_USER && E.SMTP_PASS) : false;
+  const emailKey = EMAIL_PROVIDER === 'resend' ? !!E.RESEND_API_KEY : EMAIL_PROVIDER === 'brevo' ? !!E.BREVO_API_KEY : EMAIL_PROVIDER === 'smtp' ? !!(E.SMTP_USER && E.SMTP_PASS) : false;
   const smsKey = SMS_PROVIDER === 'msg91' ? !!(E.MSG91_AUTHKEY && E.MSG91_TEMPLATE_ID) : SMS_PROVIDER === 'textbee' ? !!(E.TEXTBEE_API_KEY && E.TEXTBEE_DEVICE_ID) : false;
   const need = (p, ok, names) => p === 'console' ? 'Not switched on: set ' + names.join(' / ') : ok ? '' : 'Provider chosen but its key is missing';
   return {
-    email: { provider: EMAIL_PROVIDER, ready: emailKey, from: EMAIL_PROVIDER === 'console' ? '' : EMAIL_FROM, problem: need(EMAIL_PROVIDER, emailKey, ['EMAIL_PROVIDER=resend + RESEND_API_KEY', 'EMAIL_PROVIDER=smtp + SMTP_USER + SMTP_PASS']), last: svcLast.email },
+    email: { provider: EMAIL_PROVIDER, ready: emailKey, from: EMAIL_PROVIDER === 'console' ? '' : EMAIL_FROM, problem: need(EMAIL_PROVIDER, emailKey, ['EMAIL_PROVIDER=brevo + BREVO_API_KEY + EMAIL_FROM (works on Render free)', 'EMAIL_PROVIDER=resend + RESEND_API_KEY (needs your own domain)', 'EMAIL_PROVIDER=smtp + SMTP_USER + SMTP_PASS (Render free blocks SMTP)']), last: svcLast.email },
     sms: { provider: SMS_PROVIDER, ready: smsKey, sent: db.smsSent || 0, cap: SMS_TOTAL_BUDGET || 0, problem: need(SMS_PROVIDER, smsKey, ['SMS_PROVIDER=textbee + TEXTBEE_API_KEY + TEXTBEE_DEVICE_ID', 'SMS_PROVIDER=msg91 + MSG91_AUTHKEY + MSG91_TEMPLATE_ID']), last: svcLast.sms },
     live: { ready: !!(CRIC_KEY || SM), provider: SM ? 'sportmonks' : 'cricketdata', problem: (CRIC_KEY || SM) ? '' : 'Set CRIC_API_KEY (CricketData) or SPORTMONKS_TOKEN (Sportmonks)' },
     ai: { ready: !!NEWS_AI_KEY, model: NEWS_AI_KEY ? NEWS_AI_MODEL : '', problem: NEWS_AI_KEY ? '' : 'Optional: set ANTHROPIC_API_KEY for AI-polished articles (articles are still written without it)' },
@@ -740,6 +740,12 @@ async function sendMail(to, subject, text) {
 }
 async function sendMail0(to, subject, text) {
   if (EMAIL_PROVIDER === 'console') { console.log(`[EMAIL to ${to}] ${subject}: ${text}`); return; }
+  if (EMAIL_PROVIDER === 'brevo') {   // HTTPS (port 443), so it works on Render free instances where SMTP ports are blocked. The sender address must be verified in Brevo (one email link).
+    const m = /^\s*(.*?)\s*<([^>]+)>\s*$/.exec(EMAIL_FROM), sender = m ? { name: m[1].replace(/^"|"$/g, '') || 'SH Sports', email: m[2] } : { name: 'SH Sports', email: String(EMAIL_FROM).trim() };
+    const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+    const r = await fetch((E.BREVO_BASE || 'https://api.brevo.com') + '/v3/smtp/email', { method: 'POST', headers: { 'api-key': E.BREVO_API_KEY || '', 'content-type': 'application/json', accept: 'application/json' }, body: JSON.stringify({ sender, to: [{ email: to }], subject, htmlContent: '<p>' + esc(text) + '</p>' }) });
+    if (!r.ok) throw new Error('Brevo ' + r.status + ' ' + (await r.text()).slice(0, 200)); return;
+  }
   if (EMAIL_PROVIDER === 'resend') {
     const r = await fetch('https://api.resend.com/emails', { method: 'POST', headers: { authorization: 'Bearer ' + (E.RESEND_API_KEY || ''), 'content-type': 'application/json' }, body: JSON.stringify({ from: EMAIL_FROM, to: [to], subject, text }) });
     if (!r.ok) throw new Error('Resend ' + r.status + ' ' + (await r.text()).slice(0, 200)); return;
