@@ -1,0 +1,195 @@
+{
+  "98d2afd6-f4dc-4d43-a25b-0f812d8bc5c6": {
+    "squads": [
+      {
+        "teamName": "Pakistan",
+        "players": [
+          {
+            "name": "Shaheen Afridi",
+            "role": "Role not supplied",
+            "status": "Series squad; match XI unconfirmed",
+            "captain": true,
+            "aliases": [
+              "Shaheen Shah Afridi"
+            ]
+          },
+          {
+            "name": "Abrar Ahmed",
+            "role": "Role not supplied",
+            "status": "Series squad; match XI unconfirmed"
+          },
+          {
+            "name": "Salman Agha",
+            "role": "Role not supplied",
+            "status": "Series squad; match XI unconfirmed",
+            "aliases": [
+              "Salman Ali Agha"
+            ]
+          },
+          {
+            "name": "Arafat Minhas",
+            "role": "Role not supplied",
+            "status": "Series squad; match XI unconfirmed"
+          },
+          {
+            "name": "Babar Azam",
+            "role": "Role not supplied",
+            "status": "Series squad; match XI unconfirmed"
+          },
+          {
+            "name": "Faheem Ashraf",
+            "role": "Role not supplied",
+            "status": "Series squad; match XI unconfirmed"
+          },
+          {
+            "name": "Fakhar Zaman",
+            "role": "Role not supplied",
+            "status": "Series squad; match XI unconfirmed"
+          },
+          {
+            "name": "Muhammad Ghazi Ghori",
+            "role": "Wicketkeeper",
+            "status": "Series squad; match XI unconfirmed",
+            "isKeeper": true
+          },
+          {
+            "name": "Haris Rauf",
+            "role": "Role not supplied",
+            "status": "Series squad; match XI unconfirmed"
+          },
+          {
+            "name": "Hasan Nawaz",
+            "role": "Role not supplied",
+            "status": "Series squad; match XI unconfirmed"
+          },
+          {
+            "name": "Naseem Shah",
+            "role": "Role not supplied",
+            "status": "Series squad; match XI unconfirmed"
+          },
+          {
+            "name": "Razaullah",
+            "role": "Role not supplied",
+            "status": "Series squad; match XI unconfirmed"
+          },
+          {
+            "name": "Saad Baig",
+            "role": "Wicketkeeper",
+            "status": "Series squad; match XI unconfirmed",
+            "isKeeper": true
+          },
+          {
+            "name": "Saim Ayub",
+            "role": "Role not supplied",
+            "status": "Series squad; match XI unconfirmed"
+          },
+          {
+            "name": "Shadab Khan",
+            "role": "Role not supplied",
+            "status": "Series squad; match XI unconfirmed"
+          },
+          {
+            "name": "Sufiyan Moqim",
+            "role": "Role not supplied",
+            "status": "Series squad; match XI unconfirmed"
+          }
+        ],
+        "source": "https://www.pcb.com.pk/press-release-detail/pakistan-squads-announced-for-sri-lanka-t20is-and-odi-tri-series.html",
+        "scope": "Published series squad",
+        "publishedAt": "2026-10-05"
+      },
+      {
+        "teamName": "Sri Lanka",
+        "players": [
+          {
+            "name": "Kusal Mendis",
+            "role": "Wicketkeeper",
+            "status": "Series squad; match XI unconfirmed",
+            "isKeeper": true,
+            "captain": true
+          },
+          {
+            "name": "Sahan Arachchige",
+            "role": "Role not supplied",
+            "status": "Series squad; match XI unconfirmed"
+          },
+          {
+            "name": "Dushmantha Chameera",
+            "role": "Role not supplied",
+            "status": "Series squad; match XI unconfirmed"
+          },
+          {
+            "name": "Sachindu Colombage",
+            "role": "Role not supplied",
+            "status": "Series squad; match XI unconfirmed"
+          },
+          {
+            "name": "Avishka Fernando",
+            "role": "Role not supplied",
+            "status": "Series squad; match XI unconfirmed"
+          },
+          {
+            "name": "Asitha Fernando",
+            "role": "Role not supplied",
+            "status": "Series squad; match XI unconfirmed"
+          },
+          {
+            "name": "Janith Liyanage",
+            "role": "Role not supplied",
+            "status": "Series squad; match XI unconfirmed"
+          },
+          {
+            "name": "Dilshan Madushanka",
+            "role": "Role not supplied",
+            "status": "Series squad; match XI unconfirmed"
+          },
+          {
+            "name": "Eshan Malinga",
+            "role": "Role not supplied",
+            "status": "Series squad; match XI unconfirmed"
+          },
+          {
+            "name": "Kamindu Mendis",
+            "role": "Role not supplied",
+            "status": "Series squad; match XI unconfirmed"
+          },
+          {
+            "name": "Kamil Mishara",
+            "role": "Role not supplied",
+            "status": "Series squad; match XI unconfirmed"
+          },
+          {
+            "name": "Pathum Nissanka",
+            "role": "Role not supplied",
+            "status": "Travel conditional on medical fitness in squad announcement"
+          },
+          {
+            "name": "Pavan Rathnayake",
+            "role": "Role not supplied",
+            "status": "Series squad; match XI unconfirmed"
+          },
+          {
+            "name": "Dasun Shanaka",
+            "role": "Role not supplied",
+            "status": "Series squad; match XI unconfirmed"
+          },
+          {
+            "name": "Maheesh Theekshana",
+            "role": "Role not supplied",
+            "status": "Series squad; match XI unconfirmed"
+          },
+          {
+            "name": "Dunith Wellalage",
+            "role": "Role not supplied",
+            "status": "Series squad; match XI unconfirmed"
+          }
+        ],
+        "source": "https://www.icc-cricket.com/news/sri-lanka-unveil-odi-squad-for-tri-series-in-pakistan",
+        "scope": "Published series squad",
+        "publishedAt": "2026-10-04"
+      }
+    ],
+    "reviewedAt": "2026-10-18",
+    "notes": "Series registration lists only. No confirmed match XI or current pitch report inferred."
+  }
+}

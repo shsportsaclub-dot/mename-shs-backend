@@ -120,5 +120,13 @@ export function createRecent({ dir, log = console.log, keepDays = 45 }) {
     finally { if (fd >= 0) try { fs.closeSync(fd); } catch {} if (tmp) try { fs.unlinkSync(tmp); } catch {} }
     return st;
   }
-  return { find, facts, refresh, status: () => ({ ...st }), size: () => rows.length };
+  const exact = x => String(x || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const past = (team, type, before) => rows.filter(r => r.tm.some(t => exact(t) === exact(team)) && (!type || exact(r.raw.info?.match_type) === exact(type)) && (!before || r.d < before)).sort((a,b)=>String(b.d).localeCompare(String(a.d)));
+  const teamRecent = (team, type, before) => past(team,type,before).slice(0,10).map(r=>({id:r.id,date:r.d,teams:r.tm,format:r.raw.info?.match_type,winner:r.raw.info?.outcome?.winner||'',result:r.raw.info?.outcome?.result||'',score:inningsTotals(r.raw),source:RECENT_SOURCE}));
+  const playerForm = (name, team, type, before) => past(team,type,before).filter(r => (r.raw.info?.players?.[r.tm.find(t=>exact(t)===exact(team))]||[]).filter(n=>exact(n)===exact(name)).length===1).slice(0,10).map(r=>{
+    let runs=0,wickets=0;for(const inn of r.raw.innings||[]){if(inn.super_over)continue;for(const ov of inn.overs||[])for(const d of ov.deliveries||[]){if(exact(d.batter)===exact(name))runs+=d.runs?.batter||0;if(exact(d.bowler)===exact(name))wickets+=(d.wickets||[]).filter(w=>!['run out','retired hurt','obstructing the field','retired out'].includes(w.kind)).length}}
+    return {id:r.id,date:r.d,format:r.raw.info.match_type,opponent:r.tm.find(t=>exact(t)!==exact(team)),r:runs,w:wickets,source:RECENT_SOURCE};
+  });
+  return { find, facts, refresh, teamRecent, playerForm, status: () => ({ ...st }), size: () => rows.length };
 }
+

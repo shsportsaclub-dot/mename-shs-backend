@@ -11,7 +11,7 @@ const sInn = s => String(s || '').replace(/\s+Inning.*$/i, '').trim();
 export function snapshotOf(sc) {
   const L = sc && Array.isArray(sc.scorecard) ? sc.scorecard : [];
   const idx = L.length - 1; if (idx < 0) return null;
-  const inn = L[idx], t = inn.totals || {};
+  const inn = L[idx], headline=(sc.score||[]).findLast(s=>String(s.inning).toLowerCase()===String(inn.inning).toLowerCase()),t = {R:headline?.r,W:headline?.w,O:headline?.o,...inn.totals};
   const b = balls(t.O); if (b == null || t.R == null || t.W == null) return null;
   const bat = {}, bowl = {};
   for (const r of inn.batting || []) { const nm = nameOf(r.batsman); if (nm) bat[nm] = { r: n(r.r), b: n(r.b), f4: n(r['4s']), f6: n(r['6s']), t: String(r['dismissal-text'] ?? r.dismissal ?? '').trim() }; }
@@ -51,7 +51,7 @@ export function diffSnapshots(prev, cur) {
   const dismissed = batChg.filter(x => x.now && !notOut(x.now.t) && (!x.was || notOut(x.was.t)));
   const sumBatRuns = batChg.reduce((a, x) => a + x.dr, 0);
   const over = b => Math.floor((b - 1) / 6), ball = b => ((b - 1) % 6) + 1;
-  const base = { inning: cur.idx + 1, team: cur.team };
+  const base = { inning: cur.idx + 1, team: cur.team, derived: true, provenance: 'scorecard delta' };
   const single = (row) => ({ rows: [{ ...base, ...row }], note: null });
 
   // one legal delivery
@@ -64,12 +64,12 @@ export function diffSnapshots(prev, cur) {
   // one wide: no ball is bowled in the over count, the bowler's wide column goes up by one
   if (dB === 0 && dW === 0 && wd.length === 1 && wd[0].dwd === 1 && !nb.length && dR >= 1 && sumBatRuns === 0 && !faced.length && wd[0].dr === dR) {
     const ob = Math.max(cur.balls, 0);
-    return single({ over: Math.floor(ob / 6), ball: Math.max(1, ob % 6), runs: dR, total_runs: dR, bruns: 0, wicket: false, wide: true, noball: false, xtype: '', batsman: '', bowler: wd[0].k });
+    return single({ over: Math.floor(ob / 6), ball: ob % 6 + 1, runs: dR, total_runs: dR, bruns: 0, wicket: false, wide: true, noball: false, xtype: '', batsman: '', bowler: wd[0].k });
   }
   // one no ball: the bowler's no-ball column goes up by one; the batter faced it
   if (dB === 0 && dW === 0 && nb.length === 1 && nb[0].dnb === 1 && !wd.length && faced.length === 1 && faced[0].db === 1 && sumBatRuns === faced[0].dr && faced[0].dr + 1 === dR) {
     const ob = Math.max(cur.balls, 0);
-    return single({ over: Math.floor(ob / 6), ball: Math.max(1, ob % 6), runs: dR, total_runs: dR, bruns: faced[0].dr, wicket: false, wide: false, noball: true, xtype: '', batsman: faced[0].k, bowler: nb[0].k });
+    return single({ over: Math.floor(ob / 6), ball: ob % 6 + 1, runs: dR, total_runs: dR, bruns: faced[0].dr, wicket: false, wide: false, noball: true, xtype: '', batsman: faced[0].k, bowler: nb[0].k });
   }
   // several deliveries (or something the figures cannot settle): keep a plain note, never a ball record
   const parts = [`${cur.team} ${prev.r}/${prev.w} (${prev.o} ov) to ${cur.r}/${cur.w} (${cur.o} ov): ${dR} run${dR === 1 ? '' : 's'}${dB > 0 ? ' from ' + dB + ' legal ball' + (dB === 1 ? '' : 's') : ''}${dW ? ', ' + dW + ' wicket' + (dW === 1 ? '' : 's') : ''}.`];
@@ -77,3 +77,4 @@ export function diffSnapshots(prev, cur) {
   for (const x of dismissed) parts.push(`${x.k} out: ${x.now.t}.`);
   return { rows: [], note: { text: parts.join(' ') } };
 }
+

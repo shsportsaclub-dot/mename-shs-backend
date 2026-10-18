@@ -1,5 +1,6 @@
 // Scoring Heroes backend: OTP SMS from "SH Sports" + magic login link + live cricket proxy.
 // Zero dependencies. Needs Node 20.6 or newer.   Run:  node --env-file=.env server.js
+import { createMatchJournal } from './match-journal.mjs';
 import { createSportmonks } from './sportmonks.mjs';
 import http from 'node:http';
 import crypto from 'node:crypto';
@@ -65,6 +66,27 @@ if (DATABASE_URL) {
   } catch (e) { console.error('DATABASE_URL set but not usable, using the local file only:', e.message); }
 }
 db.users = db.users || {}; db.shared = db.shared || {};
+// Server journal: a shared replay log; observations never become invented deliveries.
+const JOURNAL_FILE=E.MATCH_JOURNAL_FILE||path.join(path.dirname(DATA_FILE),'match-journal.json');
+let journalState={},journalTimer=null,journalRemote=Promise.resolve();
+const journalStorage={databaseConnected:!!neonOk,localSavedAt:0,remoteSavedAt:0,error:''};
+try{journalState=JSON.parse(fs.readFileSync(JOURNAL_FILE,'utf8'));journalStorage.localSavedAt=fs.statSync(JOURNAL_FILE).mtimeMs}catch{}
+if(neonOk){try{const r=await neon('select v from kv where k=$1',['match-journal-v1']);if(r.rows?.[0])journalState=JSON.parse(r.rows[0].v)}catch{journalStorage.error='Could not restore database journal'}}
+const journalArchivePending=new Map();
+function saveMatchJournal(state){
+ for(const [id,match] of Object.entries(state.matches||{}))journalArchivePending.set(id,JSON.stringify({match,engine:state.engine?.[id]}));
+ clearTimeout(journalTimer);journalTimer=setTimeout(()=>{const raw=JSON.stringify(state),rows=[...journalArchivePending];journalArchivePending.clear();
+  try{fs.mkdirSync(JOURNAL_FILE+'.matches',{recursive:true});for(const [id,value]of rows){const file=path.join(JOURNAL_FILE+'.matches',id+'.json');fs.writeFileSync(file+'.tmp',value);fs.renameSync(file+'.tmp',file)}fs.writeFileSync(JOURNAL_FILE+'.tmp',raw);fs.renameSync(JOURNAL_FILE+'.tmp',JOURNAL_FILE);journalStorage.localSavedAt=Date.now();journalStorage.error=''}catch{journalStorage.error='Server file save failed'}
+  if(neonOk)journalRemote=journalRemote.then(async()=>{for(const [id,value]of rows)await neon('insert into kv(k,v) values($1,$2) on conflict(k) do update set v=excluded.v',['match-journal:'+id,value]);await neon('insert into kv(k,v) values($1,$2) on conflict(k) do update set v=excluded.v',['match-journal-v1',raw]);journalStorage.remoteSavedAt=Date.now()}).catch(()=>{journalStorage.error='Database journal save failed; server file retained'})
+ },500);journalTimer.unref()
+}
+async function restoreArchivedJournal(id){let row;try{row=JSON.parse(fs.readFileSync(path.join(JOURNAL_FILE+'.matches',id+'.json'),'utf8'))}catch{}if(!row&&neonOk){try{const r=await neon('select v from kv where k=$1',['match-journal:'+id]);if(r.rows?.[0])row=JSON.parse(r.rows[0].v)}catch{}}if(row)matchJournal.restore(row)}
+
+const matchJournal=createMatchJournal({state:journalState,save:saveMatchJournal});
+const matchWatch=new Map(),matchWatchBusy=new Set();
+async function pollMatchJournal(id){if(matchWatchBusy.has(id))return;const watch=matchWatch.get(id);if(!watch)return;matchWatchBusy.add(id);try{const n=Date.now(),j=matchJournal.view(id),eps=['match_scorecard'];if(!watch.infoAt||n-watch.infoAt>=60000){eps.push('match_info');watch.infoAt=n}if(!watch.squadAt||n-watch.squadAt>=300000){eps.push('match_squad');watch.squadAt=n}if(!watch.ballAt||n-watch.ballAt>=(j?.balls?.length?20000:60000)){eps.push('match_bbb');watch.ballAt=n}await Promise.allSettled(eps.map(ep=>routes['GET /api/cric']({}, {ep,id},'journal-monitor-'+id)))}finally{matchWatchBusy.delete(id)}}
+setInterval(()=>{const now=Date.now();for(const [id,w]of matchWatch){if(w.until<now||matchJournal.view(id)?.ended){matchWatch.delete(id);continue}pollMatchJournal(id)}},20000).unref();
+
 
 const pending = new Map();   // phone -> {hash,salt,exp,tries,mode,profile,linkToken}
 const links = new Map();     // linkToken -> {phone,exp}
@@ -213,6 +235,7 @@ async function liveMatches() {
     }));
     const info = { hitsToday: j.info && j.info.hitsToday, hitsLimit: j.info && j.info.hitsLimit };
     live = { t: Date.now(), ttl: liveTtl(j.info), err: '', data: { ok: true, matches, info, refreshEverySec: Math.round(liveTtl(j.info) / 1000), updated: new Date().toISOString() } };
+    for(const m of matches)if(m.started&&!m.ended||matchJournal.view(m.id))matchJournal.record(m.id,'currentMatches',{...m,matchStarted:m.started,matchEnded:m.ended,matchType:m.type},{source:'CricketData current matches'});
     try { fs.writeFileSync(LIVE_FILE, JSON.stringify({ data: live.data })); } catch (e) {}
     return live.data;
   } catch (e) {
@@ -328,14 +351,14 @@ function enrichSquad(sq, info) {
 // ---- Live tracker: while people are looking at a running match, the server checks its scorecard every TRACK_SECONDS and keeps what the figures prove (see observer.mjs). Everyone sees the same saved record, not only the people who had the page open. ----
 db.track = db.track || {};
 const viewed = new Map();   // match id -> { t: last viewed, next: do not check before }
-const TRACK_SECONDS = Math.max(+E.TRACK_MIN_SECONDS || 15, +E.TRACK_SECONDS || 30), TRACK_MAX = Math.max(1, +E.TRACK_MAX_MATCHES || 3), TRACK_DAILY = Math.max(0, E.TRACK_DAILY_CALLS == null || E.TRACK_DAILY_CALLS === '' ? 60 : +E.TRACK_DAILY_CALLS);
+const TRACK_SECONDS = Math.max(+E.TRACK_MIN_SECONDS || 15, +E.TRACK_SECONDS || 30), TRACK_MAX = Math.max(1, +E.TRACK_MAX_MATCHES || 3), TRACK_DAILY = Math.max(0, E.TRACK_DAILY_CALLS == null || E.TRACK_DAILY_CALLS === '' ? 1000000 : +E.TRACK_DAILY_CALLS);
 const trackStat = { last: 0, day: '', calls: 0, paused: 0, note: 'waiting for a viewer on a live match' };
 async function cricFresh(ep, id, maxAge) {   // same cache the match page uses; returns [result, realProviderCall]
   const k = ep + id, h = cricCache.get(k); if (h && Date.now() - h.t < maxAge) return [h.d, false];
   const r = await fetch(`${CRIC_BASE}/${ep}?apikey=${encodeURIComponent(CRIC_KEY)}&id=${encodeURIComponent(id)}`, { signal: AbortSignal.timeout(10000) }), j = await r.json();
   if (j.status !== 'success') return [{ ok: false, error: j.reason || 'Cricket API error' }, true];
   let data = j.data; if (ep === 'match_scorecard') { try { data = await enrichScorecard(data, id); } catch {} }
-  const d = { ok: true, data }; cricCache.set(k, { t: Date.now(), d }); return [d, true];
+  matchJournal.record(id,ep,data,{source:'CricketData tracker check'});const d = { ok: true, data }; cricCache.set(k, { t: Date.now(), d }); return [d, true];
 }
 let trackBusy = false;
 async function trackTick() {
@@ -407,7 +430,7 @@ routes['GET /api/cric'] = async (req, body, ip) => {
       const num = id.replace(/^sm/i, '');
     try {
       const data = ep === 'match_scorecard' ? await SM.scorecard(num) : ep === 'match_info' ? await SM.matchInfo(num) : ep === 'match_squad' ? await SM.squad(num) : ep === 'match_bbb' ? await SM.bbb(num) : await SM.player(num);
-      const d = { ok: true, data }; cricCache.set(k0, { t: Date.now(), d }); if (cricCache.size > 500) cricCache.clear(); return [200, d];
+      matchJournal.record(id,ep,data,{source:'Sportmonks'});const d = { ok: true, data }; cricCache.set(k0, { t: Date.now(), d }); if (cricCache.size > 500) cricCache.clear(); return [200, d];
     } catch (e) { return [502, { ok: false, error: String(e.message || 'Sportmonks error').slice(0, 160) }]; }
   }
   if (!CRIC_KEY) return [503, { ok: false, error: 'CRIC_API_KEY is not set on the server' }];
@@ -416,18 +439,18 @@ routes['GET /api/cric'] = async (req, body, ip) => {
   if (hit && Date.now() - hit.t < ttl) return [200, hit.d];
   if (limited('cric:' + ip, 900, 36e5)) return [429, { ok: false, error: 'Too many requests' }];
   if (ep === 'match_bbb') {   // a finished match: Cricsheet has the full ball by ball
-    try { const rr = recentOf(await infoOf(id)); if (rr) { const bbb = buildBbb(rr.raw); if (bbb.length) { const d = { ok: true, data: { bbb, source: RECENT_SOURCE } }; cricCache.set(k, { t: Date.now(), d }); return [200, d]; } } } catch {}
+    try { const rr = recentOf(await infoOf(id)); if (rr) { const bbb = buildBbb(rr.raw); if (bbb.length) { const d = { ok: true, data: { bbb, source: RECENT_SOURCE } };matchJournal.record(id,ep,d.data,{source:RECENT_SOURCE}); cricCache.set(k, { t: Date.now(), d }); return [200, d]; } } } catch {}
   }
   try {
     const r = await fetch(`${CRIC_BASE}/${ep}?apikey=${encodeURIComponent(CRIC_KEY)}&id=${encodeURIComponent(id)}`, { signal: AbortSignal.timeout(10000) });
     const j = await r.json();
-    if (j.status !== 'success') { const fb = ep === 'match_bbb' ? trackerBbb(id) : null; return fb ? [200, fb] : [502, { ok: false, error: j.reason || 'Cricket API error' }]; }
+    if(j.status!=='success'){const fb=ep==='match_bbb'?trackerBbb(id):null;if(fb){matchJournal.record(id,ep,fb.data,{source:'SH snapshot tracker'});return [200,fb]}matchJournal.record(id,ep,null,{error:j.reason||'Cricket API error'});return [502,{ok:false,error:j.reason||'Cricket API error'}]}
     let data = j.data;
-    if (ep === 'match_bbb' && !(Array.isArray(data) ? data.length : (data && Array.isArray(data.bbb) ? data.bbb.length : 0))) { const fb = trackerBbb(id); if (fb) return [200, fb]; }
+    if (ep === 'match_bbb' && !(Array.isArray(data) ? data.length : (data && Array.isArray(data.bbb) ? data.bbb.length : 0))) { const fb = trackerBbb(id); if(fb){matchJournal.record(id,ep,fb.data,{source:'SH snapshot tracker'});return [200,fb]} }
     try { if (ep === 'match_info') data = enrichInfo(data); else if (ep === 'match_squad') data = enrichSquad(data, await infoOf(id)); else if (ep === 'match_scorecard') data = await enrichScorecard(data, id); } catch {}
-    const d = { ok: true, data }; cricCache.set(k, { t: Date.now(), d }); if (cricCache.size > 500) cricCache.clear();
+    matchJournal.record(id,ep,data,{source:'CricketData'});const d = { ok: true, data }; cricCache.set(k, { t: Date.now(), d }); if (cricCache.size > 500) cricCache.clear();
     return [200, d];
-  } catch { return [502, { ok: false, error: 'Cricket API unreachable' }]; }
+  } catch {matchJournal.record(id,ep,null,{error:'Cricket API unreachable'}); return [502, { ok: false, error: 'Cricket API unreachable' }]; }
 };
 
 
@@ -504,6 +527,11 @@ const HISTORY_YEARS = Math.min(60, Math.max(1, parseInt(E.HISTORY_YEARS, 10) || 
 const history = createHistory({ dir: E.HISTORY_DIR || './history-data', log: m => console.log(m) });
 const recent = createRecent({ dir: path.join(E.HISTORY_DIR || './history-data', 'recent'), log: m => console.log(m) });
 if (E.RECENT_OPEN_DATA !== '0') { setTimeout(() => recent.refresh(), 25e3); setInterval(() => recent.refresh(), 3 * 3600e3); }
+let curatedMatchContexts={};try{curatedMatchContexts=JSON.parse(fs.readFileSync(new URL('./data/match-context.json',import.meta.url),'utf8'))}catch{}
+function matchContext(id,j){const curated=curatedMatchContexts[id]||{},squads=(j?.squads?.length?j.squads:curated.squads)||[],type=String(j?.type||'').toLowerCase(),before=String(j?.mi?.date||j?.sc?.date||'').slice(0,10),teams=(j?.mi?.teams||j?.sc?.teams||squads.map(t=>t.teamName)).slice(0,2);
+ const enriched=squads.map(t=>({...t,players:(t.players||[]).map(p=>({...p,recent:recent.playerForm(p.name,t.teamName,type,before)}))}));return {...curated,squads:enriched,recentTeams:teams.map(team=>({team,matches:recent.teamRecent(team,type,before)})),formCoverage:'Up to last 10 completed matches in the available Cricsheet archive; exact name/team/format matches only.'}}
+routes['GET /api/match-journal']=async(req,body,ip)=>{const id=String(body.id||'');if(!/^(sm)?[0-9a-z-]{1,40}$/i.test(id))return [400,{ok:false,error:'Bad match id'}];if(limited('journal-read:'+ip,1800,36e5))return [429,{ok:false,error:'Too many journal reads'}];let j=matchJournal.view(id);if(!j){await restoreArchivedJournal(id);j=matchJournal.view(id)}if(!j)return [404,{ok:false,error:'Match history is not recorded yet. Open the match to start collection.'}];if(!j.ended){if(matchWatch.has(id)||matchWatch.size<8){const w=matchWatch.get(id)||{};w.until=Date.now()+30*60000;matchWatch.set(id,w);if(!w.tryAt||Date.now()-w.tryAt>19000){w.tryAt=Date.now();pollMatchJournal(id)}}}return [200,{ok:true,journal:j,context:matchContext(id,j),storage:{...journalStorage,retention:'Latest 12 matches in memory; saved matches replay from archive. Up to 6000 delivery records and 6000 updates per match',durability:neonOk?'Database and server file':'Server file; free-host redeploy can clear history'}}]};
+
 const histSince = () => new Date().getUTCFullYear() - HISTORY_YEARS;
 const startHistory = () => history.importFrom({ url: HISTORY_URL, sinceYear: histSince() }).catch(e => console.error(e.message));
 if (E.HISTORY_AUTOIMPORT === '1' && !history.status().ready) setTimeout(startHistory, 20000);
@@ -1064,4 +1092,5 @@ http.createServer(async (req, res) => {
   try { const [code, obj] = await h(req, body, ip); out(code, obj); }
   catch (e) { console.error(e); out(500, { ok: false, error: 'Server error' }); }
 }).listen(PORT, () => console.log(`Scoring Heroes API on :${PORT}  (SMS: ${SMS_PROVIDER}, live feed: ${SM ? 'sportmonks' : CRIC_KEY ? 'cricketdata' : 'off'})`));
+
 
