@@ -498,8 +498,8 @@ function engDism(k,bowl,fld){
   return k||'out'}
 /* n = {bat,bowl,brun (runs off the bat),tot (all runs on the ball),x:''|'wd'|'nb'|'b'|'lb',wk:null|{out,kind,fld}}; st = running state from engNew(), or null for a plain line */
 function engText(n,st){
-  const head=n.bowl+' to '+n.bat;let B=null,Bw=null,pre=0;
-  if(st){B=st.bs[n.bat]=st.bs[n.bat]||{r:0,b:0};Bw=st.bw[n.bowl]=st.bw[n.bowl]||{w:0};pre=B.r;B.r+=n.brun;if(n.x!=='wd')B.b++;st.tot+=n.tot}
+  const head=n.bat?n.bowl+' to '+n.bat:n.bowl;let B=null,Bw=null,pre=0;
+  if(st){B=st.bs[n.bat||'?']=st.bs[n.bat||'?']||{r:0,b:0};Bw=st.bw[n.bowl]=st.bw[n.bowl]||{w:0};pre=B.r;B.r+=n.brun;if(n.x!=='wd')B.b++;st.tot+=n.tot}
   if(n.wk){
     const k=String(n.wk.kind||'').toLowerCase().replace(/\s+/g,' '),cred=ENG_CRED.includes(k);
     if(st){st.wk++;st.dots=0;if(cred)Bw.w++}
@@ -4535,7 +4535,7 @@ function cbpBbb(W){if(W.bb==null&&!W.bbErr)return '<div class="mu" style="paddin
  return `<div class="cbp-cd">${L.slice(0,150).map(x=>`<div class="cm-i"><span class="cm-o">${esc(x.ov)}</span>${x.run!==''?`<span class="cm-r ${x.cls}">${esc(String(x.run))}</span>`:''}<span>${esc(x.txt)}</span></div>`).join('')}</div>`}
 function cbpBbbList(d){const ES={};const arr=Array.isArray(d)?d:Array.isArray(d&&d.bbb)?d.bbb:Array.isArray(d&&d.balls)?d.balls:[];const nm=x=>x&&typeof x==='object'?(x.name||''):String(x||'');
  return arr.map(it=>{if(!it||typeof it!=='object')return null;const ov=it.over!=null&&it.ball!=null?it.over+'.'+it.ball:(it.n!=null?String(it.n):(it.ball_number||it.overs||'')),run=it.runs!=null?it.runs:(it.run!=null?it.run:''),wk=!!(it.wicket||it.isWicket||it.out||/wicket|out/i.test(String(it.event||it.type||'')));let txt=String(it.commentary||it.text||it.comment||it.desc||it.description||'').trim();
-  if(!txt&&nm(it.bowler)&&nm(it.batsman)&&run!==''){const k=String(it.inning==null?'':it.inning),stt=ES[k]||(ES[k]=engNew()),tot=+run||0,x=it.wide?'wd':it.noball?'nb':(it.xtype||'');txt=engText({bat:nm(it.batsman),bowl:nm(it.bowler),brun:it.bruns!=null?+it.bruns:(x?0:tot),tot,x,wk:wk?{out:it.out||nm(it.batsman),kind:it.kind||'out',fld:it.fielder||''}:null},stt)}
+  if(!txt&&nm(it.bowler)&&(nm(it.batsman)||it.wide)&&run!==''){const k=String(it.inning==null?'':it.inning),stt=ES[k]||(ES[k]=engNew()),tot=+run||0,x=it.wide?'wd':it.noball?'nb':(it.xtype||'');txt=engText({bat:nm(it.batsman),bowl:nm(it.bowler),brun:it.bruns!=null?+it.bruns:(x?0:tot),tot,x,wk:wk?{out:it.out||nm(it.batsman),kind:it.kind||'out',fld:it.fielder||''}:null},stt)}
   if(!txt&&ov==='')return null;const n=+run;return{inning:it.inning??it.innings??it.scoreboard,team:it.team,ov:String(ov),run:wk?'W':run,cls:wk?'w':n===4?'f':n===6?'s':'',txt,r:isFinite(n)?n:0,o:it.over}}).filter(Boolean).reverse()}
 function cbpGraphs(W){const L=W.sc&&W.sc.scorecard||[];if(!L.length)return W.err?`<div class="cbp-cd cbp-note">${esc(W.err)}</div>`:'<div class="mu" style="padding:14px">Loading...</div>';
  const key=a=>`<div class="gr-key">${a.map(([c,l])=>`<span><i class="${c}" style="background:${({o:'#3f7bff',f:'#ffc83d',s:'#e11d2e',w:'#e11d2e',r:'#3f7bff'})[c]}"></i>${l}</span>`).join('')}</div>`;
@@ -4834,12 +4834,35 @@ function shWorldPartnerships(W){const L=W.sc?.scorecard||[];let out='';for(const
  cbpInfo=function(W){const i=W.mi||{},m=W.m,rows=[['Match',m.name],['Format',String(m.type||'').toUpperCase()],['Date',cbpInfoDate(W)],['Toss',i.tossWinner?i.tossWinner+(i.tossChoice?' · '+i.tossChoice:''):'Not published'],['Result / status',m.status],['Player of the Match',(Array.isArray(i.playerOfTheMatch)?i.playerOfTheMatch:[i.playerOfTheMatch]).filter(Boolean).join(', ')]];return '<div class="cbp-cd">'+rows.filter(x=>x[1]).map(([k,v])=>'<div class="cbp-kv"><span>'+k+'</span><b>'+esc(v)+'</b></div>').join('')+'</div>'+shWorldVenueDetails(W)+shWorldOfficials(W)+shWorldLineups(W)+((cr=>cr?`<div class="mu sm" style="padding:0 4px 10px">Officials, toss, player of the match and playing XI for this finished match: ${esc(cr)}.</div>`:'')(i.factSrc||((Array.isArray(W.sq)&&W.sq.find(t=>t.xiSrc))||{}).xiSrc))};
  const comm=cbpBbb;cbpBbb=function(W){if(!shAvailableBalls(W).length&&(W.bbErr||W.mi?.bbbEnabled===false))return '<div class="cbp-cd cbp-note"><b>Commentary unavailable for this match</b>The current provider request did not return delivery records. The scorecard is available separately.</div>';return comm(shAvailableBalls(W).length?{...W,bbErr:''}:W)};
 }
-{ // open-data credit: ball by ball, fall of wickets and partnerships filled for a finished match
- const cr=src=>src?`<div class="mu sm" style="padding:0 4px 10px">Ball by ball for this finished match: ${esc(src)}.</div>`:'';
- const c0=cbpBbb;cbpBbb=function(W){return c0(W)+cr(W.bb&&W.bb.source)};
- const o0=cbpOverTab;cbpOverTab=cbpOvers=function(W){return o0(W)+cr(W.bb&&W.bb.source)};
- // Partnerships remain in cbpCard; Graphs displays actual runs progression.
+{ // open-data credit: ball by ball, fall of wickets and partnerships filled for a finished match; live tracker records and notes
+ const cr=bb=>{const src=bb&&bb.source;if(!src)return '';return `<div class="mu sm" style="padding:0 4px 10px">${bb.tracked?'Ball records: '+esc(src)+'. A ball is written only when the scorecard changed by exactly one delivery between two checks (about every 30 seconds while someone has the match open). When several balls happen between checks, only a note is kept, never a guessed ball.':'Ball by ball for this finished match: '+esc(src)+'.'}</div>`};
+ const notes=bb=>{const L=bb&&Array.isArray(bb.notes)?bb.notes.slice().reverse():[];if(!L.length)return '';return `<div class="cbp-lb">Updates between checks</div><div class="cbp-cd">${L.slice(0,60).map(x=>`<div class="cm-i" style="align-items:flex-start"><span class="cm-o" style="flex:0 0 58px;font-size:10px">${esc(new Date(x.at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}))}</span><span>${esc(x.text)}</span></div>`).join('')}</div>`};
+ const c0=cbpBbb;cbpBbb=function(W){const bb=W.bb;if(bb&&bb.tracked){const rows=shAvailableBalls(W);return (rows.length?c0(W):'')+notes(bb)+cr(bb)}return c0(W)+cr(bb)};
+ const o0=cbpOverTab;cbpOverTab=cbpOvers=function(W){return o0(W)+cr(W.bb)};
+ const g0=cbpGraphs;cbpGraphs=function(W){const has=(W.sc&&W.sc.scorecard||[]).some(i=>Array.isArray(i.fow));return (has&&typeof cbpPartGraph==='function'?cbpPartGraph(W):'')+g0(W)};
  const k0=cbpCard;cbpCard=function(W){return k0(W)+(W.sc&&W.sc.factSrc?`<div class="mu sm" style="padding:0 4px 10px">Fall of wickets and partnerships for this finished match: ${esc(W.sc.factSrc)}.</div>`:'')};
+}
+{ // SH Sports XI (our pick, Dream11-style, by SH points from the scorecard) and the players seen so far
+ const norm=t=>String(t||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+ const notOut=t=>/^(|not out|batting|did not bat|yet to bat)$/i.test(String(t||'').trim());
+ var shMatchPlayers=function(W){
+  const L=(W.sc&&W.sc.scorecard)||[],teams=(W.m.teams||[]).slice(0,2).map(t=>typeof t==='string'?t:(t.name||'')).filter(Boolean),P=new Map();
+  const get=(n,t)=>{let x=P.get(n);if(!x){x={name:n,team:t,r:0,b:0,f4:0,f6:0,out:false,bat:false,w:0,m:0,br:0,bo:'',bowl:false,pts:0};P.set(n,x)}if(t&&!x.team)x.team=t;return x};
+  L.forEach(inn=>{const bt=shInningName(inn.inning),batTeam=teams.find(t=>norm(t)===norm(bt))||bt,fieldTeam=teams.find(t=>norm(t)!==norm(batTeam))||'';
+   (inn.batting||[]).forEach(r=>{const n=r.batsman&&r.batsman.name;if(!n)return;const x=get(n,batTeam),t=r['dismissal-text']??r.dismissal??'';x.bat=true;x.r+=+r.r||0;x.b+=+r.b||0;x.f4+=+r['4s']||0;x.f6+=+r['6s']||0;x.out=x.out||!notOut(t);x.duck=(+r.r||0)===0&&!notOut(t)&&(+r.b||0)>0||x.duck});
+   (inn.bowling||[]).forEach(r=>{const n=r.bowler&&r.bowler.name;if(!n)return;const x=get(n,fieldTeam);x.bowl=true;x.w+=+r.w||0;x.m+=+r.m||0;x.br+=+r.r||0;x.bo=r.o})});
+  P.forEach(x=>{let p=0;if(x.bat)p+=x.r+x.f4+x.f6*2+(x.r>=100?16:x.r>=50?8:x.r>=30?4:0)-(x.duck?2:0);if(x.bowl)p+=x.w*25+x.m*12+(x.w>=5?16:x.w>=3?4:0);x.pts=p});
+  return [...P.values()]};
+ var shDreamXI=function(W){const all=shMatchPlayers(W).sort((a,b)=>b.pts-a.pts||a.name.localeCompare(b.name)),cnt={},xi=[];for(const x of all){const t=x.team||'?';if(xi.length>=11)break;if((cnt[t]||0)>=7)continue;cnt[t]=(cnt[t]||0)+1;xi.push(x)}return {xi,seen:all.length}};
+ const line=x=>[x.bat?`${x.r} (${x.b})`+(x.f4||x.f6?` ${x.f4}x4 ${x.f6}x6`:''):'',x.bowl?`${x.w}/${x.br} (${x.bo} ov)`:''].filter(Boolean).join(' · ');
+ var shDreamCard=function(W){
+  if(!W.sc||!(W.sc.scorecard||[]).length)return '';const {xi,seen}=shDreamXI(W);if(!xi.length)return '';
+  return `<div class="cbp-lb">SH Sports XI · top 11 so far</div><div class="cbp-cd">${xi.map(x=>`<div class="cbp-kv"><span>${esc(x.name)}<br><small>${esc(x.team||'')} · ${x.bat&&x.bowl?'batted and bowled':x.bowl?'bowled':'batted'}</small></span><b>${x.pts} pts<br><small>${esc(line(x))}</small></b></div>`).join('')}</div><div class="mu sm" style="padding:0 4px 10px">Our own pick, not the official playing XI. Best eleven of the ${seen} players seen on the scorecard so far, at most 7 from one team, ranked by SH points: 1 per run, +1 per four, +2 per six, +4/+8/+16 for 30/50/100, -2 for a duck, 25 per wicket, 12 per maiden, +4/+16 for 3/5 wickets. It changes as the match goes on.</div>`};
+ var shSeenCard=function(W){
+  const P=shMatchPlayers(W);if(!P.length)return '';const teams=[...new Set(P.map(x=>x.team||'?'))];
+  return `<div class="cbp-lb">Players seen in this match</div>`+teams.map(t=>`<div class="cbp-cd cbp-note"><b>${esc(t)}</b><p>${esc(P.filter(x=>(x.team||'?')===t).map(x=>x.name).join(', '))}</p></div>`).join('')+`<div class="mu sm" style="padding:0 4px 10px">The provider has not sent a squad for this match. These are the players who have batted or bowled on the scorecard so far; the list grows as play goes on.</div>`};
+ const i0=cbpInfo;cbpInfo=function(W){const noSq=!(Array.isArray(W.sq)&&W.sq.length);return i0(W)+(noSq?shSeenCard(W):'')+shDreamCard(W)};
+ if(typeof cbpSquads==='function'){const q0=cbpSquads;cbpSquads=function(W){const o=q0(W),has=Array.isArray(W.sq)&&W.sq.length;if(!has&&(W.sc&&(W.sc.scorecard||[]).length))return shSeenCard(W)+shDreamCard(W);return o+(has?shDreamCard(W):'')}}
 }
 /* END SH MATCH CENTRE REVIEW */
 

@@ -8,6 +8,7 @@ import path from 'node:path';
 import net from 'node:net';
 import tls from 'node:tls';
 import { createHistory, sameTeamName } from './history.mjs';
+import { snapshotOf, diffSnapshots } from './observer.mjs';
 import { createRecent, buildBbb, buildFow, buildPartnerships, inningsTotals, RECENT_SOURCE } from './recent.mjs';
 
 const E = process.env;
@@ -324,6 +325,49 @@ function enrichSquad(sq, info) {
     return { ...t, players: t.players.map((p, i) => hit[i] ? { ...p, playing: true } : p), xiSrc: 'Cricsheet (open data, ODC-By)' };
   });
 }
+// ---- Live tracker: while people are looking at a running match, the server checks its scorecard every TRACK_SECONDS and keeps what the figures prove (see observer.mjs). Everyone sees the same saved record, not only the people who had the page open. ----
+db.track = db.track || {};
+const viewed = new Map();   // match id -> { t: last viewed, next: do not check before }
+const TRACK_SECONDS = Math.max(+E.TRACK_MIN_SECONDS || 15, +E.TRACK_SECONDS || 30), TRACK_MAX = Math.max(1, +E.TRACK_MAX_MATCHES || 3), TRACK_DAILY = Math.max(0, E.TRACK_DAILY_CALLS == null || E.TRACK_DAILY_CALLS === '' ? 60 : +E.TRACK_DAILY_CALLS);
+const trackStat = { last: 0, day: '', calls: 0, paused: 0, note: 'waiting for a viewer on a live match' };
+async function cricFresh(ep, id, maxAge) {   // same cache the match page uses; returns [result, realProviderCall]
+  const k = ep + id, h = cricCache.get(k); if (h && Date.now() - h.t < maxAge) return [h.d, false];
+  const r = await fetch(`${CRIC_BASE}/${ep}?apikey=${encodeURIComponent(CRIC_KEY)}&id=${encodeURIComponent(id)}`, { signal: AbortSignal.timeout(10000) }), j = await r.json();
+  if (j.status !== 'success') return [{ ok: false, error: j.reason || 'Cricket API error' }, true];
+  let data = j.data; if (ep === 'match_scorecard') { try { data = await enrichScorecard(data, id); } catch {} }
+  const d = { ok: true, data }; cricCache.set(k, { t: Date.now(), d }); return [d, true];
+}
+let trackBusy = false;
+async function trackTick() {
+  if (trackBusy || !CRIC_KEY) return; trackBusy = true;
+  try {
+    const now = Date.now(), day = istDate(); if (trackStat.day !== day) { trackStat.day = day; trackStat.calls = 0; }
+    if (now < trackStat.paused) { trackStat.note = 'paused: provider limit reached'; return; }
+    const ids = [...viewed].filter(([, v]) => now - v.t < 10 * 60e3 && now >= v.next).sort((a, b) => b[1].t - a[1].t).slice(0, TRACK_MAX).map(x => x[0]);
+    for (const id of ids) {
+      if (/^sm/i.test(id)) continue;   // Sportmonks matches have their own ball by ball
+      const v = viewed.get(id);
+      if (trackStat.calls >= TRACK_DAILY) { trackStat.note = `daily check budget used (${TRACK_DAILY}); set TRACK_DAILY_CALLS for more`; break; }
+      let res, real; try { [res, real] = await cricFresh('match_scorecard', id, TRACK_SECONDS * 1000 - 3000); } catch { continue; }
+      if (real) trackStat.calls++; trackStat.last = now;
+      if (!res.ok) { if (/hit|limit|quota|exceed/i.test(res.error || '')) trackStat.paused = now + 30 * 60e3; trackStat.note = 'provider: ' + res.error; continue; }
+      const d = res.data, snap = snapshotOf(d);
+      if (!snap) { v.next = now + 5 * 60e3; continue; }
+      const T = db.track[id] || (db.track[id] = { first: now, t: now, rows: [], notes: [], prev: null });
+      const df = diffSnapshots(T.prev, snap);
+      if (df.rows.length) { T.rows.push(...df.rows.map(r => ({ ...r, at: now }))); if (T.rows.length > 3000) T.rows.splice(0, T.rows.length - 3000); }
+      if (df.note) { T.notes.push({ at: now, inning: snap.idx + 1, text: df.note.text }); if (T.notes.length > 300) T.notes.splice(0, T.notes.length - 300); }
+      T.prev = snap; T.t = now;
+      if (d && d.matchEnded) viewed.delete(id);
+      for (const k of Object.keys(db.track).sort((a, b) => db.track[b].t - db.track[a].t).slice(10)) delete db.track[k];   // keep the last 10 matches
+      if (df.rows.length || df.note) saveDb();
+      trackStat.note = 'tracking ' + ids.length + ' match(es)';
+    }
+  } catch (e) { trackStat.note = 'error: ' + String(e.message).slice(0, 120); }
+  finally { trackBusy = false; }
+}
+if (E.TRACKER !== '0') setInterval(trackTick, TRACK_SECONDS * 1000);
+const trackerBbb = id => { const T = db.track[id]; return T && (T.rows.length || T.notes.length) ? { ok: true, data: { bbb: T.rows, notes: T.notes.slice(-80), source: 'Scoring Heroes live tracker', tracked: true } } : null; };
 async function enrichScorecard(sc, id) {
   if (!sc || !Array.isArray(sc.scorecard) || !sc.scorecard.length) return sc;
   const info = Array.isArray(sc.teams) && sc.teams.length >= 2 ? sc : await infoOf(id).catch(() => null), teams = (info && info.teams) || []; if (teams.length < 2) return sc;
@@ -368,6 +412,7 @@ routes['GET /api/cric'] = async (req, body, ip) => {
   }
   if (!CRIC_KEY) return [503, { ok: false, error: 'CRIC_API_KEY is not set on the server' }];
   const k = ep + id, hit = cricCache.get(k), ttl = ep === 'players_info' ? 864e5 : 15e3;
+  if (['match_scorecard', 'match_info', 'match_bbb'].includes(ep)) { const v = viewed.get(id); viewed.set(id, { t: Date.now(), next: v ? v.next : 0 }); }
   if (hit && Date.now() - hit.t < ttl) return [200, hit.d];
   if (limited('cric:' + ip, 900, 36e5)) return [429, { ok: false, error: 'Too many requests' }];
   if (ep === 'match_bbb') {   // a finished match: Cricsheet has the full ball by ball
@@ -376,8 +421,9 @@ routes['GET /api/cric'] = async (req, body, ip) => {
   try {
     const r = await fetch(`${CRIC_BASE}/${ep}?apikey=${encodeURIComponent(CRIC_KEY)}&id=${encodeURIComponent(id)}`, { signal: AbortSignal.timeout(10000) });
     const j = await r.json();
-    if (j.status !== 'success') return [502, { ok: false, error: j.reason || 'Cricket API error' }];
+    if (j.status !== 'success') { const fb = ep === 'match_bbb' ? trackerBbb(id) : null; return fb ? [200, fb] : [502, { ok: false, error: j.reason || 'Cricket API error' }]; }
     let data = j.data;
+    if (ep === 'match_bbb' && !(Array.isArray(data) ? data.length : (data && Array.isArray(data.bbb) ? data.bbb.length : 0))) { const fb = trackerBbb(id); if (fb) return [200, fb]; }
     try { if (ep === 'match_info') data = enrichInfo(data); else if (ep === 'match_squad') data = enrichSquad(data, await infoOf(id)); else if (ep === 'match_scorecard') data = await enrichScorecard(data, id); } catch {}
     const d = { ok: true, data }; cricCache.set(k, { t: Date.now(), d }); if (cricCache.size > 500) cricCache.clear();
     return [200, d];
@@ -577,7 +623,8 @@ function svcStatus() {
     live: { ready: !!(CRIC_KEY || SM), provider: SM ? 'sportmonks' : 'cricketdata', problem: (CRIC_KEY || SM) ? '' : 'Set CRIC_API_KEY (CricketData) or SPORTMONKS_TOKEN (Sportmonks)' },
     ai: { ready: !!NEWS_AI_KEY, model: NEWS_AI_KEY ? NEWS_AI_MODEL : '', problem: NEWS_AI_KEY ? '' : 'Optional: set ANTHROPIC_API_KEY for AI-polished articles (articles are still written without it)' },
     history: { autoimport: E.HISTORY_AUTOIMPORT === '1' },
-    recent: { enabled: E.RECENT_OPEN_DATA !== '0', ...recent.status() }
+    recent: { enabled: E.RECENT_OPEN_DATA !== '0', ...recent.status() },
+    tracker: { enabled: E.TRACKER !== '0', seconds: TRACK_SECONDS, maxMatches: TRACK_MAX, callsToday: trackStat.calls, dailyBudget: TRACK_DAILY, saved: Object.keys(db.track).length, note: trackStat.note }
   };
 }
 routes['GET /api/status'] = async () => { const x = svcStatus(); return [200, { ok: true, emailReady: x.email.ready, smsReady: x.sms.ready, liveReady: x.live.ready }]; };
