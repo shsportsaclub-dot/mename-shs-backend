@@ -666,7 +666,21 @@ routes['POST /api/admin/probe'] = async (req, body) => {
   const phone = readSession((req.headers.authorization || '').replace(/^Bearer /, '')), u = phone && db.users[phone];
   if (!u) return [401, { ok: false, error: 'Please sign in again' }];
   if (u.role !== 'admin') return [403, { ok: false, error: 'Only an admin can see this' }];
-  if (!SM) return [200, { ok: false, error: 'SPORTMONKS_TOKEN is not set on the server' }];
+  if (!SM) {   // CricketData: show exactly what the key is allowed to read (plan, hits, ball by ball) without printing the key
+    if (!CRIC_KEY) return [200, { ok: false, error: 'Neither CRIC_API_KEY nor SPORTMONKS_TOKEN is set on the server' }];
+    try {
+      const L = (await liveMatches()).matches || [], m = L.find(x => x.id === body.id) || L.find(x => x.started && !x.ended) || L.find(x => x.started) || L[0];
+      if (!m) return [200, { ok: false, error: 'CricketData returned no matches' }];
+      const out = [`Provider: CricketData · match: ${m.name} (${m.id}) · started=${m.started} ended=${m.ended}`];
+      for (const ep of ['match_bbb', 'match_scorecard']) {
+        const j = await (await fetch(`${CRIC_BASE}/${ep}?apikey=${encodeURIComponent(CRIC_KEY)}&id=${encodeURIComponent(m.id)}`, { signal: AbortSignal.timeout(12000) })).json();
+        const d = j.data, n = Array.isArray(d) ? d.length : d && Array.isArray(d.bbb) ? d.bbb.length : d && Array.isArray(d.scorecard) ? d.scorecard.length : 0;
+        out.push('', `${ep}: status=${j.status}${j.reason ? ' · reason: ' + j.reason : ''}`, `hits today: ${j.info && j.info.hitsToday} of ${j.info && j.info.hitsLimit}`, `rows: ${n}${d && !Array.isArray(d) ? ' · fields: ' + Object.keys(d).slice(0, 12).join(', ') : ''}`);
+        if (ep === 'match_bbb' && n) out.push('first row: ' + JSON.stringify((Array.isArray(d) ? d : d.bbb)[0]).slice(0, 400));
+      }
+      return [200, { ok: true, id: m.id, fixture: out.join('\n') }];
+    } catch (e) { return [200, { ok: false, error: String(e.message).slice(0, 300) }]; }
+  }
   const id = String(body.id || '').replace(/\D/g, '');
   try {
     let fid = id;
