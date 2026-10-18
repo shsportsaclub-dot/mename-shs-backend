@@ -18,8 +18,8 @@ test('Sportmonks keeps explicit innings so a two-innings chart can separate deli
 });
 test('refresh retains good delivery data on transient error and stops after leaving the match',async()=>{
  const a=html.indexOf('/* WORLD DETAIL FLOW:'),b=html.indexOf('/* END WORLD DETAIL FLOW */',a);
- const W={m:{id:'fixture',started:true,ended:false},bb:{bbb:[{inning:1,over:0,ball:1,runs:4}]}};let calls=0,renders=0;
- const context={UI:{view:'wmatch',wm:W},document:{hidden:false},A:{wOpen(){},wmTab(){}},XV:{wmatch(){}},cbpGraphs(){},setInterval(){},render(){renders++},wLoad:async ep=>{calls++;return ep==='match_bbb'?{ok:false,error:'Temporary failure'}:{ok:true,data:ep==='match_scorecard'?{score:[]}:{matchStarted:true,matchEnded:false}}},Date};
- vm.createContext(context);vm.runInContext(html.slice(a,b),context);await context.shRefreshWorldDetails(W,true);assert.equal(calls,3);assert.equal(W.bb.bbb[0].runs,4);assert.equal(W.detailBusy,false);assert.equal(W.bbBusy,0);assert.equal(renders,1);
+ const W={m:{id:'fixture',started:true,ended:false},bb:{bbb:[{inning:1,over:0,ball:1,runs:4}]}};let calls=0,renders=0,observed=0;
+ const context={shObserveScoreCommentary(snapshot){assert.equal(snapshot,W);observed++},UI:{view:'wmatch',wm:W},document:{hidden:false},A:{wOpen(){},wmTab(){}},XV:{wmatch(){}},cbpGraphs(){},setInterval(){},render(){renders++},wLoad:async ep=>{calls++;return ep==='match_bbb'?{ok:false,error:'Temporary failure'}:{ok:true,data:ep==='match_scorecard'?{score:[]}:{matchStarted:true,matchEnded:false}}},Date};
+ vm.createContext(context);vm.runInContext(html.slice(a,b),context);await context.shRefreshWorldDetails(W,true);assert.equal(calls,3);assert.equal(W.bb.bbb[0].runs,4);assert.equal(W.detailBusy,false);assert.equal(W.bbBusy,0);assert.equal(renders,1);assert.equal(observed,1);
  context.UI.view='home';await context.shRefreshWorldDetails(W,true);assert.equal(calls,3);
 });
