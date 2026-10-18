@@ -445,9 +445,9 @@ routes['GET /api/cric'] = async (req, body, ip) => {
   try {
     const r = await fetch(`${CRIC_BASE}/${ep}?apikey=${encodeURIComponent(CRIC_KEY)}&id=${encodeURIComponent(id)}`, { signal: AbortSignal.timeout(10000) });
     const j = await r.json();
-    if(j.status!=='success'){const fb=ep==='match_bbb'?trackerBbb(id):null;if(fb){matchJournal.record(id,ep,fb.data,{source:'SH snapshot tracker'});return [200,fb]}matchJournal.record(id,ep,null,{error:j.reason||'Cricket API error'});return [502,{ok:false,error:j.reason||'Cricket API error'}]}
+    if(j.status!=='success'){const fb=ep==='match_bbb'?trackerBbb(id):null;if(fb){fb.data.providerNote='Provider reply: '+(j.reason||'no ball-by-ball');matchJournal.record(id,ep,fb.data,{source:'SH snapshot tracker'});return [200,fb]}matchJournal.record(id,ep,null,{error:j.reason||'Cricket API error'});return [502,{ok:false,error:j.reason||'Cricket API error'}]}
     let data = j.data;
-    if (ep === 'match_bbb' && !(Array.isArray(data) ? data.length : (data && Array.isArray(data.bbb) ? data.bbb.length : 0))) { const fb = trackerBbb(id); if(fb){matchJournal.record(id,ep,fb.data,{source:'SH snapshot tracker'});return [200,fb]} }
+    if (ep === 'match_bbb' && !(Array.isArray(data) ? data.length : (data && Array.isArray(data.bbb) ? data.bbb.length : 0))) { const fb = trackerBbb(id); if(fb){fb.data.providerNote='Provider reply: success, but 0 ball rows';matchJournal.record(id,ep,fb.data,{source:'SH snapshot tracker'});return [200,fb]} data = Array.isArray(data) ? data : { ...(data && typeof data === 'object' ? data : {}), bbb: [], providerNote: 'Provider reply: success, but 0 ball rows for this match' }; }
     try { if (ep === 'match_info') data = enrichInfo(data); else if (ep === 'match_squad') data = enrichSquad(data, await infoOf(id)); else if (ep === 'match_scorecard') data = await enrichScorecard(data, id); } catch {}
     matchJournal.record(id,ep,data,{source:'CricketData'});const d = { ok: true, data }; cricCache.set(k, { t: Date.now(), d }); if (cricCache.size > 500) cricCache.clear();
     return [200, d];
