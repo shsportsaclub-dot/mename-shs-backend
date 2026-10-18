@@ -360,16 +360,20 @@ async function cricFresh(ep, id, maxAge) {   // same cache the match page uses; 
   let data = j.data; if (ep === 'match_scorecard') { try { data = await enrichScorecard(data, id); } catch {} }
   matchJournal.record(id,ep,data,{source:'CricketData tracker check'});const d = { ok: true, data }; cricCache.set(k, { t: Date.now(), d }); return [d, true];
 }
-let trackBusy = false;
+let trackBusy = false; const trackDone = new Set();
 async function trackTick() {
   if (trackBusy || !CRIC_KEY) return; trackBusy = true;
   try {
     const now = Date.now(), day = istDate(); if (trackStat.day !== day) { trackStat.day = day; trackStat.calls = 0; }
     if (now < trackStat.paused) { trackStat.note = 'paused: provider limit reached'; return; }
     const ids = [...viewed].filter(([, v]) => now - v.t < 10 * 60e3 && now >= v.next).sort((a, b) => b[1].t - a[1].t).slice(0, TRACK_MAX).map(x => x[0]);
+    // Live matches are followed even when nobody has the page open, so the record already exists when someone arrives.
+    const AUTO = E.TRACK_AUTO_MATCHES == null || E.TRACK_AUTO_MATCHES === '' ? 6 : +E.TRACK_AUTO_MATCHES;
+    if (AUTO > 0) { try { await liveMatches(); } catch { /* provider refused: keep what we have */ } }
+    if (AUTO > 0 && live.data && Array.isArray(live.data.matches)) for (const m of live.data.matches.filter(m => m.started && !m.ended && !trackDone.has(m.id) && !ids.includes(m.id)).slice(0, AUTO)) { const w = viewed.get(m.id); if (!w || now >= w.next) ids.push(m.id); }
     for (const id of ids) {
       if (/^sm/i.test(id)) continue;   // Sportmonks matches have their own ball by ball
-      const v = viewed.get(id);
+      let v = viewed.get(id); if (!v) { v = { t: 0, next: 0 }; viewed.set(id, v); }
       if (trackStat.calls >= TRACK_DAILY) { trackStat.note = `daily check budget used (${TRACK_DAILY}); set TRACK_DAILY_CALLS for more`; break; }
       let res, real; try { [res, real] = await cricFresh('match_scorecard', id, TRACK_SECONDS * 1000 - 3000); } catch { continue; }
       if (real) trackStat.calls++; trackStat.last = now;
@@ -381,7 +385,7 @@ async function trackTick() {
       if (df.rows.length) { T.rows.push(...df.rows.map(r => ({ ...r, at: now }))); if (T.rows.length > 3000) T.rows.splice(0, T.rows.length - 3000); }
       if (df.note) { T.notes.push({ at: now, inning: snap.idx + 1, text: df.note.text }); if (T.notes.length > 300) T.notes.splice(0, T.notes.length - 300); }
       T.prev = snap; T.t = now;
-      if (d && d.matchEnded) viewed.delete(id);
+      if (d && d.matchEnded) { viewed.delete(id); trackDone.add(id); }
       for (const k of Object.keys(db.track).sort((a, b) => db.track[b].t - db.track[a].t).slice(10)) delete db.track[k];   // keep the last 10 matches
       if (df.rows.length || df.note) saveDb();
       trackStat.note = 'tracking ' + ids.length + ' match(es)';
