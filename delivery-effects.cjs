@@ -4,8 +4,8 @@ function createSHDeliveryEffects({storage=null,now=Date.now}={}){
  for(const s of Object.values(state))delete s.effect;
  const persist=()=>{try{storage?.setItem('sh-delivery-effects-v1',JSON.stringify(Object.fromEntries(Object.entries(state).slice(-40))))}catch{}};
  const signature=b=>String(b.eventId||b._key||b.id||[b.inning,b.over,b.ball,b.wide?'wd':b.noball?'nb':'legal',b.index??''].join('|'));
- function observe(id,rows,{active=true,ended=false}={}){
-  if(!id||!Array.isArray(rows)||!rows.length)return null;const last=rows.at(-1),key=signature(last),position=String(last.inning)+'|'+last.over+'|'+last.ball,count=rows.filter(b=>String(b.inning)+'|'+b.over+'|'+b.ball===position).length;
+ function observe(id,rows,{active=true,ended=false,fromStart=false}={}){
+  if(!id||!Array.isArray(rows))return null;if(!rows.length){if(fromStart&&!state[id]){state[id]={key:'',position:'1|-1|0',count:0,ended,seen:[]};persist()}return null}const last=rows.at(-1),key=signature(last),position=String(last.inning)+'|'+last.over+'|'+last.ball,count=rows.filter(b=>String(b.inning)+'|'+b.over+'|'+b.ball===position).length;
   let s=state[id];if(!s){state[id]={key,position,count,ended,seen:rows.slice(-300).map(signature)};persist();return null}
   const known=s.seen.includes(key),same=s.position===position,old=s.position.split('|'),forward=String(last.inning)!==old[0]? !s.seen.some(k=>k===key):last.over*6+last.ball>+old[1]*6+(+old[2]);
   // Same-position replacement is a correction; repeated extras require an added delivery.
