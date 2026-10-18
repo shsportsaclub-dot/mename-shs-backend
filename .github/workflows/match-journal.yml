@@ -1,7 +1,7 @@
 name: Shared match journal and selection
 on:
   push:
-    paths: ['app-index.html', 'server.js', 'match-journal.mjs', 'match-intelligence.cjs', 'recent.mjs', 'observer.mjs', 'pulse-model.cjs', 'tests/pulse.test.mjs', 'data/match-context.json', 'tests/match-journal*', '.github/workflows/match-journal.yml']
+    paths: ['app-index.html', 'server.js', 'match-journal.mjs', 'match-intelligence.cjs', 'recent.mjs', 'observer.mjs', 'pulse-model.cjs', 'delivery-effects.cjs', 'tests/delivery-effects*', 'tests/pulse.test.mjs', 'data/match-context.json', 'tests/match-journal*', '.github/workflows/match-journal.yml']
   workflow_dispatch:
 jobs:
   verify:
@@ -11,12 +11,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: node --test tests/pulse.test.mjs tests/match-journal.test.mjs tests/match-journal-runtime.test.mjs tests/recent.test.mjs tests/observer.test.mjs tests/tracker.test.mjs
+      - run: node --test tests/delivery-effects.test.cjs tests/pulse.test.mjs tests/match-journal.test.mjs tests/match-journal-runtime.test.mjs tests/recent.test.mjs tests/observer.test.mjs tests/tracker.test.mjs
       - run: npm install --no-save playwright@1.61.1
       - run: npx playwright install --with-deps chromium
       - run: node tests/match-journal-browser.cjs
+      - run: node tests/delivery-effects-browser.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: shared-journal-evidence
-          path: runtime-evidence/journal-*
+          path: |
+            runtime-evidence/journal-*
+            runtime-evidence/effect-*
