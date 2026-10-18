@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="sh-build" content="__SH_BUILD__">
 <link rel="icon" type="image/png" href="/icon-192.png"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#0a1f5c"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="SH Heroes">
 <title>Scoring Heroes – Sports Sky High</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4405,7 +4406,7 @@ heroHome=function(){
  const c0=h.cat;if(hx==='int')h.cat='int';let L=[];try{L=hhMatches()||[]}finally{h.cat=c0}
  const tabs=[['sh','Scoring Heroes'],['int','International'],['all','All'],['live','Live'],['up','Upcoming'],['rec','Results']],tOn=k=>k===hx||(hx!=='sh'&&hx!=='int'&&k===h.tab&&k!=='all')||(k==='all'&&hx==='all'&&h.tab==='all');
  const reg=S.user?'':'<button data-a="go" data-v="login">Register</button>';
- const feed=!j?'<div class="mu sm">Loading live scores...</div>':!j.ok?`<div class="hh-box" style="border-color:var(--ac)"><div class="b">Live scores load only on the real app link</div><div class="mu sm" style="margin:4px 0 8px">${esc(j.error||'')}</div><a class="btn" href="${DEFAULT_API}" target="_blank" rel="noopener" style="display:inline-block;text-decoration:none">Open live app</a></div>`:`<div class="mu sm" style="margin:0 0 8px">Updated ${j.updated?new Date(j.updated).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'-'} | v${esc(UI.ver||'...')}${j.stale?' | <b style="color:var(--ac)">older data: '+esc(j.note||'API limit')+'</b>':''} <a data-a="refreshLive" role="button" style="color:var(--ac);cursor:pointer">Refresh</a></div>`;
+ const feed=!j?'<div class="mu sm">Loading live scores...</div>':!j.ok?`<div class="hh-box" style="border-color:var(--ac)"><div class="b">Live scores load only on the real app link</div><div class="mu sm" style="margin:4px 0 8px">${esc(j.error||'')}</div><a class="btn" href="${DEFAULT_API}" target="_blank" rel="noopener" style="display:inline-block;text-decoration:none">Open live app</a></div>`:`<div class="mu sm" style="margin:0 0 8px">Updated ${j.updated?new Date(j.updated).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'-'} | server v${esc(UI.ver||'...')} · page v${esc(typeof SH_PAGE_BUILD!=='undefined'&&SH_PAGE_BUILD||'?')}${j.stale?' | <b style="color:var(--ac)">older data: '+esc(j.note||'API limit')+'</b>':''} <a data-a="refreshLive" role="button" style="color:var(--ac);cursor:pointer">Refresh</a></div>`;
  const ord=L.slice().sort((a,b)=>((b.started&&!b.ended)-(a.started&&!a.ended)));
  const cards=hx==='sh'?shL:ord.slice(0,30);
  let R=[];try{R=reelItems()}catch(e){}if(R.length&&R[0].kind==='empty')R=[];
@@ -4607,6 +4608,13 @@ Object.assign(A,{svcLoad(){UI.svc=null;render()},async svcTest(){const v=(docume
 MENU2[MENU2.length-1][1].push(['svc','\u{1F6E0}️','Server status (admin)']);
 
 try{fetch(apiBase()+'/health').then(r=>r.json()).then(j=>{UI.ver=j&&j.version||'?'}).catch(()=>{UI.ver='offline'})}catch(e){}
+/* AUTO UPDATE: the page knows its own build. An old tab left open after a deploy shows a banner and reloads itself, so nobody keeps looking at a stale copy. */
+var SH_PAGE_BUILD=(function(){try{var m=document.querySelector('meta[name="sh-build"]');var v=m&&m.content||'';return /^[0-9a-f]{7}$/.test(v)?v:''}catch(e){return ''}})();
+var shCheckBuild=function(){if(!SH_PAGE_BUILD)return;try{fetch(apiBase()+'/health',{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){var sv=j&&j.version;UI.ver=sv||UI.ver;if(!sv||!/^[0-9a-f]{7}$/.test(sv)||sv===SH_PAGE_BUILD)return;
+  if(!document.getElementById('sh-upd')){var d=document.createElement('div');d.id='sh-upd';d.style.cssText='position:fixed;left:12px;right:12px;bottom:76px;z-index:99998;background:#e11d2e;color:#fff;border-radius:12px;padding:12px 14px;font:600 13px system-ui;display:flex;gap:10px;align-items:center;justify-content:space-between';d.innerHTML='<span>New version ready ('+sv+'). You are on '+SH_PAGE_BUILD+'.</span><button style="background:#fff;color:#111;border:0;border-radius:8px;padding:8px 12px;font-weight:700">Reload</button>';d.querySelector('button').onclick=shReloadFresh;document.body.appendChild(d)}
+  if(['home','wmatch','matches'].indexOf(UI.view)>=0&&!sessionStorage.getItem('sh-auto-'+sv)){try{sessionStorage.setItem('sh-auto-'+sv,'1')}catch(e){}setTimeout(shReloadFresh,1500)}}).catch(function(){})}catch(e){}};
+var shReloadFresh=function(){var go=function(){location.reload()};try{(window.caches?caches.keys().then(function(k){return Promise.all(k.map(function(x){return caches.delete(x)}))}):Promise.resolve()).then(go,go)}catch(e){go()}};
+setTimeout(shCheckBuild,4000);setInterval(shCheckBuild,60000);document.addEventListener('visibilitychange',function(){if(!document.hidden)shCheckBuild()});
 /* ---------------- SCORING VIEW: 2 skins (Cricbuzz / Cricket Australia) + Cricex-style tab order and live strip ---------------- */
 {const st=document.createElement('style');st.textContent=
 '.shh{border-radius:12px;margin-bottom:10px;overflow:hidden}.shh .tp{display:flex;align-items:center;gap:8px;padding:8px 12px;font:700 12px var(--ui);letter-spacing:.5px;text-transform:uppercase}.shh .bd2{padding:12px}'+

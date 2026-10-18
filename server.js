@@ -926,7 +926,7 @@ http.createServer(async (req, res) => {
   }
   if (req.method === 'GET' && (path === '/' || path === '/index.html')) {   // serve the app itself, same address as the API
     try {
-      const html = fs.readFileSync(new URL('./app-index.html', import.meta.url));
+      const html = Buffer.from(fs.readFileSync(new URL('./app-index.html', import.meta.url), 'utf8').replace('__SH_BUILD__', String(E.RENDER_GIT_COMMIT || '').slice(0, 7) || 'local'));
       res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store', 'x-sh-commit': String(E.RENDER_GIT_COMMIT || 'local') });
       return res.end(html);
     } catch { /* fall through to 404 */ }
