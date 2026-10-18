@@ -9,7 +9,7 @@ function createSHPulseModel(){
  return{team:name(x.team),inning:String(inning),over,ball,runs,wide,noball,wicket,label,derived,batter,bowler,index,text:String(x.commentary||x.text||x.comment||x.description||'').trim()||[bowler&&batter?bowler+' to '+batter:bowler||batter,result].filter(Boolean).join(' — ')};
  }).filter(Boolean).sort((a,b)=>a.inning.localeCompare(b.inning,undefined,{numeric:true})||a.over-b.over||a.ball-b.ball||a.index-b.index);
  }
- function overs(data){const map=new Map();for(const b of deliveries(data)){const key=b.inning+'|'+b.over;let g=map.get(key);if(!g)map.set(key,g={inning:b.inning,over:b.over,runs:0,wickets:0,balls:[]});g.runs+=b.runs;g.wickets+=+b.wicket;g.balls.push(b)}return[...map.values()].map(g=>{const legal=g.balls.filter(b=>!b.wide&&!b.noball);return{...g,complete:legal.length===6&&new Set(legal.map(b=>b.ball)).size===6,derived:g.balls.some(b=>b.derived)}})}
+ function overs(data){const map=new Map();for(const b of deliveries(data)){const key=b.inning+'|'+b.over;let g=map.get(key);if(!g)map.set(key,g={inning:b.inning,over:b.over,runs:0,wickets:0,balls:[]});g.runs+=b.runs;g.wickets+=+b.wicket;g.balls.push(b)}return[...map.values()].map(g=>{const legal=g.balls.filter(b=>!b.wide&&!b.noball);return{...g,complete:legal.length===6&&new Set(legal.map(b=>b.ball)).size===6,derived:g.balls.some(b=>b.derived)}}).map((g,i,all)=>{const before=all.slice(0,i+1).filter(x=>x.inning===g.inning);const full=before.every((x,n)=>x.over===n&&x.complete);return{...g,knownTotal:full?{r:before.reduce((s,x)=>s+x.runs,0),w:before.reduce((s,x)=>s+x.wickets,0)}:null}})}
  return{deliveries,overs};
 }
 if(typeof module!=='undefined')module.exports={createSHPulseModel};

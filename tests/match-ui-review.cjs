@@ -17,6 +17,6 @@ assert.match(ctx.shWorldGraphs(W),/width:0%/);assert.match(ctx.shWorldGraphs(W),
 const venue=ctx.shWorldVenueDetails({...W,mi:{venue:{name:'Fixture Stadium',city:'Test City',capacity:20000},pitchReport:{text:'Fixture pitch note',source:'Fixture report'}}});
 assert.match(venue,/20000/);assert.match(venue,/Fixture pitch note/);
 const missing=ctx.shWorldVenueDetails({...W,m:{venue:'TBC, TBC'},mi:{}});assert.match(missing,/confirmation pending/);assert.match(missing,/No sourced pitch report is saved/);
-assert.ok(h.includes('SH Classic'));assert.ok(h.includes('SH Stadium'));
+assert.ok(h.includes('SH Pulse'));assert.ok(h.includes('SH Stadium'));
 console.log('PASS: team flags and names, separate innings, zero bars, wicket runs, uncertain delivery exclusion, sourced venue and pitch notes, inline script syntax');
 
