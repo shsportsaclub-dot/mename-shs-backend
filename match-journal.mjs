@@ -1,4 +1,5 @@
 import commentary from './score-update-commentary.cjs';
+import {snapshotOf,diffSnapshots} from './observer.mjs';
 const {createSHCommentaryEngine}=commentary;
 const copy=x=>JSON.parse(JSON.stringify(x)),clean=(x,n=180)=>String(x??'').slice(0,n),validId=id=>/^(sm)?[a-z0-9-]{1,40}$/i.test(String(id))&&!['constructor','prototype','__proto__'].includes(id);
 export function createMatchJournal({state={},save=()=>{},load=()=>null,now=Date.now}={}){
@@ -26,6 +27,15 @@ export function createMatchJournal({state={},save=()=>{},load=()=>null,now=Date.
   if(incoming.length){const previous=m.score.at(-1),next=incoming.at(-1),ov=x=>{const [a,b]=String(x??'').split('.');return +a*6+(+b||0)};
    const older=previous&&next&&(incoming.length<m.score.length||incoming.length===m.score.length&&previous.inning===next.inning&&(ov(next.o)<ov(previous.o)||ov(next.o)===ov(previous.o)&&(next.r<previous.r||next.w<previous.w)));
    if(older&&!corrected)m.sources[ep].behind=true;else{if(JSON.stringify(m.score)!==JSON.stringify(incoming))m.scoreChangedAt=at;m.score=incoming;m.scoreSource=ep}
+  }
+  // Persist a scorecard baseline per match, independent of the three-match legacy tracker.
+  // Only a fully proved single delivery is stored; multi-ball gaps remain score intervals.
+  if(ep==='match_scorecard'&&!m.sources[ep].behind){
+   const nextSnapshot=snapshotOf(data),delta=diffSnapshots(m.deliverySnapshot,nextSnapshot);
+   if(nextSnapshot){m.deliverySnapshot=copy(nextSnapshot);if(delta.rows.length&&(!m.balls.length||m.derived)){
+    m.derived=true;m.ballSource='SH engine · verified single-delivery scorecard changes';
+    const map=new Map(m.balls.map(b=>[b._key,b]));for(const b of delta.rows){const key=String(b.inning)+'|'+b.over+'|'+b.ball+'|'+(b.wide?'wd':b.noball?'nb':'legal')+'|0';map.set(key,{...b,_key:key})}m.balls=[...map.values()].slice(-6000);
+   }}
   }
   const meta=m.mi||m.sc||data||{};m.ended=!!m.ended||!!(data?.matchEnded??data?.ended);m.started=!!m.started||!!(data?.matchStarted??data?.started);m.name=clean(meta.name||m.name);m.type=clean(meta.matchType||meta.type||m.type,30);
   const s=m.score.at(-1),card=(m.sc?.scorecard||[]).findLast(c=>String(c.inning).toLowerCase()===String(s?.inning).toLowerCase());
