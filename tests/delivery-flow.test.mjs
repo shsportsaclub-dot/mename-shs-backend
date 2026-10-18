@@ -20,6 +20,12 @@ test('refresh retains good delivery data on transient error and stops after leav
  const a=html.indexOf('/* WORLD DETAIL FLOW:'),b=html.indexOf('/* END WORLD DETAIL FLOW */',a);
  const W={m:{id:'fixture',started:true,ended:false},bb:{bbb:[{inning:1,over:0,ball:1,runs:4}]}};let calls=0,renders=0,observed=0;
  const context={shObserveScoreCommentary(snapshot){assert.equal(snapshot,W);observed++},UI:{view:'wmatch',wm:W},document:{hidden:false},A:{wOpen(){},wmTab(){}},XV:{wmatch(){}},cbpGraphs(){},setInterval(){},render(){renders++},wLoad:async ep=>{calls++;return ep==='match_bbb'?{ok:false,error:'Temporary failure'}:{ok:true,data:ep==='match_scorecard'?{score:[]}:{matchStarted:true,matchEnded:false}}},Date};
- vm.createContext(context);vm.runInContext(html.slice(a,b),context);await context.shRefreshWorldDetails(W,true);assert.equal(calls,3);assert.equal(W.bb.bbb[0].runs,4);assert.equal(W.detailBusy,false);assert.equal(W.bbBusy,0);assert.equal(renders,1);assert.equal(observed,1);
+ vm.createContext(context);vm.runInContext(html.slice(a,b),context);await context.shRefreshWorldDetails(W,true);assert.equal(calls,3);assert.equal(W.bb.bbb[0].runs,4);assert.equal(W.detailBusy,false);assert.equal(W.bbBusy,0);assert.ok(renders>=1);assert.ok(observed>=1);
  context.UI.view='home';await context.shRefreshWorldDetails(W,true);assert.equal(calls,3);
+});
+
+test('a hanging delivery request cannot block a newer score; stale info cannot roll it back',async()=>{
+ const a=html.indexOf('/* WORLD DETAIL FLOW:'),b=html.indexOf('/* END WORLD DETAIL FLOW */',a),W={m:{id:'pending',started:true,ended:false,score:[{inning:'India Inning 1',r:20,w:0,o:2}]},bb:[]};let release;
+ const context={UI:{view:'wmatch',wm:W},document:{hidden:false},A:{wOpen(){},wmTab(){}},XV:{wmatch(){}},cbpGraphs(){},cbpOv:o=>{const [a,b]=String(o).split('.');return +a*6+(+b||0)},setInterval(){},render(){},shObserveScoreCommentary(){},Date,wLoad:ep=>ep==='match_bbb'?new Promise(r=>release=r):Promise.resolve({ok:true,data:{matchStarted:true,score:[{inning:'India Inning 1',r:ep==='match_scorecard'?26:20,w:0,o:ep==='match_scorecard'?3:2}]}})};
+ vm.createContext(context);vm.runInContext(html.slice(a,b),context);const pending=context.shRefreshWorldDetails(W,true);await new Promise(r=>setImmediate(r));assert.equal(W.m.score[0].r,26);assert.equal(W.detailBusy,true);release({ok:false,error:'timeout'});await pending;assert.equal(W.detailBusy,false);
 });

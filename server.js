@@ -326,7 +326,7 @@ function enrichSquad(sq, info) {
 }
 async function enrichScorecard(sc, id) {
   if (!sc || !Array.isArray(sc.scorecard) || !sc.scorecard.length) return sc;
-  const info = await infoOf(id).catch(() => null), teams = (info && info.teams) || []; if (teams.length < 2) return sc;
+  const info = Array.isArray(sc.teams) && sc.teams.length >= 2 ? sc : await infoOf(id).catch(() => null), teams = (info && info.teams) || []; if (teams.length < 2) return sc;
   // the provider sometimes names an innings "Team A,Team B" or in lower case: give each innings its real batting team (never guessed when two teams fit)
   const res = sc.scorecard.map(inn => { const parts = String(inn.inning || '').replace(/\s+Inning.*$/i, '').split(','); const m = teams.filter(t => parts.some(p => sameTeamName(p, t))); return m.length === 1 ? m[0] : null; });
   const pend = res.map((t, i) => t ? -1 : i).filter(i => i >= 0), free = teams.filter(t => !res.includes(t));
@@ -350,7 +350,7 @@ async function enrichScorecard(sc, id) {
 }
 async function infoOf(id) {
   const h = cricCache.get('match_info' + id); if (h && h.d && h.d.data) return h.d.data;
-  const r = await fetch(`${CRIC_BASE}/match_info?apikey=${encodeURIComponent(CRIC_KEY)}&id=${encodeURIComponent(id)}`), j = await r.json();
+  const r = await fetch(`${CRIC_BASE}/match_info?apikey=${encodeURIComponent(CRIC_KEY)}&id=${encodeURIComponent(id)}`, { signal: AbortSignal.timeout(4000) }), j = await r.json();
   return j.status === 'success' ? j.data : null;
 }
 routes['GET /api/cric'] = async (req, body, ip) => {
@@ -358,8 +358,8 @@ routes['GET /api/cric'] = async (req, body, ip) => {
   if (!['match_scorecard', 'players_info', 'match_info', 'match_squad', 'match_bbb'].includes(ep) || !/^(sm)?[0-9a-z-]{1,40}$/i.test(id)) return [400, { ok: false, error: 'Bad request' }];
   if (SM && /^sm?\d+$/i.test(id)) {
     const k0 = 'sm' + ep + id, h0 = cricCache.get(k0);
-    if (h0 && Date.now() - h0.t < (ep === 'players_info' ? 864e5 : 30e3)) return [200, h0.d];
-    if (limited('cric:' + ip, 300, 36e5)) return [429, { ok: false, error: 'Too many requests' }];
+    if (h0 && Date.now() - h0.t < (ep === 'players_info' ? 864e5 : 15e3)) return [200, h0.d];
+    if (limited('cric:' + ip, 900, 36e5)) return [429, { ok: false, error: 'Too many requests' }];
       const num = id.replace(/^sm/i, '');
     try {
       const data = ep === 'match_scorecard' ? await SM.scorecard(num) : ep === 'match_info' ? await SM.matchInfo(num) : ep === 'match_squad' ? await SM.squad(num) : ep === 'match_bbb' ? await SM.bbb(num) : await SM.player(num);
@@ -367,14 +367,14 @@ routes['GET /api/cric'] = async (req, body, ip) => {
     } catch (e) { return [502, { ok: false, error: String(e.message || 'Sportmonks error').slice(0, 160) }]; }
   }
   if (!CRIC_KEY) return [503, { ok: false, error: 'CRIC_API_KEY is not set on the server' }];
-  const k = ep + id, hit = cricCache.get(k), ttl = ep === 'players_info' ? 864e5 : 45e3;
+  const k = ep + id, hit = cricCache.get(k), ttl = ep === 'players_info' ? 864e5 : 15e3;
   if (hit && Date.now() - hit.t < ttl) return [200, hit.d];
-  if (limited('cric:' + ip, 300, 36e5)) return [429, { ok: false, error: 'Too many requests' }];
+  if (limited('cric:' + ip, 900, 36e5)) return [429, { ok: false, error: 'Too many requests' }];
   if (ep === 'match_bbb') {   // a finished match: Cricsheet has the full ball by ball
     try { const rr = recentOf(await infoOf(id)); if (rr) { const bbb = buildBbb(rr.raw); if (bbb.length) { const d = { ok: true, data: { bbb, source: RECENT_SOURCE } }; cricCache.set(k, { t: Date.now(), d }); return [200, d]; } } } catch {}
   }
   try {
-    const r = await fetch(`${CRIC_BASE}/${ep}?apikey=${encodeURIComponent(CRIC_KEY)}&id=${encodeURIComponent(id)}`);
+    const r = await fetch(`${CRIC_BASE}/${ep}?apikey=${encodeURIComponent(CRIC_KEY)}&id=${encodeURIComponent(id)}`, { signal: AbortSignal.timeout(10000) });
     const j = await r.json();
     if (j.status !== 'success') return [502, { ok: false, error: j.reason || 'Cricket API error' }];
     let data = j.data;
@@ -1017,3 +1017,4 @@ http.createServer(async (req, res) => {
   try { const [code, obj] = await h(req, body, ip); out(code, obj); }
   catch (e) { console.error(e); out(500, { ok: false, error: 'Server error' }); }
 }).listen(PORT, () => console.log(`Scoring Heroes API on :${PORT}  (SMS: ${SMS_PROVIDER}, live feed: ${SM ? 'sportmonks' : CRIC_KEY ? 'cricketdata' : 'off'})`));
+

@@ -16,7 +16,7 @@ function createSHCommentaryEngine(options={}){
  const batter=p=>p.name+(p.r==null?'':' '+p.r)+(p.b==null?'':' ('+p.b+')');
  function observe(input){
   const s=normalize(input);if(!s)return null;trim();const prior=records[s.matchId],old=prior?.last,changedInning=old&&old.inning.toLowerCase()!==s.inning.toLowerCase();
-  if(old&&same(old,s))return null;
+  if(old&&same(old,s)){if(!Array.isArray(prior.points)||!prior.points.length){prior.points=[{at:clock(),inning:s.inning,team:s.team,r:s.r,w:s.w,o:s.o,balls:s.balls,correction:false}];save()}return null;}
   let text='',kind='update';
   if(!old||changedInning){kind='summary';text=(changedInning?'New innings observed. ':'')+score(s)+'.';const active=s.batters.filter(p=>p.active);if(active.length)text+=' At the crease: '+active.map(batter).join('; ')+'.';if(s.bowler)text+=' Bowler: '+s.bowler+'.';else if(s.bowlers.length)text+=' Bowling figures: '+s.bowlers.map(p=>p.name+' '+(p.w??'—')+'/'+(p.r??'—')+(p.o?' ('+p.o+' ov)':'')).join('; ')+'.';}
   else {
@@ -27,7 +27,7 @@ function createSHCommentaryEngine(options={}){
     const parts=[];
     if(dr||dw||db>0)parts.push(score(s)+'. '+dr+' run'+(dr===1?'':'s')+' added since the previous update'+(db>0?' across '+db+' legal ball'+(db===1?'':'s'):'')+'.');
     if(dw>0){kind='wicket-update';parts.push(dw+' wicket'+(dw===1?'':'s')+' added since the previous update.');}
-    for(const p of s.batters){const q=old.batters.find(q=>q.id===p.id);if(!q)continue;
+    for(const p of s.batters){const q=old.batters.find(q=>q.id===p.id);if(!q){if(p.active)parts.push('Scorecard now lists '+batter(p)+' at the crease.');continue;}
      if(p.r!=null&&q.r!=null&&p.r>q.r)parts.push(p.name+' adds '+(p.r-q.r)+' run'+(p.r-q.r===1?'':'s')+'; now '+batter(p)+'.');
      if(p.fours!=null&&q.fours!=null&&p.fours>q.fours)parts.push(p.name+': '+(p.fours-q.fours)+' additional four'+(p.fours-q.fours===1?'':'s')+' recorded.');
      if(p.sixes!=null&&q.sixes!=null&&p.sixes>q.sixes)parts.push(p.name+': '+(p.sixes-q.sixes)+' additional six'+(p.sixes-q.sixes===1?'':'es')+' recorded.');
@@ -38,11 +38,14 @@ function createSHCommentaryEngine(options={}){
    }
   }
   if(s.ended&&(!old?.ended||old.result!==s.result)&&s.result)text+=(text?' ':'')+'Match result: '+s.result+'.';
-  const at=clock(),entries=Array.isArray(prior?.entries)?prior.entries.slice(-29):[];let entry=null;
+  const at=clock(),entries=Array.isArray(prior?.entries)?prior.entries.slice(-119):[];let entry=null;
+  const points=Array.isArray(prior?.points)?prior.points.slice(-359):[],last=points[points.length-1];
+  if(!last||last.inning!==s.inning||last.r!==s.r||last.w!==s.w||last.o!==s.o)points.push({at,inning:s.inning,team:s.team,r:s.r,w:s.w,o:s.o,balls:s.balls,correction:kind==='correction'});
   if(text){entry={at,inning:s.inning,kind,text:clean(text,2000),source:'SH score-update commentary'};entries.push(entry)}
-  records[s.matchId]={at,last:s,entries};save();return entry;
+  records[s.matchId]={at,last:s,entries,points};save();return entry;
  }
  function entries(matchId){trim();return (records[clean(matchId,120)]?.entries||[]).filter(e=>e&&typeof e.text==='string'&&Number.isFinite(e.at)).map(e=>({...e,text:clean(e.text,2000),inning:clean(e.inning),kind:clean(e.kind,30)}));}
- return {observe,entries};
+ function points(matchId){trim();return (records[clean(matchId,120)]?.points||[]).filter(p=>p&&Number.isFinite(p.at)&&Number.isFinite(p.r)&&Number.isFinite(p.w)&&typeof p.inning==='string').map(p=>({...p,inning:clean(p.inning),team:clean(p.team)}))}
+ return {observe,entries,points};
 }
 if(typeof module!=='undefined'&&module.exports)module.exports={createSHCommentaryEngine};

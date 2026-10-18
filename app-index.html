@@ -1493,11 +1493,13 @@ function storiesRow(){
 
 /* ---------------- World match centre: scorecard + player profile (our style) ---------------- */
 async function wLoad(ep,id){
-  try{
-    if(apiBase()){const r=await fetch(apiBase()+'/cric?ep='+ep+'&id='+encodeURIComponent(id));return await r.json()}
-    const r=await fetch('https://api.cricapi.com/v1/'+ep+'?apikey='+encodeURIComponent(S.settings.cricKey)+'&id='+encodeURIComponent(id));const j=await r.json();
-    return j.status==='success'?{ok:true,data:j.data}:{ok:false,error:j.reason||'Cricket API error'}
-  }catch(e){return{ok:false,error:'Cannot reach the cricket API'}}}
+ const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),12000);
+ try{
+  const url=apiBase()?apiBase()+'/cric?ep='+ep+'&id='+encodeURIComponent(id):'https://api.cricapi.com/v1/'+ep+'?apikey='+encodeURIComponent(S.settings.cricKey)+'&id='+encodeURIComponent(id);
+  const r=await fetch(url,{signal:controller.signal,cache:'no-store'}),j=await r.json();
+  return apiBase()?j:j.status==='success'?{ok:true,data:j.data}:{ok:false,error:j.reason||'Cricket API error'};
+ }catch(e){return {ok:false,error:e.name==='AbortError'?'Match detail request timed out; retrying automatically':'Cannot reach the cricket API'}}finally{clearTimeout(timer)}
+}
 const pl=(n,id)=>id?`<span class="plink" style="cursor:pointer" data-a="wPlayer" data-id="${esc(id)}" data-name="${esc(n)}">${esc(n)}</span>`:esc(n);
 function wShow(){UI.modal={t:'html',html:UI.wp?wPlayerHTML():wMatchHTML()};renderModal()}
 function wMatchHTML(){
@@ -4846,7 +4848,7 @@ function shAvailableBalls(W){const d=W.bb;return Array.isArray(d)?d:Array.isArra
 function shWorldLiveBalls(W){
  if(!W.m.started)return '';
  const L=cbpBbbList(W.bb||[]),inning=L.find(x=>x.inning!=null)?.inning,latest=(inning==null?L:L.filter(x=>x.inning===inning)).slice(0,8);
- return '<div class="cbp-lb">Recent balls & commentary</div>'+(!latest.length?`<div class="cbp-cd cbp-note">${W.bbBusy?'Loading delivery records…':W.bbErr?'Delivery records are currently unavailable for this match.':'No delivery records have arrived yet.'}</div>`:`<div class="cbp-cd"><div style="display:flex;flex-wrap:wrap;gap:6px;padding:12px">${latest.slice().reverse().map(x=>`<span class="cm-r ${x.cls}" title="${esc(x.ov)}">${esc(String(x.run===''?'•':x.run))}</span>`).join('')}</div>${latest.map(x=>`<div class="cm-i"><span class="cm-o">${esc(x.ov)}</span><span>${esc(x.txt)}</span></div>`).join('')}</div>`)+`<div class="mu sm" style="padding:0 4px 8px">${W.detailAt?'Details checked '+esc(new Date(W.detailAt).toLocaleTimeString()):'Waiting for match details'}${W.m.ended?'':' · refreshes every minute while this match is open'}${W.bb?.source?'<br>Source: '+esc(W.bb.source):''}</div>`;
+ return '<div class="cbp-lb">Recent balls & commentary</div>'+(!latest.length?`<div class="cbp-cd cbp-note">${W.bbBusy?'Loading delivery records…':W.bbErr?'Delivery records are currently unavailable for this match.':'No delivery records have arrived yet.'}</div>`:`<div class="cbp-cd"><div style="display:flex;flex-wrap:wrap;gap:6px;padding:12px">${latest.slice().reverse().map(x=>`<span class="cm-r ${x.cls}" title="${esc(x.ov)}">${esc(String(x.run===''?'•':x.run))}</span>`).join('')}</div>${latest.map(x=>`<div class="cm-i"><span class="cm-o">${esc(x.ov)}</span><span>${esc(x.txt)}</span></div>`).join('')}</div>`)+`<div class="mu sm" style="padding:0 4px 8px">${W.detailAt?'Details checked '+esc(new Date(W.detailAt).toLocaleTimeString()):'Waiting for match details'}${W.m.ended?'':' · checks every 20 seconds while this match is open'}${W.bb?.source?'<br>Source: '+esc(W.bb.source):''}</div>`;
 }
 function shWorldRunProgress(W){const data=shWorldOverData(W),groups=new Map();for(const row of data.rows){if(!groups.has(row.inn))groups.set(row.inn,[]);groups.get(row.inn).push(row)}
  const series=[...groups].map(([id,rows])=>{let r=0;return {id,rows:rows.map(x=>({x:x.over+1,r:r+=x.r,w:x.w})),completeStart:rows[0]?.over===0}}).filter(s=>s.completeStart&&!data.skipped&&s.rows.every((r,i)=>r.x===i+1));
@@ -4856,25 +4858,34 @@ function shWorldRunProgress(W){const data=shWorldOverData(W),groups=new Map();fo
  return `<div class="cbp-lb">Runs progression · recorded overs</div><div class="cbp-cd" style="padding:10px"><svg viewBox="0 0 350 185" role="img" aria-label="Cumulative recorded runs by innings; circles mark wickets" style="width:100%;display:block"><path d="M36 20V154H325" fill="none" stroke="currentColor" opacity=".5"/><text x="4" y="27" fill="currentColor" font-size="10">${maxY}</text><text x="20" y="157" fill="currentColor" font-size="10">0</text><text x="280" y="177" fill="currentColor" font-size="10">${maxX} overs</text>${series.map((s,i)=>`<polyline points="36,154 ${s.rows.map(p=>X(p.x)+','+Y(p.r)).join(' ')}" fill="none" stroke="${colors[i%4]}" stroke-width="2.5"/>${s.rows.filter(p=>p.w).map(p=>`<circle cx="${X(p.x)}" cy="${Y(p.r)}" r="4" fill="${colors[i%4]}"><title>${esc(name(s.id))}: ${p.r} runs, ${p.w} wicket(s) in this over</title></circle>`).join('')}`).join('')}</svg><div class="mu sm">${series.map((s,i)=>`<span style="display:inline-block;margin:4px 12px 4px 0;color:${colors[i%4]}">● ${esc(name(s.id))}</span>`).join('')}<br>Wicket markers use recorded deliveries. ${data.skipped?'Incomplete deliveries were excluded.':''}${W.bb?.source?'<br>Source: '+esc(W.bb.source):''}</div></div>`;
 }
 async function shRefreshWorldDetails(W,force=false){
- if(!W||UI.wm!==W||UI.view!=='wmatch'||W.detailBusy||(!force&&(document.hidden||!W.m.started||W.m.ended||Date.now()-(W.detailTry||0)<60000)))return;
- W.detailBusy=true;W.detailTry=Date.now();W.bbBusy=1;const id=W.m.id;
+ if(!W||UI.wm!==W||UI.view!=='wmatch'||W.detailBusy||(!force&&(document.hidden||!W.m.started||W.m.ended||Date.now()-(W.detailTry||0)<20000)))return;
+ W.detailBusy=true;W.detailTry=Date.now();W.bbBusy=1;const id=W.m.id;let cardScore=null;
+ const active=()=>UI.wm===W&&UI.view==='wmatch';
+ const applyScore=(score,info=false)=>{if(!Array.isArray(score)||!score.length)return;
+  // Info and scorecard caches may differ. An older info response must not roll back this batch's scorecard.
+  const card=cardScore?.at(-1),candidate=score.at(-1);
+  if(info&&cardScore&&score.length<cardScore.length)return;
+  if(info&&card&&candidate?.inning===card.inning&&(cbpOv(candidate.o)<cbpOv(card.o)||cbpOv(candidate.o)===cbpOv(card.o)&&(candidate.r<card.r||candidate.w<card.w)))return;
+  W.m.score=score;
+ };
  try{
-  const result=await Promise.allSettled(['match_scorecard','match_bbb','match_info'].map(ep=>wLoad(ep,id)));
-  if(UI.wm!==W||UI.wm.m.id!==id)return;
-  result.forEach((res,k)=>{const j=res.status==='fulfilled'?res.value:{ok:false,error:'Connection interrupted'};
-   if(j.ok){if(k===0){W.sc=j.data;W.err='';if(Array.isArray(j.data?.score))W.m.score=j.data.score;if(j.data?.matchEnded!=null)W.m.ended=!!j.data.matchEnded;if(j.data?.status)W.m.status=j.data.status}
-    else if(k===1){W.bb=j.data??[];W.bbErr=''}else {W.mi=j.data||{};W.miErr='';if(j.data?.matchStarted!=null)W.m.started=!!j.data.matchStarted;if(j.data?.matchEnded!=null)W.m.ended=!!j.data.matchEnded;if(Array.isArray(j.data?.score))W.m.score=j.data.score;if(j.data?.status)W.m.status=j.data.status}}
-   else if(k===1){W.bbErr=j.error||'Delivery data unavailable'}
-  });W.detailAt=Date.now();shObserveScoreCommentary(W);
- }finally{W.bbBusy=0;W.detailBusy=false;if(UI.wm===W&&UI.view==='wmatch')render()}
+  await Promise.allSettled(['match_scorecard','match_bbb','match_info'].map(async(ep,k)=>{
+   let j;try{j=await wLoad(ep,id)}catch{j={ok:false,error:'Connection interrupted'}}if(!active())return;
+   if(j.ok){if(k===0){W.sc=j.data;W.err='';cardScore=j.data?.score;applyScore(cardScore);W.scoreAt=Date.now();if(j.data?.matchEnded!=null)W.m.ended=!!j.data.matchEnded;if(j.data?.status)W.m.status=j.data.status}
+    else if(k===1){W.bb=j.data??[];W.bbErr=''}else{W.mi=j.data||{};W.miErr='';if(j.data?.matchStarted!=null)W.m.started=!!j.data.matchStarted;if(j.data?.matchEnded!=null)W.m.ended=!!j.data.matchEnded;applyScore(j.data?.score,true);if(j.data?.status)W.m.status=j.data.status}}
+   else if(k===0)W.err=j.error||'Scorecard check failed';else if(k===1)W.bbErr=j.error||'Delivery data unavailable';else W.miErr=j.error||'Match info check failed';
+   // Each successful result is visible immediately, independently of the delivery request.
+   if(j.ok){shObserveScoreCommentary(W);render()}
+  }));W.detailAt=Date.now();shObserveScoreCommentary(W);
+ }finally{W.bbBusy=0;W.detailBusy=false;if(active())render()}
 }
 {
  A.shWorldRefresh=function(){if(UI.wm)shRefreshWorldDetails(UI.wm,true)};
  const originalOpen=A.wOpen;A.wOpen=function(d){originalOpen.apply(this,arguments);if(UI.wm?.m.started)shRefreshWorldDetails(UI.wm,true)};
- const originalTab=A.wmTab;A.wmTab=function(d){originalTab.apply(this,arguments);if(d.v==='live'&&UI.wm?.m.started)shRefreshWorldDetails(UI.wm,false)};
+ const originalTab=A.wmTab;A.wmTab=function(d){originalTab.apply(this,arguments);if(['live','cm','ov','gr'].includes(d.v)&&UI.wm?.m.started)shRefreshWorldDetails(UI.wm,false)};
  const originalWorld=XV.wmatch;XV.wmatch=function(){const W=UI.wm;let html=originalWorld.apply(this,arguments);const extra=(W&&(W.tab||'live')==='live'?shWorldLiveBalls(W):'')+(W?'<button class="btn sm ghost" data-a="shWorldRefresh">Refresh match details</button>':'');const end=html.lastIndexOf('</div>');return end<0?html+extra:html.slice(0,end)+extra+html.slice(end)};
  const graphs=cbpGraphs;cbpGraphs=function(W){return shWorldRunProgress(W)+graphs(W)};
- setInterval(()=>{if(UI.view==='wmatch')shRefreshWorldDetails(UI.wm,false)},15000);
+ setInterval(()=>{if(UI.view==='wmatch')shRefreshWorldDetails(UI.wm,false)},5000);
 }
 /* END WORLD DETAIL FLOW */
 
@@ -4896,7 +4907,7 @@ function createSHCommentaryEngine(options={}){
  const batter=p=>p.name+(p.r==null?'':' '+p.r)+(p.b==null?'':' ('+p.b+')');
  function observe(input){
   const s=normalize(input);if(!s)return null;trim();const prior=records[s.matchId],old=prior?.last,changedInning=old&&old.inning.toLowerCase()!==s.inning.toLowerCase();
-  if(old&&same(old,s))return null;
+  if(old&&same(old,s)){if(!Array.isArray(prior.points)||!prior.points.length){prior.points=[{at:clock(),inning:s.inning,team:s.team,r:s.r,w:s.w,o:s.o,balls:s.balls,correction:false}];save()}return null;}
   let text='',kind='update';
   if(!old||changedInning){kind='summary';text=(changedInning?'New innings observed. ':'')+score(s)+'.';const active=s.batters.filter(p=>p.active);if(active.length)text+=' At the crease: '+active.map(batter).join('; ')+'.';if(s.bowler)text+=' Bowler: '+s.bowler+'.';else if(s.bowlers.length)text+=' Bowling figures: '+s.bowlers.map(p=>p.name+' '+(p.w??'—')+'/'+(p.r??'—')+(p.o?' ('+p.o+' ov)':'')).join('; ')+'.';}
   else {
@@ -4907,7 +4918,7 @@ function createSHCommentaryEngine(options={}){
     const parts=[];
     if(dr||dw||db>0)parts.push(score(s)+'. '+dr+' run'+(dr===1?'':'s')+' added since the previous update'+(db>0?' across '+db+' legal ball'+(db===1?'':'s'):'')+'.');
     if(dw>0){kind='wicket-update';parts.push(dw+' wicket'+(dw===1?'':'s')+' added since the previous update.');}
-    for(const p of s.batters){const q=old.batters.find(q=>q.id===p.id);if(!q)continue;
+    for(const p of s.batters){const q=old.batters.find(q=>q.id===p.id);if(!q){if(p.active)parts.push('Scorecard now lists '+batter(p)+' at the crease.');continue;}
      if(p.r!=null&&q.r!=null&&p.r>q.r)parts.push(p.name+' adds '+(p.r-q.r)+' run'+(p.r-q.r===1?'':'s')+'; now '+batter(p)+'.');
      if(p.fours!=null&&q.fours!=null&&p.fours>q.fours)parts.push(p.name+': '+(p.fours-q.fours)+' additional four'+(p.fours-q.fours===1?'':'s')+' recorded.');
      if(p.sixes!=null&&q.sixes!=null&&p.sixes>q.sixes)parts.push(p.name+': '+(p.sixes-q.sixes)+' additional six'+(p.sixes-q.sixes===1?'':'es')+' recorded.');
@@ -4918,12 +4929,15 @@ function createSHCommentaryEngine(options={}){
    }
   }
   if(s.ended&&(!old?.ended||old.result!==s.result)&&s.result)text+=(text?' ':'')+'Match result: '+s.result+'.';
-  const at=clock(),entries=Array.isArray(prior?.entries)?prior.entries.slice(-29):[];let entry=null;
+  const at=clock(),entries=Array.isArray(prior?.entries)?prior.entries.slice(-119):[];let entry=null;
+  const points=Array.isArray(prior?.points)?prior.points.slice(-359):[],last=points[points.length-1];
+  if(!last||last.inning!==s.inning||last.r!==s.r||last.w!==s.w||last.o!==s.o)points.push({at,inning:s.inning,team:s.team,r:s.r,w:s.w,o:s.o,balls:s.balls,correction:kind==='correction'});
   if(text){entry={at,inning:s.inning,kind,text:clean(text,2000),source:'SH score-update commentary'};entries.push(entry)}
-  records[s.matchId]={at,last:s,entries};save();return entry;
+  records[s.matchId]={at,last:s,entries,points};save();return entry;
  }
  function entries(matchId){trim();return (records[clean(matchId,120)]?.entries||[]).filter(e=>e&&typeof e.text==='string'&&Number.isFinite(e.at)).map(e=>({...e,text:clean(e.text,2000),inning:clean(e.inning),kind:clean(e.kind,30)}));}
- return {observe,entries};
+ function points(matchId){trim();return (records[clean(matchId,120)]?.points||[]).filter(p=>p&&Number.isFinite(p.at)&&Number.isFinite(p.r)&&Number.isFinite(p.w)&&typeof p.inning==='string').map(p=>({...p,inning:clean(p.inning),team:clean(p.team)}))}
+ return {observe,entries,points};
 }
 
 /* SH COMMENTARY INTEGRATION: local observations never become synthetic ball records. */
@@ -4942,14 +4956,43 @@ function shCommentaryObservation(W){
 }
 function shObserveScoreCommentary(W){const snapshot=shCommentaryObservation(W);return snapshot?shScoreCommentary.observe(snapshot):null}
 function shScoreCommentaryHTML(W){
- shObserveScoreCommentary(W);const entries=shScoreCommentary.entries(W.m.id).slice(-30).reverse();
- return `<section class="sh-own-commentary" aria-label="Scoring Heroes score-update commentary"><div class="cbp-lb">SH score-update commentary</div><div class="cbp-cd"><div class="cbp-note mu sm">Generated on this device from available scores and scorecard changes. An update can cover several balls; this is not ball-by-ball commentary.</div>${entries.length?entries.map(e=>`<div class="cm-i" style="align-items:flex-start"><span class="cm-o" style="flex:0 0 58px;font-size:10px">${esc(new Date(e.at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}))}<br>Observed</span><div style="min-width:0;overflow-wrap:anywhere"><b style="font-size:11px;color:var(--mu)">${esc(shInningName(e.inning))}${e.kind==='correction'?' · CORRECTION':''}</b><p style="margin:4px 0;font-size:13px;line-height:1.5">${esc(e.text)}</p></div></div>`).join(''):'<div class="cbp-note">Waiting for the first available score update.</div>'}</div>${W.sc?.factSrc?`<p class="mu sm">Scorecard source: ${esc(W.sc.factSrc)}</p>`:''}</section>`;
+ shObserveScoreCommentary(W);const entries=shScoreCommentary.entries(W.m.id).slice(-120).reverse();
+ return `<section class="sh-own-commentary" aria-label="Scoring Heroes score-update commentary"><div class="cbp-lb">SH score-update commentary</div><div class="cbp-cd"><div class="cbp-note mu sm">Own commentary from observed scores. Checks every 20 seconds while this match is open. Several balls may occur between updates; individual deliveries are not supplied.</div>${shScoreStatusHTML(W)}${entries.length?entries.map(e=>`<div class="cm-i" style="align-items:flex-start"><span class="cm-o" style="flex:0 0 58px;font-size:10px">${esc(new Date(e.at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}))}<br>Observed</span><div style="min-width:0;overflow-wrap:anywhere"><b style="font-size:11px;color:var(--mu)">${esc(shInningName(e.inning))}${e.kind==='correction'?' · CORRECTION':e.kind==='summary'?' · FIRST OBSERVED SCORE':''}</b><p style="margin:4px 0;font-size:13px;line-height:1.5">${esc(e.text)}</p></div></div>`).join(''):'<div class="cbp-note">Waiting for the first available score update.</div>'}</div>${W.sc?.factSrc?`<p class="mu sm">Scorecard source: ${esc(W.sc.factSrc)}</p>`:''}</section>`;
 }
 {
  const feed=cbpBbb;cbpBbb=function(W){shObserveScoreCommentary(W);return shAvailableBalls(W).length?feed(W):shScoreCommentaryHTML(W)};
  const live=shWorldLiveBalls;shWorldLiveBalls=function(W){shObserveScoreCommentary(W);return shAvailableBalls(W).length?live(W):shScoreCommentaryHTML(W)};
 }
 /* END SH COMMENTARY INTEGRATION */
+
+/* SH OBSERVED PROGRESS: score intervals are kept distinct from delivery records. */
+function shScoreStatusHTML(W){const last=shScoreCommentary.points(W.m.id).at(-1);return `<p class="mu sm" style="padding:8px 12px;line-height:1.5">${W.detailBusy?'Checking match details…':W.m.ended?'Match finished.':'Auto-check: every 20 seconds while open.'}${W.scoreAt?'<br>Scorecard received '+esc(new Date(W.scoreAt).toLocaleTimeString()):''}${last?'<br>Last observed score change '+esc(new Date(last.at).toLocaleTimeString()):''}${W.err?'<br>'+esc(W.err)+'; previous scores retained.':''}</p>`}
+function shObservedIntervals(W){shObserveScoreCommentary(W);const pts=shScoreCommentary.points(W.m.id),rows=[];for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i];if(a.inning!==b.inning)continue;const correction=b.correction||b.r<a.r||b.w<a.w||a.balls!=null&&b.balls!=null&&b.balls<a.balls;rows.push({a,b,correction,r:b.r-a.r,w:b.w-a.w})}return {pts,rows}}
+function shObservedOvers(W){
+ const {pts,rows}=shObservedIntervals(W),first=pts[0];
+ if(!W.m.started)return '<div class="cbp-cd cbp-note">Over cards begin after play starts.</div>';
+ return `<div class="cbp-lb">Observed score intervals</div><div class="cbp-cd cbp-note"><b>${first?'Tracking from '+esc(first.o)+' overs · '+esc(first.r)+'/'+esc(first.w):'Waiting for a score'}</b>These cards record score changes seen on this device. They may span part of an over or several overs. Full over totals and ball chips require delivery records; earlier overs cannot be reconstructed from one total.</div>${rows.length?rows.slice(-120).reverse().map(({a,b,correction,r,w})=>`<article class="cbp-cd sh-observed-over"><div class="cbp-kv"><span>${esc(shInningName(b.inning))}<br>${esc(a.o)} → ${esc(b.o)} ov</span><b>${correction?'Score correction':esc(r)+' runs · '+esc(w)+' wickets'}<br><small>${esc(a.r)}/${esc(a.w)} → ${esc(b.r)}/${esc(b.w)}</small></b></div><p class="mu sm" style="padding:0 12px 10px">Observed ${esc(new Date(b.at).toLocaleTimeString())}${b.balls!=null&&a.balls!=null&&!correction?' · '+esc(b.balls-a.balls)+' legal balls between scores':''}</p></article>`).join(''):`<div class="cbp-cd cbp-note">First score captured${first?': '+esc(first.r)+'/'+esc(first.w)+' ('+esc(first.o)+' ov)':''}. The next score change creates an interval card automatically.</div>`}${shScoreStatusHTML(W)}`;
+}
+function shObservedRunGraph(W){
+ const {pts}=shObservedIntervals(W),valid=pts.filter(p=>p.balls!=null&&Number.isFinite(p.balls));
+ if(!W.m.started)return '<div class="cbp-cd cbp-note">Match progression begins after play starts.</div>';
+ if(!valid.length)return '<div class="cbp-cd cbp-note">Waiting for a score with a known over position.</div>';
+ const minX=Math.min(...valid.map(p=>p.balls)),maxX=Math.max(minX+6,...valid.map(p=>p.balls)),maxY=Math.max(10,...valid.map(p=>p.r)),X=b=>38+(b-minX)/(maxX-minX)*275,Y=r=>151-r/maxY*124,ov=b=>Math.floor(b/6)+'.'+b%6,colors=['#3f7bff','#e11d2e','#ffc83d','#2fd1a0'],names=[...new Set(valid.map(p=>p.inning))];
+ // Corrections break the connecting line. Wicket deltas locate an interval, never an invented delivery.
+ let previous=null;const lines=[],dots=[];for(const p of valid){const color=colors[names.indexOf(p.inning)%colors.length],same=previous&&previous.inning===p.inning,join=same&&!p.correction&&p.balls>=previous.balls&&p.r>=previous.r&&p.w>=previous.w,wicket=join?p.w-previous.w:0;
+  if(join)lines.push(`<path d="M${X(previous.balls)},${Y(previous.r)}L${X(p.balls)},${Y(p.r)}" fill="none" stroke="${color}" stroke-width="2" stroke-dasharray="4 4"/>`);
+  dots.push(`<circle cx="${X(p.balls)}" cy="${Y(p.r)}" r="${wicket?5:3.5}" fill="${wicket?'#e11d2e':color}"><title>${esc(shInningName(p.inning))} ${p.r}/${p.w} at ${esc(p.o)} overs${wicket?'; '+wicket+' wicket(s) added since previous observation':''}${p.correction?'; corrected score':''}</title></circle>`);previous=p;
+ }
+ return `<div class="cbp-lb">Runs progression · observed scores</div><div class="cbp-cd" style="padding:10px"><svg class="sh-observed-graph" viewBox="0 0 350 188" role="img" aria-label="Observed scores by over, partial coverage" style="width:100%;display:block"><path d="M38 20V151H325" fill="none" stroke="currentColor" opacity=".5"/><text x="4" y="26" fill="currentColor" font-size="10">${maxY}</text><text x="18" y="154" fill="currentColor" font-size="10">0</text><text x="38" y="176" fill="currentColor" font-size="10">${ov(minX)} ov</text><text x="275" y="176" fill="currentColor" font-size="10">${ov(maxX)} ov</text>${lines.join('')}${dots.join('')}</svg><p class="mu sm">${names.map((n,i)=>`<span style="color:${colors[i%4]}">● ${esc(shInningName(n))}</span>`).join(' · ')}<br>Each dot is an observed score, not a ball. Dashed links connect observations. Red dots indicate wickets added within the observed interval, not their exact delivery. Tracking starts at ${esc(valid[0].o)} overs; earlier history is unavailable.${valid.length===1?'<br>One score captured. The next update adds another point.':''}</p></div>`;
+}
+function shScorecardPerformance(W){const L=W.sc?.scorecard||[];return L.map(inn=>{const team=shInningName(inn.inning),bat=inn.batting||[],bow=inn.bowling||[],opposition=shWorldTeams(W).map(shTeamName).find(n=>n.toLowerCase()!==team.toLowerCase()),max=Math.max(1,...bat.map(b=>+b.r||0)),bm=Math.max(1,...bow.map(b=>+b.r||0));return `<section class="sh-player-performance"><div class="cbp-lb">${esc(team)} · Batter performance</div><div class="cbp-cd sh-chart">${bat.map(b=>{const r=+b.r||0,f=(+b['4s']||0)*4,s=(+b['6s']||0)*6;return shChartRow(b.batsman?.name||'Batter',[['other',Math.max(0,r-f-s)],['four',f],['six',s]],r,max)}).join('')}<p class="sh-chart-key">Blue: other runs · Gold: fours · Red: sixes</p></div><div class="cbp-lb">${esc(opposition||'Opposition')} · Bowler performance</div><div class="cbp-cd sh-chart">${bow.map(b=>shChartRow(b.bowler?.name||'Bowler',[['other',+b.r||0]],`${b.w??'—'}/${b.r??'—'}`,bm)).join('')}<p class="sh-chart-key">Bar: runs conceded · Label: wickets/runs</p></div></section>`}).join('')}
+{
+ const realOvers=cbpOverTab;cbpOverTab=cbpOvers=function(W){return shWorldOverData(W).rows.length?realOvers(W):shObservedOvers(W)};
+ cbpGraphs=function(W){shObserveScoreCommentary(W);return (shWorldRunProgress(W)||shObservedRunGraph(W))+shScoreStatusHTML(W)};
+ const card=cbpCard;cbpCard=function(W){return card(W)+shScorecardPerformance(W)};
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden&&UI.view==='wmatch')shRefreshWorldDetails(UI.wm,false)});
+}
+/* END SH OBSERVED PROGRESS */
 
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
