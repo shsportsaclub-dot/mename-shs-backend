@@ -98,7 +98,8 @@ export function createSportmonks({ token, base = BASE, fetchImpl = fetch }) {
     for (const inc of attempts) { try { f = await get('fixtures/' + id, { include: inc }); break; } catch (e) { last = e; } }
     if (!f) throw last || new Error('No ball by ball');
     return arr(f.balls).map(b => { const s = obj(b.score) || {}, runs = s.runs != null ? s.runs : b.runs;
-      return { over: b.over != null ? b.over : (b.ball != null ? Math.floor(+b.ball) : undefined), ball: b.ball != null ? Math.round((+b.ball % 1) * 10) : undefined, runs: runs != null ? runs + (+s.bye || 0) + (+s.leg_bye || 0) + (+s.noball_runs || 0) : undefined, wicket: !!(s.is_wicket || s.out), commentary: [s.name, nm(b.bowler) && nm(b.batsman) ? nm(b.bowler) + ' to ' + nm(b.batsman) : ''].filter(Boolean).join(': '), batsman: nm(b.batsman), bowler: nm(b.bowler) }; });
+      const inn = b.inning ?? b.innings ?? b.scoreboard; const inning = typeof inn === 'string' && /^S[1-4]$/i.test(inn) ? Number(inn.slice(1)) : inn;
+      return { ...(inning != null ? { inning } : {}), team_id: b.team_id, wide: !!s.wide, noball: !!s.noball, over: b.over != null ? b.over : (b.ball != null ? Math.floor(+b.ball) : undefined), ball: b.ball != null ? Math.round((+b.ball % 1) * 10) : undefined, runs: runs != null ? runs + (+s.bye || 0) + (+s.leg_bye || 0) + (+s.noball_runs || 0) : undefined, wicket: !!(s.is_wicket || s.out), commentary: [s.name, nm(b.bowler) && nm(b.batsman) ? nm(b.bowler) + ' to ' + nm(b.batsman) : ''].filter(Boolean).join(': '), batsman: nm(b.batsman), bowler: nm(b.bowler) }; });
   }
   async function player(id) {
     const p = await get('players/' + id, { include: 'country' });

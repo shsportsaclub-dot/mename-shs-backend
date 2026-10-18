@@ -357,19 +357,19 @@ routes['GET /api/cric'] = async (req, body, ip) => {
   const ep = String(body.ep || ''), id = String(body.id || '');
   if (!['match_scorecard', 'players_info', 'match_info', 'match_squad', 'match_bbb'].includes(ep) || !/^(sm)?[0-9a-z-]{1,40}$/i.test(id)) return [400, { ok: false, error: 'Bad request' }];
   if (SM && /^sm?\d+$/i.test(id)) {
-    if (limited('cric:' + ip, 120, 36e5)) return [429, { ok: false, error: 'Too many requests' }];
     const k0 = 'sm' + ep + id, h0 = cricCache.get(k0);
     if (h0 && Date.now() - h0.t < (ep === 'players_info' ? 864e5 : 30e3)) return [200, h0.d];
-    const num = id.replace(/^sm/i, '');
+    if (limited('cric:' + ip, 300, 36e5)) return [429, { ok: false, error: 'Too many requests' }];
+      const num = id.replace(/^sm/i, '');
     try {
       const data = ep === 'match_scorecard' ? await SM.scorecard(num) : ep === 'match_info' ? await SM.matchInfo(num) : ep === 'match_squad' ? await SM.squad(num) : ep === 'match_bbb' ? await SM.bbb(num) : await SM.player(num);
       const d = { ok: true, data }; cricCache.set(k0, { t: Date.now(), d }); if (cricCache.size > 500) cricCache.clear(); return [200, d];
     } catch (e) { return [502, { ok: false, error: String(e.message || 'Sportmonks error').slice(0, 160) }]; }
   }
   if (!CRIC_KEY) return [503, { ok: false, error: 'CRIC_API_KEY is not set on the server' }];
-  if (limited('cric:' + ip, 120, 36e5)) return [429, { ok: false, error: 'Too many requests' }];
   const k = ep + id, hit = cricCache.get(k), ttl = ep === 'players_info' ? 864e5 : 45e3;
   if (hit && Date.now() - hit.t < ttl) return [200, hit.d];
+  if (limited('cric:' + ip, 300, 36e5)) return [429, { ok: false, error: 'Too many requests' }];
   if (ep === 'match_bbb') {   // a finished match: Cricsheet has the full ball by ball
     try { const rr = recentOf(await infoOf(id)); if (rr) { const bbb = buildBbb(rr.raw); if (bbb.length) { const d = { ok: true, data: { bbb, source: RECENT_SOURCE } }; cricCache.set(k, { t: Date.now(), d }); return [200, d]; } } } catch {}
   }

@@ -4806,16 +4806,53 @@ function shWorldPartnerships(W){const L=W.sc?.scorecard||[];let out='';for(const
 {
  const card=cbpCard;cbpCard=function(W){const supplied=shWorldPartnerships(W);const fow=(W.sc?.scorecard||[]).some(i=>Array.isArray(i.fow??i['fall-of-wickets']??i.fallOfWickets));return card(W)+(supplied||((fow&&typeof cbpPartGraph==='function')?cbpPartGraph(W):''))};
  cbpInfo=function(W){const i=W.mi||{},m=W.m,rows=[['Match',m.name],['Format',String(m.type||'').toUpperCase()],['Date',cbpInfoDate(W)],['Toss',i.tossWinner?i.tossWinner+(i.tossChoice?' · '+i.tossChoice:''):'Not published'],['Result / status',m.status],['Player of the Match',(Array.isArray(i.playerOfTheMatch)?i.playerOfTheMatch:[i.playerOfTheMatch]).filter(Boolean).join(', ')]];return '<div class="cbp-cd">'+rows.filter(x=>x[1]).map(([k,v])=>'<div class="cbp-kv"><span>'+k+'</span><b>'+esc(v)+'</b></div>').join('')+'</div>'+shWorldVenueDetails(W)+shWorldOfficials(W)+shWorldLineups(W)+((cr=>cr?`<div class="mu sm" style="padding:0 4px 10px">Officials, toss, player of the match and playing XI for this finished match: ${esc(cr)}.</div>`:'')(i.factSrc||((Array.isArray(W.sq)&&W.sq.find(t=>t.xiSrc))||{}).xiSrc))};
- const comm=cbpBbb;cbpBbb=function(W){if(W.bbErr||W.mi?.bbbEnabled===false)return '<div class="cbp-cd cbp-note"><b>Commentary unavailable for this match</b>The current provider request did not return delivery records. The scorecard is available separately.</div>';return comm(W)};
+ const comm=cbpBbb;cbpBbb=function(W){if(!shAvailableBalls(W).length&&(W.bbErr||W.mi?.bbbEnabled===false))return '<div class="cbp-cd cbp-note"><b>Commentary unavailable for this match</b>The current provider request did not return delivery records. The scorecard is available separately.</div>';return comm(shAvailableBalls(W).length?{...W,bbErr:''}:W)};
 }
 { // open-data credit: ball by ball, fall of wickets and partnerships filled for a finished match
  const cr=src=>src?`<div class="mu sm" style="padding:0 4px 10px">Ball by ball for this finished match: ${esc(src)}.</div>`:'';
  const c0=cbpBbb;cbpBbb=function(W){return c0(W)+cr(W.bb&&W.bb.source)};
  const o0=cbpOverTab;cbpOverTab=cbpOvers=function(W){return o0(W)+cr(W.bb&&W.bb.source)};
- const g0=cbpGraphs;cbpGraphs=function(W){const has=(W.sc&&W.sc.scorecard||[]).some(i=>Array.isArray(i.fow));return (has&&typeof cbpPartGraph==='function'?cbpPartGraph(W):'')+g0(W)};
+ // Partnerships remain in cbpCard; Graphs displays actual runs progression.
  const k0=cbpCard;cbpCard=function(W){return k0(W)+(W.sc&&W.sc.factSrc?`<div class="mu sm" style="padding:0 4px 10px">Fall of wickets and partnerships for this finished match: ${esc(W.sc.factSrc)}.</div>`:'')};
 }
 /* END SH MATCH CENTRE REVIEW */
+
+/* WORLD DETAIL FLOW: successful delivery records take precedence over provider capability hints. */
+function shAvailableBalls(W){const d=W.bb;return Array.isArray(d)?d:Array.isArray(d?.bbb)?d.bbb:Array.isArray(d?.balls)?d.balls:[]}
+function shWorldLiveBalls(W){
+ if(!W.m.started)return '';
+ const L=cbpBbbList(W.bb||[]),latest=L.slice(0,8);
+ return '<div class="cbp-lb">Recent balls & commentary</div>'+(!latest.length?`<div class="cbp-cd cbp-note">${W.bbBusy?'Loading delivery records…':W.bbErr?'Delivery records are currently unavailable for this match.':'No delivery records have arrived yet.'}</div>`:`<div class="cbp-cd"><div style="display:flex;flex-wrap:wrap;gap:6px;padding:12px">${latest.slice().reverse().map(x=>`<span class="cm-r ${x.cls}" title="${esc(x.ov)}">${esc(String(x.run===''?'•':x.run))}</span>`).join('')}</div>${latest.map(x=>`<div class="cm-i"><span class="cm-o">${esc(x.ov)}</span><span>${esc(x.txt)}</span></div>`).join('')}</div>`)+`<div class="mu sm" style="padding:0 4px 8px">${W.detailAt?'Details checked '+esc(new Date(W.detailAt).toLocaleTimeString()):'Waiting for match details'}${W.m.ended?'':' · refreshes every minute while this match is open'}</div>`;
+}
+function shWorldRunProgress(W){const data=shWorldOverData(W),groups=new Map();for(const row of data.rows){if(!groups.has(row.inn))groups.set(row.inn,[]);groups.get(row.inn).push(row)}
+ const series=[...groups].map(([id,rows])=>{let r=0;return {id,rows:rows.map(x=>({x:x.over+1,r:r+=x.r,w:x.w})),completeStart:rows[0]?.over===0}}).filter(s=>s.completeStart&&!data.skipped&&s.rows.every((r,i)=>r.x===i+1));
+ if(!series.length)return '';
+ const maxX=Math.max(1,...series.flatMap(s=>s.rows.map(x=>x.x))),maxY=Math.max(1,...series.flatMap(s=>s.rows.map(x=>x.r))),X=x=>36+x/maxX*282,Y=r=>154-r/maxY*128,colors=['#3f7bff','#e11d2e','#ffc83d','#2fd1a0'];
+ const name=id=>shInningName(W.sc?.scorecard?.[Number(id)-1]?.inning||id);
+ return `<div class="cbp-lb">Runs progression · recorded overs</div><div class="cbp-cd" style="padding:10px"><svg viewBox="0 0 350 185" role="img" aria-label="Cumulative recorded runs by innings; circles mark wickets" style="width:100%;display:block"><path d="M36 20V154H325" fill="none" stroke="currentColor" opacity=".5"/><text x="4" y="27" fill="currentColor" font-size="10">${maxY}</text><text x="20" y="157" fill="currentColor" font-size="10">0</text><text x="280" y="177" fill="currentColor" font-size="10">${maxX} overs</text>${series.map((s,i)=>`<polyline points="36,154 ${s.rows.map(p=>X(p.x)+','+Y(p.r)).join(' ')}" fill="none" stroke="${colors[i%4]}" stroke-width="2.5"/>${s.rows.filter(p=>p.w).map(p=>`<circle cx="${X(p.x)}" cy="${Y(p.r)}" r="4" fill="${colors[i%4]}"><title>${esc(name(s.id))}: ${p.r} runs, ${p.w} wicket(s) in this over</title></circle>`).join('')}`).join('')}</svg><div class="mu sm">${series.map((s,i)=>`<span style="display:inline-block;margin:4px 12px 4px 0;color:${colors[i%4]}">● ${esc(name(s.id))}</span>`).join('')}<br>Wicket markers use recorded deliveries. ${data.skipped?'Incomplete deliveries were excluded.':''}${W.bb?.source?'<br>Source: '+esc(W.bb.source):''}</div></div>`;
+}
+async function shRefreshWorldDetails(W,force=false){
+ if(!W||UI.wm!==W||UI.view!=='wmatch'||W.detailBusy||(!force&&(document.hidden||!W.m.started||W.m.ended||Date.now()-(W.detailTry||0)<60000)))return;
+ W.detailBusy=true;W.detailTry=Date.now();W.bbBusy=1;const id=W.m.id;
+ try{
+  const result=await Promise.allSettled(['match_scorecard','match_bbb','match_info'].map(ep=>wLoad(ep,id)));
+  if(UI.wm!==W||UI.wm.m.id!==id)return;
+  result.forEach((res,k)=>{const j=res.status==='fulfilled'?res.value:{ok:false,error:'Connection interrupted'};
+   if(j.ok){if(k===0){W.sc=j.data;W.err='';if(Array.isArray(j.data?.score))W.m.score=j.data.score;if(j.data?.matchEnded!=null)W.m.ended=!!j.data.matchEnded;if(j.data?.status)W.m.status=j.data.status}
+    else if(k===1){W.bb=j.data??[];W.bbErr=''}else {W.mi=j.data||{};W.miErr='';if(j.data?.matchStarted!=null)W.m.started=!!j.data.matchStarted;if(j.data?.matchEnded!=null)W.m.ended=!!j.data.matchEnded;if(Array.isArray(j.data?.score))W.m.score=j.data.score;if(j.data?.status)W.m.status=j.data.status}}
+   else if(k===1){W.bbErr=j.error||'Delivery data unavailable'}
+  });W.detailAt=Date.now();
+ }finally{W.bbBusy=0;W.detailBusy=false;if(UI.wm===W&&UI.view==='wmatch')render()}
+}
+{
+ A.shWorldRefresh=function(){if(UI.wm)shRefreshWorldDetails(UI.wm,true)};
+ const originalOpen=A.wOpen;A.wOpen=function(d){originalOpen.apply(this,arguments);if(UI.wm?.m.started)shRefreshWorldDetails(UI.wm,true)};
+ const originalTab=A.wmTab;A.wmTab=function(d){originalTab.apply(this,arguments);if(d.v==='live'&&UI.wm?.m.started)shRefreshWorldDetails(UI.wm,false)};
+ const originalWorld=XV.wmatch;XV.wmatch=function(){const W=UI.wm;let html=originalWorld.apply(this,arguments);return html+(W&&(W.tab||'live')==='live'?shWorldLiveBalls(W):'')+(W?'<button class="btn sm ghost" data-a="shWorldRefresh">Refresh match details</button>':'')};
+ const graphs=cbpGraphs;cbpGraphs=function(W){return shWorldRunProgress(W)+graphs(W)};
+ setInterval(()=>{if(UI.view==='wmatch')shRefreshWorldDetails(UI.wm,false)},15000);
+}
+/* END WORLD DETAIL FLOW */
 
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());

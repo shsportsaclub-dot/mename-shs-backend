@@ -1,0 +1,22 @@
+name: Delivery flow regression
+on:
+  push:
+    paths: ['app-index.html', 'server.js', 'sportmonks.mjs', 'recent.mjs', 'tests/delivery-flow*', '.github/workflows/delivery-flow.yml']
+  workflow_dispatch:
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test tests/delivery-flow.test.mjs tests/sportmonks.test.mjs tests/recent.test.mjs
+      - run: npm install --no-save playwright@1.61.1
+      - run: npx playwright install --with-deps chromium
+      - run: node tests/delivery-flow-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: delivery-flow-evidence
+          path: runtime-evidence/
