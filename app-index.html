@@ -5116,6 +5116,47 @@ function shPulseTimeline(W){const rows=shPulseData(W);if(!rows.length)return `<d
 }
 /* END SH PULSE */
 
+
+/* SH ROLE SQUADS + SH SPORTS 11 PHASES + OVER TOTALS + OVER LINE GRAPH (applies to every match) */
+var SH_ROLES=[['WK','Wicketkeepers'],['BAT','Batters'],['AR','All-rounders'],['PACE','Fast / medium bowlers'],['SPIN','Spinners'],['BOWL','Bowlers (style not supplied)'],['UNK','Role not supplied']];
+var shRoleOf=function(p){var r=String(p.role||'').toLowerCase(),b=String(p.bowlingStyle||'').toLowerCase();
+ if(p.isKeeper===true||/\bwk\b|wicket.?keep/.test(r))return 'WK';if(/all.?round/.test(r))return 'AR';
+ if(/bowl/.test(r)&&!/bat/.test(r)){return /spin|break|orthodox|chinaman|googly|slow/.test(b)?'SPIN':/fast|medium|seam|pace/.test(b)?'PACE':'BOWL'}
+ if(/bat|open|top order|middle order/.test(r))return 'BAT';return 'UNK'};
+var shRoleBlocks=function(list,rowFn){var by={};list.forEach(function(p){var k=shRoleOf(p);(by[k]||(by[k]=[])).push(p)});
+ return SH_ROLES.filter(function(x){return by[x[0]]}).map(function(x){return '<div class="sh-role-h">'+x[1]+' <span>'+by[x[0]].length+'</span></div>'+by[x[0]].map(rowFn).join('')}).join('')};
+var shRoleSquads=function(W){var squads=shAllSquads(W),roster=shRoster(W);if(!squads.length)return '';
+ return squads.map(function(t){var list=t.players.map(function(p){return Object.assign({},p,roster.find(function(r){return r.team===t.teamName&&r.name===p.name})||{},{team:t.teamName})});
+  return '<div class="cbp-lb">'+shTeamMark({name:t.teamName})+' '+esc(t.teamName)+' · Full squad ('+t.players.length+')</div><div class="cbp-cd"><div class="cbp-note">'+(t.publishedAt?'Published '+esc(t.publishedAt)+'. ':'')+'The playing XI is usually known only at the toss. Until then the whole squad is shown by role.</div>'+shRoleBlocks(list,shRosterPlayer)+'</div>'}).join('')};
+{var sq0=cbpSquads;cbpSquads=function(W){var h='';try{h=shRoleSquads(W)}catch(e){}return h||sq0(W)}}
+var shElevenPhase=function(W){return W.m.ended?'final':W.m.started?'live':'pre'};
+{var el0=shElevenHTML;shElevenHTML=function(W){var ph=shElevenPhase(W),dx=null;try{dx=shDreamXI(W)}catch(e){}
+ var head=ph==='pre'?'<div class="cbp-lb">SH Sports 11 · pick before the match</div><div class="cbp-cd cbp-note"><b>Choose your own 11 from both full squads</b>Playing XI is not announced yet. Pick keepers, batters, all-rounders and bowlers below (max 7 from one team). When play starts this page switches to the live top 11, and after the match to the final top 11.</div>'
+  :'<div class="cbp-lb">SH Sports 11 · '+(ph==='live'?'live top 11 (active so far)':'final top 11 of the match')+'</div>'+(dx&&dx.xi&&dx.xi.length?shDreamCard(W):'<div class="cbp-cd cbp-note"><b>Top 11 needs scorecard data</b>It fills in as soon as batting and bowling figures arrive.</div>')+'<div class="cbp-cd cbp-note"><b>Your own 11</b>Pick yours and compare. Players are grouped by role.</div>';
+ var roster=shRoster(W),state=shElevenSelections[W.m.id]||{ids:[]},ranked=shMatchIntelligence.ranked(roster,{live:!!W.m.started}),byId={};ranked.forEach(function(x){byId[x.id]=x});
+ var list=roster.map(function(x){return Object.assign({},x,{index:byId[x.id]&&byId[x.id].index})});
+ var sel=list.filter(function(x){return state.ids.indexOf(x.id)>=0});
+ var field=sel.length?'<div class="cbp-lb">Your 11 · '+sel.length+'/11</div><div class="cbp-cd sh-xi-field">'+sel.map(function(p){return '<div><i>'+cbpImg(p.playerImg,p.name)+'</i><b>'+esc(p.name)+'</b><small>'+esc(p.team)+(state.c===p.id?' · C':state.vc===p.id?' · VC':'')+'</small><button class="btn sm ghost" data-a="shElevenCaptain" data-id="'+esc(p.id)+'" data-v="c">C</button><button class="btn sm ghost" data-a="shElevenCaptain" data-id="'+esc(p.id)+'" data-v="vc">VC</button></div>'}).join('')+'</div>':'';
+ var row=function(p){return '<div class="sh-xi-pick"><div><b>'+esc(p.name)+'</b><small>'+esc(p.team)+' · '+esc(p.role)+(p.index!=null?' · SH index '+p.index:'')+'<br>'+(p.confirmed?'Confirmed XI':p.observed?'Played in this match':'XI not confirmed')+(p.excluded?' · Unavailable':'')+'</small></div><button class="btn sm" data-a="shElevenPick" data-id="'+esc(p.id)+'" '+(p.excluded?'disabled':'')+'>'+(state.ids.indexOf(p.id)>=0?'Remove':'+ Add')+'</button></div>'};
+ var teams=[];list.forEach(function(p){if(teams.indexOf(p.team)<0)teams.push(p.team)});
+ var picker=teams.length?teams.map(function(t){return '<div class="cbp-lb">'+esc(t)+'</div><div class="cbp-cd">'+shRoleBlocks(list.filter(function(p){return p.team===t}),row)+'</div>'}).join(''):'<div class="cbp-cd cbp-note"><b>Squads not published yet</b>Both squads appear here the moment the source publishes them.</div>';
+ return head+field+picker}}
+var shOverRows=function(W){var G=shPulseModel.overs(W.bb||[]),by={};G.forEach(function(g){(by[g.inning]||(by[g.inning]=[])).push(g)});
+ return Object.keys(by).map(function(id){var L=by[id].sort(function(a,b){return a.over-b.over}),cum=0,wk=0,ok=true,prev=-1;
+  var rows=L.map(function(g,i){if(g.over!==prev+1||(prev>=0&&!L[i-1].complete))ok=false;if(i===0&&g.over!==0)ok=false;prev=g.over;cum+=g.runs;wk+=g.wickets;return{over:g.over+1,runs:g.runs,w:g.wickets,total:ok?cum+'/'+wk:'—',part:!g.complete}});
+  return{id:id,name:shPulseInning(W,id),rows:rows,L:L,gap:rows.some(function(r){return r.total==='—'})}})};
+var shOverTable=function(W){var T=shOverRows(W);if(!T.length)return '';
+ return T.map(function(t){return '<div class="cbp-lb">'+esc(t.name)+' · over by over</div><div class="cbp-cd sh-ovt"><div class="sh-ovt-r h"><span>Over</span><span>Runs</span><span>Wkts</span><span>Total</span></div>'+t.rows.slice().reverse().map(function(r){return '<div class="sh-ovt-r"><span>'+r.over+(r.part?'*':'')+'</span><span><b>'+r.runs+'</b></span><span>'+(r.w||'•')+'</span><span>'+r.total+'</span></div>'}).join('')+'</div>'+(t.gap||t.rows.some(function(r){return r.part})?'<div class="mu sm" style="padding:0 4px 10px">* partial over. Total shows only where every earlier ball was recorded; missing overs are never filled with guesses.</div>':'')}).join('')};
+{var ov0=cbpOverTab;cbpOverTab=cbpOvers=function(W){var h='';try{h=shOverTable(W)}catch(e){}return h+ov0(W)}}
+var shOverLine=function(W){var T=shOverRows(W);if(!T.length)return '';var cols=['#3f7bff','#e11d2e','#ffc83d'],mx=Math.max(10,Math.max.apply(null,[0].concat(T.map(function(t){return Math.max.apply(null,t.rows.map(function(r){return r.runs}))})))),mo=Math.max(6,Math.max.apply(null,[0].concat(T.map(function(t){return t.rows.length?t.rows[t.rows.length-1].over:0})))),X=function(o){return 34+(o-1)/(mo-1)*290},Y=function(r){return 140-r/mx*120};
+ var svg='<svg viewBox="0 0 340 176" width="100%" role="img" aria-label="Runs per over, line graph" style="display:block;max-width:100%"><g stroke="currentColor" opacity=".18"><line x1="34" y1="140" x2="330" y2="140"/><line x1="34" y1="'+Y(mx/2)+'" x2="330" y2="'+Y(mx/2)+'"/><line x1="34" y1="20" x2="330" y2="20"/></g><g font-size="10" fill="currentColor" opacity=".7"><text x="4" y="144">0</text><text x="4" y="'+(Y(mx/2)+3)+'">'+Math.round(mx/2)+'</text><text x="4" y="24">'+mx+'</text>';
+ for(var o=1;o<=mo;o+=(mo>12?5:1)){var oo=o===1&&mo>12?1:o;svg+='<text x="'+(X(oo)-4)+'" y="156">'+oo+'</text>'}svg+='<text x="150" y="172">Over</text></g>';
+ T.forEach(function(t,i){var c=cols[i%3],pts=t.rows.map(function(r){return X(r.over)+','+Y(r.runs)}).join(' ');svg+='<polyline fill="none" stroke="'+c+'" stroke-width="2.2" stroke-linejoin="round" points="'+pts+'"/>';t.rows.forEach(function(r){svg+='<circle cx="'+X(r.over)+'" cy="'+Y(r.runs)+'" r="'+(r.w?5:3)+'" fill="'+(r.w?'#e11d2e':c)+'"'+(r.part?' opacity=".55"':'')+'><title>'+esc(t.name)+' over '+r.over+': '+r.runs+' runs'+(r.w?', '+r.w+' wkt':'')+'</title></circle>'})});
+ return '<div class="cbp-lb">Runs per over · line graph</div><div class="cbp-cd" style="padding:10px">'+svg+'<div class="gr-key" style="margin-top:6px">'+T.map(function(t,i){return '<span><i style="background:'+cols[i%3]+'"></i>'+esc(t.name)+'</span>'}).join('')+'<span><i style="background:#e11d2e"></i>Wicket over</span></div></div>'};
+{var gr0=cbpGraphs;cbpGraphs=function(W){var h='';try{h=shOverLine(W)}catch(e){}return h+gr0(W)}}
+{var st=document.createElement('style');st.textContent='.sh-role-h{display:flex;justify-content:space-between;padding:8px 12px;background:rgba(127,127,127,.14);font:700 12px var(--ui);letter-spacing:.3px}.sh-role-h span{opacity:.7}.sh-ovt-r{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));padding:9px 12px;border-top:1px solid rgba(127,127,127,.18);font:500 13px var(--ui);font-variant-numeric:tabular-nums}.sh-ovt-r.h{font:700 11px var(--ui);opacity:.7;border-top:0;text-transform:uppercase}';document.head.appendChild(st)}
+/* END SH ROLE SQUADS */
+
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});
