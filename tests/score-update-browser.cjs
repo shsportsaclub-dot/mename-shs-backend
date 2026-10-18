@@ -1,0 +1,20 @@
+const {chromium}=require('playwright'),fs=require('node:fs'),http=require('node:http'),assert=require('node:assert/strict');
+(async()=>{
+ const html=fs.readFileSync('app-index.html');const server=http.createServer((req,res)=>{res.setHeader('content-type','text/html');res.end(html)});await new Promise(r=>server.listen(18959,'127.0.0.1',r));let browser;
+ const score=[{inning:'India Inning 1',r:20,w:0,o:2}];
+ const sc={score,scorecard:[{inning:score[0].inning,totals:{R:20,W:0,O:2},batting:[{batsman:{id:'r',name:'Ravi'},r:12,b:7,'4s':1,'6s':0,'dismissal-text':'not out'},{batsman:{id:'s',name:'Suresh'},r:8,b:5,'4s':1,'6s':0,'dismissal-text':'not out'}],bowling:[{bowler:{id:'k',name:'Kumar'},r:10,w:0,o:1}]}]};
+ try{browser=await chromium.launch({headless:true});fs.mkdirSync('runtime-evidence',{recursive:true});const results=[],errors=[];
+ for(const width of [320,412]){const p=await browser.newPage({viewport:{width,height:920}});p.on('pageerror',e=>errors.push(e.message));
+ await p.route('**/*',r=>{const u=new URL(r.request().url());if(u.origin==='http://127.0.0.1:18959'&&u.pathname==='/')return r.continue();return r.fulfill({contentType:'application/json',body:JSON.stringify({ok:true,matches:[],items:[],data:[],version:'fixture'})})});
+ await p.goto('http://127.0.0.1:18959/');await p.evaluate(({sc,score})=>{UI.stage='app';UI.view='wmatch';S.user={nick:'Test',name:'Test',role:'viewer',kind:'Fan'};S.prefs={...S.prefs,asked:1,welcomed:1};UI.wm={tab:'cm',m:{id:'snapshot-fixture',name:'India v Australia',type:'t20',started:true,ended:false,status:'Synthetic fixture',teams:[{name:'India',short:'IND'},{name:'Australia',short:'AUS'}],score},mi:{bbbEnabled:false},sc,bb:[],bbErr:'No provider balls',sq:[],vs:{n:0}};render()},{sc,score});
+ let text=await p.locator('.sh-own-commentary').innerText();assert.match(text,/Ravi/);assert.match(text,/Kumar/);
+ await p.evaluate(()=>{const W=UI.wm;W.m.score[0]={...W.m.score[0],r:26,w:1,o:3};const i=W.sc.scorecard[0];i.totals={R:26,W:1,O:3};i.batting[0].r=16;i.batting[0].b=10;i.batting[1].r=10;i.batting[1].b=8;i.bowling[0].r=16;i.bowling[0].w=1;i.bowling[0].o=2;render()});
+ text=await p.locator('.sh-own-commentary').innerText();assert.match(text,/6 runs added/);assert.match(text,/1 wicket added/);assert.match(text,/Ravi adds 4/);assert.doesNotMatch(text,/additional six|SIX!/);assert.equal(await p.locator('.sh-own-commentary .cm-r').count(),0);
+ const count=await p.evaluate(()=>shScoreCommentary.entries(UI.wm.m.id).length);await p.evaluate(()=>render());assert.equal(await p.evaluate(()=>shScoreCommentary.entries(UI.wm.m.id).length),count);
+ for(const skin of ['cb','ca']){await p.evaluate(skin=>{UI.wm.skin=skin;UI.wm.tab='live';render()},skin);assert.match(await p.locator('.sh-own-commentary').innerText(),/6 runs added/);const overflow=await p.locator('.sh-own-commentary').evaluateAll(es=>es.filter(e=>e.scrollWidth>e.clientWidth+1||e.getBoundingClientRect().right>innerWidth+.5).length);assert.equal(overflow,0);await p.screenshot({path:`runtime-evidence/score-update-${width}-${skin}.png`,fullPage:true})}
+ await p.evaluate(()=>{UI.wm.m.score[0].r=25;UI.wm.tab='cm';render()});assert.match(await p.locator('.sh-own-commentary').innerText(),/CORRECTION/);
+ await p.evaluate(()=>{UI.wm.bb={bbb:[{inning:1,over:3,ball:1,runs:1,commentary:'REAL DELIVERY FIXTURE — Kumar to Ravi, one run'}]};UI.wm.tab='cm';render()});assert.equal(await p.locator('.sh-own-commentary').count(),0);assert.match(await p.locator('main').innerText(),/REAL DELIVERY FIXTURE/);
+ results.push({width,aggregateUpdate:true,wicketUpdate:true,namedPlayers:true,deduplication:true,correction:true,providerPriority:true,noSyntheticBallChips:true});await p.close();
+ }assert.deepEqual(errors,[]);fs.writeFileSync('runtime-evidence/score-update.json',JSON.stringify({scope:'Synthetic scores in actual renderer; all external requests stubbed',results,errors},null,2));console.log('PASS score-update commentary integration');
+ }finally{if(browser)await browser.close();await new Promise(r=>server.close(r))}
+})().catch(e=>{console.error(e);process.exitCode=1});
