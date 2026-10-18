@@ -1,0 +1,24 @@
+{
+  "scope": "Actual renderer with synthetic fallback records and stub provider; no real match, OTP or provider calls",
+  "results": [
+    {
+      "width": 320,
+      "validFallbackShownDespiteFalseHint": true,
+      "inningsLines": 2,
+      "wicketMarkers": 2,
+      "partnershipsInScorecard": true,
+      "liveRefreshRequests": 3,
+      "overflow": []
+    },
+    {
+      "width": 412,
+      "validFallbackShownDespiteFalseHint": true,
+      "inningsLines": 2,
+      "wicketMarkers": 2,
+      "partnershipsInScorecard": true,
+      "liveRefreshRequests": 3,
+      "overflow": []
+    }
+  ],
+  "errors": []
+}

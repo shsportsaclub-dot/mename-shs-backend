@@ -13,22 +13,6 @@ export const RECENT_URL = 'https://cricsheet.org/downloads/recently_added_7_json
 export const RECENT_URL_30 = 'https://cricsheet.org/downloads/recently_added_30_json.zip';
 
 const isLegal = d => !(d.extras && (d.extras.wides > 0 || d.extras.noballs > 0));
-const plural = (n, w) => n + ' ' + w + (n === 1 ? '' : 's');
-
-function describe(d) {
-  const ex = d.extras || {}, rr = d.runs || {}, w = (d.wickets || [])[0];
-  if (w) {
-    const f = (w.fielders || []).map(x => x.name).filter(Boolean).join(', ');
-    return 'OUT, ' + w.kind + (f ? ' (' + f + ')' : '') + ': ' + w.player_out;
-  }
-  if (ex.wides > 0) return 'wide' + (rr.total > 1 ? ', ' + plural(rr.total, 'run') + ' in all' : '');
-  if (ex.noballs > 0) return 'no ball' + (rr.batter ? ', ' + plural(rr.batter, 'run') + ' off the bat' : '') + (rr.total > 1 && !rr.batter ? ', ' + plural(rr.total, 'run') + ' in all' : '');
-  if (rr.batter === 6) return 'SIX';
-  if (rr.batter === 4 && !rr.non_boundary) return 'FOUR';
-  if (ex.byes > 0) return plural(ex.byes, 'bye');
-  if (ex.legbyes > 0) return plural(ex.legbyes, 'leg bye');
-  return rr.total ? plural(rr.total, 'run') : 'no run';
-}
 
 // Ball by ball in the shape the match page reads: inning (1-based, in batting order), over (0-based), ball (1..6), runs, wicket, wide, noball, names, text
 export function buildBbb(raw) {
@@ -41,7 +25,9 @@ export function buildBbb(raw) {
         const ex = d.extras || {}, rr = d.runs || {}, lg = isLegal(d);
         const ball = Math.min(6, lg ? legal + 1 : Math.max(1, legal));
         if (lg) legal++;
-        out.push({ inning: ii + 1, team: inn.team, over: ov.over, ball, runs: rr.total || 0, total_runs: rr.total || 0, wicket: !!(d.wickets && d.wickets.length), wide: ex.wides > 0, noball: ex.noballs > 0, batsman: d.batter, bowler: d.bowler, commentary: d.bowler + ' to ' + d.batter + ', ' + describe(d) });
+        const w = (d.wickets || [])[0];
+        out.push({ inning: ii + 1, team: inn.team, over: ov.over, ball, runs: rr.total || 0, total_runs: rr.total || 0, bruns: rr.batter || 0, wicket: !!w, wide: ex.wides > 0, noball: ex.noballs > 0, xtype: ex.byes > 0 ? 'b' : ex.legbyes > 0 ? 'lb' : '', batsman: d.batter, bowler: d.bowler,
+          ...(w ? { out: w.player_out, kind: w.kind, fielder: (w.fielders || []).map(x => x.name).filter(Boolean).join(', ') } : {}) });   // the match page's own commentary engine writes the text from these facts
       }
     }
   });

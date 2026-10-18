@@ -19,9 +19,10 @@ test('bbb: innings numbered, overs 0-based, legal ball 1..6, wides keep the over
   assert.equal(b.length, 10);
   assert.deepEqual(b.slice(0, 7).map(x => x.ball), [1, 2, 2, 3, 4, 5, 6]);        // the wide is not a legal ball
   assert.ok(b[2].wide && b[2].runs === 2);
-  assert.ok(b[3].wicket && /OUT, bowled: A/.test(b[3].commentary));
-  assert.ok(/FOUR/.test(b[1].commentary) && /SIX/.test(b[4].commentary));
-  assert.ok(/caught \(F1\): D/.test(b[7].commentary));
+  assert.ok(b[3].wicket && b[3].out === 'A' && b[3].kind === 'bowled');
+  assert.equal(b[1].bruns, 4); assert.equal(b[4].bruns, 6); assert.equal(b[2].bruns, 0);
+  assert.equal(b[7].kind, 'caught'); assert.equal(b[7].fielder, 'F1');
+  assert.equal(b[0].commentary, undefined);   // the page's own engine writes the words
   assert.equal(b[8].inning, 2); assert.equal(b[8].over, 0);
 });
 test('fall of wickets and partnerships follow the runs', () => {
