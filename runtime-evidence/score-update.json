@@ -1,0 +1,36 @@
+{
+  "scope": "Synthetic scores in actual renderer; all external requests stubbed",
+  "results": [
+    {
+      "width": 320,
+      "aggregateUpdate": true,
+      "wicketUpdate": true,
+      "namedPlayers": true,
+      "deduplication": true,
+      "correction": true,
+      "providerPriority": true,
+      "noSyntheticBallChips": true,
+      "observedOverIntervals": true,
+      "progressGraph": true,
+      "performanceInScorecard": true,
+      "scoreBeforeBBBTimeout": true,
+      "staleInfoIgnored": true
+    },
+    {
+      "width": 412,
+      "aggregateUpdate": true,
+      "wicketUpdate": true,
+      "namedPlayers": true,
+      "deduplication": true,
+      "correction": true,
+      "providerPriority": true,
+      "noSyntheticBallChips": true,
+      "observedOverIntervals": true,
+      "progressGraph": true,
+      "performanceInScorecard": true,
+      "scoreBeforeBBBTimeout": true,
+      "staleInfoIgnored": true
+    }
+  ],
+  "errors": []
+}

@@ -4837,6 +4837,7 @@ function shWorldPartnerships(W){const L=W.sc?.scorecard||[];let out='';for(const
 { // open-data credit: ball by ball, fall of wickets and partnerships filled for a finished match; live tracker records and notes
  const cr=bb=>{const src=bb&&bb.source;if(!src)return '';return `<div class="mu sm" style="padding:0 4px 10px">${bb.tracked?'Ball records: '+esc(src)+'. A ball is written only when the scorecard changed by exactly one delivery between two checks (about every 30 seconds while someone has the match open). When several balls happen between checks, only a note is kept, never a guessed ball.':'Ball by ball for this finished match: '+esc(src)+'.'}</div>`};
  const notes=bb=>{const L=bb&&Array.isArray(bb.notes)?bb.notes.slice().reverse():[];if(!L.length)return '';return `<div class="cbp-lb">Updates between checks</div><div class="cbp-cd">${L.slice(0,60).map(x=>`<div class="cm-i" style="align-items:flex-start"><span class="cm-o" style="flex:0 0 58px;font-size:10px">${esc(new Date(x.at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}))}</span><span>${esc(x.text)}</span></div>`).join('')}</div>`};
+ var shNotesFn=notes,shCrFn=cr;
  const c0=cbpBbb;cbpBbb=function(W){const bb=W.bb;if(bb&&bb.tracked){const rows=shAvailableBalls(W);return (rows.length?c0(W):'')+notes(bb)+cr(bb)}return c0(W)+cr(bb)};
  const o0=cbpOverTab;cbpOverTab=cbpOvers=function(W){return o0(W)+cr(W.bb)};
  const g0=cbpGraphs;cbpGraphs=function(W){const has=(W.sc&&W.sc.scorecard||[]).some(i=>Array.isArray(i.fow));return (has&&typeof cbpPartGraph==='function'?cbpPartGraph(W):'')+g0(W)};
@@ -5104,6 +5105,19 @@ UI.sportLink=new URLSearchParams(location.search).get('sportmatch')||'';
  }
 }
 
+
+/* SH CREX-STYLE COMMENTARY: over cards (newest first) with ball chips, then one line per ball. Facts only; text comes from provider or our engine. */
+var shChip=function(x){var t=String(x.txt||''),r=x.run;return r==='W'?{c:'W',k:'w'}:/\bwide\b/i.test(t)?{c:'Wd',k:'x'}:/no.?ball/i.test(t)?{c:'Nb',k:'x'}:(+r===4?{c:'4',k:'f'}:+r===6?{c:'6',k:'s'}:{c:(r===''||+r===0)?'•':String(r),k:''})};
+var shOverGroups=function(W){var L=cbpBbbList(W.bb),g=[],ix={};L.forEach(function(x){var k=(x.inning==null?'':x.inning)+'|'+(x.o==null?String(x.ov).split('.')[0]:x.o);if(!(k in ix)){ix[k]=g.length;g.push({k:k,inn:x.inning,team:x.team,o:+(x.o==null?String(x.ov).split('.')[0]:x.o),b:[]})}g[ix[k]].b.push(x)});return g};
+var shChips=function(b){return '<span class="shc-row">'+b.slice().reverse().map(function(x){var c=shChip(x);return '<i class="shc '+c.k+'">'+c.c+'</i>'}).join('')+'</span>'};
+var shCrexComm=function(W){var G=shOverGroups(W);if(!G.length)return '';
+ return G.slice(0,40).map(function(g){var runs=g.b.reduce(function(n,x){return n+(+x.r||0)},0),w=g.b.filter(function(x){return x.run==='W'}).length;
+  return '<div class="shc-ov"><div class="shc-h"><b>'+(g.team?esc(shShort?g.team:g.team)+' · ':'')+'Over '+(g.o+1)+'</b><span>'+runs+' run'+(runs===1?'':'s')+(w?' · '+w+' wkt':'')+'</span>'+shChips(g.b)+'</div>'+
+  g.b.map(function(x){var c=shChip(x);return '<div class="shc-b"><span class="shc-n">'+esc(x.ov)+'</span><i class="shc '+c.k+'">'+c.c+'</i><span class="shc-t">'+esc(x.txt)+'</span></div>'}).join('')+'</div>'}).join('')};
+{var st=document.createElement('style');st.textContent='.shc{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:24px;border-radius:12px;background:#243053;color:#fff;font:700 11px var(--ui);font-style:normal;padding:0 5px;flex:none}.shc.f{background:#1f8a4c}.shc.s{background:#7b3fe4}.shc.w{background:#e11d2e}.shc.x{background:#b9770e}.shc-row{display:flex;gap:4px;flex-wrap:wrap;width:100%}.shc-ov{background:var(--card,#141c33);border-radius:12px;margin:0 0 10px;overflow:hidden}.shc-h{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;padding:10px 12px;background:linear-gradient(90deg,#14204a,#6b0f1a);color:#fff}.shc-h b{font:700 13px var(--ui)}.shc-h span:nth-child(2){font:500 12px var(--ui);opacity:.85;margin-left:auto}.shc-b{display:flex;gap:8px;align-items:flex-start;padding:9px 12px;border-top:1px solid rgba(255,255,255,.07)}.shc-n{width:34px;flex:none;font:600 12px var(--ui);opacity:.7;padding-top:4px}.shc-t{min-width:0;flex:1;font:400 13px/1.45 var(--ui);overflow-wrap:anywhere}';document.head.appendChild(st)}
+{var cc0=cbpBbb;cbpBbb=function(W){var rows=shAvailableBalls(W);if(rows.length){var h=shCrexComm(W);if(h)return '<div class="cbp-lb">Ball by ball</div>'+h+(W.bb&&W.bb.tracked&&typeof shNotesFn==='function'?shNotesFn(W.bb)+shCrFn(W.bb):'')}return cc0(W)}}
+{var cr0=cbpCrease;cbpCrease=function(W){var o=cr0(W);try{var rows=shAvailableBalls(W);if(!rows.length)return o;var G=shOverGroups(W);if(!G.length)return o;var g=G[0];return o+'<div class="cbp-lb">This over · '+(g.o+1)+'</div><div class="cbp-cd" style="padding:10px 12px">'+shChips(g.b)+'</div>'}catch(e){return o}}}
+/* END SH CREX-STYLE COMMENTARY */
 </script>
 </body>
 </html>
