@@ -1,13 +1,13 @@
 import commentary from './score-update-commentary.cjs';
 const {createSHCommentaryEngine}=commentary;
 const copy=x=>JSON.parse(JSON.stringify(x)),clean=(x,n=180)=>String(x??'').slice(0,n),validId=id=>/^(sm)?[a-z0-9-]{1,40}$/i.test(String(id))&&!['constructor','prototype','__proto__'].includes(id);
-export function createMatchJournal({state={},save=()=>{},now=Date.now}={}){
+export function createMatchJournal({state={},save=()=>{},load=()=>null,now=Date.now}={}){
  state.matches=state.matches&&typeof state.matches==='object'?state.matches:{};state.engine=state.engine||{};
  const makeEngine=()=>createSHCommentaryEngine({now,storage:{getItem:()=>JSON.stringify(state.engine),setItem:(k,v)=>state.engine=JSON.parse(v)}});let engine=makeEngine();
  const trim=()=>{state.matches=Object.fromEntries(Object.entries(state.matches).filter(([id,m])=>validId(id)&&m&&now()-(m.checkedAt||0)<14*864e5).sort((a,b)=>b[1].checkedAt-a[1].checkedAt).slice(0,12))};
  const changed=()=>{trim();save(state)};
  function record(id,ep,data,{source='match provider',error='',corrected=false}={}){
-  if(!validId(id))return null;let m=state.matches[id]||(state.matches[id]={id,sources:{},score:[],balls:[]});const at=now();m.checkedAt=at;
+  if(!validId(id)||!['currentMatches','match_info','match_squad','match_bbb','match_scorecard'].includes(ep))return null;if(!state.matches[id]){const archived=load(id);if(archived)restore(archived)}let m=state.matches[id]||(state.matches[id]={id,sources:{},score:[],balls:[]});const at=now();m.checkedAt=at;
   m.sources[ep]={checkedAt:at,ok:!error,...(error?{error:clean(error,250)}:{})};if(error){changed();return view(id)}
   if(ep==='match_scorecard'&&data&&Array.isArray(data.scorecard))m.sc=copy(data);
   if(ep==='match_info'&&data&&typeof data==='object')m.mi=copy(data);
@@ -34,5 +34,6 @@ export function createMatchJournal({state={},save=()=>{},now=Date.now}={}){
   changed();return view(id);
  }
  function view(id){const m=state.matches[id];if(!m)return null;return copy({...m,commentary:m.commentary||engine.entries(id),points:m.timeline||engine.points(id),coverage:{kind:m.balls.length?(m.derived?'derived delivery records':'recorded deliveries'):'score observations',balls:m.balls.length,historyStartsAt:(m.timeline||engine.points(id))[0]?.at||null},stale:!m.ended&&m.scoreChangedAt&&now()-m.scoreChangedAt>180000})}
- return {record,view,restore(row){if(row?.match&&validId(row.match.id)){state.matches[row.match.id]=row.match;if(row.engine)state.engine[row.match.id]=row.engine;engine=makeEngine()}},exportState:()=>copy(state)};
+ function restore(row){if(row?.match&&validId(row.match.id)){state.matches[row.match.id]=row.match;if(row.engine)state.engine[row.match.id]=row.engine;engine=makeEngine()}}
+ return {record,view,restore,exportState:()=>copy(state)};
 }

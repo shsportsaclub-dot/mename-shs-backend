@@ -82,7 +82,7 @@ function saveMatchJournal(state){
 }
 async function restoreArchivedJournal(id){let row;try{row=JSON.parse(fs.readFileSync(path.join(JOURNAL_FILE+'.matches',id+'.json'),'utf8'))}catch{}if(!row&&neonOk){try{const r=await neon('select v from kv where k=$1',['match-journal:'+id]);if(r.rows?.[0])row=JSON.parse(r.rows[0].v)}catch{}}if(row)matchJournal.restore(row)}
 
-const matchJournal=createMatchJournal({state:journalState,save:saveMatchJournal});
+const matchJournal=createMatchJournal({state:journalState,save:saveMatchJournal,load:id=>{try{return JSON.parse(fs.readFileSync(path.join(JOURNAL_FILE+'.matches',id+'.json'),'utf8'))}catch{return null}}});
 const matchWatch=new Map(),matchWatchBusy=new Set();
 async function pollMatchJournal(id){if(matchWatchBusy.has(id))return;const watch=matchWatch.get(id);if(!watch)return;matchWatchBusy.add(id);try{const n=Date.now(),j=matchJournal.view(id),eps=['match_scorecard'];if(!watch.infoAt||n-watch.infoAt>=60000){eps.push('match_info');watch.infoAt=n}if(!watch.squadAt||n-watch.squadAt>=300000){eps.push('match_squad');watch.squadAt=n}if(!watch.ballAt||n-watch.ballAt>=(j?.balls?.length?20000:60000)){eps.push('match_bbb');watch.ballAt=n}await Promise.allSettled(eps.map(ep=>routes['GET /api/cric']({}, {ep,id},'journal-monitor-'+id)))}finally{matchWatchBusy.delete(id)}}
 setInterval(()=>{const now=Date.now();for(const [id,w]of matchWatch){if(w.until<now||matchJournal.view(id)?.ended){matchWatch.delete(id);continue}pollMatchJournal(id)}},20000).unref();
@@ -235,7 +235,7 @@ async function liveMatches() {
     }));
     const info = { hitsToday: j.info && j.info.hitsToday, hitsLimit: j.info && j.info.hitsLimit };
     live = { t: Date.now(), ttl: liveTtl(j.info), err: '', data: { ok: true, matches, info, refreshEverySec: Math.round(liveTtl(j.info) / 1000), updated: new Date().toISOString() } };
-    for(const m of matches)if(m.started&&!m.ended||matchJournal.view(m.id))matchJournal.record(m.id,'currentMatches',{...m,matchStarted:m.started,matchEnded:m.ended,matchType:m.type},{source:'CricketData current matches'});
+    for(const m of matches)if(m.started&&!m.ended||matchJournal.view(m.id)){if(!matchJournal.view(m.id))await restoreArchivedJournal(m.id);matchJournal.record(m.id,'currentMatches',{...m,matchStarted:m.started,matchEnded:m.ended,matchType:m.type},{source:'CricketData current matches'})}
     try { fs.writeFileSync(LIVE_FILE, JSON.stringify({ data: live.data })); } catch (e) {}
     return live.data;
   } catch (e) {
@@ -423,6 +423,7 @@ async function infoOf(id) {
 routes['GET /api/cric'] = async (req, body, ip) => {
   const ep = String(body.ep || ''), id = String(body.id || '');
   if (!['match_scorecard', 'players_info', 'match_info', 'match_squad', 'match_bbb'].includes(ep) || !/^(sm)?[0-9a-z-]{1,40}$/i.test(id)) return [400, { ok: false, error: 'Bad request' }];
+  if(ep!=='players_info'&&!matchJournal.view(id))await restoreArchivedJournal(id);
   if (SM && /^sm?\d+$/i.test(id)) {
     const k0 = 'sm' + ep + id, h0 = cricCache.get(k0);
     if (h0 && Date.now() - h0.t < (ep === 'players_info' ? 864e5 : 15e3)) return [200, h0.d];
