@@ -11,6 +11,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - run: npm ci
       - run: node --test tests/scorer-phases.test.cjs tests/delivery-effects.test.cjs tests/pulse.test.mjs tests/match-journal.test.mjs tests/match-journal-runtime.test.mjs tests/recent.test.mjs tests/observer.test.mjs tests/tracker.test.mjs
       - run: npm install --no-save playwright@1.61.1
       - run: npx playwright install --with-deps chromium

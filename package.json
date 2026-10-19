@@ -3,6 +3,19 @@
   "version": "1.0.0",
   "type": "module",
   "private": true,
-  "engines": { "node": ">=20.6" },
-  "scripts": { "start": "node --env-file=.env server.js" }
+  "engines": {
+    "node": ">=20.6"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "build": "node scripts/build.mjs",
+    "test:neon": "node --test tests/neon-persistence.test.mjs",
+    "verify:neon": "node scripts/verify-neon.mjs"
+  },
+  "dependencies": {
+    "@neon/config": "^1.9.2",
+    "@neon/env": "^1.6.3",
+    "@neondatabase/serverless": "^1.2.0",
+    "dotenv": "^18.0.8"
+  }
 }

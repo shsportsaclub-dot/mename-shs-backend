@@ -9,6 +9,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - run: npm ci
       - run: node tests/update-state.cjs
       - run: node scripts/verify-production.mjs
       - uses: actions/upload-artifact@v4

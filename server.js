@@ -1,5 +1,7 @@
 // Scoring Heroes backend: OTP SMS from "SH Sports" + magic login link + live cricket proxy.
-// Zero dependencies. Needs Node 20.6 or newer.   Run:  node --env-file=.env server.js
+// Run npm install, then npm start. Environment may come from Render or dotenv.
+import './env.mjs';
+import { createNeonQuery } from './neon-postgres.mjs';
 import { createMatchJournal } from './match-journal.mjs';
 import { createSportmonks } from './sportmonks.mjs';
 import http from 'node:http';
@@ -45,12 +47,7 @@ if (!E.SESSION_SECRET) console.warn('SESSION_SECRET not set: sessions reset on e
 const DATABASE_URL = E.DATABASE_URL || '';   // optional Neon/Postgres connection string: makes accounts and shared data survive restarts
 let db = { users: {}, shared: {} };
 try { db = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')); } catch {}
-const neon = async (query, params = []) => {
-  const host = new URL(DATABASE_URL).hostname;
-  const r = await fetch(`https://${host}/sql`, { method: 'POST', headers: { 'content-type': 'application/json', 'Neon-Connection-String': DATABASE_URL }, body: JSON.stringify({ query, params }) });
-  if (!r.ok) throw new Error('neon ' + r.status + ' ' + (await r.text()).slice(0, 200));
-  return r.json();
-};
+const neon = createNeonQuery(DATABASE_URL);
 let neonTimer = null, neonOk = false;
 const saveDb = () => {
   try { fs.writeFileSync(DATA_FILE, JSON.stringify(db)); } catch {}
@@ -316,7 +313,7 @@ const routes = {
     try { return [200, await liveMatches()]; }
     catch (e) { return [e.code || 502, { ok: false, error: e.message }]; }
   },
-  'GET /health': async () => [200, { ok: true, version: String(E.RENDER_GIT_COMMIT || '').slice(0, 7) || 'local', commit: E.RENDER_GIT_COMMIT || null, appSha256: crypto.createHash('sha256').update(fs.readFileSync(new URL('./app-index.html', import.meta.url))).digest('hex') }]
+  'GET /health': async () => [200, { ok: true, database: { configured: !!DATABASE_URL, connected: neonOk }, version: String(E.RENDER_GIT_COMMIT || '').slice(0, 7) || 'local', commit: E.RENDER_GIT_COMMIT || null, appSha256: crypto.createHash('sha256').update(fs.readFileSync(new URL('./app-index.html', import.meta.url))).digest('hex') }]
 };
 
 // ---- Match scorecard / player profile proxy (key stays on the server) ----
