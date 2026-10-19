@@ -104,3 +104,25 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 - NOT IN THE FEED (not shown, not invented): fall of wickets, partnerships, umpires, Player of the Match, win-probability forecast.
 - Missing player photos: the provider's placeholder logo is detected (keyword and 3+ repeats) and replaced by an initials avatar; broken pictures fall back the same way.
 - OTP: Render runs with SMS_PROVIDER=console and no EMAIL_PROVIDER, so no real email or SMS is sent. Admin > More > Server status shows what is switched on, sends a test email and shows the provider's real error. Needs the owner to set Render Environment values.
+
+## Batch 2026-10-19 (audit against first documents)
+
+| Area | Status | Notes |
+|---|---|---|
+| Viewer live centre (head result, phases, ball-by-ball strip, 4/6/W animation) | Done | tests/live-centre.cjs, live-window-browser.cjs |
+| Powerplay (ICC T20/ODI phases) | Done | Source: ICC playing conditions via Wikipedia "Powerplay (cricket)" |
+| Live video servers 1-4, multi-view, SH logo on own player | Done | Own player only. Covering another channel's watermark is refused. |
+| Phone/YouTube streaming from the app | Guide only | Direct page-to-YouTube push needs a streaming server (not built) |
+| Match graphs (Manhattan, worm, run rate vs required, partnerships, wagon wheel, shots, win %) | Done | Wording is "win probability", never "odds" |
+| Auction rules (price slabs, reserve, category/overseas limits, cap, undo, retention, RTM, re-auction, franchise profile + social handles) | Done | Points only, no money. tests/auction-rules.cjs |
+| Auction player registration social handles | Done | server.js sanitises handles (https or @handle) |
+| Ground booking (profiles, base/peak/weekend, slot calendar, blackout, advance %, cancellation, status flow, payment record, UPI link) | Done (local) | Requests reach the owner via WhatsApp link; no server-side booking sync yet |
+| Academy (batches, students, attendance, fees, coach ratings, training log) | Done (local) | Fees are recorded/UPI link only. Parent login not built |
+| Marketplace (listings, offers, moderation, reports) | Existing | Unchanged this batch |
+| Social studio (14 templates, brand kit, player photo, auction SOLD) | Done | tests/social-studio-v2.cjs |
+| ePaper (brand masthead, Local/Global editions, poster from article) | Done | AI desk articles already generated from match data |
+| QR generator/scanner, CSV import from other apps | Done | No scraping of other apps. Link scan only opens SH links |
+| Rankings World/Country/State/City | Done | City uses player profile city |
+| App-wide translation beyond commentary/voice | Open | 16 languages exist for commentary and voice only |
+| Referee/umpire profiles with ratings | Open | XV.officials exists; ratings not added |
+| Server-side ground/academy sync, parent login | Open | Next batch |
