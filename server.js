@@ -7,6 +7,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import net from 'node:net';
+import { answersFrom, board as pollBoard, POLL_POINTS } from './poll-score.mjs';
 import tls from 'node:tls';
 import { createHistory, sameTeamName } from './history.mjs';
 import { snapshotOf, diffSnapshots } from './observer.mjs';
@@ -546,19 +547,35 @@ function pollVoter(req, body) {
   if (phone && db.users[phone]) return 'u:' + phone;
   const g = String(body.guest || ''); return /^[\w-]{12,60}$/.test(g) ? 'g:' + g : '';
 }
+async function pollResolve(id) {   // fill db.pollRes[id] once the provider says the match is over and its figures prove an answer
+  const M = (db.polls || {})[id]; if (!M || !live.data || !Array.isArray(live.data.matches)) return;
+  const m = live.data.matches.find(x => x.id === id); if (!m || !m.ended) return;
+  const R = (db.pollRes = db.pollRes || {})[id] || (db.pollRes[id] = {}), opts = {}; for (const [k, p] of Object.entries(M)) opts[k] = p.opts;
+  let sc = null;
+  if (!('century' in R) && M.century && CRIC_KEY && !limited('pollsc:' + id, 4, 36e5)) { try { const [r] = await cricFresh('match_scorecard', id, 600e3); if (r && r.ok && r.data && Array.isArray(r.data.scorecard)) sc = r.data.scorecard; } catch {} }
+  const a = answersFrom(m, sc, opts); let ch = false;
+  for (const [k, v] of Object.entries(a)) if (!(k in R) && M[k]) { R[k] = v; ch = true; }
+  if (ch) { R.at = Date.now(); saveDb(); }
+}
 function pollView(match, voter) {
-  const M = (db.polls || {})[match] || {}, out = {};
+  const M = (db.polls || {})[match] || {}, out = {}, R = (db.pollRes || {})[match] || {};
   for (const [k, p] of Object.entries(M)) {
     const mine = voter ? p.votes[voter] || null : null, counts = {}; let total = 0;
     for (const o of p.opts) counts[o] = 0;
     for (const o of Object.values(p.votes)) if (o in counts) { counts[o]++; total++; }
-    out[k] = { opts: p.opts, mine, total, counts: mine ? counts : null };   // results are shown only after you vote
+    out[k] = { opts: p.opts, mine, total, counts: mine ? counts : null, ...(k in R ? { answer: R[k], points: mine && mine === R[k] ? POLL_POINTS : 0 } : {}) };   // results are shown only after you vote
   }
   return out;
 }
 routes['GET /api/polls'] = async (req, body) => {
   const id = String(body.match || ''); if (!/^[\w-]{1,60}$/.test(id)) return [400, { ok: false, error: 'Bad match id' }];
+  try { await pollResolve(id); } catch {}
   return [200, { ok: true, polls: pollView(id, pollVoter(req, body)) }];
+};
+routes['GET /api/polls/leaderboard'] = async (req, body) => {
+  for (const id of Object.keys(db.polls || {}).filter(i => !((db.pollRes || {})[i] || {}).at).slice(-3)) { try { await pollResolve(id); } catch {} }
+  const b = pollBoard(db.polls, db.pollRes, db.users), v = pollVoter(req, body), me = v && b.all[v] ? b.all[v] : { pts: 0, ok: 0, n: 0 };
+  return [200, { ok: true, top: b.top, me: { ...me, rank: v ? b.rank(v) : null }, points: POLL_POINTS, note: 'Only polls the final scorecard can prove are scored: winner, 200+ team total, century.' }];
 };
 routes['POST /api/polls/vote'] = async (req, body, ip) => {
   const id = String(body.match || ''), key = String(body.poll || ''), voter = pollVoter(req, body);

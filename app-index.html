@@ -5539,6 +5539,17 @@ function shLive(){try{if(UI.shES||!window.EventSource||!apiBase()||!S.user)retur
   es.onerror=()=>{}}catch(x){}}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){shLive();if(S.user)shPull()}});
 setInterval(shLive,5000);
+/* poll leaderboard: points only for answers the final scorecard proves */
+{const L0=shPollsLoad;shPollsLoad=async function(W){const r=await L0.apply(this,arguments);
+  try{const id=W&&W.m&&W.m.id;const j=await (await fetch(apiBase()+'/api/polls/leaderboard?guest='+encodeURIComponent(shGuestId()),{headers:S.tok?{Authorization:'Bearer '+S.tok}:{}})).json();
+    if(j.ok&&UI.wm&&UI.wm.m.id===id){UI.wm.lb=j;if(UI.view==='wmatch'&&UI.wm.tab==='po')render()}}catch(e){}return r}}
+{const H0=shPollsHTML;shPollsHTML=function(W){let h=H0.apply(this,arguments);const P=W.polls||{};
+  const sc=Object.keys(P).filter(k=>P[k].answer!=null);
+  if(sc.length){const pts=sc.reduce((a,k)=>a+(P[k].points||0),0);
+    h=h.replace(/(<div class="cbp-lb">[^<]*<\/div>)/,`$1<div class="cbp-cd cbp-note sh-lb-res"><b>Result of your predictions</b>${sc.map(k=>{const p=P[k];return p.mine?`${esc(k)}: ${p.mine===p.answer?'correct (+'+p.points+')':'wrong, answer was '+esc(p.answer)}`:`${esc(k)}: answer ${esc(p.answer)}`}).join(' · ')}${pts?` · <b>+${pts} points</b>`:''}</div>`)}
+  const L=W.lb;
+  if(L){h+=`<div class="cbp-cd sh-lb"><div class="b">Prediction leaderboard</div><div class="mu sm">${esc(L.note||'')} ${L.points||10} points per correct poll. Signed-in players only.</div>${L.top&&L.top.length?`<div class="sh-lb-list">${L.top.map(x=>`<div class="item"><b style="width:26px">${x.rank}</b><span class="grow">${esc(x.name)}</span><span class="mu sm">${x.ok}/${x.n} correct</span><b style="min-width:52px;text-align:right">${x.pts} pts</b></div>`).join('')}</div>`:'<div class="mu sm" style="margin-top:8px">No scored polls yet. Points appear after a match ends and its final scorecard proves an answer.</div>'}${L.me&&L.me.n?`<div class="mu sm" style="margin-top:8px">You: ${L.me.pts} pts · ${L.me.ok}/${L.me.n} correct${L.me.rank?' · rank '+L.me.rank:''}</div>`:''}</div>`}
+  return h}}
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});
