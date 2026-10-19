@@ -1,7 +1,7 @@
 {
   "checkedAt": "2026-10-19T10:07:28.392448+00:00",
   "liveNeonVerified": false,
-  "note": "Neon deploy awaits authentication; no DATABASE_URL was retrieved. SQL fixture is not live database proof.",
+  "note": "Neon database write/read and kv schema verified directly in Console. App end-to-end remains unverified: CLI authorization callback blocked by browser URL policy; no CLI credential stored; Render sign-in was declined and DATABASE_URL has not been configured there.",
   "checks": {
     "build": {
       "exitCode": 0,
@@ -10,7 +10,7 @@
     },
     "neonFixture": {
       "exitCode": 0,
-      "stdout": "\n> scoring-heroes-api@1.0.0 test:neon\n> node --test tests/neon-persistence.test.mjs\n\n\u2714 HTTP app loads Neon env, saves a match, and restores it after restart (SQL fixture) (1998.197041ms)\n\u2139 tests 1\n\u2139 suites 0\n\u2139 pass 1\n\u2139 fail 0\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 2111.240336\n",
+      "stdout": "\n> scoring-heroes-api@1.0.0 test:neon\n> node --test tests/neon-persistence.test.mjs\n\n✔ HTTP app loads Neon env, saves a match, and restores it after restart (SQL fixture) (1998.197041ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 2111.240336\n",
       "stderr": "npm warn Unknown env config \"http-proxy\". This will stop working in the next major version of npm.\n"
     },
     "liveNeon": {
@@ -36,5 +36,15 @@
       "bytes": 1073469
     },
     "startOutput": "npm warn Unknown env config \"http-proxy\". This will stop working in the next major version of npm.\n\n> scoring-heroes-api@1.0.0 start\n> node server.js\n\nScoring Heroes API on :18984  (SMS: console, live feed: off)\n"
+  },
+  "liveDatabaseDashboardVerification": {
+    "checkedAt": "2026-10-19T13:42:44Z",
+    "project": "winter-sun-54416595",
+    "branch": "production",
+    "database": "neondb",
+    "postgresWriteReadPass": true,
+    "appSchemaReady": true,
+    "testRecordRolledBack": true,
+    "method": "Signed-in Neon Console SQL Editor; CREATE TABLE IF NOT EXISTS kv, transaction write/read assertion, ROLLBACK, final two booleans true"
   }
 }
