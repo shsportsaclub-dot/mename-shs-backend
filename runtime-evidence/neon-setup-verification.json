@@ -1,7 +1,7 @@
 {
   "checkedAt": "2026-10-19T10:07:28.392448+00:00",
-  "liveNeonVerified": false,
-  "note": "Neon database write/read and kv schema verified directly in Console. App end-to-end remains unverified: CLI authorization callback blocked by browser URL policy; no CLI credential stored; Render sign-in was declined and DATABASE_URL has not been configured there.",
+  "liveNeonVerified": true,
+  "note": "Completed via signed-in Neon and Render dashboards after CLI OAuth callback was blocked by browser policy. DATABASE_URL saved privately to Render and local dotenv; Render rebuilt and deployed commit 5293ad6. npm run build, npm start, and live Neon app-connected/write/read/cleanup checks passed. Earlier checks below preserve the initial blocked state; liveRuntimeVerification and deployedHealth are the final result.",
   "checks": {
     "build": {
       "exitCode": 0,
@@ -46,5 +46,36 @@
     "appSchemaReady": true,
     "testRecordRolledBack": true,
     "method": "Signed-in Neon Console SQL Editor; CREATE TABLE IF NOT EXISTS kv, transaction write/read assertion, ROLLBACK, final two booleans true"
-  }
+  },
+  "deployedAppVerified": true,
+  "liveRuntimeVerification": {
+    "buildPassed": true,
+    "liveNeonVerified": true,
+    "health": {
+      "status": 200,
+      "data": {
+        "ok": true,
+        "database": {
+          "configured": true,
+          "connected": true
+        },
+        "version": "local",
+        "commit": null,
+        "appSha256": "455b461fb7baf5590b915056c0f83672d7d6177ce29831174f32875697d69f82"
+      }
+    },
+    "verifyOutput": "\n> scoring-heroes-api@1.0.0 verify:neon\n> node scripts/verify-neon.mjs\n\nLIVE Neon PASS: app connected; parameterized Postgres write/read verified\nLIVE Neon PASS: verification record removed\n"
+  },
+  "deployedHealth": {
+    "status": 200,
+    "ok": true,
+    "database": {
+      "configured": true,
+      "connected": true
+    },
+    "version": "5293ad6",
+    "commit": "5293ad6f497af17eb1eab3893ea9c2d69341476b",
+    "appSha256": "455b461fb7baf5590b915056c0f83672d7d6177ce29831174f32875697d69f82"
+  },
+  "deployedAppStatus": 200
 }
