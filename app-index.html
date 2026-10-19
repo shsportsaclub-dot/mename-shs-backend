@@ -241,6 +241,12 @@ svg text{font-family:var(--ui)}
 .sh-poll-list{display:grid;gap:8px;margin:10px 0}.sh-poll-o{padding:11px 12px;border:1px solid var(--line,#2b3a63);border-radius:10px;background:transparent;color:inherit;font:700 14px var(--ui);text-align:left}.sh-poll-o:disabled{opacity:.5}
 .sh-poll-r{position:relative;display:flex;justify-content:space-between;gap:8px;padding:11px 12px;border:1px solid var(--line,#2b3a63);border-radius:10px;overflow:hidden;font:600 14px var(--ui)}.sh-poll-r>*{position:relative}.sh-poll-fill{position:absolute!important;inset:0 auto 0 0;background:rgba(63,123,255,.28)}.sh-poll-r.me{border-color:#3f7bff}
 .sh-pp-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:6px 0}.sh-pp-strip div{display:grid;gap:2px;text-align:center;padding:10px 2px;border-radius:10px;background:#fff;color:#1a1a1a;box-shadow:0 1px 3px #0002}.sh-pp-strip b{font:800 17px var(--ui)}.sh-pp-strip span{font-size:10px;opacity:.7;text-transform:uppercase;letter-spacing:.04em}
+.ovbug{text-shadow:0 1px 2px #000b}
+.ovfx{position:absolute;left:50%;top:18cqw;transform:translateX(-50%);min-width:34cqw;padding:1.4cqw 3cqw;border-radius:1cqw;text-align:center;color:#fff;display:grid;gap:.2cqw;box-shadow:0 1cqw 3cqw #0008;animation:ovfxpop 4.5s ease both;text-shadow:0 .2cqw .4cqw #000a}
+.ovfx b{font-size:8cqw;line-height:1;letter-spacing:.2cqw;font-style:italic}.ovfx span{font-size:2.8cqw}.ovfx small{font-size:2cqw;opacity:.85}
+.ovfx-four{background:linear-gradient(90deg,#1747c9,#3f7bff)}.ovfx-six{background:linear-gradient(90deg,#d9480f,#ffb020)}.ovfx-out{background:linear-gradient(90deg,#8e0f1d,#e11d2e)}.ovfx-m50,.ovfx-m100{background:linear-gradient(90deg,#8a6a00,#ffc83d);color:#1b1500;text-shadow:none}
+@keyframes ovfxpop{0%{opacity:0;transform:translateX(-50%) scale(.6)}8%{opacity:1;transform:translateX(-50%) scale(1.08)}14%{transform:translateX(-50%) scale(1)}85%{opacity:1}100%{opacity:0;transform:translateX(-50%) translateY(-2cqw)}}
+@media (prefers-reduced-motion:reduce){.ovfx{animation:ovfxfade 4.5s both}@keyframes ovfxfade{0%,90%{opacity:1}100%{opacity:0}}}
 </style>
 <style>.cbscore{background:var(--c2,#14213d);border:1px solid var(--bd,#2a3a66);border-radius:12px;padding:12px 14px;margin:8px 0}.cbs2{display:flex;gap:16px;flex-wrap:wrap;margin:6px 0;font-size:13px}.cbst{background:#f5c518;color:#111;font-weight:700;border-radius:8px;padding:8px 10px;margin-top:6px}.cbov{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:6px 0}</style>
 <style>.catabs{display:flex;border-bottom:2px solid var(--bd);margin:8px 0;overflow-x:auto}.catabs button{flex:1;background:none;border:0;color:var(--mu);font-weight:700;padding:12px 8px;white-space:nowrap;border-bottom:3px solid transparent;margin-bottom:-2px}.catabs button.on{color:var(--tx);border-bottom-color:var(--ac)}
@@ -5311,6 +5317,23 @@ function shPlayerAnalytics(p){const log=ppLog(p.id),a=ppAgg(p.id,{fmt:'all',yr:'
  const fol=(S.fol&&S.fol.players||[]).includes(p.id),btn=`<div style="padding:10px 4px"><button class="btn" style="width:100%;${fol?'background:#fff;color:#1a1a1a;border:1px solid #9aa4bf':''}" data-a="ppFollow" data-id="${esc(p.id)}">${fol?'Following ✓ (tap to unfollow)':'Follow player'}</button></div>`;
  let r='';try{r=btn+shPlayerAnalytics(p)}catch(e){r=btn}
  return o.replace('<div class="ppS">PERSONAL INFORMATION</div>',r+'<div class="ppS">PERSONAL INFORMATION</div>')}}
+
+/* ---------------- Experience tickers: OBS overlay score bug in team colours + FOUR / SIX / OUT / 50 / 100 banners ---------------- */
+function shOvEvent(m){const s=st(m);if(!s)return null;const n=s.inn.ev.length,e=s.inn.ev[n-1];if(!e)return null;let kind='',label='';
+ if(e.w){kind='out';label='OUT!'}
+ else{try{const i=s.i,m2={...m,innings:m.innings.map((x,j)=>j===i?{...x,ev:x.ev.slice(0,-1)}:x)},a=calc(m2,i).bat[e.bt],b=s.k.bat[e.bt],pr=a?a.r:0,nw=b?b.r:0;if(pr<100&&nw>=100){kind='m100';label='100 RUNS!'}else if(pr<50&&nw>=50){kind='m50';label='FIFTY RUNS!'}}catch{}
+  if(!kind&&!e.x&&e.r===6){kind='six';label='SIX!'}else if(!kind&&!e.x&&e.r===4){kind='four';label='FOUR!'}}
+ if(!kind)return null;const b=e.bt&&s.k.bat[e.bt];
+ return {kind,label,i:s.i,n,sub:kind==='out'?(e.out?nm(e.out):''):b?nm(e.bt)+' '+b.r+' ('+b.b+')':'',tag:s.k.runs+'-'+s.k.wk+' ('+fmtOv(s.k.lg)+')'}}
+{const o0=overlayHTML;overlayHTML=function(prev){let html=o0.apply(this,arguments);
+ try{const m=ovMatch();if(!m||S.stream.nofx)return html;const s=st(m);
+  if(s&&s.bat&&s.bowl&&s.bat.color&&s.bowl.color&&s.bat.color!==s.bowl.color)html=html.replace('<div class="ovbug">',`<div class="ovbug" style="--ob:linear-gradient(90deg,${s.bat.color}f2 0 50%,${s.bowl.color}f2 50% 100%);--oa:#0b1020">`);
+  const ev=shOvEvent(m),key=ev?m.id+'|'+ev.i+'|'+ev.n:'',F=UI.ovFx||(UI.ovFx={key,at:0});
+  if(F.key!==key){F.key=key;F.at=ev?Date.now():0}
+  if(ev&&Date.now()-F.at<4500){html=html.replace(/<\/div>$/,`<div class="ovfx ovfx-${ev.kind}" role="status"><b>${esc(ev.label)}</b><span>${esc(ev.sub)}</span><small>${esc(ev.tag)}</small></div></div>`);
+   clearTimeout(UI.ovT);UI.ovT=setTimeout(()=>{if(location.hash==='#overlay'||UI.view==='stream')render()},4700)}
+ }catch(e){}
+ return html}}
 
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
