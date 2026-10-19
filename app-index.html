@@ -1369,14 +1369,30 @@ function speak(txt,flush){
     const u=new SpeechSynthesisUtterance(txt),tag=VL[vlang()].tag;u.lang=tag;u.rate=1.02;u.pitch=1;
     const vs=ss.getVoices?ss.getVoices():[],v=vs.find(x=>x.lang===tag)||vs.find(x=>x.lang&&x.lang.slice(0,2)===tag.slice(0,2));if(v)u.voice=v;
     ss.speak(u)}catch(e){}}
+/* Telugu / Hindi voice for milestones, end of over and the result (numbers and names only, nothing invented) */
+const VNUM={te:n=>String(n),hi:n=>String(n)};
+function vExtra(m,e,lang){const te=lang==='te',o={},inn=m.innings[m.cur];if(!inn||!e)return o;const k=calc(m,m.cur);
+  if(e.x===''||e.x==='nb'){const r=(k.bat[e.bt]||{}).r||0,b=r-e.r;
+    if(b<100&&r>=100)o.ms=te?`${sh(e.bt)} సెంచరీ పూర్తి చేశాడు! ${r} పరుగులు.`:`${sh(e.bt)} का शतक पूरा! ${r} रन।`;
+    else if(b<50&&r>=50)o.ms=te?`${sh(e.bt)} అర్ధ సెంచరీ పూర్తి చేశాడు! ${r} పరుగులు.`:`${sh(e.bt)} का अर्धशतक पूरा! ${r} रन।`}
+  const legal=e.x!=='wd'&&e.x!=='nb';
+  if(legal&&inn.lg&&inn.lg%BPO===0){const q=k.pov[inn.lg/BPO-1];if(q)o.ov=te?`ఓవర్ ${inn.lg/BPO} ముగిసింది. ${q.runs} పరుగులు${q.wk?', '+q.wk+' వికెట్'+(q.wk>1?'లు':''):''}. స్కోరు ${k.runs} / ${k.wk}.`:`ओवर ${inn.lg/BPO} समाप्त। ${q.runs} रन${q.wk?', '+q.wk+' विकेट':''}। स्कोर ${k.runs} / ${k.wk}।`}
+  return o}
+function vResult(m,lang){const te=lang==='te',r=String(m.result||'');
+  if(/tied/i.test(r))return te?'మ్యాచ్ టై అయింది.':'मैच टाई रहा।';
+  let x=/^(.*) won by (\d+) runs?$/i.exec(r);if(x)return te?`మ్యాచ్ ముగిసింది. ${x[1]} ${x[2]} పరుగుల తేడాతో గెలిచింది.`:`मैच समाप्त। ${x[1]} ने ${x[2]} रन से जीत हासिल की।`;
+  x=/^(.*) won by (\d+) wickets?$/i.exec(r);if(x)return te?`మ్యాచ్ ముగిసింది. ${x[1]} ${x[2]} వికెట్ల తేడాతో గెలిచింది.`:`मैच समाप्त। ${x[1]} ने ${x[2]} विकेट से जीत हासिल की।`;
+  return (te?'మ్యాచ్ ముగిసింది. ':'मैच समाप्त। ')+r}
 {const b0=ball;ball=function(m,s){
   const r=b0.apply(this,arguments);
   if(UI.quiet||!voiceOn())return r;
   try{const L=commentary(m,m.cur),ov=L[0]&&L[0].t==='o'?L[0]:null,bl=L.find(c=>c.t==='b'),inn=m.innings[m.cur],e=inn.ev[inn.ev.length-1];
     if(e){speak(cLine(e,vlang()),false);
-      if(vlang()==='en'&&ov)speak(ov.txt,false);
-      if(m.status==='done')speak(vlang()==='en'?m.result:'Match over. '+m.result,false);
-      else if(m.status==='break')speak(vlang()==='en'?'End of innings.':(vlang()==='te'?'ఇన్నింగ్స్ ముగిసింది.':'पारी समाप्त।'),false)}}catch(x){}
+      const lg9=vlang();
+      if(lg9==='en'&&ov)speak(ov.txt,false);
+      else if(lg9!=='en'){const x=vExtra(m,e,lg9);if(x.ms)speak(x.ms,false);if(x.ov)speak(x.ov,false)}
+      if(m.status==='done')speak(lg9==='en'?m.result:vResult(m,lg9),false);
+      else if(m.status==='break')speak(lg9==='en'?'End of innings.':(lg9==='te'?'ఇన్నింగ్స్ ముగిసింది.':'पारी समाप्त।'),false)}}catch(x){}
   return r}}
 {const a0=autoPlay;autoPlay=function(){UI.quiet=true;try{return a0.apply(this,arguments)}finally{UI.quiet=false}}}
 function voiceBar(){
