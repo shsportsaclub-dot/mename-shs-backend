@@ -5575,7 +5575,7 @@ UI.ot=UI.ot||null;
   UI.ot=null;const r=b9.call(this,m,s);
   if(s.ot){const inn=m.innings[m.cur],e=inn.ev[inn.ev.length-1];if(e){e.ot=s.ot;e.otb=!!s.otb}}return r}}
 {const c9=commentary;commentary=function(m,i){const L=c9.apply(this,arguments),inn=m.innings[i];if(!inn)return L;
-  const bs=L.filter(x=>x.t==='b');bs.forEach((x,k)=>{const e=inn.ev[k];if(e&&e.ot&&x.txt.indexOf('overthrow')<0)x.txt+=` Overthrows: ${e.ot} extra run${e.ot===1?'':'s'}${e.otb?' (boundary)':''}.`});return L}}
+  const bs=L.filter(x=>x.t==='b');bs.forEach((x,k)=>{const e=inn.ev[inn.ev.length-1-k];if(e&&e.ot&&x.txt.indexOf('overthrow')<0)x.txt+=` Overthrows: ${e.ot} extra run${e.ot===1?'':'s'}${e.otb?' (boundary)':''}.`});return L}}
 const csPool=(m,tid)=>{const xi=m.xi[tid]||[],sub=(m.subs&&m.subs[tid])||[],sq=(T(tid)&&T(tid).players)||[];return [...new Set([...sub,...sq])].filter(id=>!xi.includes(id)&&P(id)&&!(m.cs||[]).some(c=>c.out===id))};
 function csApplyTo(m,tid,outId,inId){
   if(!m||!m.xi||!m.xi[tid]||!m.xi[tid].includes(outId)||m.xi[tid].includes(inId)||m.status==='done')return false;
@@ -5724,6 +5724,10 @@ vExtra=function(m,e,lang){const P=LP[lang],o={},inn=m.innings[m.cur];if(!P||!inn
 vResult=function(m,lang){const P=LP[lang],r=String(m.result||'');if(!P)return r;if(/tied/i.test(r))return P.tie;
   let x=/^(.*) won by (\d+) runs?$/i.exec(r);if(x)return lpf(P.wonR,{t:x[1],n:x[2]});x=/^(.*) won by (\d+) wickets?$/i.exec(r);if(x)return lpf(P.wonW,{t:x[1],n:x[2]});return P.fin+r};
 A.vtest=function(){const P=LP[vlang()];speak(vlang()==='en'||!P?'Four! Cracked through the covers for a boundary.':P.test,true)};
+/* on-screen commentary follows the chosen language too (balls from the recorded events, over lines from the recorded totals) */
+{const c8=commentary;commentary=function(m,i){const L=c8.apply(this,arguments),lang=vlang(),P=LP[lang],inn=m.innings[i];if(lang==='en'||!P||!inn)return L;
+  let k=0;L.forEach(x=>{if(x.t==='b'){const e=inn.ev[inn.ev.length-1-k++];if(e){x.txt=cLine(e,lang)+(e.ot?' +'+e.ot:'');x.en=1}}
+    else if(x.t==='o'){const q=/^End of over (\d+): (\d+) runs?(?:, (\d+) wkt)?\. \S+ (\d+)\/(\d+)\.$/.exec(x.txt);if(q)x.txt=lpf(P.over,{o:q[1],r:q[2],w:q[3]?lpf(P.ow,{n:q[3]}):'',s:q[4],k:q[5]})}});return L}}
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});

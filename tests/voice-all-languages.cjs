@@ -30,3 +30,20 @@ const { chromium } = require('playwright');
   ok(new Set(r.langs.map(l => r[l].res)).size === r.langs.length, 'each language has its own wording');
   ok(!errs.length, errs.join(';')); await b.close(); if (!process.exitCode) console.log('PASS: all-language voice (' + r.langs.length + ' languages)');
 })();
+// on-screen commentary in the chosen language, each ball attached to its own event
+(async () => {
+  const b = await require('playwright').chromium.launch(), p = await b.newPage(); await p.goto('file://' + require('path').resolve(__dirname, '../app-index.html')); await p.waitForTimeout(400);
+  const r = await p.evaluate(() => {
+    S.players = Array.from({ length: 22 }, (_, i) => ({ id: 'p' + i, name: 'Zed ' + i, role: 'BAT' }));
+    S.teams = [{ id: 'a', name: 'India', short: 'IND', color: '#235bbb', players: S.players.slice(0, 11).map(p => p.id) }, { id: 'b', name: 'Australia', short: 'AUS', color: '#c9a400', players: S.players.slice(11).map(p => p.id) }];
+    const m = newMatch({ a: 'a', b: 'b', overs: 3, toss: 'a', dec: 'bat', xiA: S.teams[0].players, xiB: S.teams[1].players }); startInnings(m, 0, 'p0', 'p1', 'p11'); const inn = m.innings[0];
+    for (let k = 0; k < 6; k++) { inn.cur.bl = inn.cur.bl || 'p11'; ball(m, { r: k === 1 ? 4 : k === 2 ? 6 : 1 }) }
+    UI.ot = { n: 2, b: false }; inn.cur.bl = inn.cur.bl || 'p12'; ball(m, { r: 1 });
+    const o = {}; S.settings.vlang = 'en'; o.en = commentary(m, 0).map(x => x.txt); S.settings.vlang = 'te'; o.te = commentary(m, 0).map(x => x.txt); S.settings.vlang = 'ta'; o.ta = commentary(m, 0).map(x => x.txt); S.settings.vlang = 'en'; return o;
+  });
+  const ok = (c, m) => { if (!c) { console.error('FAIL', m); process.exitCode = 1; } };
+  ok(/Overthrows: 2/.test(r.en[0]) && !/Overthrows/.test(r.en[r.en.length - 1]), 'overthrow note on the right ball (newest first): ' + r.en[0]);
+  ok(r.te.length === r.en.length && r.te.every(t => !/[A-Za-z]{4,} (reaches|runs)/.test(t)), 'telugu lines'); ok(/ఓవర్ 1 ముగిసింది/.test(r.te.join(' ')), 'telugu over line: ' + r.te.join(' | ')); ok(/ஓவர் 1 முடிந்தது/.test(r.ta.join(' ')), 'tamil over line');
+  ok(/ఫోర్/.test(r.te.join(' ')) && /సిక్సర్/.test(r.te.join(' ')), 'telugu four and six'); ok(!/ఫోర్|సిక్సర్/.test(r.en.join(' ')), 'english stays english');
+  await b.close(); if (!process.exitCode) console.log('PASS: on-screen commentary language');
+})();
