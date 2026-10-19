@@ -210,7 +210,7 @@ const LIVE_FILE = path.join(path.dirname(E.DATA_FILE || './data.json'), 'live-ca
 try { const c = JSON.parse(fs.readFileSync(LIVE_FILE, 'utf8')); if (c && c.data) live = { t: 0, data: c.data, ttl: LIVE_TTL, err: '' }; } catch (e) {}
 // The free cricket plan allows ~100 calls a day, so spread the remaining calls over the rest of the (UTC) day.
 function liveTtl(info) {
-  if ((+(info && info.hitsLimit) || 0) > 5000) return LIVE_TTL;   // generous plan: refresh every LIVE_CACHE_SECONDS (default 60 s)
+  if ((+(info && info.hitsLimit) || 0) > 5000) return (+E.LIVE_CACHE_SECONDS || 15) * 1000;   // unlimited plan: refresh every 15 s unless LIVE_CACHE_SECONDS says otherwise   // generous plan: refresh every LIVE_CACHE_SECONDS (default 60 s)
   const lim = +(info && info.hitsLimit) || 100, used = +(info && info.hitsToday) || 0, left = Math.max(1, lim - used - 8);
   const now = new Date(), end = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1), secs = (end - now) / 1000;
   return Math.min(60 * 60e3, Math.max(5 * 60e3, secs / left * 1000 * 1.15));
@@ -232,7 +232,8 @@ async function liveMatches() {
       started: !!m.matchStarted, ended: !!m.matchEnded,
       teams: (m.teamInfo && m.teamInfo.length ? m.teamInfo : (m.teams || []).map(n => ({ name: n, shortname: String(n).slice(0, 3).toUpperCase() })))
         .map(t => ({ name: t.name, short: t.shortname, img: t.img || '' })),
-      score: (m.score || []).map(s => ({ inning: s.inning, r: s.r, w: s.w, o: s.o }))
+      score: (m.score || []).map(s => ({ inning: s.inning, r: s.r, w: s.w, o: s.o })),
+      bbb: typeof m.bbbEnabled === 'boolean' ? m.bbbEnabled : undefined, fantasy: typeof m.fantasyEnabled === 'boolean' ? m.fantasyEnabled : undefined
     }));
     const info = { hitsToday: j.info && j.info.hitsToday, hitsLimit: j.info && j.info.hitsLimit };
     live = { t: Date.now(), ttl: liveTtl(j.info), err: '', data: { ok: true, matches, info, refreshEverySec: Math.round(liveTtl(j.info) / 1000), updated: new Date().toISOString() } };
@@ -361,6 +362,8 @@ async function cricFresh(ep, id, maxAge) {   // same cache the match page uses; 
   let data = j.data; if (ep === 'match_scorecard') { try { data = await enrichScorecard(data, id); } catch {} }
   matchJournal.record(id,ep,data,{source:'CricketData tracker check'});const d = { ok: true, data }; cricCache.set(k, { t: Date.now(), d }); return [d, true];
 }
+const bbbFlag = id => { const m = live.data && Array.isArray(live.data.matches) && live.data.matches.find(x => x.id === id); return m && typeof m.bbb === 'boolean' ? m.bbb : null; };
+const bbbWhy = id => bbbFlag(id) === false ? 'CricketData lists this match with ball-by-ball switched off (bbbEnabled=false), so the provider sends no deliveries for it. ' : '';
 let trackBusy = false; const trackDone = new Set();
 async function trackTick() {
   if (trackBusy || !CRIC_KEY) return; trackBusy = true;
@@ -450,9 +453,9 @@ routes['GET /api/cric'] = async (req, body, ip) => {
   try {
     const r = await fetch(`${CRIC_BASE}/${ep}?apikey=${encodeURIComponent(CRIC_KEY)}&id=${encodeURIComponent(id)}`, { signal: AbortSignal.timeout(10000) });
     const j = await r.json();
-    if(j.status!=='success'){const fb=ep==='match_bbb'?trackerBbb(id):null;if(fb){fb.data.providerNote='Provider reply: '+(j.reason||'no ball-by-ball')+' · SH tracker: '+(trackStat.per[id]||'this match is not being tracked yet')+', saved '+(db.track[id]?db.track[id].rows.length:0)+' balls, '+(db.track[id]?db.track[id].notes.length:0)+' notes';matchJournal.record(id,ep,fb.data,{source:'SH snapshot tracker'});return [200,fb]}matchJournal.record(id,ep,null,{error:j.reason||'Cricket API error'});return [502,{ok:false,error:(j.reason||'Cricket API error')+(ep==='match_bbb'?` · SH tracker: ${trackStat.per[id]||'this match is not being tracked yet'}${db.track[id]?`, saved ${db.track[id].rows.length} balls and ${db.track[id].notes.length} notes`:', nothing saved for this match yet'}`:'')}]}
+    if(j.status!=='success'){const fb=ep==='match_bbb'?trackerBbb(id):null;if(fb){fb.data.providerNote=bbbWhy(id)+'Provider reply: '+(j.reason||'no ball-by-ball')+' · SH tracker: '+(trackStat.per[id]||'this match is not being tracked yet')+', saved '+(db.track[id]?db.track[id].rows.length:0)+' balls, '+(db.track[id]?db.track[id].notes.length:0)+' notes';matchJournal.record(id,ep,fb.data,{source:'SH snapshot tracker'});return [200,fb]}matchJournal.record(id,ep,null,{error:j.reason||'Cricket API error'});return [502,{ok:false,error:(ep==='match_bbb'?bbbWhy(id):'')+(j.reason||'Cricket API error')+(ep==='match_bbb'?` · SH tracker: ${trackStat.per[id]||'this match is not being tracked yet'}${db.track[id]?`, saved ${db.track[id].rows.length} balls and ${db.track[id].notes.length} notes`:', nothing saved for this match yet'}`:'')}]}
     let data = j.data;
-    if (ep === 'match_bbb' && !(Array.isArray(data) ? data.length : (data && Array.isArray(data.bbb) ? data.bbb.length : 0))) { const fb = trackerBbb(id); if(fb){fb.data.providerNote='Provider reply: success, but 0 ball rows';matchJournal.record(id,ep,fb.data,{source:'SH snapshot tracker'});return [200,fb]} data = Array.isArray(data) ? data : { ...(data && typeof data === 'object' ? data : {}), bbb: [], providerNote: 'Provider reply: success, but 0 ball rows for this match · SH tracker: ' + (trackStat.per[id]||'this match is not being tracked yet') }; }
+    if (ep === 'match_bbb' && !(Array.isArray(data) ? data.length : (data && Array.isArray(data.bbb) ? data.bbb.length : 0))) { const fb = trackerBbb(id); if(fb){fb.data.providerNote=bbbWhy(id)+'Provider reply: success, but 0 ball rows';matchJournal.record(id,ep,fb.data,{source:'SH snapshot tracker'});return [200,fb]} data = Array.isArray(data) ? data : { ...(data && typeof data === 'object' ? data : {}), bbb: [], providerNote: 'Provider reply: success, but 0 ball rows for this match · SH tracker: ' + (trackStat.per[id]||'this match is not being tracked yet') }; }
     try { if (ep === 'match_info') data = enrichInfo(data); else if (ep === 'match_squad') data = enrichSquad(data, await infoOf(id)); else if (ep === 'match_scorecard') data = await enrichScorecard(data, id); } catch {}
     matchJournal.record(id,ep,data,{source:'CricketData'});const d = { ok: true, data }; cricCache.set(k, { t: Date.now(), d }); if (cricCache.size > 500) cricCache.clear();
     return [200, d];

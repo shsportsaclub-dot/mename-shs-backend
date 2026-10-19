@@ -1315,12 +1315,12 @@ function liveFeedCard(){
   if(!j.ok)return `<!--wf--><div class="sec"><h3>Live cricket</h3></div><div class="card mu">Live feed unavailable: ${esc(j.error||'')}</div><!--/wf-->`;
   const F2=wFilter(),rec=F2.rec.filter(m=>Date.now()-wTm(m)<21*864e5),tab=UI.htab||(F2.live.length?'live':'up'),
     T3={live:[F2.live,'No live matches right now. Check Upcoming or Recent.'],rec:[rec,'No recent results.'],up:[F2.up,'No upcoming matches listed.']}[tab];
-  return `<!--wf--><div class="sec"><h3>Cricket</h3><span class="mu sm">${j.stale?'delayed (provider limit) | ':''}${j.refreshEverySec?'auto-refresh ~'+Math.max(1,Math.round(j.refreshEverySec/60))+' min | ':''}updated ${j.updated?new Date(j.updated).toLocaleTimeString('en-IN',{hour:'numeric',minute:'2-digit'}):''} <button class="btn sm ghost" data-a="refreshLive" style="padding:2px 8px;margin-left:6px">Refresh</button></span></div>
+  return `<!--wf--><div class="sec"><h3>Cricket</h3><span class="mu sm">${j.stale?'delayed (provider limit) | ':''}${j.refreshEverySec?'auto-refresh ~'+(j.refreshEverySec<60?j.refreshEverySec+' s':Math.round(j.refreshEverySec/60)+' min')+' | ':''}updated ${j.updated?new Date(j.updated).toLocaleTimeString('en-IN',{hour:'numeric',minute:'2-digit'}):''} <button class="btn sm ghost" data-a="refreshLive" style="padding:2px 8px;margin-left:6px">Refresh</button></span></div>
   <div class="htabs">${[['live','Live',F2.live.length],['rec','Recent',rec.length],['up','Upcoming',F2.up.length]].map(([k,l,n])=>`<button class="btn sm ${tab===k?'':'ghost'}" data-a="htab" data-v="${k}">${l} (${n})</button>`).join('')}</div>
   ${T3[0].length?wGroup(T3[0],30):`<div class="card mu">${T3[1]}</div>`}
   <button class="btn sm ghost wide" data-a="go" data-v="matches">All matches</button><!--/wf-->`}
 {const h0=vHome;vHome=function(){const o=h0(),i=o.indexOf('<div class="sec"><h3>Top teams</h3>');return i<0?o+liveFeedCard():o.slice(0,i)+liveFeedCard()+o.slice(i)}}
-pullLive();setInterval(pullLive,60000);
+pullLive();setInterval(pullLive,20000);
 
 
 /* ---------------- LOGIN BY SENDING AN SMS (user sends SMS from own phone; server reads the sender number) ---------------- */
