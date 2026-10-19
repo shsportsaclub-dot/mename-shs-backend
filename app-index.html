@@ -1044,6 +1044,7 @@ function hdrSimple(){return `<header class="hdr"><a class="hlogo"><img src="${lo
 function hdr(){
   const u=S.user;
   return `<header class="hdr"><a class="hlogo" data-a="go" data-v="home" role="button" aria-label="Scoring Heroes home"><img src="${logoSrc()}" alt="Sports Sky High logo"></a><div class="grow"></div>
+  ${u.guest?'<button type="button" class="btn sm" data-a="registerNow">Register now</button>':''}
   <button class="iconbtn" data-a="notif" aria-label="Notifications">${ic('bell')}${S.messages.length?'<i class="dot"></i>':''}</button>
   <button class="iconbtn me" data-a="go" data-v="profile" aria-label="Profile">${esc((u.nick||u.name||'?')[0].toUpperCase())}</button>
   <button class="iconbtn" data-a="menu" aria-label="Menu">${ic('menu')}</button></header>`}
@@ -3834,7 +3835,8 @@ Object.assign(F,{catNew(fd){if(!shAdmin())return;const name=(fd.get('name')||'')
   const l=s=>(fd.get(s)||'').split(',').map(x=>x.trim()).filter(Boolean);S.cat.push({id,name,icon:(fd.get('icon')||'\u{1F3C5}').trim(),cat:(fd.get('cat')||'').trim(),al:l('al'),fm:l('fm'),st:'COMING SOON',on:1,k:fd.get('k')==='Game'?'Game':'Sport',vr:l('vr'),pc:[]});shAudit('Added '+(fd.get('k')==='Game'?'game ':'sport ')+name);commit()},
  catDef(fd){if(!shAdmin())return;const cc=fd.get('ctry'),ids=(fd.get('ids')||'').split(',').map(x=>x.trim()).filter(Boolean),bad=ids.filter(i=>!shGet(i));if(bad.length){toast('Unknown sport id: '+bad.join(', '),4000);return}S.cdef[cc]=ids;shAudit('Country list '+cc+': '+ids.join(', '));commit();toast('Saved',1500)}});
 MENU2[0][1].splice(5,0,['mysports','⭐','My sports and country'],['sportsadmin','\u{1F6E0}️','Sports catalogue (admin)']);
-{const f0=render;render=function(){if(S.user&&S.prefs&&!S.prefs.asked&&UI.stage==='app'&&UI.view==='home'&&!UI.modal){S.prefs.asked=1;UI.view='mysports';try{save()}catch(e){}}return f0()}}
+// Home remains the entry page. Sports preferences are available from My sports
+// and country without interrupting viewers or redirecting a newly signed-in user.
 /* Start-scoring hub: only sports whose scorer exists and whose status allows it; primary sport first */
 function shHubKeys(){const keys=[];const mine=shMine();const order=[S.prefs.primary].concat(mine).filter(id=>id&&mine.includes(id));[...new Set(order)].forEach(id=>{if(id!=='cricket')shScorers(id).forEach(k=>keys.push(k))});return keys}
 const shLab=k=>(k==='football'?'⚽ Football':k==='tennis'?'\u{1F3BE} Tennis':(RS[k]?RS[k].ic:S2I[k]||'')+' '+S2N[k]);
@@ -4122,7 +4124,8 @@ Object.assign(A,{async emLSend(){const em=String((document.getElementById('em-l-
 /* ---------------- GUEST: browse without an account; stays on this device until the person logs in or out ---------------- */
 {const v1=vAuth;vAuth=function(){const o=v1.apply(this,arguments);if(o.indexOf('class="auth"')<0)return o;
   return o.replace(/<\/div>$/,'<div style="text-align:center;margin:14px 0 4px"><button type="button" class="btn ghost" data-a="guestGo">Continue as guest</button><div class="mu sm" style="margin-top:6px">See live scores, matches and news without an account. Log in to score, register for auctions, report problems or keep your profile.</div></div></div>')}}
-Object.assign(A,{guestGo(){gCols().forEach(L=>(L||[]).forEach(x=>{if(x&&!x.gts)x.keep=1}));S.user={name:'Guest',nick:'Guest',phone:'',guest:true,role:'admin',kind:'Fan'};S.tok='';UI.view='home';UI.stage='app';UI.login={step:1};commit()}});
+Object.assign(A,{guestGo(){gCols().forEach(L=>(L||[]).forEach(x=>{if(x&&!x.gts)x.keep=1}));S.user={name:'Guest',nick:'Guest',phone:'',guest:true,role:'admin',kind:'Fan'};S.tok='';UI.view='home';UI.stage='app';UI.login={step:1};commit()},
+registerNow(){if(!S.user?.guest)return;S.user=null;S.tok='';UI.view='home';UI.stage='app';UI.authTab='register';UI.login={step:1};UI.drawer=false;UI.sheet=false;commit()}});
 
 /* guest records live for 24 hours on this device, then are removed. Guest matches are never sent to the server. */
 const GUEST_MS=864e5,gCols=()=>[S.matches,S.auc,S.tours];
