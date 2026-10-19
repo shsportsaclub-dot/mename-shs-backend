@@ -1061,6 +1061,7 @@ http.createServer(async (req, res) => {
     const bag = (db.aucreg = db.aucreg || {}), regs = (bag[aid] = bag[aid] || {});
     const isOrg = au.owner === phone || u.role === 'admin';
     if (!u.shid) { let id; do { id = 'SH-' + crypto.randomBytes(5).toString('hex').slice(0, 8).toUpperCase(); } while (Object.values(db.users).some(x => x.shid === id)); u.shid = id; }
+    const socClean = s => { const o = {}; s = s && typeof s === 'object' ? s : {}; for (const k of ['ig', 'fb', 'x', 'yt', 'web']) { const v = String(s[k] == null ? '' : s[k]).trim().slice(0, 120); if (/^https:\/\/[^\s<>"']+$/i.test(v) || /^@?[\w.]{1,40}$/.test(v)) o[k] = v; } return o; };
     const view = r => ({ id: r.id, pid: r.pid, status: r.status, form: r.form, cat: r.cat, base: r.base, max: r.max, fee: r.fee, paid: r.paid, note: r.note, created: r.created, updated: r.updated, audit: r.audit });
     const mine = Object.values(regs).find(r => r.owner === phone);
     if (req.method === 'GET') {
@@ -1077,7 +1078,7 @@ http.createServer(async (req, res) => {
       if (cfg.from && today < cfg.from) return out(400, { ok: false, error: 'Registration opens on ' + cfg.from });
       if (cfg.to && today > cfg.to) return out(400, { ok: false, error: 'Registration closed on ' + cfg.to });
       const f = b.form || {}, str = (v, n) => String(v == null ? '' : v).trim().slice(0, n);
-      const form = { name: str(f.name, 60), dob: str(f.dob, 10), city: str(f.city, 60), role: str(f.role, 30), bat: str(f.bat, 30), bowl: str(f.bowl, 40), team: str(f.team, 60), link: str(f.link, 300), avail: str(f.avail, 120), prefCat: str(f.prefCat, 30), photo: str(f.photo, 200000), decl: !!f.decl, srcKind: str(f.srcKind, 30), srcNote: str(f.srcNote, 200) };
+      const form = { name: str(f.name, 60), dob: str(f.dob, 10), city: str(f.city, 60), role: str(f.role, 30), bat: str(f.bat, 30), bowl: str(f.bowl, 40), team: str(f.team, 60), link: str(f.link, 300), avail: str(f.avail, 120), prefCat: str(f.prefCat, 30), photo: str(f.photo, 200000), decl: !!f.decl, srcKind: str(f.srcKind, 30), srcNote: str(f.srcNote, 200), social: socClean(f.social), fgn: !!f.fgn };
       if (!form.name) return out(400, { ok: false, error: 'Display name is required' });
       if (!/^data:image\/(png|jpe?g|webp);base64,/.test(form.photo)) return out(400, { ok: false, error: 'A player photo is required for this auction' });
       if (!form.decl) return out(400, { ok: false, error: 'Please accept the declaration' });
