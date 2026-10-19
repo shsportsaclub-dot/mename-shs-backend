@@ -5661,6 +5661,14 @@ function shWorldStrip(W){const m=W&&W.m;if(!m)return '';const sc=(m.score||[]).f
   const chips=`<div class="sh-cf" role="tablist">${[['all','All'],['hl','Highlights'],['ov','Overs'],['w','Wickets']].map(([k,l])=>`<button class="${f===k?'on':''}" data-a="cmF" data-v="${k}">${l}</button>`).join('')}</div>`;
   return chips+h.replace('class="sh-pulse-timeline"',`class="sh-pulse-timeline" data-cf="${f}"`)}}
 Object.assign(A,{cmF(d){if(UI.wm){UI.wm.cf=d.v;render()}}});
+/* head to head from the Cricsheet archive (Info tab); nothing is shown when the archive has no meeting of these two teams */
+function shH2HLoad(W){if(!W||W.h2h!==undefined||W.h2hBusy||!apiBase())return;const tm=(()=>{try{return shWorldTeams(W).map(shTeamName)}catch{return[]}})();if(tm.length<2)return;
+  W.h2hBusy=1;const id=W.m.id;fetch(apiBase()+'/history/h2h?a='+encodeURIComponent(tm[0])+'&b='+encodeURIComponent(tm[1])+'&type='+encodeURIComponent(String(W.m.type||'').toLowerCase())).then(r=>r.json()).then(j=>{if(UI.wm&&UI.wm.m.id===id){UI.wm.h2hBusy=0;UI.wm.h2h=j&&j.ok&&j.n?j:null;if(UI.view==='wmatch'&&(UI.wm.tab||'live')==='info')render()}}).catch(()=>{if(UI.wm&&UI.wm.m.id===id){UI.wm.h2hBusy=0;UI.wm.h2h=null}})}
+{const t1=A.wmTab;A.wmTab=function(d){t1.apply(this,arguments);if(d&&d.v==='info')shH2HLoad(UI.wm)}}
+{const i0=cbpInfo;cbpInfo=function(W){let h=i0.apply(this,arguments);shH2HLoad(W);const x=W.h2h;if(!x||!x.n)return h;
+  const tot=x.a.wins+x.b.wins,pa=tot?Math.round(x.a.wins*100/tot):0;
+  return h+`<div class="cbp-lb">Head to head · ${x.n} match${x.n===1?'':'es'} in the archive</div><div class="cbp-cd sh-h2h"><div class="row" style="justify-content:space-between;align-items:center"><div style="text-align:left"><b>${esc(x.a.name)}</b><div style="font:800 26px var(--ui)">${x.a.wins}</div></div><div class="mu sm" style="text-align:center">${x.nr?x.nr+' tied or no result':'wins'}</div><div style="text-align:right"><b>${esc(x.b.name)}</b><div style="font:800 26px var(--ui)">${x.b.wins}</div></div></div>${tot?`<div style="display:flex;height:8px;border-radius:6px;overflow:hidden;margin:8px 0"><i style="width:${pa}%;background:#3f7bff"></i><i style="width:${100-pa}%;background:#e11d2e"></i></div>`:''}
+  ${(x.recent||[]).map(r=>`<div class="mu sm" style="margin-top:6px">${esc(r.d)} · ${esc(String(r.t||'').toUpperCase())} · ${esc(r.res)}${r.v?' · '+esc(String(r.v).slice(0,40)):''}</div>`).join('')}<div class="mu sm" style="margin-top:8px">Source: Cricsheet (cricsheet.org), ${esc(x.from)} to ${esc(x.to)}. Only matches of the same format in the archive.</div></div>`}}
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});

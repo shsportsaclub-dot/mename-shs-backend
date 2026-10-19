@@ -252,6 +252,16 @@ export function createHistory({ dir, log = console.log }) {
     const recent = L.slice().sort((a, b) => String(b.d).localeCompare(String(a.d))).slice(0, 5).map(m => ({ d: m.d, t: m.t, tm: m.tm, res: m.w ? m.w + ' won' + (m.res && m.res !== 'won' ? ' by ' + m.res : '') : (m.res || 'No result'), sc: m.sc.map(x => x.r + '/' + x.w) }));
     return { n: L.length, venue: L[0].v, city: L[0].c, rows, recent, from: L.reduce((a, m) => (!a || String(m.d) < a ? String(m.d) : a), ''), to: L.reduce((a, m) => (!a || String(m.d) > a ? String(m.d) : a), '') };
   };
+  // head to head of two teams from the archive: wins for each side, ties/no result, and the latest meetings (no estimates)
+  const h2h = (a, b, type, gender) => {
+    if (!a || !b || String(a).length < 3 || String(b).length < 3) return { n: 0 };
+    const L = matches.filter(m => m.tm && m.tm.length === 2 && ((sameT(m.tm[0], a) && sameT(m.tm[1], b)) || (sameT(m.tm[0], b) && sameT(m.tm[1], a))) && (!type || m.t === type) && (!gender || m.g === gender));
+    if (!L.length) return { n: 0 };
+    let wa = 0, wb = 0, nr = 0;
+    for (const m of L) { if (m.w && sameT(m.w, a)) wa++; else if (m.w && sameT(m.w, b)) wb++; else nr++; }
+    const recent = L.slice().sort((x, y) => String(y.d).localeCompare(String(x.d))).slice(0, 5).map(m => ({ d: m.d, t: m.t, v: m.v, res: m.w ? m.w + ' won' + (m.res && m.res !== 'won' ? ' by ' + m.res : '') : (m.res || 'No result') }));
+    return { n: L.length, a: { name: a, wins: wa }, b: { name: b, wins: wb }, nr, recent, from: L.reduce((x, m) => (!x || String(m.d) < x ? String(m.d) : x), ''), to: L.reduce((x, m) => (!x || String(m.d) > x ? String(m.d) : x), '') };
+  };
   load();
-  return { status, importFrom, searchPlayers, player, searchMatches, venueStats, matchFacts, sameTeam: sameT, load };
+  return { status, importFrom, searchPlayers, player, searchMatches, venueStats, h2h, matchFacts, sameTeam: sameT, load };
 }

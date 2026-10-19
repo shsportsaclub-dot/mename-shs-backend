@@ -620,6 +620,10 @@ routes['GET /api/history/match'] = async (req, body, ip) => {
   const m = history.matchFacts(String(body.a || '').slice(0, 80), String(body.b || '').slice(0, 80), String(body.date || ''));
   return m ? [200, { ok: true, match: m, source: 'Cricsheet (open data, ODC-By)' }] : [404, { ok: false, error: 'No single matching record in the history store' }];
 };
+routes['GET /api/history/h2h'] = async (req, body, ip) => {
+  if (limited('hh:' + ip, 600, 36e5)) return [429, { ok: false, error: 'Too many requests' }];
+  return [200, { ok: true, ...history.h2h(String(body.a || '').slice(0, 80), String(body.b || '').slice(0, 80), body.type ? String(body.type).slice(0, 8) : '', body.gender ? String(body.gender).slice(0, 8) : '') }];
+};
 routes['GET /api/history/venue'] = async (req, body, ip) => {
   if (limited('hv:' + ip, 600, 36e5)) return [429, { ok: false, error: 'Too many requests' }];
   return [200, { ok: true, ...history.venueStats(String(body.name || '').slice(0, 120), body.type ? String(body.type).slice(0, 8) : '') }];
