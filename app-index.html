@@ -5550,6 +5550,42 @@ setInterval(shLive,5000);
   const L=W.lb;
   if(L){h+=`<div class="cbp-cd sh-lb"><div class="b">Prediction leaderboard</div><div class="mu sm">${esc(L.note||'')} ${L.points||10} points per correct poll. Signed-in players only.</div>${L.top&&L.top.length?`<div class="sh-lb-list">${L.top.map(x=>`<div class="item"><b style="width:26px">${x.rank}</b><span class="grow">${esc(x.name)}</span><span class="mu sm">${x.ok}/${x.n} correct</span><b style="min-width:52px;text-align:right">${x.pts} pts</b></div>`).join('')}</div>`:'<div class="mu sm" style="margin-top:8px">No scored polls yet. Points appear after a match ends and its final scorecard proves an answer.</div>'}${L.me&&L.me.n?`<div class="mu sm" style="margin-top:8px">You: ${L.me.pts} pts · ${L.me.ok}/${L.me.n} correct${L.me.rank?' · rank '+L.me.rank:''}</div>`:''}</div>`}
   return h}}
+/* ---------------- MATCH HIGHLIGHTS (built only from recorded balls) ---------------- */
+function shHighlights(m){const out=[];if(!m||!m.innings)return out;
+  m.innings.forEach((inn,i)=>{if(!inn||!inn.ev)return;const tn=(T(inn.bat)||{}).name||'Batting side';let r=0,w=0,lg=0;const bt={},tm={},ov={};
+    inn.ev.forEach((e,idx)=>{const legal=e.x!=='wd'&&e.x!=='nb',pen=e.x==='wd'?1:e.x==='nb'?NBP:0,tot=e.r+pen,lab=Math.floor(lg/BPO)+'.'+((lg%BPO)+(legal?1:0));
+      r+=tot;const bo=Math.floor(lg/BPO);(ov[bo]=ov[bo]||{r:0,bl:e.bl}).r+=tot;
+      if(e.x===''||e.x==='nb'){const b=bt[e.bt]||(bt[e.bt]={r:0,b:0,m:0});const before=b.r;b.r+=e.r;
+        if(before<50&&b.r>=50&&b.r<100||before<50&&b.r>=100)out.push({i,ov:lab,t:'ms',k:'50',txt:`${nm(e.bt)} reaches 50 (${b.r} off ${b.b+1})`,sort:out.length});
+        if(before<100&&b.r>=100)out.push({i,ov:lab,t:'ms',k:'100',txt:`${nm(e.bt)} reaches a century`,sort:out.length})}
+      if(e.x!=='wd'){(bt[e.bt]=bt[e.bt]||{r:0,b:0,m:0}).b++}
+      if(e.x===''&&!e.ot&&(e.r===4||e.r===6))out.push({i,ov:lab,t:'bd',k:String(e.r),txt:`${e.r===6?'SIX':'FOUR'}: ${nm(e.bt)} off ${nm(e.bl)} (${tn} ${r}/${w})`});
+      if(e.w){w++;const b=bt[e.out]||{r:0,b:0};out.push({i,ov:lab,t:'wk',k:'W',txt:`WICKET: ${nm(e.out)} ${e.w==='Run out'?'run out':'out'} for ${b.r} (${b.b}) · ${nm(e.bl)} · ${tn} ${r}/${w}`})}
+      [50,100,150,200,250,300].forEach(x=>{if(r-tot<x&&r>=x&&!tm[x]){tm[x]=1;out.push({i,ov:lab,t:'tm',k:'T'+x,txt:`${tn} reach ${x} (${r}/${w})`})}});
+      if(legal)lg++});
+    const best=Object.entries(ov).filter(([o])=>(+o+1)*BPO<=lg+BPO).sort((a,b)=>b[1].r-a[1].r)[0];
+    if(best&&best[1].r>=10)out.push({i,ov:(+best[0]+1)+' ov',t:'ov',k:'O',txt:`Biggest over of the innings: ${best[1].r} runs, bowled by ${nm(best[1].bl)}`})});
+  return out}
+function shHlSummary(m){const L=[];m.innings.forEach((inn,i)=>{if(!inn||!inn.ev.length)return;const k=calc(m,i),tn=(T(inn.bat)||{}).name;
+    const tb=Object.entries(k.bat).sort((a,b)=>b[1].r-a[1].r)[0],bw=Object.entries(k.bowl).filter(([,x])=>x.w>0).sort((a,b)=>b[1].w-a[1].w||a[1].r-b[1].r)[0];
+    L.push(`${tn} ${k.runs}/${k.wk} (${fmtOv(k.lg)} ov).${tb?` Top scorer ${nm(tb[0])} ${tb[1].r} (${tb[1].b}).`:''}${bw?` Best bowler ${nm(bw[0])} ${bw[1].w}/${bw[1].r}.`:''}`)});
+  if(m.result)L.push(m.result+'.');return L}
+UI.hl=UI.hl||{id:'',f:'all'};
+XV.highlights=function(){const ms=S.matches.filter(x=>x.status!=='setup'&&x.innings&&x.innings.some(i=>i&&i.ev&&i.ev.length));
+  const m=ms.find(x=>x.id===UI.hl.id)||ms[0];
+  if(!m)return `<div class="bar"><h2>Match highlights</h2></div><div class="card"><div class="mu">No scored matches yet. Highlights are built from the balls you record: wickets, fours, sixes, 50s, centuries, team milestones and the biggest over.</div></div>`;
+  const all=shHighlights(m),F=UI.hl.f,list=all.filter(x=>F==='all'||x.t===F),ch=[['all','All'],['wk','Wickets'],['bd','Boundaries'],['ms','50s and 100s'],['tm','Team milestones']];
+  const cnt=k=>all.filter(x=>k==='all'||x.t===k).length,sum=shHlSummary(m);
+  return `<div class="bar"><h2>Match highlights</h2><div class="grow"></div><select data-c="hlMatch">${ms.map(x=>`<option value="${x.id}"${x.id===m.id?' selected':''}>${esc((T(x.a)||{}).short||'')} v ${esc((T(x.b)||{}).short||'')} · ${esc(x.date||'')}</option>`).join('')}</select></div>
+  <div class="card sh-hl"><div class="mu sm" style="margin-bottom:6px">Built only from the balls recorded in this match. Nothing is estimated.</div>${sum.map(l=>`<div class="b" style="margin:3px 0">${esc(l)}</div>`).join('')}</div>
+  <div class="chips" style="margin:8px 0">${ch.map(([k,l])=>`<button class="ch ${F===k?'on':''}" data-a="hlF" data-v="${k}">${l} (${cnt(k)})</button>`).join('')}</div>
+  ${list.length?list.map(x=>`<div class="card sh-hl-i sh-hl-${x.t}"><div class="row" style="justify-content:space-between"><span class="pill">${esc(((T(m.innings[x.i].bat)||{}).short||'')+' · '+x.ov+(/ov$/.test(x.ov)?'':' ov'))}</span><span class="mu sm">${x.t==='wk'?'Wicket':x.t==='bd'?(x.k==='6'?'Six':'Four'):x.t==='ms'?'Milestone':x.t==='tm'?'Team':'Over'}</span></div><div class="b" style="margin-top:6px">${esc(x.txt)}</div></div>`).join(''):'<div class="card mu">Nothing in this filter yet.</div>'}
+  <div class="row" style="margin-top:8px"><button class="btn sm ghost" data-a="hlCopy">Copy highlights text</button></div>`};
+Object.assign(A,{hlF(d){UI.hl.f=d.v;render()},hlCopy(){const m=S.matches.find(x=>x.id===UI.hl.id)||S.matches.find(x=>x.status!=='setup'&&x.innings&&x.innings.some(i=>i&&i.ev&&i.ev.length));if(!m)return;
+  const t=[`${(T(m.a)||{}).name} v ${(T(m.b)||{}).name} highlights`,...shHlSummary(m),'',...shHighlights(m).map(x=>`${((T(m.innings[x.i].bat)||{}).short||'')} ${x.ov}: ${x.txt}`)].join('\n');
+  try{navigator.clipboard.writeText(t).then(()=>toast('Highlights copied',2000),()=>toast('Copy not allowed here',2500))}catch(e){toast('Copy not allowed here',2500)}}});
+C.hlMatch=function(v){UI.hl.id=v;render()};
+MENU2[0][1].splice(6,0,['highlights','\u{1F3AC}','Match highlights']);
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});
