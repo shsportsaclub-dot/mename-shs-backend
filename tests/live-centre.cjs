@@ -14,7 +14,7 @@ const { chromium } = require('playwright');
     const o = {};
     // 1) live first innings, T20
     const m = mk(20); for (const x of [1, 4, 0, 2, 1, 1]) { bowl(m); ball(m, { r: x }) }
-    let app = show(m); o.head = app.querySelector('.lc-head')?.innerText || ''; o.state = app.querySelector('.lc-state')?.textContent; o.phase = app.querySelector('.lc-ph')?.innerText || '';
+    let app = show(m); o.head = (app.querySelector('.lc-head')?.innerText || '') + ' ' + (app.querySelector('.sh-pulse-metrics')?.innerText || ''); o.state = app.querySelector('.lc-state')?.textContent; o.phase = app.querySelector('.lc-ph')?.innerText || '';
     o.bat = [...app.querySelectorAll('.lc-live table')][0]?.innerText || ''; o.over = app.querySelector('.lc-ov')?.innerText || '';
     // 2) burst only on a NEW ball after the first observation
     o.burst0 = !!document.querySelector('.lc-burst');
