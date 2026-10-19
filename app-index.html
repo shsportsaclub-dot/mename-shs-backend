@@ -5359,7 +5359,7 @@ function shCurrentPowerplay(m){const s=st(m);if(!s)return false;const key=s.i+':
  const tabs=[['rev','Match Review'],['live','Live'],['card','Scorecard'],['comm','Commentary'],['xi','Playing XI'],['squads','Squads'],['ovr','Overs'],['graphs','Graphs'],['h2h','H2H & Strength'],['ins','Match Insights'],['ven','Venue'],['hl','Highlights'],['info','Info'],['sh11','SH Sports 11'],['part','Partnerships'],['sum','Summary'],['mvp','MVP'],['pts','Points Table'],['act','Activity'],['gal','Gallery'],['drs','DRS'],['dls','DLS']];
  window.SH_MTABS.splice(0,window.SH_MTABS.length,...tabs);
  XV.match=function(){const m=curM();if(!m)return '<div class="empty">Select a match.</div>';if(!tabs.some(t=>t[0]===UI.tab))UI.tab='live';const W=shLocalWorld(m),skin=S.settings.mskin==='ca'?'ca':'cb';
-  const views={rev:()=>tReview(m),live:()=>shPulsePanel(W)+shWorldSummary(W)+streamCard('m'+m.id,m.status==='live')+shWorldLiveBalls(W)+ppCard(m)+shPulseOverGraph(W),card:()=>tCard(m)+tPart(m),comm:()=>tComm(m),xi:()=>shConfirmedXI(W),squads:()=>shSquadComparison(W),ovr:()=>cbpOverTab(W),graphs:()=>shPulseOverGraph(W)+tGraphs2(m),h2h:()=>tH2H(m),ins:()=>tIns(m),ven:()=>tVenue(m),hl:()=>tHigh(m),info:()=>tInfo(m)+'<div class="cbp-lb">Registered squads</div>'+shSquadComparison(W),sh11:()=>shElevenHTML(W),part:()=>tPart(m),sum:()=>tSum(m),mvp:()=>tMvp(m),pts:()=>tPts(m),act:()=>tAct(m),gal:()=>tGal(m),drs:()=>tDRS(m),dls:()=>tDLS(m)};
+  const views={rev:()=>tReview(m),live:()=>shWorldSummary(W)+shPulsePanel(W)+streamCard('m'+m.id,m.status==='live')+shWorldLiveBalls(W)+ppCard(m)+shPulseOverGraph(W),card:()=>tCard(m)+tPart(m),comm:()=>tComm(m),xi:()=>shConfirmedXI(W),squads:()=>shSquadComparison(W),ovr:()=>cbpOverTab(W),graphs:()=>shPulseOverGraph(W)+tGraphs2(m),h2h:()=>tH2H(m),ins:()=>tIns(m),ven:()=>tVenue(m),hl:()=>tHigh(m),info:()=>tInfo(m)+'<div class="cbp-lb">Registered squads</div>'+shSquadComparison(W),sh11:()=>shElevenHTML(W),part:()=>tPart(m),sum:()=>tSum(m),mvp:()=>tMvp(m),pts:()=>tPts(m),act:()=>tAct(m),gal:()=>tGal(m),drs:()=>tDRS(m),dls:()=>tDLS(m)};
   return `<div class="msk msk-${skin}"><div class="mskbar">${[['cb','SH Pulse'],['ca','SH Stadium']].map(([k,l])=>`<button data-a="mskin" data-v="${k}" class="${k===skin?'on':''}">${l}</button>`).join('')}</div>${cbpHead(T(m.a).short+' v '+T(m.b).short,tabs,UI.tab,'tab')}${views[UI.tab]()}</div>`;
  };
  const head=cbpHead;cbpHead=function(title,list,tab,action){if(action!=='wmTab')return head(title,list,tab,action);const order=['rp','live','sc','cm','xi','sq','ov','gr','sh11','form','info','pr','vn'];const ordered=list.map(([k,l])=>[k,k==='rp'?'Match Review':k==='pr'?'Projection':l]).sort((a,b)=>{const ai=order.indexOf(a[0]),bi=order.indexOf(b[0]);return(ai<0?99:ai)-(bi<0?99:bi)});let html=head(title,ordered,tab,action);/* Earlier wrappers sort their own input: order final DOM once. */const box=document.createElement('div');box.innerHTML=html;const rail=box.querySelector('.cbp-tabs');if(rail){const buttons=[...rail.children].sort((a,b)=>order.indexOf(a.dataset.v)-order.indexOf(b.dataset.v));buttons.forEach(b=>rail.appendChild(b));}return box.innerHTML;};
@@ -5730,6 +5730,87 @@ A.vtest=function(){const P=LP[vlang()];speak(vlang()==='en'||!P?'Four! Cracked t
 {const c8=commentary;commentary=function(m,i){const L=c8.apply(this,arguments),lang=vlang(),P=LP[lang],inn=m.innings[i];if(lang==='en'||!P||!inn)return L;
   let k=0;L.forEach(x=>{if(x.t==='b'){const e=inn.ev[inn.ev.length-1-k++];if(e){x.txt=cLine(e,lang)+(e.ot?' +'+e.ot:'');x.en=1}}
     else if(x.t==='o'){const q=/^End of over (\d+): (\d+) runs?(?:, (\d+) wkt)?\. \S+ (\d+)\/(\d+)\.$/.exec(x.txt);if(q)x.txt=lpf(P.over,{o:q[1],r:q[2],w:q[3]?lpf(P.ow,{n:q[3]}):'',s:q[4],k:q[5]})}});return L}}
+/* ---------------- SH LIVE CENTRE v2: score header, batters/bowler/partnership, ICC phases, big 4/6/W burst ---------------- */
+{
+const lcBalls=(o,b)=>{const p=String(o==null?'0.0':o).split('.');return (+p[0]||0)*b+(+p[1]||0)};
+const lcOvStr=(n,b)=>Math.floor(n/b)+'.'+n%b;
+const lcNorm=s=>shCountryKey(s).replace(/[^a-z0-9]/g,'');
+// ICC Playing Conditions: T20 powerplay = first 30% of overs (2 outside the 30-yard circle), then 5. Longer limited-overs: 20% / 60% / 20% with 2 / 4 / 5.
+function lcPhases(ov){ov=+ov||0;if(!ov)return [];
+ if(ov>20){const a=Math.round(ov*.2),b=Math.round(ov*.8);return [[0,a,2,'Powerplay 1'],[a,b,4,'Powerplay 2'],[b,ov,5,'Powerplay 3']]}
+ const a=Math.round(ov*.3);return [[0,a,2,'Powerplay'],[a,ov,5,'Overs '+(a+1)+'-'+ov]]}
+function lcModel(W){const m=W.m,sc=m.score||[],bpo=+m.bpo||6,ov=m.ov!=null?+m.ov:cbpTot(m.type),cur=sc.at(-1)||null,cards=W.sc&&W.sc.scorecard||[],card=cards.at(-1)||{};
+ const balls=cur?lcBalls(cur.o,bpo):0,r=cur?+cur.r||0:0,w=cur?+cur.w||0:0,X={m,sc,bpo,ov,cur,card,balls,r,w,crr:balls?r*bpo/balls:null,live:!!m.started&&!m.ended};
+ if(ov&&sc.length===2){const target=(+sc[0].r||0)+1,need=target-r,left=ov*bpo-balls;X.chase={target,need,left,rrr:left>0?Math.max(0,need)*bpo/left:null}}
+ else if(m.brk&&ov&&sc.length===1){const target=(+sc[0].r||0)+1;X.chase={target,need:target,left:ov*bpo,rrr:target/ov}}
+ else if(ov&&balls)X.proj=Math.round(r*ov*bpo/balls);
+ return X}
+function lcHead(W){const X=lcModel(W),m=W.m,teams=shWorldTeams(W),curTeam=X.cur?lcNorm(shInningName(X.cur.inning)):'';
+ const won=k=>m.ended&&/\bwon\b/i.test(m.status||'')&&lcNorm(m.status).indexOf(k)===0;
+ const rows=teams.map(t=>{const n=shTeamName(t),k=lcNorm(n),mine=X.sc.filter(s=>lcNorm(shInningName(s.inning))===k),bat=X.live&&k===curTeam&&!m.brk,w=won(k);
+  return `<div class="lc-t ${bat?'bat':''} ${w?'won':''}">${shTeamMark(t)}<span class="lc-n">${esc(n)}${bat?'<i class="lc-dot" title="batting"></i>':''}${w?' \u{1F3C6}':''}</span><span class="lc-s">${mine.length?mine.map(s=>`<b>${esc(s.r)}/${esc(s.w)}</b><small>(${esc(s.o)})</small>`).join('<em>&amp;</em>'):'<small>Yet to bat</small>'}</span></div>`}).join('')||`<div class="lc-t"><span class="lc-n">${esc(m.name||'Match')}</span></div>`;
+ const state=m.ended?'RESULT':m.brk?'INNINGS BREAK':m.started?'LIVE':'UPCOMING',cls=m.ended?'end':m.brk?'brk':m.started?'live':'up';
+ let metrics='';if(X.live||m.brk){if(m.brk&&X.chase)metrics=[['Target',X.chase.target],['Required rate',X.chase.rrr.toFixed(2)]];else if(X.chase)metrics=[['Target',X.chase.target],['RRR',X.chase.rrr==null?'-':X.chase.rrr.toFixed(2)],['CRR',X.crr==null?'-':X.crr.toFixed(2)]];else metrics=[['CRR',X.crr==null?'-':X.crr.toFixed(2)],...(X.proj?[['Projected',X.proj]]:[])]}
+ let line=m.status||'';const bt=X.cur?shInningName(X.cur.inning):'';
+ if(!m.ended&&!m.brk&&X.chase&&X.live)line=X.chase.need<=0?bt+' won':`${bt} need ${X.chase.need} run${X.chase.need===1?'':'s'} from ${X.chase.left} ball${X.chase.left===1?'':'s'}`;
+ else if(m.brk&&X.chase)line=`Innings break · ${teams[1]?shTeamName(teams[1]):'Chasing side'} need ${X.chase.target} to win`;
+ const ph=X.live&&X.ov?lcPhases(X.ov):[],idx=Math.floor(X.balls/X.bpo),p=ph.find(q=>idx>=q[0]&&idx<q[1]);
+ const chip=p?`<div class="lc-ph"><b>${esc(p[3].toUpperCase())}</b><span>max ${p[2]} fielders outside the 30-yard circle</span><small>${lcOvStr(p[1]*X.bpo-X.balls,X.bpo)} ov left in phase</small></div>`:'';
+ return `<section class="lc-head ${cls}" aria-label="Match score"><div class="lc-top"><span class="lc-state ${cls}">${state}</span><span class="lc-meta">${esc([X.ov?(X.ov>=900?'Test':X.ov+' ov'):(m.type||'').toUpperCase(),m.venue].filter(Boolean).join(' · '))}</span></div>${rows}${metrics?`<div class="lc-mx">${metrics.map(([k,v])=>`<div><small>${k}</small><b>${esc(v)}</b></div>`).join('')}</div>`:''}${line?`<div class="lc-line ${m.ended?'res':''}">${m.ended?'\u{1F3C6} ':''}${esc(line)}</div>`:''}${chip}</section>`}
+function lcPhaseTable(W){const X=lcModel(W),ph=lcPhases(X.ov),rows=shPulseData(W);if(!ph.length||!rows.length)return '';
+ const inns=[...new Set(rows.map(r=>r.inning))];
+ return `<div class="lc-box"><h4>Innings phases</h4><div class="lc-sc"><table class="lc-tb"><tr><th></th>${ph.map(p=>`<th>${esc(p[3])}<br><small>ov ${p[0]+1}-${p[1]} · ${p[2]} out</small></th>`).join('')}</tr>${inns.map(i=>`<tr><td><b>${esc(shPulseInning(W,i))}</b></td>${ph.map(p=>{const L=rows.filter(r=>r.inning===i&&r.over>=p[0]&&r.over<p[1]);return L.length?`<td>${L.reduce((s,r)=>s+r.runs,0)}/${L.filter(r=>r.wicket).length}</td>`:'<td>-</td>'}).join('')}</tr>`).join('')}</table></div></div>`}
+function lcPlayers(W){const X=lcModel(W),card=X.card,rows=shPulseData(W).filter(r=>String(r.inning)===String(X.sc.length||1)),last=rows.at(-1);
+ const bat=(card.batting||[]).filter(b=>/^(batting|not out)$/i.test(b['dismissal-text']||b.dismissal||'')),sid=card.striker;
+ if(!bat.length&&!last)return '';
+ const bw=[];for(let i=rows.length-1;i>=0&&bw.length<2;i--){const n=rows[i].bowler;if(n&&!bw.includes(n))bw.push(n)}
+ const brow=bw.map(n=>(card.bowling||[]).find(b=>b.bowler&&b.bowler.name===n)).filter(Boolean);
+ const wk=[...rows].reverse().findIndex(r=>r.wicket),since=wk<0?rows:rows.slice(rows.length-wk),pr=since.reduce((s,r)=>s+r.runs,0),pb=since.filter(r=>!r.wide&&!r.noball).length;
+ const part=card.part?card.part:(rows.length?{r:pr,b:pb}:null),lw=card.fowx&&card.fowx.at(-1),lastW=lw?`${esc(lw.name)} ${lw.r}/${lw.w} (${esc(lw.ov)} ov)`:(wk>=0?esc(rows[rows.length-1-wk].text):'');
+ return `<div class="lc-box"><div class="lc-sc"><table class="lc-tb"><tr><th>Batter</th><th>R</th><th>B</th><th>4s</th><th>6s</th><th>SR</th></tr>${bat.map(b=>`<tr><td><i class="lc-av">${cbpImg(b.batsman&&b.batsman.playerImg,b.batsman&&b.batsman.name)}</i><b>${esc(b.batsman&&b.batsman.name||'Batter')}${sid&&b.batsman&&b.batsman.id===sid?' *':''}</b></td><td><b>${esc(b.r)}</b></td><td>${esc(b.b)}</td><td>${esc(b['4s']||0)}</td><td>${esc(b['6s']||0)}</td><td>${esc(b.sr||'0')}</td></tr>`).join('')||'<tr><td colspan="6" class="mu">Batters will show when the innings starts</td></tr>'}</table></div>
+ ${part?`<div class="lc-kv"><span>Partnership</span><b>${part.r} (${part.b})</b></div>`:''}${lastW?`<div class="lc-kv"><span>Last wicket</span><b>${lastW}</b></div>`:''}
+ ${brow.length?`<div class="lc-sc"><table class="lc-tb"><tr><th>Bowler</th><th>O</th><th>M</th><th>R</th><th>W</th><th>Eco</th></tr>${brow.map((b,i)=>`<tr><td><b>${esc(b.bowler.name)}${i===0?' *':''}</b></td><td>${esc(b.o)}</td><td>${esc(b.m)}</td><td>${esc(b.r)}</td><td><b>${esc(b.w)}</b></td><td>${esc(b.eco)}</td></tr>`).join('')}</table></div>`:''}</div>`}
+function lcOvers(W){const g=shPulseModel.overs(W.bb||[]);if(!g.length)return '';const c=g.at(-1),p=g.length>1?g.at(-2):null;
+ return `<div class="lc-box"><div class="lc-ov"><b>This over</b><span>${c.runs} runs${c.wickets?' · '+c.wickets+' wkt':''}</span><div class="sh-pulse-chips">${c.balls.map(shPulseChip).join('')}</div></div>${p?`<div class="lc-ov dim"><b>Last over</b><span>${p.runs} runs${p.wickets?' · '+p.wickets+' wkt':''}</span><div class="sh-pulse-chips">${p.balls.map(shPulseChip).join('')}</div></div>`:''}</div>`}
+function lcComm(W){const rows=shPulseData(W).slice(-6).reverse();if(!rows.length)return '';const go=UI.view==='wmatch'?'wmTab':'tab',cm=UI.view==='wmatch'?'cm':'comm';
+ return `<div class="lc-box"><h4>Commentary</h4>${rows.map(r=>`<div class="lc-cm"><span class="lc-b">${r.over}.${r.ball}</span>${shPulseChip(r)}<p>${esc(r.text)}</p></div>`).join('')}<button class="btn sm ghost" data-a="${go}" data-v="${cm}">Full commentary</button></div>`}
+function lcBurst(html){const m=/data-effect="(four|six|wicket)"[^>]*--sh-fx-delay:-(\d+)ms/.exec(html);if(!m)return '';const k=m[1],r=shPulseData(UI.view==='wmatch'&&UI.wm?UI.wm:{bb:[]});return `<div class="lc-burst lc-${k}" style="--lcd:-${m[2]}ms" aria-live="polite"><div class="lc-bt">${k==='wicket'?'WICKET!':k==='six'?'SIX!':'FOUR!'}</div><div class="lc-bp">${[...Array(18)].map((_,i)=>`<i style="--a:${i*20}deg;--s:${(i%3)+1}"></i>`).join('')}</div></div>`}
+let lcLast=null;
+shPulsePanel=function(W){const fx=shDeliveryEffectsHTML(W);return `<section class="sh-live-window ${UI.liveWindowExpanded?'expanded':''}" aria-label="Live viewer window"><div class="sh-live-window-head"><div><b>${W.m.ended?'MATCH REPLAY':'LIVE WINDOW'}</b><small>${W.m.ended?'Saved match events':'Ball flow \u00B7 batters \u00B7 commentary'}</small></div><button class="btn sm ghost" data-a="shLiveExpand" aria-label="${UI.liveWindowExpanded?'Close expanded live window':'Expand live window'}">${UI.liveWindowExpanded?'Close \u2715':'Expand \u26F6'}</button></div><div class="lc-live">${lcBurst(fx)}${fx}${lcOvers(W)}${lcPlayers(W)}${lcPhaseTable(W)}${lcComm(W)}</div></section>`};
+shWorldSummary=lcHead;
+{const slw=shLocalWorld;shLocalWorld=function(m){const W=slw(m);try{const bpo=+m.bpo||6;W.m.ov=m.overs>=900?0:m.overs;W.m.bpo=bpo;W.m.brk=m.status==='break';
+  W.m.toss=m.toss?T(m.toss).name+' won the toss and chose to '+(m.dec==='bowl'?'bowl':'bat'):'';
+  W.m.status=m.status==='done'?(m.result||'Match ended'):m.status==='break'?'Innings break':(W.m.toss||'Live');
+  W.m.winner=m.status==='done'&&m.win?T(m.win).name:'';
+  (W.sc.scorecard||[]).forEach((card,i)=>{const inn=m.innings[i],k=calc(m,i);card.part=k.part;card.striker=inn.cur.s;card.nonstriker=inn.cur.n;card.fowx=k.fow.map(f=>({...f,name:nm(f.id)}))})}catch(e){}return W}}
+const css=document.createElement('style');css.textContent=`
+.lc-head{border-radius:16px;margin:10px 0 12px;padding:12px 14px;background:linear-gradient(135deg,#0c1c3f,#3a0f1e);color:#fff;border:1px solid rgba(255,255,255,.12);min-width:0}
+.lc-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}.lc-meta{font-size:11px;opacity:.75;text-align:right;overflow-wrap:anywhere}
+.lc-state{font:800 10px/1 var(--ui,inherit);letter-spacing:1px;padding:4px 8px;border-radius:99px;background:#444}.lc-state.live{background:#e5243b;animation:lcp 1.2s infinite}.lc-state.end{background:#1c8f5f}.lc-state.brk{background:#c58b00}.lc-state.up{background:#2b5cc4}
+@keyframes lcp{50%{opacity:.55}}
+.lc-t{display:flex;align-items:center;gap:10px;padding:6px 0;min-width:0}.lc-t .sh-team-mark,.lc-t>i{flex:none}.lc-n{flex:1;min-width:0;font-weight:700;font-size:16px;overflow-wrap:anywhere;opacity:.78}.lc-t.bat .lc-n,.lc-t.won .lc-n{opacity:1}
+.lc-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#ffd23f;margin-left:7px;box-shadow:0 0 8px #ffd23f}
+.lc-s{text-align:right;font-variant-numeric:tabular-nums}.lc-s b{font-size:20px}.lc-s small{opacity:.75;margin-left:4px}.lc-s em{opacity:.6;margin:0 5px;font-style:normal}
+.lc-mx{display:flex;gap:18px;margin-top:6px;padding-top:8px;border-top:1px solid rgba(255,255,255,.14)}.lc-mx small{display:block;font-size:10px;letter-spacing:.8px;text-transform:uppercase;opacity:.7}.lc-mx b{font-size:16px}
+.lc-line{margin-top:8px;font-weight:700;color:#ffd23f;overflow-wrap:anywhere}.lc-line.res{font-size:17px;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.1);color:#fff}
+.lc-ph{margin-top:10px;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;font-size:12px;background:rgba(255,255,255,.1);border-radius:10px;padding:7px 10px}.lc-ph b{color:#7be0ff;letter-spacing:.8px}.lc-ph small{opacity:.8;margin-left:auto}
+.lc-box{border:1px solid var(--bd);border-radius:14px;padding:12px;margin:0 0 12px;background:var(--card);min-width:0}.lc-box h4{margin:0 0 8px;font-size:13px;letter-spacing:.8px;text-transform:uppercase;color:var(--mu)}
+.lc-sc{overflow-x:auto}.lc-tb{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}.lc-tb th{font-size:10px;letter-spacing:.6px;text-transform:uppercase;color:var(--mu);text-align:right;padding:4px 6px;font-weight:700}.lc-tb th:first-child,.lc-tb td:first-child{text-align:left}.lc-tb td{padding:7px 6px;text-align:right;border-top:1px solid var(--bd)}
+.lc-av{display:inline-block;width:24px;height:24px;vertical-align:middle;margin-right:8px;border-radius:50%;overflow:hidden}.lc-av img{width:100%;height:100%;border-radius:50%;object-fit:cover}
+.lc-kv{display:flex;justify-content:space-between;gap:10px;padding:7px 2px;border-top:1px solid var(--bd);font-size:13px}.lc-kv span{color:var(--mu)}.lc-kv b{text-align:right;overflow-wrap:anywhere}
+.lc-ov{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;align-items:center;padding:4px 0}.lc-ov span{text-align:right;font-size:12px;color:var(--mu)}.lc-ov .sh-pulse-chips{grid-column:1/3}.lc-ov.dim{opacity:.7;border-top:1px solid var(--bd);margin-top:6px;padding-top:8px}
+.lc-cm{display:grid;grid-template-columns:34px 34px 1fr;gap:8px;align-items:start;padding:8px 0;border-top:1px solid var(--bd)}.lc-cm p{margin:0;font-size:13px;line-height:1.45;overflow-wrap:anywhere}.lc-b{font-weight:700;font-size:12px;color:var(--mu);padding-top:6px}
+.lc-burst{position:fixed;inset:0;z-index:9000;pointer-events:none;display:grid;place-items:center;opacity:0;animation:lcb 2.4s ease-out forwards;animation-delay:var(--lcd,0ms)}
+.lc-four{background:radial-gradient(circle,rgba(28,170,110,.55),rgba(0,0,0,0) 70%)}.lc-six{background:radial-gradient(circle,rgba(130,70,255,.6),rgba(0,0,0,0) 70%)}.lc-wicket{background:radial-gradient(circle,rgba(229,36,59,.6),rgba(0,0,0,0) 70%)}
+.lc-bt{font:900 clamp(54px,18vw,120px)/1 var(--ui,inherit);color:#fff;text-shadow:0 6px 30px rgba(0,0,0,.6);letter-spacing:2px;animation:lcz 2.4s cubic-bezier(.2,1.4,.4,1) forwards;animation-delay:var(--lcd,0ms)}.lc-wicket .lc-bt{animation-name:lcs}
+.lc-bp{position:absolute;left:50%;top:50%;width:0;height:0}.lc-bp i{position:absolute;left:0;top:0;width:10px;height:10px;border-radius:50%;background:#ffd23f;animation:lcf 1.6s ease-out forwards;animation-delay:var(--lcd,0ms);transform:rotate(var(--a)) translateY(0)}.lc-four .lc-bp i{background:#6dffb7}.lc-wicket .lc-bp i{background:#ff6b7a;border-radius:2px;width:6px;height:18px}
+@keyframes lcb{0%{opacity:0}8%{opacity:1}75%{opacity:1}100%{opacity:0}}@keyframes lcz{0%{transform:scale(.2) rotate(-6deg)}20%{transform:scale(1.12)}35%{transform:scale(1)}100%{transform:scale(1.04)}}
+@keyframes lcs{0%{transform:scale(.4)}12%{transform:scale(1.1) translateX(-14px)}24%{transform:translateX(14px)}36%{transform:translateX(-10px)}48%{transform:translateX(8px)}60%,100%{transform:scale(1)}}
+@keyframes lcf{0%{transform:rotate(var(--a)) translateY(0);opacity:1}100%{transform:rotate(var(--a)) translateY(calc(-90px*var(--s) - 60px));opacity:0}}
+@media (prefers-reduced-motion:reduce){.lc-burst,.lc-bt,.lc-bp i{animation-duration:.01s!important}.lc-burst{opacity:0}.lc-state.live{animation:none}}`;
+document.head.appendChild(css);
+}
+
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});
