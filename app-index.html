@@ -5378,6 +5378,22 @@ XV.rewards=function(){const x=shRewardStats(),r=shRewardCalc(x),q=[['Vote in a p
 {const w0=A.wOpen;A.wOpen=function(d){const r=w0.apply(this,arguments);shTouch('opens');return r}}
 MENU2[3][1].splice(1,0,['rewards','\u{1F3C5}','Rewards & achievements']);
 
+/* ---------------- Voice commentary for matches you watch (not only the ones you score): speaks new deliveries once, never the first load ---------------- */
+function shWorldLine(b,lang){const te=lang==='te',hi=lang==='hi',N=te?NUMW.te:hi?NUMW.hi:null,a=b.batter||'',bw=b.bowler||'';
+ if(lang==='en'||!N){return b.text||(b.wicket?'Wicket!':b.wide?'Wide.':b.noball?'No ball.':b.runs===4?'Four!':b.runs===6?'Six!':b.runs+' run'+(b.runs===1?'':'s')+'.')}
+ if(b.wicket)return te?`వికెట్! ${a} అవుట్. బౌలర్ ${bw}.`:`विकेट! ${a} आउट। गेंदबाज़ ${bw}।`;
+ if(b.wide)return te?'వైడ్ బాల్.':'वाइड बॉल।';if(b.noball)return te?'నో బాల్!':'नो बॉल!';
+ if(b.runs===4&&b.batRuns===4)return te?`${a}, ఫోర్! బౌండరీ.`:`${a}, चौका! शानदार शॉट।`;if(b.runs===6)return te?`${a}, సిక్సర్!`:`${a}, छक्का!`;
+ return te?`${bw} బౌలింగ్‌లో ${a}, ${N[Math.min(b.runs,6)]}.`:`${bw} की गेंद पर ${a}, ${N[Math.min(b.runs,6)]}।`}
+function shWorldVoice(){try{const W=UI.wm;if(!W)return;if(UI.view!=='wmatch'||!voiceOn()||!['live','cm'].includes(W.tab||'live')){W.vKey=null;return}
+ const rows=shPulseData(W);if(!rows.length)return;const last=rows[rows.length-1],key=rows.length+'|'+last.inning+'|'+last.over+'.'+last.ball;
+ if(W.vKey==null){W.vKey=key;W.vN=rows.length;return}
+ if(W.vKey===key)return;const fresh=rows.slice(Math.max(W.vN,rows.length-3));W.vKey=key;W.vN=rows.length;
+ fresh.forEach(b=>speak(shWorldLine(b,vlang()),false))}catch(e){}}
+{const r0=render;render=function(){const o=r0.apply(this,arguments);shWorldVoice();return o}}
+{const x0=XV.wmatch;XV.wmatch=function(){const o=x0.apply(this,arguments),W=UI.wm;if(!W||!['live','cm'].includes(W.tab||'live'))return o;
+ let d=0,i=o.indexOf('<div class="cbp-h"');if(i<0)return o;const re=/<div\b|<\/div>/g;re.lastIndex=i;let m;while((m=re.exec(o))){d+=m[0]==='</div>'?-1:1;if(d===0){const e=m.index+6;return o.slice(0,e)+voiceBar()+o.slice(e)}}return o}}
+
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});
