@@ -5641,6 +5641,26 @@ Object.assign(A,{hlF(d){UI.hl.f=d.v;render()},hlCopy(){const m=S.matches.find(x=
   try{navigator.clipboard.writeText(t).then(()=>toast('Highlights copied',2000),()=>toast('Copy not allowed here',2500))}catch(e){toast('Copy not allowed here',2500)}}});
 C.hlMatch=function(v){UI.hl.id=v;render()};
 MENU2[0][1].splice(6,0,['highlights','\u{1F3AC}','Match highlights']);
+/* ---------------- CREX-style structure: sticky score strip + commentary filters (layout idea only, own design) ---------------- */
+{const st=document.createElement('style');st.textContent='.sh-strip{display:flex;gap:6px 12px;flex-wrap:wrap;align-items:baseline;padding:6px 2px 8px;font:700 13px var(--ui);color:#fff}.sh-strip b{font-weight:800}.sh-strip small{opacity:.8;font-weight:600}.sh-strip .sep{display:none}'+
+ '.sh-cf{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 10px;scrollbar-width:none}.sh-cf::-webkit-scrollbar{display:none}.sh-cf button{flex:none;border:1px solid var(--bd);background:var(--c1,transparent);color:inherit;padding:7px 14px;border-radius:999px;font:700 12.5px var(--ui)}.sh-cf button.on{background:#c4f000;color:#0b1020;border-color:#c4f000}'+
+ '.sh-pulse-timeline[data-cf="hl"] .sh-pulse-delivery:not(:has(.sh-pulse-ball.w,.sh-pulse-ball.four,.sh-pulse-ball.six)){display:none}'+
+ '.sh-pulse-timeline[data-cf="w"] .sh-pulse-delivery:not(:has(.sh-pulse-ball.w)){display:none}'+
+ '.sh-pulse-timeline[data-cf="ov"] .sh-pulse-delivery{display:none}'+
+ '.sh-pulse-timeline[data-cf="hl"] .shc-ov:not(:has(.sh-pulse-delivery .sh-pulse-ball.w,.sh-pulse-delivery .sh-pulse-ball.four,.sh-pulse-delivery .sh-pulse-ball.six)){display:none}'+
+ '.sh-pulse-timeline[data-cf="w"] .shc-ov:not(:has(.sh-pulse-delivery .sh-pulse-ball.w)){display:none}';document.head.appendChild(st)}
+function shOversNum(o){const x=String(o==null?'':o).split('.'),b=(+x[0]||0)*6+(+(x[1]||0)||0);return b}
+function shWorldStrip(W){const m=W&&W.m;if(!m)return '';const sc=(m.score||[]).filter(s=>s&&s.r!=null);if(!sc.length)return '';
+  const nm=s=>{const n=shInningName(s.inning);const t=(m.teams||[]).find(t=>shCountryKey(shTeamName(t)).replace(/[^a-z0-9]/g,'')===shCountryKey(n).replace(/[^a-z0-9]/g,''));return (t&&(t.short||t.shortname))||n.slice(0,3).toUpperCase()};
+  const parts=sc.map(s=>`<span><b>${esc(nm(s))} ${esc(s.r)}/${esc(s.w)}</b> <small>(${esc(s.o)})</small></span>`);
+  let crr='';const live=m.started&&!m.ended,last=sc[sc.length-1],balls=shOversNum(last.o);if(live&&balls>0&&isFinite(+last.r))crr=`<span class="sep">|</span><span><small>CRR</small> <b>${(+last.r*6/balls).toFixed(2)}</b></span>`;
+  const mi=W.mi||{},toss=mi.tossWinner?`<span class="sep">|</span><span><small>Toss</small> <b>${esc(mi.tossWinner)}${mi.tossChoice?' ('+esc(mi.tossChoice)+')':''}</b></span>`:'';
+  return `<div class="sh-strip" aria-label="Match score">${parts.join('<span class="sep">·</span>')}${crr}${toss}</div>`}
+{const hd=cbpHead;cbpHead=function(title,tabs,tab,action){const html=hd.apply(this,arguments);if(action!=='wmTab'||!UI.wm)return html;const s=shWorldStrip(UI.wm);return s?html.replace('<div class="cbp-tabs">',s+'<div class="cbp-tabs">'):html}}
+{const bb=cbpBbb;cbpBbb=function(W){let h=bb.apply(this,arguments);if(h.indexOf('class="sh-pulse-timeline"')<0)return h;const f=W.cf||'all';
+  const chips=`<div class="sh-cf" role="tablist">${[['all','All'],['hl','Highlights'],['ov','Overs'],['w','Wickets']].map(([k,l])=>`<button class="${f===k?'on':''}" data-a="cmF" data-v="${k}">${l}</button>`).join('')}</div>`;
+  return chips+h.replace('class="sh-pulse-timeline"',`class="sh-pulse-timeline" data-cf="${f}"`)}}
+Object.assign(A,{cmF(d){if(UI.wm){UI.wm.cf=d.v;render()}}});
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});
