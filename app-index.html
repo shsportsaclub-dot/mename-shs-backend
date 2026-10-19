@@ -247,6 +247,7 @@ svg text{font-family:var(--ui)}
 .ovfx-four{background:linear-gradient(90deg,#1747c9,#3f7bff)}.ovfx-six{background:linear-gradient(90deg,#d9480f,#ffb020)}.ovfx-out{background:linear-gradient(90deg,#8e0f1d,#e11d2e)}.ovfx-m50,.ovfx-m100{background:linear-gradient(90deg,#8a6a00,#ffc83d);color:#1b1500;text-shadow:none}
 @keyframes ovfxpop{0%{opacity:0;transform:translateX(-50%) scale(.6)}8%{opacity:1;transform:translateX(-50%) scale(1.08)}14%{transform:translateX(-50%) scale(1)}85%{opacity:1}100%{opacity:0;transform:translateX(-50%) translateY(-2cqw)}}
 @media (prefers-reduced-motion:reduce){.ovfx{animation:ovfxfade 4.5s both}@keyframes ovfxfade{0%,90%{opacity:1}100%{opacity:0}}}
+.sh-drs-row{display:grid;gap:6px;margin:10px 0}.sh-drs-row>span{font:700 12px var(--ui);opacity:.75;text-transform:uppercase;letter-spacing:.04em}.sh-drs-row>div{display:flex;flex-wrap:wrap;gap:6px}.sh-drs-row button{flex:1 1 auto;padding:10px;border:1px solid var(--bd);border-radius:9px;background:transparent;color:var(--tx);font:600 13px var(--ui)}.sh-drs-row button.on{background:var(--bl);border-color:var(--bl);color:#fff}.sh-drs-chk{display:flex!important;flex-direction:row!important;gap:8px;align-items:flex-start;justify-content:flex-start!important;text-align:left;margin:8px 0;font-size:13px}.sh-drs-chk input{width:auto!important;flex:none;margin:2px 0 0}.sh-drs-res{margin:14px 0 8px;padding:14px;border-radius:12px;text-align:center;color:#fff;display:grid;gap:3px}.sh-drs-res b{font:800 28px var(--ui)}.sh-drs-res small{opacity:.9;letter-spacing:.08em}.sh-drs-why{margin:6px 0 0;padding-left:18px;font-size:13px;line-height:1.5}
 </style>
 <style>.cbscore{background:var(--c2,#14213d);border:1px solid var(--bd,#2a3a66);border-radius:12px;padding:12px 14px;margin:8px 0}.cbs2{display:flex;gap:16px;flex-wrap:wrap;margin:6px 0;font-size:13px}.cbst{background:#f5c518;color:#111;font-weight:700;border-radius:8px;padding:8px 10px;margin-top:6px}.cbov{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:6px 0}</style>
 <style>.catabs{display:flex;border-bottom:2px solid var(--bd);margin:8px 0;overflow-x:auto}.catabs button{flex:1;background:none;border:0;color:var(--mu);font-weight:700;padding:12px 8px;white-space:nowrap;border-bottom:3px solid transparent;margin-bottom:-2px}.catabs button.on{color:var(--tx);border-bottom-color:var(--ac)}
@@ -5334,6 +5335,29 @@ function shOvEvent(m){const s=st(m);if(!s)return null;const n=s.inn.ev.length,e=
    clearTimeout(UI.ovT);UI.ovT=setTimeout(()=>{if(location.hash==='#overlay'||UI.view==='stream')render()},4700)}
  }catch(e){}
  return html}}
+
+/* ---------------- LBW review (DRS) panel: decision worked out from ICC ball-tracking protocol; values are entered by hand, never invented ---------------- */
+function shLbw(x){const R=[];let out=null,call=false;const orig=x.orig==='out'?'OUT':'NOT OUT';
+ if(x.pitch==='leg'){return {res:'NOT OUT',call:false,changed:x.orig==='out',why:['Pitched outside leg stump: never out LBW.']}}
+ if(x.impact==='leg'){return {res:'NOT OUT',call:false,changed:x.orig==='out',why:['Impact outside leg stump: not out.']}}
+ if(x.impact==='off'&&x.shot==='yes'){return {res:'NOT OUT',call:false,changed:x.orig==='out',why:['Impact outside off stump and the batter was playing a shot: not out.']}}
+ if(x.wickets==='miss'){return {res:'NOT OUT',call:false,changed:x.orig==='out',why:['Ball tracking shows the ball missing the stumps.']}}
+ const ucImpact=x.impact==='part',ucWk=x.wickets==='uc',far=!!x.far,hv=!!x.hv;
+ if(x.wickets==='hit'&&!ucImpact&&!far&&!hv){return {res:'OUT',call:false,changed:x.orig!=='out',why:['Pitched in line or outside off, impact in line, and the ball is hitting the stumps.']}}
+ if(ucImpact)R.push('Only part of the ball is in the impact zone (1% to 50%).');if(ucWk)R.push('Only part of the ball is hitting the wickets zone (1% to 50%).');if(far)R.push('First impact is 300 cm or more from the stumps.');if(hv)R.push('Half-volley rule: batter 250 cm or more out and ball pitched 40 cm or less before impact.');
+ return {res:"UMPIRE'S CALL",call:true,changed:false,why:R.concat('The on-field decision stands: '+orig+'.')}}
+const DRS_OPTS={pitch:[['line','In line / outside off'],['leg','Outside leg']],impact:[['line','In line'],['off','Outside off'],['leg','Outside leg'],['part','Part in line (1-50%)']],wickets:[['hit','Hitting'],['uc','Umpire\'s call (1-50%)'],['miss','Missing']]};
+UI.drs=UI.drs||{orig:'not',pitch:'line',impact:'line',wickets:'hit',shot:'yes',far:false,hv:false};
+XV.drs=function(){const d=UI.drs,r=shLbw(d),tone=r.res==='OUT'?'#c8102e':r.res==='NOT OUT'?'#1f9d55':'#e0a100';
+ const seg=(k,rows)=>`<div class="sh-drs-row"><span>${k[1]}</span><div>${rows.map(([v,l])=>`<button class="${d[k[0]]===v?'on':''}" data-a="drsSet" data-k="${k[0]}" data-v="${v}">${l}</button>`).join('')}</div></div>`;
+ return `<div class="bar"><h2>LBW review (DRS)</h2></div><div class="mu sm" style="margin:0 2px 8px">Enter what the ball-tracking / broadcast shows. The decision follows the ICC protocol (pitching, impact, wickets, umpire's call). Nothing here is measured by the app.</div>
+ <div class="card sh-drs">${seg(['orig','On-field decision'],[['not','Not out'],['out','Out']])}${seg(['pitch','Pitching'],DRS_OPTS.pitch)}${seg(['impact','Impact'],DRS_OPTS.impact)}${seg(['shot','Batter playing a shot?'],[['yes','Yes'],['no','No']])}${seg(['wickets','Wickets'],DRS_OPTS.wickets)}
+ <label class="sh-drs-chk"><input type="checkbox" data-c="drsFar" ${d.far?'checked':''}> First impact 300 cm or more from stumps</label><label class="sh-drs-chk"><input type="checkbox" data-c="drsHv" ${d.hv?'checked':''}> Half-volley case (batter 250 cm+ out, ball pitched 40 cm or less before impact)</label>
+ <div class="sh-drs-res" style="background:${tone}"><small>DECISION</small><b>${r.res}</b>${r.res==="UMPIRE'S CALL"?'':`<small>${r.changed?'On-field decision overturned':'On-field decision stays'}</small>`}</div>
+ <ul class="sh-drs-why">${r.why.map(w=>`<li>${esc(w)}</li>`).join('')}</ul></div>
+ <div class="mu sm" style="margin:6px 2px">Rules: pitching has no umpire's call; impact and wickets zones use the 50% rule; the wickets zone includes the top of the bails (since 2021). Number of reviews per innings depends on the competition's playing conditions.</div>`};
+Object.assign(A,{drsSet(d){UI.drs[d.k]=d.v;render()}});Object.assign(C,{drsFar(v,el){UI.drs.far=!!el.checked;render()},drsHv(v,el){UI.drs.hv=!!el.checked;render()}});
+MENU2[0][1].splice(4,0,['drs','\u{1F4FA}','LBW review (DRS)']);
 
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
