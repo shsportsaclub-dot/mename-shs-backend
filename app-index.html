@@ -3200,13 +3200,13 @@ async function shPush(){
     UI.sh.state=UI.sh.state==='login'?'login':'ok';
   }catch(e){UI.sh.state='offline'}
   UI.sh.busy=false}
-async function shPull(){
+async function shPull(only){
   if(!apiBase())return;let changed=false;
   try{
     const me=shMe();
-    for(const col of ['matches','sports','tours','auc']){
-      const r=await fetch(apiBase()+'/api/shared/'+col);const j=await r.json();if(!j.ok)continue;
-      for(const it of j.items){const d=it.data||{},mine=it.owner===me;
+    for(const col of (only?[only.col]:['matches','sports','tours','auc'])){
+      const r=await fetch(apiBase()+'/api/shared/'+col+(only?'/'+only.id:''));const j=await r.json();if(!j.ok)continue;
+      for(const it of (j.items||[j.item])){const d=it.data||{},mine=it.owner===me;
         const h=JSON.stringify(d);
         if(col==='matches'&&d.m){const i=S.matches.findIndex(x=>x.id===it.id);if(i>=0&&!S.matches[i].rm)continue;
           if(i>=0&&S.matches[i]._sh===it.updated)continue;
@@ -3227,7 +3227,7 @@ async function shPull(){
     UI.sh.state=UI.sh.state==='login'?'login':'ok'
   }catch(e){UI.sh.state='offline'}
   if(changed){save();render()}}
-{const sv=save;save=function(){sv.apply(this,arguments);clearTimeout(UI.sh.t);UI.sh.t=setTimeout(shPush,2500)}}
+{const sv=save;save=function(){sv.apply(this,arguments);clearTimeout(UI.sh.t);UI.sh.t=setTimeout(shPush,400)}}
 {const fl=finishLogin;finishLogin=function(){const L=UI.login;if(L&&L.session)S.tok=L.session;const r=fl.apply(this,arguments);setTimeout(()=>{shPush();shPull()},1500);return r}}
 setInterval(()=>{if(document.visibilityState==='visible'&&S.user){shPull();shPush()}},5000);
 setTimeout(()=>{if(S.user){shPull();shPush()}},2500);
@@ -5532,6 +5532,13 @@ Object.assign(A,{otSet(d){const v=String(d.v);UI.ot=v==='0'?null:{n:parseInt(v),
  csApply(){const m=scM(),u=UI.cs||{};if(!can()||!m||!u.out||!u.inn)return toast('Pick the concussed player and the replacement',2500);
   if(!csApplyTo(m,u.t||m.a,u.out,u.inn))return toast('Replacement not allowed',2500);UI.cs={t:u.t||m.a,open:1};commit();toast('Concussion replacement recorded',3000)}});
 Object.assign(C,{csTeam(v){UI.cs={t:v,open:1};render()},csOut(v){UI.cs=Object.assign({},UI.cs,{out:v,open:1});render()},csIn(v){UI.cs=Object.assign({},UI.cs,{inn:v,open:1});render()}});
+/* live push: a viewer is told the moment the scorer's save lands, so a ball shows up in about a second */
+function shLive(){try{if(UI.shES||!window.EventSource||!apiBase()||!S.user)return;
+  const es=UI.shES=new EventSource(apiBase()+'/api/shared-stream');
+  es.onmessage=e=>{try{const d=JSON.parse(e.data);if(d.gone||!d.col)return;if(document.visibilityState!=='visible')return;shPull({col:d.col,id:d.id})}catch(x){}};
+  es.onerror=()=>{}}catch(x){}}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){shLive();if(S.user)shPull()}});
+setInterval(shLive,5000);
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});

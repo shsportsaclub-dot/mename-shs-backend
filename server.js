@@ -969,6 +969,9 @@ routes['POST /api/auth/pin'] = async (req, body) => {
 };
 
 const allow = o => ORIGINS.length === 0 ? '*' : (ORIGINS.includes(o) ? o : 'null');
+const sseClients = new Set();
+const sseSend = o => { const line = `data: ${JSON.stringify(o)}\n\n`; for (const r of sseClients) { try { r.write(line); } catch { sseClients.delete(r); } } };
+setInterval(() => { for (const r of sseClients) { try { r.write(': ping\n\n'); } catch { sseClients.delete(r); } } }, 20000).unref();
 http.createServer(async (req, res) => {
   const origin = req.headers.origin, path = new URL(req.url, 'http://x').pathname;
   const out = (code, obj) => {
@@ -976,6 +979,10 @@ http.createServer(async (req, res) => {
     res.end(code === 204 ? '' : typeof obj === 'string' ? obj : JSON.stringify(obj));
   };
   if (req.method === 'OPTIONS') return out(204);
+  if (req.method === 'GET' && path === '/api/shared-stream') {   // live push: viewers hear about a saved match the moment the scorer's save lands
+    res.writeHead(200, { 'content-type': 'text/event-stream', 'cache-control': 'no-cache, no-transform', connection: 'keep-alive', 'x-accel-buffering': 'no', 'access-control-allow-origin': allow(origin), vary: 'origin' });
+    res.write('retry: 2000\n\n'); sseClients.add(res); req.on('close', () => sseClients.delete(res)); return;
+  }
   const STATIC = { '/manifest.webmanifest': 'application/manifest+json', '/sw.js': 'application/javascript', '/icon-192.png': 'image/png', '/icon-512.png': 'image/png', '/icon-maskable.png': 'image/png', '/apple-touch-icon.png': 'image/png' };
   const em = /^\/emblems\/[a-z-]+\.webp$/.exec(path);
   if (req.method === 'GET' && em) { try { const f = fs.readFileSync(new URL('./public' + path, import.meta.url)); res.writeHead(200, { 'content-type': 'image/webp', 'cache-control': 'public, max-age=604800' }); return res.end(f); } catch { /* fall through */ } }
@@ -1005,7 +1012,7 @@ http.createServer(async (req, res) => {
     if (!id || !/^[\w-]{3,40}$/.test(id)) return out(400, { ok: false, error: 'Bad id' });
     const cur = bag[id];
     if (cur && cur.owner !== phone && u.role !== 'admin') return out(403, { ok: false, error: 'Only the owner can change this' });
-    if (req.method === 'DELETE') { delete bag[id]; saveDb(); return out(200, { ok: true }); }
+    if (req.method === 'DELETE') { delete bag[id]; saveDb(); sseSend({ col, id, gone: 1 }); return out(200, { ok: true }); }
     if (req.method !== 'PUT') return out(405, { ok: false, error: 'Method not allowed' });
     let raw = ''; for await (const c of req) { raw += c; if (raw.length > 400000) return out(413, { ok: false, error: 'Too large' }); }
     let b; try { b = JSON.parse(raw); } catch { return out(400, { ok: false, error: 'Bad body' }); }
@@ -1020,7 +1027,7 @@ http.createServer(async (req, res) => {
     }
     if (limited('shw:' + phone, 600, 36e5)) return out(429, { ok: false, error: 'Too many saves, slow down' });
     bag[id] = { id, owner: cur ? cur.owner : phone, ownerName: u.nick || u.name || '', updated: Date.now(), data: b.data };
-    saveDb(); return out(200, { ok: true, updated: bag[id].updated });
+    saveDb(); sseSend({ col, id, updated: bag[id].updated }); return out(200, { ok: true, updated: bag[id].updated });
   }
   if (path.startsWith('/api/aucreg/')) {   // auction player registrations: players submit, organiser reviews (server decides status)
     const [, , , aid, rid] = path.split('/');
