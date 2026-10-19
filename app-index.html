@@ -380,7 +380,7 @@ function calc(m,i){
     const pen=e.x==='wd'?1:e.x==='nb'?NBP:0,tot=e.r+pen,legal=!pen,ov=Math.floor(o.lg/BPO);
     o.runs+=tot;if(e.x)o.ex[e.x]+=pen?tot:e.r;
     const B=gb(e.bt),W=gw(e.bl);
-    if(e.x===''||e.x==='nb'){B.r+=e.r;if(e.r===4)B.f4++;if(e.r===6)B.f6++}
+    if(e.x===''||e.x==='nb'){B.r+=e.r;if(e.r===4&&!e.ot)B.f4++;if(e.r===6)B.f6++}
     if(e.x!=='wd')B.b++;
     W.r+=(e.x==='b'||e.x==='lb')?0:tot;if(e.x==='wd')W.wd+=tot;if(e.x==='nb')W.nb++;
     if(legal){W.b++;o.lg++}
@@ -5496,6 +5496,42 @@ Object.assign(A,{
 XV.tests=function(){const L=(S.tests||[]).slice().reverse();return `<div class="bar"><h2>Test and multi-day matches</h2></div><div class="mu sm" style="margin:0 2px 8px">Start one from New match: choose Test, 4-day, 3-day, 2-day or 1-day. Each innings is scored with the normal scorer. Declaration, follow-on (MCC Law 14) and the result are worked out here.</div>${L.length?L.map(T=>`${mtCard(T)}<div class="row" style="gap:8px;margin:-4px 0 12px"><button class="btn sm" data-a="tOpen" data-id="${T.id}">Open scorer</button></div>`).join(''):'<div class="empty">No multi-day matches yet.</div>'}`};
 MENU2[0][1].splice(5,0,['tests','\u{1F3CF}','Test and multi-day matches']);
 
+/* ---------------- OVERTHROWS (Law 19.8) + CONCUSSION REPLACEMENT ---------------- */
+/* Overthrow runs are added to the runs already completed; a boundary 4 from an overthrow is not counted as a batter's boundary. Strike changes by the total, which is the same as the completed runs because 4 is even. */
+UI.ot=UI.ot||null;
+{const b9=ball;ball=function(m,s){s=s||{};const o=UI.ot;
+  if(o&&o.n>0&&!s.ot&&!s.w){s=Object.assign({},s,{r:(s.r||0)+o.n,ot:o.n,otb:!!o.b})}
+  UI.ot=null;const r=b9.call(this,m,s);
+  if(s.ot){const inn=m.innings[m.cur],e=inn.ev[inn.ev.length-1];if(e){e.ot=s.ot;e.otb=!!s.otb}}return r}}
+{const c9=commentary;commentary=function(m,i){const L=c9.apply(this,arguments),inn=m.innings[i];if(!inn)return L;
+  const bs=L.filter(x=>x.t==='b');bs.forEach((x,k)=>{const e=inn.ev[k];if(e&&e.ot&&x.txt.indexOf('overthrow')<0)x.txt+=` Overthrows: ${e.ot} extra run${e.ot===1?'':'s'}${e.otb?' (boundary)':''}.`});return L}}
+const csPool=(m,tid)=>{const xi=m.xi[tid]||[],sub=(m.subs&&m.subs[tid])||[],sq=(T(tid)&&T(tid).players)||[];return [...new Set([...sub,...sq])].filter(id=>!xi.includes(id)&&P(id)&&!(m.cs||[]).some(c=>c.out===id))};
+function csApplyTo(m,tid,outId,inId){
+  if(!m||!m.xi||!m.xi[tid]||!m.xi[tid].includes(outId)||m.xi[tid].includes(inId)||m.status==='done')return false;
+  if(!csPool(m,tid).includes(inId))return false;
+  m.xi[tid]=m.xi[tid].map(x=>x===outId?inId:x);
+  if(m.subs&&m.subs[tid])m.subs[tid]=m.subs[tid].filter(x=>x!==inId);
+  m.cs=(m.cs||[]).concat([{tid,out:outId,inn:inId,i:m.cur,at:m.innings[m.cur]?fmtOv(calc(m,m.cur).lg):'0.0'}]);
+  const inn=m.innings[m.cur];
+  if(inn){const c=inn.cur;
+    if(inn.bat===tid){['s','n'].forEach(k=>{if(c[k]===outId){c[k]=inId;if(!inn.used.includes(inId))inn.used.push(inId)}});inn.ret=(inn.ret||[]).filter(x=>x!==outId)}
+    else if(c.bl===outId)c.bl=inId}
+  return true}
+const shOtBar=m=>{const o=UI.ot,B=(n,b,l)=>`<button class="${o&&o.n===n&&!!o.b===b?'on':''}" data-a="otSet" data-v="${n}${b?'b':''}">${l}</button>`;
+  return `<div class="card sh-ot"><div class="mu sm"><b>Overthrow</b> (Law 19.8): runs added to the next ball${o?' · <b style="color:var(--ac2)">+'+o.n+(o.b?' boundary':'')+' on next ball</b>':''}</div><div class="exr">${B(1,0,'+1')}${B(2,0,'+2')}${B(3,0,'+3')}${B(4,1,'+4 boundary')}${o?'<button data-a="otSet" data-v="0">Clear</button>':''}</div></div>`};
+const shCsBar=m=>{if(!m||m.status!=='live')return '';const cs=m.cs||[],S0=UI.cs||{},tid=S0.t||m.a,xi=m.xi[tid]||[],pool=csPool(m,tid);
+  const sel=(n,arr,v,ph)=>`<select data-c="${n}"><option value="">${ph}</option>${arr.map(id=>`<option value="${id}"${v===id?' selected':''}>${esc((P(id)||{}).name||id)}</option>`).join('')}</select>`;
+  return `<details class="card sh-cs"${S0.open?' open':''}><summary><b>Concussion replacement</b>${cs.length?` · ${cs.length} used`:''}</summary>
+  <div class="mu sm" style="margin:6px 0">Like-for-like replacement for a concussed player (ICC Playing Conditions). The replaced player cannot return; the replacement may bat and bowl fully. The match referee approves it, so record it only after approval.</div>
+  <div class="row" style="gap:6px;flex-wrap:wrap"><select data-c="csTeam">${[m.a,m.b].map(t=>`<option value="${t}"${t===tid?' selected':''}>${esc(T(t).name)}</option>`).join('')}</select>${sel('csOut',xi,S0.out,'Concussed player')}${sel('csIn',pool,S0.inn,'Replacement')}<button class="btn sm" data-a="csApply">Replace</button></div>
+  ${cs.map(c=>`<div class="mu sm" style="margin-top:6px">${esc(T(c.tid).name)}: ${esc((P(c.out)||{}).name||'')} replaced by ${esc((P(c.inn)||{}).name||'')} (concussion, at ${c.at} ov)</div>`).join('')}</details>`};
+{const v9=vScore;vScore=function(){let h=v9.apply(this,arguments);const m=scM();if(!m||m.sport&&m.sport!=='cricket')return h;
+  if(m.status!=='live')return h;const ix=h.indexOf('<div class="runs">');if(ix<0)return h;const end=h.indexOf('</div>',ix)+6;
+  return h.slice(0,end)+shOtBar(m)+h.slice(end)+shCsBar(m)}}
+Object.assign(A,{otSet(d){const v=String(d.v);UI.ot=v==='0'?null:{n:parseInt(v),b:/b$/.test(v)};render()},
+ csApply(){const m=scM(),u=UI.cs||{};if(!can()||!m||!u.out||!u.inn)return toast('Pick the concussed player and the replacement',2500);
+  if(!csApplyTo(m,u.t||m.a,u.out,u.inn))return toast('Replacement not allowed',2500);UI.cs={t:u.t||m.a,open:1};commit();toast('Concussion replacement recorded',3000)}});
+Object.assign(C,{csTeam(v){UI.cs={t:v,open:1};render()},csOut(v){UI.cs=Object.assign({},UI.cs,{out:v,open:1});render()},csIn(v){UI.cs=Object.assign({},UI.cs,{inn:v,open:1});render()}});
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});
