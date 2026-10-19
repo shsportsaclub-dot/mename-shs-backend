@@ -14,8 +14,8 @@ const fs=require('node:fs'),http=require('node:http'),assert=require('node:asser
     UI.stage='app';S.user={name:'QA scorer',role:'scorer',kind:'Scorer',phone:'+910000000000'};S.prefs={...S.prefs,asked:1,welcomed:1};
     S.players=Array.from({length:22},(_,i)=>({id:'p'+i,name:'Player '+i,role:i%11===0?'WK':'BAT'}));
     S.teams=[{id:'a',name:'Home XI',short:'HOME',players:S.players.slice(0,11).map(p=>p.id)},{id:'b',name:'Away XI',short:'AWAY',players:S.players.slice(11).map(p=>p.id)}];
-    S.matches=[];const m=newMatch({a:'a',b:'b',overs:2,toss:'a',dec:'bat',xiA:S.teams[0].players,xiB:S.teams[1].players,venue:'Isolated QA ground'});
-    UI.sid=null;UI.mid=null;UI.view='score';render();
+    S.matches=[];const m=newMatch({a:'a',b:'b',overs:20,toss:'a',dec:'bat',xiA:S.teams[0].players,xiB:S.teams[1].players,venue:'Isolated QA ground'});
+    m.cat={gender:'men'};UI.sid=null;UI.mid=null;UI.view='score';render();
    });
    assert.equal(await p.locator('.sh-match-workspace').count(),1);
    assert.ok(await p.evaluate(()=>UI.sid===S.matches[0].id),'fallback match is also the action target');
@@ -55,10 +55,15 @@ const fs=require('node:fs'),http=require('node:http'),assert=require('node:asser
    await p.evaluate(()=>{S.user={role:'viewer',name:'QA fan'};render()});
    assert.equal(await p.locator('.sh-match-workspace [data-a="scoreIt"]').count(),0);
    assert.equal(await p.locator('.sh-match-workspace').evaluate(e=>e.getBoundingClientRect().right>innerWidth+1||e.scrollWidth>e.clientWidth+1),false);
+   await p.evaluate(()=>{S.user={name:'QA scorer',role:'scorer',phone:'+910000000000'};const m=S.matches[0];while(calc(m,0).lg<36){if(!m.innings[0].cur.bl)m.innings[0].cur.bl='p12';ball(m,{r:0})}render()});
+   assert.match(await p.locator('.sh-fielding-phase').innerText(),/5 outside circle/);
+   await p.evaluate(()=>{S.matches[0].rules=S.matches[0].rules||{};S.matches[0].rules.slowOverRate=true;render()});assert.match(await p.locator('.sh-fielding-phase').innerText(),/4 outside circle/);
+   await p.evaluate(()=>{const m=S.matches[0];m.status='done';m.result='Home XI won by 12 runs';render()});
+   assert.match(await p.locator('.sh-match-result').innerText(),/Home XI won by 12 runs/);
    assert.deepEqual(errors,[]);fs.mkdirSync('runtime-evidence',{recursive:true});await p.screenshot({path:'runtime-evidence/scorer-workspace-'+width+'.png',fullPage:true});
-   results.push({width,inningsGuard:true,selectedMatch:true,freeHitAcrossWide:true,undoAudit:true,deliveryIds:true,extrasVisible:true,viewerNavigation:true,viewerReadOnly:true});await p.close();
+   results.push({width,inningsGuard:true,selectedMatch:true,freeHitAcrossWide:true,undoAudit:true,deliveryIds:true,extrasVisible:true,viewerNavigation:true,viewerReadOnly:true,fieldingProfile:true,finalResult:true});await p.close();
   }
   fs.writeFileSync('runtime-evidence/scorer-workspace.json',JSON.stringify({scope:'Actual app, isolated synthetic cricket match, external calls stubbed',results},null,2));
-  console.log('PASS scorer workspace: 320/412/1280, innings guard, NB-wide-free-hit, undo audit, delivery IDs, extras, viewer tabs and reload');
+  console.log('PASS scorer workspace: 320/412/1280, innings guard, NB-wide-free-hit, undo audit, delivery IDs, extras, viewer tabs, fielding phase, final result and reload');
  }finally{await browser?.close();await new Promise(r=>server.close(r))}
 })().catch(e=>{console.error(e);process.exitCode=1});

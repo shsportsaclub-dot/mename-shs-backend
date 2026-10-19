@@ -10,7 +10,9 @@
       "deliveryIds": true,
       "extrasVisible": true,
       "viewerNavigation": true,
-      "viewerReadOnly": true
+      "viewerReadOnly": true,
+      "fieldingProfile": true,
+      "finalResult": true
     },
     {
       "width": 412,
@@ -21,7 +23,9 @@
       "deliveryIds": true,
       "extrasVisible": true,
       "viewerNavigation": true,
-      "viewerReadOnly": true
+      "viewerReadOnly": true,
+      "fieldingProfile": true,
+      "finalResult": true
     },
     {
       "width": 1280,
@@ -32,7 +36,9 @@
       "deliveryIds": true,
       "extrasVisible": true,
       "viewerNavigation": true,
-      "viewerReadOnly": true
+      "viewerReadOnly": true,
+      "fieldingProfile": true,
+      "finalResult": true
     }
   ]
 }

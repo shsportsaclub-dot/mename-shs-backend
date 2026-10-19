@@ -1726,9 +1726,8 @@ function embedHTML(u){
   return swBox(`<iframe src="${esc(u)}" allow="autoplay; fullscreen" allowfullscreen></iframe>`)}
 function streamCard(key,live){
   const url=getStream(key),ed=can();
-  if(!url&&!ed)return '';
   return `<div class="card" style="margin:10px 0"><div class="row" style="justify-content:space-between"><b>Live stream</b>${live?'<span class="pill live pulse">LIVE</span>':'<span class="mu sm">opens when the match is live</span>'}</div>
-  ${url&&live?embedHTML(url):url?'<div class="mu sm" style="margin:8px 0">Stream link is saved. The video window opens here as soon as the match goes live.</div>':'<div class="mu sm" style="margin:8px 0">No stream link yet.</div>'}
+  ${url&&live?embedHTML(url):url?'<div class="mu sm" style="margin:8px 0">Stream link is saved. The video window opens here as soon as the match goes live.</div>':'<div class="mu sm" style="margin:8px 0">Live video is not connected for this match. Score visualization and live video are separate.</div>'}
   ${ed?`<form data-f="stream" style="margin-top:8px"><input type="hidden" name="key" value="${esc(key)}"><label>Stream link (YouTube, Facebook live, .m3u8)<input name="url" inputmode="url" placeholder="https://www.youtube.com/live/..." value="${esc(url)}"></label><div class="row"><button class="btn sm">Save link</button>${url?`<button type="button" class="btn sm ghost" data-a="stDel" data-k="${esc(key)}">Remove</button>`:''}</div></form>`:''}</div>`}
 async function saveStream(key,url){
   S.streams=S.streams||{};if(url)S.streams[key]=url;else delete S.streams[key];UI.streams=Object.assign({},UI.streams||{},S.streams);if(!url)delete UI.streams[key];
@@ -3294,9 +3293,9 @@ setTimeout(()=>{if(S.user){shPull();shPush()}},2500);
  A.scoreIt=g(A.scoreIt);A.delMatch=g(A.delMatch)}
 {const t0=vScore;vScore=function(){const m=S.matches.find(x=>x.id===UI.sid);if(m&&m.rm){UI.sid=null}return t0()}}
 /* ---------------- RULES: POWERPLAY, SUPER OVER, SYNC STATUS ---------------- */
-const ppDefB=m=>{if(m.bpo===5)return 25;const b=m.overs*6;return m.overs>=40?60:m.overs>20?Math.round(m.overs*.2)*6:Math.round(b*.3)};
+const ppDefB=m=>shFieldingDefaults(m);
 const ppOv=m=>m.rules&&m.rules.ppb!=null?+m.rules.ppb:ppDefB(m);
-const ppFld=m=>m.bpo===5?'2 fielders may stand outside the circle in the powerplay':m.overs>=40?'ODI: 2 fielders outside the circle in overs 1-10, 4 in overs 11-40, 5 in overs 41-50':'T20: 2 fielders outside the circle in the powerplay, 4 after it';
+const ppFld=m=>m.bpo===5?'2 fielders may stand outside the circle in the powerplay':m.overs>=40?'ODI: 2 fielders outside the circle in overs 1-10, 4 in overs 11-40, 5 in overs 41-50':'ICC men T20I reference: 2 outside in powerplay, 5 after it; use the approved competition conditions';
 function ppStat(m,i){const inn=m.innings[i],n=ppOv(m);if(!inn||!n)return null;let lg=0,r=0,w=0,b=0;
   for(const e of inn.ev){if(lg>=n&&!(e.x==='wd'||e.x==='nb'))break;const pen=e.x==='wd'?1:e.x==='nb'?NBP:0;r+=e.r+pen;if(e.w)w++;if(!pen){lg++;b++}}
   return{r,w,b,n,live:inn.lg<n&&!inn.done}}
@@ -3318,7 +3317,7 @@ function shChip(){const off=typeof navigator!=='undefined'&&navigator.onLine===f
 {const t0=tLive;tLive=function(m){return t0(m)+ppCard(m)}}
 {const t0=tSum;tSum=function(m){return t0(m)+ppCard(m)+((m.so)?`<div class="card"><div class="b">Super Over</div><div class="mu sm">${esc(m.so.text)}</div></div>`:'')}}
 Object.assign(A,{
-  rulesOpen(d){const m=S.matches.find(x=>x.id===d.id);if(!m)return;UI.modal={t:'html',html:`<h3>Match rules</h3><form data-f="rules" data-id="${m.id}"><label>Powerplay balls (0 = none)<input name="pp" type="number" min="0" max="${m.overs*(m.bpo||6)}" value="${ppOv(m)}"></label><div class="mu sm" style="margin:6px 0">Default follows the ICC: about 30% of the balls in a reduced T20 (rounded to the nearest ball), 36 balls in a 20-over match, 60 balls in an ODI, 25 balls in The Hundred. Local rules can change this.</div><button class="btn wide">Save</button></form>`};renderModal()},
+  rulesOpen(d){const m=S.matches.find(x=>x.id===d.id);if(!m)return;UI.modal={t:'html',html:`<h3>Match rules</h3><form data-f="rules" data-id="${m.id}"><label>Powerplay balls (0 = none)<input name="pp" type="number" min="0" max="${m.overs*(m.bpo||6)}" value="${ppOv(m)}"></label><div class="mu sm" style="margin:6px 0">ICC men profiles use the official reduced-innings table. Other competitions use the saved local powerplay length; confirm their approved conditions.</div><button class="btn wide">Save</button></form>`};renderModal()},
   soOpen(d){const m=S.matches.find(x=>x.id===d.id);if(!m)return;const inn=m.innings,f=inn[1].bat,s=inn[0].bat;
     const blk=(id,l)=>`<div class="card" style="margin:6px 0"><div class="b">${esc(T(id).name)} ${l}</div><div class="row"><label style="flex:1">Runs<input name="r_${id}" type="number" min="0" value="0"></label><label style="flex:1">Wickets<input name="w_${id}" type="number" min="0" max="2" value="0"></label></div></div>`;
     UI.modal={t:'html',html:`<h3>Super Over</h3><form data-f="so" data-id="${m.id}">${blk(f,'(batted first)')}${blk(s,'(batted second)')}<label class="ck"><input type="checkbox" name="win"> Counts as a win in the points table (knockout)</label><button class="btn wide">Save result</button></form>`};renderModal()},
@@ -5849,6 +5848,55 @@ function shMatchWorkspace(m,mode){
  const style=document.createElement('style');style.textContent='.sh-match-workspace{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;margin:0 0 12px}.sh-match-workspace small{color:var(--mu);font-size:10px;letter-spacing:.8px}.sh-match-workspace h2{font-size:19px;margin:4px 0}.sh-match-workspace p{font-size:11px;margin:0;color:var(--mu)}.sh-match-workspace nav{display:flex;gap:6px;flex-wrap:wrap}.sh-match-workspace nav .btn{font-size:11px;padding:7px 8px;min-height:32px}.sh-match-workspace.is-viewer{padding:8px 10px;gap:5px}.sh-match-workspace.is-viewer small,.sh-match-workspace.is-viewer p{display:none}.sh-match-workspace.is-viewer h2{font-size:13px;margin:0}.sh-match-workspace.is-viewer nav{flex-wrap:nowrap;gap:4px;width:100%}.sh-match-workspace.is-viewer nav .btn{font-size:10px;padding:6px;flex:1;white-space:nowrap}.sh-previous-over{flex-basis:100%;display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:7px}.sh-previous-over small{width:100%;color:var(--mu)}.sh-fx-runner{position:absolute;left:20%;top:45px;font-size:24px;opacity:0}.sh-fx-runs .sh-fx-runner{opacity:1;animation:shRunner 1050ms ease-in-out 2 alternate;animation-delay:var(--sh-fx-delay)}.sh-fx-runs .sh-fx-runner.second{top:72px;animation-direction:alternate-reverse}@keyframes shRunner{from{left:20%;transform:scaleX(1)}to{left:74%;transform:scaleX(-1)}}@media(prefers-reduced-motion:reduce){.sh-fx-runs .sh-fx-runner{animation:none;opacity:0}}';document.head.appendChild(style);
 }
 /* END SH SCORER ACCEPTANCE */
+
+// ICC Men's ODI/T20I Playing Conditions, effective October 2026, clause 28.7.
+function createSHCricketFielding(){
+ const t20={5:9,6:11,7:13,8:14,9:16,10:18,11:20,12:22,13:23,14:25,15:27,16:29,17:31,18:32,19:34,20:36};
+ const odi=[[20,4,12,4],[21,4,13,4],[22,5,13,4],[23,5,14,4],[24,5,14,5],[25,5,15,5],[26,5,16,5],[27,6,16,5],[28,6,17,5],[29,6,17,6],[30,6,18,6],[31,6,19,6],[32,7,19,6],[33,7,20,6],[34,7,20,7],[35,7,21,7],[36,7,22,7],[37,8,22,7],[38,8,23,7],[39,8,23,8],[40,8,24,8],[41,8,25,8],[42,9,25,8],[43,9,26,8],[44,9,26,9],[45,9,27,9],[46,9,28,9],[47,10,28,9],[48,10,29,9],[49,10,29,10],[50,10,30,10]];
+ function plan({profile='custom',overs=20,balls=0,slowOverRate=false}={}){
+  let phases=[];
+  if(profile==='icc-men-t20'&&t20[overs]!=null)phases=[{name:'Powerplay',end:t20[overs],outside:2},{name:'After powerplay',end:overs*6,outside:5}];
+  if(profile==='icc-men-odi'){const row=odi.find(x=>x[0]===overs);if(row)phases=[{name:'Powerplay 1',end:row[1]*6,outside:2},{name:'Powerplay 2',end:(row[1]+row[2])*6,outside:4},{name:'Powerplay 3',end:overs*6,outside:5}]}
+  if(!phases.length)return {supported:false,profile,reason:'Use the approved competition fielding conditions for this format.'};
+  const phase=phases.find(x=>balls<x.end)||phases.at(-1),outside=Math.max(0,phase.outside-(slowOverRate?1:0));
+  return {supported:true,profile,version:'October 2026',phases,powerplayBalls:phases[0].end,phase:phase.name,outside,slowOverRate,complete:balls>=overs*6};
+ }
+ return {plan};
+}
+if(typeof module!=='undefined')module.exports={createSHCricketFielding};
+
+/* SH FIELDING AND RESULT: explicit versioned reference profiles. */
+function shFieldingProfile(m){return m.rules?.fieldingProfile||(m.bpo!==5&&m.overs<900&&m.cat?.gender==='men'?(m.overs>=40?'icc-men-odi':m.overs<=20?'icc-men-t20':'custom'):'custom')}
+function shFieldingState(m,i=m.cur||0,balls){return createSHCricketFielding().plan({profile:shFieldingProfile(m),overs:i===1&&m.ovr2?+m.ovr2:+m.overs,balls:balls??(m.innings?.[i]?calc(m,i).lg:0),slowOverRate:!!m.rules?.slowOverRate})}
+function shFieldingDefaults(m){if(m.overs>=900)return 0;if(m.bpo===5)return 25;const p=shFieldingState(m,m.cur||0,0);return p.supported?p.powerplayBalls:m.overs>=40?60:m.overs>20?Math.round(m.overs*.2)*6:Math.round(m.overs*6*.3)}
+function shFieldingCard(m){
+ const p=shFieldingState(m);if(!p.supported)return '';
+ const custom=m.rules?.ppb!=null&&m.rules.ppb!==p.powerplayBalls||Object.keys(m.rules?.ppMarked||{}).length>0;
+ return `<section class="card sh-fielding-phase" aria-label="Current fielding restrictions"><div class="row" style="justify-content:space-between"><b>${esc(p.phase)}</b><span class="pill">${p.outside} outside circle</span></div><p class="mu sm">ICC men's ${p.profile==='icc-men-odi'?'ODI':'T20I'} reference · October 2026 · clause 28.7${p.slowOverRate?' · umpire-recorded slow-over-rate restriction':''}</p><div class="mu sm">${p.phases.map(q=>q.name+': '+q.outside+' outside, through '+Math.floor(q.end/6)+'.'+q.end%6+' ov').join(' · ')}${custom?'<br>Manual powerplay marks/length differ from this reference. Apply the approved competition conditions.':''}</div></section>`;
+}
+{
+ const oldRules=A.rulesOpen;
+ A.rulesOpen=function(d){oldRules.call(this,d);const m=S.matches.find(x=>x.id===d.id);if(!m||!UI.modal?.html)return;
+  const fields=`<label>Fielding reference<select name="fieldingProfile">${[['custom','Local / other competition'],['icc-men-t20','ICC men T20I · October 2026'],['icc-men-odi','ICC men ODI · October 2026']].map(([k,v])=>`<option value="${k}" ${shFieldingProfile(m)===k?'selected':''}>${v}</option>`).join('')}</select></label><label class="ck"><input name="useFieldingDefault" type="checkbox" checked> Use the profile's official powerplay length</label><label class="ck"><input name="slowOverRate" type="checkbox" ${m.rules?.slowOverRate?'checked':''}> Umpire has applied the slow-over-rate fielding penalty</label><p class="mu sm">Select the applicable competition profile. ICC men's profiles do not certify BCCI, women's, Hundred or local playing conditions.</p>`;
+  UI.modal.html=UI.modal.html.replace('<label>Powerplay balls',fields+'<label>Powerplay balls');renderModal();
+ };
+ const saveRules=F.rules;
+ F.rules=function(fd,el){const m=S.matches.find(x=>x.id===(el?.dataset?.id||UI.sid));if(!m||m.rm||!can())return;
+  const profile=fd.get('fieldingProfile');if(!['custom','icc-men-t20','icc-men-odi'].includes(profile))return saveRules.apply(this,arguments);
+  const plan=createSHCricketFielding().plan({profile,overs:m.cur===1&&m.ovr2?+m.ovr2:+m.overs});
+  if(profile!=='custom'&&!plan.supported)return toast('This profile does not support the selected innings length');
+  m.rules=m.rules||{};m.rules.fieldingProfile=profile;m.rules.slowOverRate=fd.has('slowOverRate');
+  if(fd.has('useFieldingDefault')&&plan.supported)fd.set('pp',String(plan.powerplayBalls));
+  m.audit=m.audit||[];m.audit.push({type:'fielding_rules',t:Date.now(),by:S.user?.name||'Scorer',profile,slowOverRate:m.rules.slowOverRate,powerplayBalls:Number(fd.get('pp'))});
+  return saveRules.call(this,fd,el);
+ };
+ const scorer=scoreConsole;scoreConsole=function(m){return shFieldingCard(m)+scorer.apply(this,arguments)};
+ const powerplay=ppCard;ppCard=function(m){return shFieldingCard(m)+powerplay.apply(this,arguments)};
+ const panel=shPulsePanel;shPulsePanel=function(W){
+  const result=W.m.ended?`<section class="card sh-match-result" role="status" aria-label="Match result"><small>FINAL RESULT</small><h2>${esc(W.m.status||'Result not published')}</h2>${W.mi?.matchWinner?`<p>Winner: ${esc(W.mi.matchWinner)}</p>`:''}</section>`:'';
+  return result+panel.apply(this,arguments)+(W.bb?.source==='Scoring Heroes scorer'?voiceBar()+'<p class="mu sm">Spoken languages depend on voices installed on this device.</p>':'');
+ };
+}
 
 </script>
 </body>
