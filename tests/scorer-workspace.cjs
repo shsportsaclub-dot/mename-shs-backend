@@ -62,6 +62,7 @@ const fs=require('node:fs'),http=require('node:http'),assert=require('node:asser
    await p.evaluate(()=>{S.matches[0].rules=S.matches[0].rules||{};S.matches[0].rules.slowOverRate=true;render()});assert.match(await p.locator('.sh-fielding-phase').innerText(),/4 outside circle/);
    await p.evaluate(()=>{const m=S.matches[0];m.status='done';m.result='Home XI won by 12 runs';render()});
    assert.match(await p.locator('.sh-match-result').innerText(),/Home XI won by 12 runs/);
+   await p.evaluate(()=>commit());await p.reload();await p.evaluate(()=>{UI.stage='app';UI.view='score';render()});assert.match(await p.locator('#app').innerText(),/Match complete/);await p.locator('.sh-match-workspace [data-a="shScorerWatch"]').click();assert.match(await p.locator('.sh-match-result').innerText(),/Home XI won by 12 runs/,'result remains accessible after reload');
    assert.deepEqual(errors,[]);fs.mkdirSync('runtime-evidence',{recursive:true});await p.screenshot({path:'runtime-evidence/scorer-workspace-'+width+'.png',fullPage:true});
    results.push({width,inningsGuard:true,selectedMatch:true,freeHitAcrossWide:true,undoAudit:true,deliveryIds:true,extrasVisible:true,viewerNavigation:true,viewerReadOnly:true,fieldingProfile:true,finalResult:true});await p.close();
   }

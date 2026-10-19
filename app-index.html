@@ -5798,7 +5798,7 @@ function shMatchWorkspace(m,mode){
 {
  const score=vScore;
  vScore=function(){
-  const m=S.matches.find(x=>x.id===UI.sid&&!x.rm)||S.matches.filter(x=>!x.rm&&x.status!=='done').at(-1);
+  const m=S.matches.find(x=>x.id===UI.sid&&!x.rm)||S.matches.filter(x=>!x.rm&&x.status!=='done').at(-1)||S.matches.filter(x=>!x.rm).at(-1);
   if(m)UI.sid=m.id;
   const html=score.apply(this,arguments);
   return m&&can()?shMatchWorkspace(m,'scorer')+html:html;
