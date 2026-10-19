@@ -237,6 +237,9 @@ svg text{font-family:var(--ui)}
 .rrow img.flag{height:34px;width:34px;border-radius:50%;object-fit:cover;background:#fff}
 .wtabs{display:flex;gap:8px;margin:6px 0 10px}
 .aucsheet .btn.ghost{color:#b0211a;border:1px solid #b0211a;background:#fff}.aucsheet .btn:not(.ghost){background:#b0211a;color:#fff}.aucsheet .pill{background:#e9ecf5;color:#1a2240;white-space:normal}.aucsheet .row{flex-wrap:wrap}.aucsheet .row>label{min-width:96px}.aucsheet form .row>label input,.aucsheet form .row>label select{width:100%}
+
+.sh-poll-list{display:grid;gap:8px;margin:10px 0}.sh-poll-o{padding:11px 12px;border:1px solid var(--line,#2b3a63);border-radius:10px;background:transparent;color:inherit;font:700 14px var(--ui);text-align:left}.sh-poll-o:disabled{opacity:.5}
+.sh-poll-r{position:relative;display:flex;justify-content:space-between;gap:8px;padding:11px 12px;border:1px solid var(--line,#2b3a63);border-radius:10px;overflow:hidden;font:600 14px var(--ui)}.sh-poll-r>*{position:relative}.sh-poll-fill{position:absolute!important;inset:0 auto 0 0;background:rgba(63,123,255,.28)}.sh-poll-r.me{border-color:#3f7bff}
 </style>
 <style>.cbscore{background:var(--c2,#14213d);border:1px solid var(--bd,#2a3a66);border-radius:12px;padding:12px 14px;margin:8px 0}.cbs2{display:flex;gap:16px;flex-wrap:wrap;margin:6px 0;font-size:13px}.cbst{background:#f5c518;color:#111;font-weight:700;border-radius:8px;padding:8px 10px;margin-top:6px}.cbov{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:6px 0}</style>
 <style>.catabs{display:flex;border-bottom:2px solid var(--bd);margin:8px 0;overflow-x:auto}.catabs button{flex:1;background:none;border:0;color:var(--mu);font-weight:700;padding:12px 8px;white-space:nowrap;border-bottom:3px solid transparent;margin-bottom:-2px}.catabs button.on{color:var(--tx);border-bottom-color:var(--ac)}
@@ -4583,11 +4586,12 @@ XV.wmatch=function(){const W=UI.wm;if(!W)return '<div class="empty">Open a match
  else if(tab==='gr')body=sum+cbpGraphs(W);
  else if(tab==='ov')body=sum+cbpOverTab(W);
  else if(tab==='pr')body=sum+cbpPredict(W);
+ else if(tab==='po')body=sum+shPollsHTML(W);
  else if(tab==='rp')body=sum+cbpReport(W);
  else if(tab==='vn')body=sum+cbpVenue(W);
  else if(tab==='sq')body=cbpSquads(W);
  else body=cbpInfo(W);
- return cbpHead(ttl,[['info','Info'],['live','Live'],['cm','Commentary'],['ov','Overs'],['sc','Scorecard'],['gr','Graphs'],['pr','Prediction'],['rp','Report'],['vn','Venue'],['sq','Squads']],tab,'wmTab')+body};
+ return cbpHead(ttl,[['info','Info'],['live','Live'],['cm','Commentary'],['ov','Overs'],['sc','Scorecard'],['gr','Graphs'],['pr','Prediction'],['po','Polls'],['rp','Report'],['vn','Venue'],['sq','Squads']],tab,'wmTab')+body};
 {const o0=A.wOpen;A.wOpen=function(d){o0.apply(this,arguments);const id=d.id;
   wLoad('match_info',id).then(j=>{if(!UI.wm||UI.wm.m.id!==id)return;if(j.ok)UI.wm.mi=j.data||{};else UI.wm.miErr=j.error||'unavailable';if(UI.view==='wmatch')render()})};
  const t0=A.wmTab;A.wmTab=function(d){t0.apply(this,arguments);const W=UI.wm;if(W&&d.v==='vn'&&W.vs==null&&!W.vsBusy&&apiBase()){W.vsBusy=1;const id=W.m.id;fetch(apiBase()+'/history/venue?name='+encodeURIComponent(W.m.venue||'')+'&type='+encodeURIComponent(String(W.m.type||'').toLowerCase())).then(r=>r.json()).then(j=>{if(UI.wm&&UI.wm.m.id===id){UI.wm.vs=j&&j.ok?j:{n:0,err:1};render()}}).catch(()=>{if(UI.wm&&UI.wm.m.id===id){UI.wm.vs={n:0,err:1};render()}})}if(W&&(d.v==='cm'||d.v==='gr'||d.v==='ov')&&W.bb==null&&!W.bbErr&&!W.bbBusy){W.bbBusy=1;const id=W.m.id;wLoad('match_bbb',id).then(j=>{if(!UI.wm||UI.wm.m.id!==id)return;UI.wm.bbBusy=0;if(j.ok)UI.wm.bb=j.data==null?[]:j.data;else UI.wm.bbErr=j.error||'Not available';if(UI.view==='wmatch')render()})}}}
@@ -5271,6 +5275,27 @@ function shCurrentPowerplay(m){const s=st(m);if(!s)return false;const key=s.i+':
  const style=document.createElement('style');style.textContent='.sh-scorer-console .runs{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.sh-scorer-console .runs button{min-height:46px;font-size:22px}.sh-scoring-open .fabfloat,.sh-viewer-open .fabfloat{display:none}.sh-scorer-console .card{margin-bottom:9px}.sh-live-window{scroll-margin-top:12px}';document.head.appendChild(style);
 }
 /* END VIEWER / SCORER SEPARATION */
+
+/* ---------------- Community polls (opinion only, no money) ---------------- */
+function shGuestId(){try{let g=localStorage.getItem('sh-guest-id');if(!g||g.length<12){g='g'+Math.random().toString(36).slice(2)+Date.now().toString(36);localStorage.setItem('sh-guest-id',g)}return g}catch{return 'g'+String(UI.shGuest||(UI.shGuest=Math.random().toString(36).slice(2)+Date.now().toString(36)))}}
+function shPollDefs(W){const m=W.m,tm=(m.teams||[]).slice(0,2).map(t=>String(t.name||t.short||'').slice(0,40)).filter(Boolean),defs=[];
+ if(tm.length===2)defs.push({k:'winner',q:'Who will win this match?',o:tm});
+ let ros=[];try{ros=shRoster(W).filter(p=>!p.excluded).map(p=>String(p.name).slice(0,40))}catch{}
+ ros=[...new Set(ros)].slice(0,12);if(ros.length>=2)defs.push({k:'top',q:'Who will be the star of the match?',o:ros});
+ defs.push({k:'century',q:'Will any batter score a century?',o:['Yes','No']},{k:'big',q:'Will a team score 200 or more?',o:['Yes','No']});
+ return defs}
+async function shPollsLoad(W){if(!apiBase())return;const id=W.m.id;W.pollBusy=1;try{const r=await fetch(apiBase()+'/api/polls?match='+encodeURIComponent(id)+'&guest='+encodeURIComponent(shGuestId()),{headers:S.tok?{Authorization:'Bearer '+S.tok}:{}});const j=await r.json();if(UI.wm&&UI.wm.m.id===id){if(j.ok){UI.wm.polls=j.polls||{};UI.wm.pollErr=''}else UI.wm.pollErr=j.error||'Polls unavailable'}}catch(e){if(UI.wm&&UI.wm.m.id===id)UI.wm.pollErr='Polls could not load (no connection)'}finally{if(UI.wm)UI.wm.pollBusy=0;if(UI.view==='wmatch'&&UI.wm&&UI.wm.tab==='po')render()}}
+function shPollsHTML(W){const defs=shPollDefs(W),P=W.polls||{},closed=!!W.m.started,nv=(()=>{try{return +localStorage.getItem('sh-poll-n')||0}catch{return 0}})();
+ const card=d=>{const p=P[d.k],opts=p?p.opts:d.o,mine=p&&p.mine,res=p&&p.counts;
+  const rows=opts.map((o,i)=>{if(res){const n=res[o]||0,pc=p.total?Math.round(n*100/p.total):0;return `<div class="sh-poll-r${mine===o?' me':''}"><div class="sh-poll-fill" style="width:${pc}%"></div><span>${esc(o)}${mine===o?' ✓':''}</span><b>${pc}% <small>(${n})</small></b></div>`}
+   return `<button class="sh-poll-o" data-a="pollVote" data-poll="${d.k}" data-i="${i}" ${closed?'disabled':''}>${esc(o)}</button>`}).join('');
+  const note=mine?`${p.total} vote${p.total===1?'':'s'} · you voted ${esc(mine)}`:closed?'Voting closed (play has started)':'Vote to see what others think';
+  return `<div class="cbp-cd sh-poll"><div class="b">${esc(d.q)}</div><div class="sh-poll-list">${rows}</div><div class="mu sm">${note}</div></div>`};
+ const resultLine=W.m.ended&&W.m.status?`<div class="cbp-cd cbp-note"><b>Result</b>${esc(W.m.status)}</div>`:'';
+ return `<div class="cbp-lb">Poll &amp; Predict · opinions only, no betting, no money</div>${resultLine}${W.pollErr?`<div class="cbp-cd cbp-note"><b>${esc(W.pollErr)}</b></div>`:''}${W.polls==null&&W.pollBusy?'<div class="cbp-cd cbp-note">Loading polls...</div>':''}${defs.map(card).join('')}<div class="cbp-cd cbp-note"><b>Your polls</b>${nv} vote${nv===1?'':'s'} on this device. One vote per poll; polls close when play starts. Results show after you vote.</div>`}
+Object.assign(A,{pollVote(d){const W=UI.wm;if(!W||!apiBase())return;const def=shPollDefs(W).find(x=>x.k===d.poll),p=(W.polls||{})[d.poll],opts=p?p.opts:def&&def.o,opt=opts&&opts[+d.i];if(!opt)return;
+ fetch(apiBase()+'/api/polls/vote',{method:'POST',headers:{'Content-Type':'application/json',...(S.tok?{Authorization:'Bearer '+S.tok}:{})},body:JSON.stringify({match:W.m.id,poll:d.poll,opts,opt,guest:shGuestId()})}).then(r=>r.json()).then(j=>{if(j.polls){W.polls=j.polls;if(j.ok){try{localStorage.setItem('sh-poll-n',String((+localStorage.getItem('sh-poll-n')||0)+1))}catch{}}}else W.pollErr=j.error||'Vote failed';render()}).catch(()=>{W.pollErr='Vote could not be sent (no connection)';render()})}});
+{const t1=A.wmTab;A.wmTab=function(d){t1.apply(this,arguments);const W=UI.wm;if(W&&d.v==='po'&&!W.pollBusy)shPollsLoad(W)}}
 
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());

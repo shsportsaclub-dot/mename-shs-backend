@@ -540,6 +540,46 @@ function hydrateJournalProfiles(j){const candidates=(j.sc?.scorecard||[]).flatMa
 function journalProfile(p){const hit=p.id?journalPlayerProfiles.get(p.id):[...journalPlayerProfiles.values()].find(x=>profileName(x.seedName)===profileName(p.name)||p.aliases?.some(n=>profileName(n)===profileName(x.seedName)));const d=hit?.data;if(!d)return p;return {...p,role:d.role||p.role,playerImg:d.playerImg||p.playerImg,bowlingStyle:d.bowlingStyle||p.bowlingStyle,battingStyle:d.battingStyle||p.battingStyle,profileSource:'CricketData player profile'}}
 function matchContext(id,j){const curated=curatedMatchContexts[id]||{},squads=(j?.squads?.length?j.squads:curated.squads)||[],type=String(j?.type||'').toLowerCase(),before=String(j?.mi?.date||j?.sc?.date||'').slice(0,10),teams=(j?.mi?.teams||j?.sc?.teams||squads.map(t=>t.teamName)).slice(0,2);
  const enriched=squads.map(t=>({...t,players:(t.players||[]).map(p=>({...journalProfile(p),recent:recent.playerForm(p.name,t.teamName,type,before)}))}));return {...curated,squads:enriched,recentTeams:teams.map(team=>({team,matches:recent.teamRecent(team,type,before)})),formCoverage:'Up to last 10 completed matches in the available Cricsheet archive; exact name/team/format matches only.'}}
+/* Community polls (opinion only, no money): one vote per signed-in user or guest device per poll. */
+function pollVoter(req, body) {
+  const phone = readSession((req.headers.authorization || '').replace(/^Bearer /, ''));
+  if (phone && db.users[phone]) return 'u:' + phone;
+  const g = String(body.guest || ''); return /^[\w-]{12,60}$/.test(g) ? 'g:' + g : '';
+}
+function pollView(match, voter) {
+  const M = (db.polls || {})[match] || {}, out = {};
+  for (const [k, p] of Object.entries(M)) {
+    const mine = voter ? p.votes[voter] || null : null, counts = {}; let total = 0;
+    for (const o of p.opts) counts[o] = 0;
+    for (const o of Object.values(p.votes)) if (o in counts) { counts[o]++; total++; }
+    out[k] = { opts: p.opts, mine, total, counts: mine ? counts : null };   // results are shown only after you vote
+  }
+  return out;
+}
+routes['GET /api/polls'] = async (req, body) => {
+  const id = String(body.match || ''); if (!/^[\w-]{1,60}$/.test(id)) return [400, { ok: false, error: 'Bad match id' }];
+  return [200, { ok: true, polls: pollView(id, pollVoter(req, body)) }];
+};
+routes['POST /api/polls/vote'] = async (req, body, ip) => {
+  const id = String(body.match || ''), key = String(body.poll || ''), voter = pollVoter(req, body);
+  if (!/^[\w-]{1,60}$/.test(id) || !/^[a-z0-9_]{1,30}$/.test(key)) return [400, { ok: false, error: 'Bad poll' }];
+  if (!voter) return [400, { ok: false, error: 'Missing voter id' }];
+  if (limited('pollvote:' + ip, 200, 36e5)) return [429, { ok: false, error: 'Too many votes from this network, try later' }];
+  const opt = String(body.opt || '').trim().slice(0, 40); if (!opt) return [400, { ok: false, error: 'Pick an option' }];
+  db.polls = db.polls || {};
+  const M = db.polls[id] || (db.polls[id] = {});
+  let p = M[key];
+  if (!p) {   // the first vote fixes the option list (2-30 short options)
+    const opts = [...new Set((Array.isArray(body.opts) ? body.opts : []).map(x => String(x).trim().slice(0, 40)).filter(Boolean))].slice(0, 30);
+    if (opts.length < 2) return [400, { ok: false, error: 'A poll needs at least 2 options' }];
+    if (Object.keys(db.polls).length > 400) delete db.polls[Object.keys(db.polls)[0]];
+    p = M[key] = { opts, votes: {}, at: Date.now() };
+  }
+  if (!p.opts.includes(opt)) return [400, { ok: false, error: 'Not an option of this poll' }];
+  if (p.votes[voter]) return [409, { ok: false, error: 'You already voted in this poll', polls: pollView(id, voter) }];
+  p.votes[voter] = opt; saveDb();
+  return [200, { ok: true, polls: pollView(id, voter) }];
+};
 routes['GET /api/match-journal']=async(req,body,ip)=>{const id=String(body.id||'');if(!/^(sm)?[0-9a-z-]{1,40}$/i.test(id))return [400,{ok:false,error:'Bad match id'}];if(limited('journal-read:'+ip,1800,36e5))return [429,{ok:false,error:'Too many journal reads'}];let j=matchJournal.view(id);if(!j){await restoreArchivedJournal(id);j=matchJournal.view(id)}if(!j)return [404,{ok:false,error:'Match history is not recorded yet. Open the match to start collection.'}];hydrateJournalProfiles(j);for(const inn of j.sc?.scorecard||[]){for(const b of inn.batting||[])b.batsman=journalProfile(b.batsman||{});for(const b of inn.bowling||[])b.bowler=journalProfile(b.bowler||{})}if(!j.ended){if(matchWatch.has(id)||matchWatch.size<8){const w=matchWatch.get(id)||{};w.until=Date.now()+30*60000;matchWatch.set(id,w);if(!w.tryAt||Date.now()-w.tryAt>19000){w.tryAt=Date.now();pollMatchJournal(id)}}}return [200,{ok:true,journal:j,context:matchContext(id,j),storage:{...journalStorage,retention:'Latest 12 matches in memory; saved matches replay from archive. Up to 6000 delivery records and 6000 updates per match',durability:neonOk?'Database and server file':'Server file; free-host redeploy can clear history'}}]};
 
 const histSince = () => new Date().getUTCFullYear() - HISTORY_YEARS;
