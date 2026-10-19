@@ -1,0 +1,288 @@
+{
+  "version": 1,
+  "note": "Country balls are previously generated SH artwork; not official board logo files. Official IPL marks retain source attribution. Originals stay preserved.",
+  "assets": [
+    {
+      "id": "country-bermuda",
+      "kind": "generated_country_board_ball_artwork",
+      "sourceName": "Bermuda Cricket Ball Identity Prototype.png",
+      "sourceSha256": "fcbcb7d650b40cf2786da347c8edd7a0a173a03393710f58ffe9843820580506",
+      "officialLogo": false,
+      "path": "/emblems/country-bermuda.webp"
+    },
+    {
+      "id": "country-singapore",
+      "kind": "generated_country_board_ball_artwork",
+      "sourceName": "Singapore cricket ball emblem prototype.png",
+      "sourceSha256": "b16a8d77cf110371e3f306513bc54be1751f26913df263c7b9848f19f65bc25e",
+      "officialLogo": false,
+      "path": "/emblems/country-singapore.webp"
+    },
+    {
+      "id": "country-malaysia",
+      "kind": "generated_country_board_ball_artwork",
+      "sourceName": "Malaysia cricket ball identity prototype.png",
+      "sourceSha256": "4a4d8e5b6361374e1eacb6ca40f8ec45a698f0c27efa83d8392c515338733f2c",
+      "officialLogo": false,
+      "path": "/emblems/country-malaysia.webp"
+    },
+    {
+      "id": "country-hong-kong",
+      "kind": "generated_country_board_ball_artwork",
+      "sourceName": "Hong Kong Bauhinia Cricket Ball.png",
+      "sourceSha256": "05e2a13f218aba54eede629ae25321bee46fa4b9249e595aec34b7a90baea084",
+      "officialLogo": false,
+      "path": "/emblems/country-hong-kong.webp"
+    },
+    {
+      "id": "country-png",
+      "kind": "generated_country_board_ball_artwork",
+      "sourceName": "Papua New Guinea Cricket Ball Emblem.png",
+      "sourceSha256": "50232523fe0f4739d59080a1bf32b84471ae960427992dc6f95164ccab5c040c",
+      "officialLogo": false,
+      "path": "/emblems/country-png.webp"
+    },
+    {
+      "id": "country-namibia",
+      "kind": "generated_country_board_ball_artwork",
+      "sourceName": "Namibian flag cricket ball with embossed logo.png",
+      "sourceSha256": "0b67d9d20bb01a0cc15e3dbd0fb3bd7f41d2cb6bae798fe88b65ee4335fe0429",
+      "officialLogo": false,
+      "path": "/emblems/country-namibia.webp"
+    },
+    {
+      "id": "country-oman",
+      "kind": "generated_country_board_ball_artwork",
+      "sourceName": "Oman flag leather cricket ball.png",
+      "sourceSha256": "cff3ffbb2304cdc8321b3ad630bc45e6798ebf4d3f7b75cad53a3a0ff5800576",
+      "officialLogo": false,
+      "path": "/emblems/country-oman.webp"
+    },
+    {
+      "id": "country-canada",
+      "kind": "generated_country_board_ball_artwork",
+      "sourceName": "Canadian flag cricket ball.png",
+      "sourceSha256": "dd3973c9105bd39696745309dc9f9cbdbaeb5dd0a4a9b10d48d9dcb3bddb1db8",
+      "officialLogo": false,
+      "path": "/emblems/country-canada.webp"
+    },
+    {
+      "id": "country-uae",
+      "kind": "generated_country_board_ball_artwork",
+      "sourceName": "UAE cricket ball with embossed crest.png",
+      "sourceSha256": "131e64e058388ff52c581a584771a81e3e3efa936d4bbc79a043c9b9ddf83419",
+      "officialLogo": false,
+      "path": "/emblems/country-uae.webp"
+    },
+    {
+      "id": "country-scotland",
+      "kind": "generated_country_board_ball_artwork",
+      "sourceName": "Scottish Saltire Cricket Ball.png",
+      "sourceSha256": "2a39eda1fe46535bc8aae0b3d4c6f86e327533f2bb2e7ab555a0bbf2b50b6a38",
+      "officialLogo": false,
+      "path": "/emblems/country-scotland.webp"
+    },
+    {
+      "id": "country-netherlands",
+      "kind": "generated_country_board_ball_artwork",
+      "sourceName": "Dutch Lion Tricolor Cricket Ball.png",
+      "sourceSha256": "65b265cd0ca13da3ded1d53f5416a45d3ebbaabe77c7b26bec0ab86bc0fb0093",
+      "officialLogo": false,
+      "path": "/emblems/country-netherlands.webp"
+    },
+    {
+      "id": "country-ireland",
+      "kind": "generated_country_board_ball_artwork",
+      "sourceName": "Ireland Shamrock Cricket Ball.png",
+      "sourceSha256": "be988ce6866c963d679379ed927ca477882cca890fc3b59168f15f63429b8bed",
+      "officialLogo": false,
+      "path": "/emblems/country-ireland.webp"
+    },
+    {
+      "id": "country-bangladesh",
+      "kind": "generated_country_board_ball_artwork",
+      "sourceName": "Bangladesh Cricket Ball with Board Crest.png",
+      "sourceSha256": "486eb0230fb55f371bac678e9463a2eef68d88ce5019b871a9cf1a02d428658b",
+      "officialLogo": false,
+      "path": "/emblems/country-bangladesh.webp"
+    },
+    {
+      "id": "country-west-indies",
+      "kind": "generated_country_board_ball_artwork",
+      "sourceName": "Maroon West Indies Cricket Ball.png",
+      "sourceSha256": "4da41296f2f2e9cfb7744bf29696e1bfa89276d8f3f2bbb7d1bc60a1a5a7d5a9",
+      "officialLogo": false,
+      "path": "/emblems/country-west-indies.webp"
+    },
+    {
+      "id": "country-sri-lanka",
+      "kind": "generated_country_board_ball_artwork",
+      "sourceName": "Sri Lanka Cricket Lion Leather Ball.png",
+      "sourceSha256": "593e3de5dbc61f34307bf0c574f088bed8bf7ccb8ca80fad2bf983e30daf022a",
+      "officialLogo": false,
+      "path": "/emblems/country-sri-lanka.webp"
+    },
+    {
+      "id": "country-new-zealand",
+      "kind": "generated_country_board_ball_artwork",
+      "sourceName": "New Zealand Silver Fern Cricket Ball.png",
+      "sourceSha256": "c010105564e9f6dd8d89730d0d3a040d71a01cf4c1230eb255b438e08b4c6877",
+      "officialLogo": false,
+      "path": "/emblems/country-new-zealand.webp"
+    },
+    {
+      "id": "country-pakistan",
+      "kind": "generated_country_board_ball_artwork",
+      "sourceName": "Pakistan Cricket Ball with Gold Emblem.png",
+      "sourceSha256": "fe89591d6b1ab8331e11aa81c603812e9a4b7bfa8eb95af5e1bbb2da9451c06b",
+      "officialLogo": false,
+      "path": "/emblems/country-pakistan.webp"
+    },
+    {
+      "id": "country-south-africa",
+      "kind": "generated_country_board_ball_artwork",
+      "sourceName": "South African Cricket Ball with Protea Emblem.png",
+      "sourceSha256": "c433699e14f4685f70c454e31f30c3e74bd8c5498d822991c240839e9858dfb7",
+      "officialLogo": false,
+      "path": "/emblems/country-south-africa.webp"
+    },
+    {
+      "id": "country-england",
+      "kind": "generated_country_board_ball_artwork",
+      "sourceName": "England cricket ball with three lions emblem.png",
+      "sourceSha256": "854030e2cd629bf8347e66a2952565cf1d5fed8648820282b002040e88ba08a2",
+      "officialLogo": false,
+      "path": "/emblems/country-england.webp"
+    },
+    {
+      "id": "country-australia",
+      "kind": "generated_country_board_ball_artwork",
+      "sourceName": "Australian cricket ball with shield.png",
+      "sourceSha256": "46c7856804763f1a6718e0e3b1c7d669e18a29ea6ee84622c5c128c2c31c1176",
+      "officialLogo": false,
+      "path": "/emblems/country-australia.webp"
+    },
+    {
+      "id": "country-india",
+      "kind": "generated_country_board_ball_artwork",
+      "sourceName": "India tricolour cricket ball with BCCI badge.png",
+      "sourceSha256": "db41b5e580d1208544875167b5d10046de6093af4c16a5e75fc4492c83bf6b9d",
+      "officialLogo": false,
+      "path": "/emblems/country-india.webp"
+    },
+    {
+      "id": "country-nepal",
+      "kind": "generated_country_board_ball_artwork",
+      "sourceName": "Nepal Cricket Board Identity Ball.png",
+      "sourceSha256": "3c174e10058045710a0a9cfa0e340a813d34dd213fd0659050cd076e5ef5e847",
+      "officialLogo": false,
+      "path": "/emblems/country-nepal.webp"
+    },
+    {
+      "id": "country-zimbabwe",
+      "kind": "generated_country_board_ball_artwork",
+      "sourceName": "Zimbabwe Cricket Flag-Embossed Ball.png",
+      "sourceSha256": "d01eb281b6de351e0da0a1ebaf07d5436fce043ca9cbfc50755391a304aba8d5",
+      "officialLogo": false,
+      "path": "/emblems/country-zimbabwe.webp"
+    },
+    {
+      "id": "country-sri-lanka-alternate",
+      "kind": "generated_country_board_ball_artwork",
+      "sourceName": "Sri Lanka Cricket Ball with Golden Lion.png",
+      "sourceSha256": "b64a497dbe1e24c5c625860c6a1bfb07a8e60d7142557200a2d063383edf1e1b",
+      "officialLogo": false,
+      "path": "/emblems/country-sri-lanka-alternate.webp"
+    },
+    {
+      "id": "ipl-chennai-super-kings",
+      "name": "Chennai Super Kings",
+      "kind": "official_franchise_logo",
+      "source": "https://www.iplt20.com/teams",
+      "sourceSha256": "c1ca54a198db2a974981eda2564993377f5e7b31a5203629efb5d8463fbeeec4",
+      "officialLogo": true,
+      "path": "/emblems/ipl-chennai-super-kings.webp"
+    },
+    {
+      "id": "ipl-delhi-capitals",
+      "name": "Delhi Capitals",
+      "kind": "official_franchise_logo",
+      "source": "https://www.iplt20.com/teams",
+      "sourceSha256": "e7a4cbfcb333ee140a398b208d17381aa9c55d1b6d8cbf57d6513ebeb710d2d3",
+      "officialLogo": true,
+      "path": "/emblems/ipl-delhi-capitals.webp"
+    },
+    {
+      "id": "ipl-gujarat-titans",
+      "name": "Gujarat Titans",
+      "kind": "official_franchise_logo",
+      "source": "https://www.iplt20.com/teams",
+      "sourceSha256": "7ac0e426ff6e8d3f98788e1d6b524f47c229ff10bf8be41f42162f8c09d65323",
+      "officialLogo": true,
+      "path": "/emblems/ipl-gujarat-titans.webp"
+    },
+    {
+      "id": "ipl-kolkata-knight-riders",
+      "name": "Kolkata Knight Riders",
+      "kind": "official_franchise_logo",
+      "source": "https://www.iplt20.com/teams",
+      "sourceSha256": "4998b04febef9013e3085067e9282e1983398c032f7d8dd42b77d9e5d351afb9",
+      "officialLogo": true,
+      "path": "/emblems/ipl-kolkata-knight-riders.webp"
+    },
+    {
+      "id": "ipl-lucknow-super-giants",
+      "name": "Lucknow Super Giants",
+      "kind": "official_franchise_logo",
+      "source": "https://www.iplt20.com/teams",
+      "sourceSha256": "d2a86269176eeb939c4959d9e70dbc92693ea06a5e70708a1e6da27e1c38ccb2",
+      "officialLogo": true,
+      "path": "/emblems/ipl-lucknow-super-giants.webp"
+    },
+    {
+      "id": "ipl-mumbai-indians",
+      "name": "Mumbai Indians",
+      "kind": "official_franchise_logo",
+      "source": "https://www.iplt20.com/teams",
+      "sourceSha256": "3560c186caeed6c79f80452b25db6f8460dff007b39d2ab8e9eddbbc7439bc47",
+      "officialLogo": true,
+      "path": "/emblems/ipl-mumbai-indians.webp"
+    },
+    {
+      "id": "ipl-punjab-kings",
+      "name": "Punjab Kings",
+      "kind": "official_franchise_logo",
+      "source": "https://www.iplt20.com/teams",
+      "sourceSha256": "ad2972c1546d7ffcd486ca21736d3e769a8cd7c03b95fd8458e30f50eb44151d",
+      "officialLogo": true,
+      "path": "/emblems/ipl-punjab-kings.webp"
+    },
+    {
+      "id": "ipl-rajasthan-royals",
+      "name": "Rajasthan Royals",
+      "kind": "official_franchise_logo",
+      "source": "https://www.iplt20.com/teams",
+      "sourceSha256": "13691e0755c02bccf60dcd2c5cce9b08aff725c00670793f84d221f46af4886c",
+      "officialLogo": true,
+      "path": "/emblems/ipl-rajasthan-royals.webp"
+    },
+    {
+      "id": "ipl-royal-challengers-bengaluru",
+      "name": "Royal Challengers Bengaluru",
+      "kind": "official_franchise_logo",
+      "source": "https://www.iplt20.com/teams",
+      "sourceSha256": "46adbc8eba475ddc62131cbe3e91fe9f6aa06bfd29679ad823ae7f6459a91d5d",
+      "officialLogo": true,
+      "path": "/emblems/ipl-royal-challengers-bengaluru.webp"
+    },
+    {
+      "id": "ipl-sunrisers-hyderabad",
+      "name": "Sunrisers Hyderabad",
+      "kind": "official_franchise_logo",
+      "source": "https://www.iplt20.com/teams",
+      "sourceSha256": "3469b3bea4571ad2608e4cfabf31caeb0b24137009670daba3086f7d165e85c8",
+      "officialLogo": true,
+      "path": "/emblems/ipl-sunrisers-hyderabad.webp"
+    }
+  ]
+}

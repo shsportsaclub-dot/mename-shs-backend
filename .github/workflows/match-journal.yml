@@ -17,6 +17,7 @@ jobs:
       - run: node tests/match-journal-browser.cjs
       - run: node tests/delivery-effects-browser.cjs
       - run: node tests/live-window-browser.cjs
+      - run: node tests/identity-assets-browser.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -25,3 +26,5 @@ jobs:
             runtime-evidence/journal-*
             runtime-evidence/effect-*
             runtime-evidence/window-*
+            runtime-evidence/identity-*
+
