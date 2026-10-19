@@ -352,7 +352,7 @@ function enrichSquad(sq, info) {
 db.track = db.track || {};
 const viewed = new Map();   // match id -> { t: last viewed, next: do not check before }
 const TRACK_SECONDS = Math.max(+E.TRACK_MIN_SECONDS || 15, +E.TRACK_SECONDS || 30), TRACK_MAX = Math.max(1, +E.TRACK_MAX_MATCHES || 3), TRACK_DAILY = Math.max(0, E.TRACK_DAILY_CALLS == null || E.TRACK_DAILY_CALLS === '' ? 1000000 : +E.TRACK_DAILY_CALLS);
-const trackStat = { last: 0, day: '', calls: 0, paused: 0, note: 'waiting for a viewer on a live match' };
+const trackStat = { per: {}, last: 0, day: '', calls: 0, paused: 0, note: 'waiting for a viewer on a live match' };
 async function cricFresh(ep, id, maxAge) {   // same cache the match page uses; returns [result, realProviderCall]
   const k = ep + id, h = cricCache.get(k); if (h && Date.now() - h.t < maxAge) return [h.d, false];
   const r = await fetch(`${CRIC_BASE}/${ep}?apikey=${encodeURIComponent(CRIC_KEY)}&id=${encodeURIComponent(id)}`, { signal: AbortSignal.timeout(10000) }), j = await r.json();
@@ -377,7 +377,7 @@ async function trackTick() {
       if (trackStat.calls >= TRACK_DAILY) { trackStat.note = `daily check budget used (${TRACK_DAILY}); set TRACK_DAILY_CALLS for more`; break; }
       let res, real; try { [res, real] = await cricFresh('match_scorecard', id, TRACK_SECONDS * 1000 - 3000); } catch { continue; }
       if (real) trackStat.calls++; trackStat.last = now;
-      if (!res.ok) { if (/hit|limit|quota|exceed/i.test(res.error || '')) trackStat.paused = now + 30 * 60e3; trackStat.note = 'provider: ' + res.error; continue; }
+      if (!res.ok) { if (/hit|limit|quota|exceed/i.test(res.error || '')) trackStat.paused = now + 30 * 60e3; trackStat.note = 'provider: ' + res.error; trackStat.per[id] = 'provider: ' + res.error; if (/not found/i.test(res.error || '')) { v.next = now + 15 * 60e3; trackDone.add(id); } continue; }
       const d = res.data, snap = snapshotOf(d);
       if (!snap) { v.next = now + 5 * 60e3; continue; }
       const T = db.track[id] || (db.track[id] = { first: now, t: now, rows: [], notes: [], prev: null });
@@ -388,7 +388,7 @@ async function trackTick() {
       if (d && d.matchEnded) { viewed.delete(id); trackDone.add(id); }
       for (const k of Object.keys(db.track).sort((a, b) => db.track[b].t - db.track[a].t).slice(10)) delete db.track[k];   // keep the last 10 matches
       if (df.rows.length || df.note) saveDb();
-      trackStat.note = 'tracking ' + ids.length + ' match(es)';
+      trackStat.note = 'tracking ' + ids.length + ' match(es)'; trackStat.per[id] = 'tracking this match, last check ok';
     }
   } catch (e) { trackStat.note = 'error: ' + String(e.message).slice(0, 120); }
   finally { trackBusy = false; }
@@ -449,9 +449,9 @@ routes['GET /api/cric'] = async (req, body, ip) => {
   try {
     const r = await fetch(`${CRIC_BASE}/${ep}?apikey=${encodeURIComponent(CRIC_KEY)}&id=${encodeURIComponent(id)}`, { signal: AbortSignal.timeout(10000) });
     const j = await r.json();
-    if(j.status!=='success'){const fb=ep==='match_bbb'?trackerBbb(id):null;if(fb){fb.data.providerNote='Provider reply: '+(j.reason||'no ball-by-ball')+' · SH tracker: '+trackStat.note+', saved '+(db.track[id]?db.track[id].rows.length:0)+' balls, '+(db.track[id]?db.track[id].notes.length:0)+' notes';matchJournal.record(id,ep,fb.data,{source:'SH snapshot tracker'});return [200,fb]}matchJournal.record(id,ep,null,{error:j.reason||'Cricket API error'});return [502,{ok:false,error:(j.reason||'Cricket API error')+(ep==='match_bbb'?` · SH tracker: ${trackStat.note}${db.track[id]?`, saved ${db.track[id].rows.length} balls and ${db.track[id].notes.length} notes`:', nothing saved for this match yet'}`:'')}]}
+    if(j.status!=='success'){const fb=ep==='match_bbb'?trackerBbb(id):null;if(fb){fb.data.providerNote='Provider reply: '+(j.reason||'no ball-by-ball')+' · SH tracker: '+(trackStat.per[id]||'this match is not being tracked yet')+', saved '+(db.track[id]?db.track[id].rows.length:0)+' balls, '+(db.track[id]?db.track[id].notes.length:0)+' notes';matchJournal.record(id,ep,fb.data,{source:'SH snapshot tracker'});return [200,fb]}matchJournal.record(id,ep,null,{error:j.reason||'Cricket API error'});return [502,{ok:false,error:(j.reason||'Cricket API error')+(ep==='match_bbb'?` · SH tracker: ${trackStat.per[id]||'this match is not being tracked yet'}${db.track[id]?`, saved ${db.track[id].rows.length} balls and ${db.track[id].notes.length} notes`:', nothing saved for this match yet'}`:'')}]}
     let data = j.data;
-    if (ep === 'match_bbb' && !(Array.isArray(data) ? data.length : (data && Array.isArray(data.bbb) ? data.bbb.length : 0))) { const fb = trackerBbb(id); if(fb){fb.data.providerNote='Provider reply: success, but 0 ball rows';matchJournal.record(id,ep,fb.data,{source:'SH snapshot tracker'});return [200,fb]} data = Array.isArray(data) ? data : { ...(data && typeof data === 'object' ? data : {}), bbb: [], providerNote: 'Provider reply: success, but 0 ball rows for this match · SH tracker: ' + trackStat.note }; }
+    if (ep === 'match_bbb' && !(Array.isArray(data) ? data.length : (data && Array.isArray(data.bbb) ? data.bbb.length : 0))) { const fb = trackerBbb(id); if(fb){fb.data.providerNote='Provider reply: success, but 0 ball rows';matchJournal.record(id,ep,fb.data,{source:'SH snapshot tracker'});return [200,fb]} data = Array.isArray(data) ? data : { ...(data && typeof data === 'object' ? data : {}), bbb: [], providerNote: 'Provider reply: success, but 0 ball rows for this match · SH tracker: ' + (trackStat.per[id]||'this match is not being tracked yet') }; }
     try { if (ep === 'match_info') data = enrichInfo(data); else if (ep === 'match_squad') data = enrichSquad(data, await infoOf(id)); else if (ep === 'match_scorecard') data = await enrichScorecard(data, id); } catch {}
     matchJournal.record(id,ep,data,{source:'CricketData'});const d = { ok: true, data }; cricCache.set(k, { t: Date.now(), d }); if (cricCache.size > 500) cricCache.clear();
     return [200, d];
