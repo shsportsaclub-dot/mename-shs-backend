@@ -124,5 +124,5 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 | QR generator/scanner, CSV import from other apps | Done | No scraping of other apps. Link scan only opens SH links |
 | Rankings World/Country/State/City | Done | City uses player profile city |
 | App-wide translation beyond commentary/voice | Open | 16 languages exist for commentary and voice only |
-| Referee/umpire profiles with ratings | Open | XV.officials exists; ratings not added |
+| Referee/umpire ratings | Done | One rating per user, no self-rating |
 | Server-side ground/academy sync, parent login | Open | Next batch |
