@@ -1,0 +1,33 @@
+name: Scorer and viewer acceptance
+on:
+  push:
+    branches: [main]
+    paths: [app-index.html, tests/scorer-workspace.cjs, .github/workflows/scorer-workspace.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+      - run: npm run build
+      - run: npm install --no-save --package-lock=false playwright
+      - run: npx playwright install --with-deps chromium
+      - run: node tests/scorer-workspace.cjs
+      - run: node tests/live-window-browser.cjs
+      - run: mkdir -p /tmp/out
+      - run: node tests/test-match.cjs
+      - run: node tests/overthrow-concussion.cjs
+      - run: node tests/delivery-effects-browser.cjs
+      - run: node tests/sports-live.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: scorer-viewer-acceptance
+          path: runtime-evidence/

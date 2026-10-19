@@ -1,0 +1,38 @@
+{
+  "scope": "Actual app, isolated synthetic cricket match, external calls stubbed",
+  "results": [
+    {
+      "width": 320,
+      "inningsGuard": true,
+      "selectedMatch": true,
+      "freeHitAcrossWide": true,
+      "undoAudit": true,
+      "deliveryIds": true,
+      "extrasVisible": true,
+      "viewerNavigation": true,
+      "viewerReadOnly": true
+    },
+    {
+      "width": 412,
+      "inningsGuard": true,
+      "selectedMatch": true,
+      "freeHitAcrossWide": true,
+      "undoAudit": true,
+      "deliveryIds": true,
+      "extrasVisible": true,
+      "viewerNavigation": true,
+      "viewerReadOnly": true
+    },
+    {
+      "width": 1280,
+      "inningsGuard": true,
+      "selectedMatch": true,
+      "freeHitAcrossWide": true,
+      "undoAudit": true,
+      "deliveryIds": true,
+      "extrasVisible": true,
+      "viewerNavigation": true,
+      "viewerReadOnly": true
+    }
+  ]
+}

@@ -1433,13 +1433,13 @@ try{window.speechSynthesis&&window.speechSynthesis.getVoices()}catch(e){}
 /* free hit: only run out counts; haptic tap on every score */
 {const b1=ball;ball=function(m,s){
   const inn=m.innings[m.cur],last=inn&&inn.ev[inn.ev.length-1];
-  if(((last&&last.x==='nb')||(s&&s.x==='nb'))&&s&&s.w&&!NOBOWL.includes(s.w)){toast('No-ball or free hit: only run out, obstructing the field or hit the ball twice can count',3500);s=Object.assign({},s,{w:'',out:null})}
+  if((shFreeHitPending(m)||(s&&s.x==='nb'))&&s&&s.w&&!NOBOWL.includes(s.w)){toast('No-ball or free hit: only run out, obstructing the field or hit the ball twice can count',3500);s=Object.assign({},s,{w:'',out:null})}
   try{if(navigator.vibrate)navigator.vibrate(15)}catch(e){}
   return b1.call(this,m,s)}}
 /* retired batters can come back later */
 avail=function(m){const inn=m.innings[m.cur],cur=[inn.cur.s,inn.cur.n];return(m.xi[inn.bat]||[]).filter(id=>(!inn.used.includes(id)||(inn.ret||[]).includes(id))&&!cur.includes(id))};
 {const sc0=scoreConsole;scoreConsole=function(m){
-  let o=sc0(m);const inn=m.innings[m.cur],last=inn.ev[inn.ev.length-1],free=last&&last.x==='nb'&&m.status==='live';
+  let o=sc0(m);const inn=m.innings[m.cur],last=inn.ev[inn.ev.length-1],free=shFreeHitPending(m)&&m.status==='live';
   o=o.replace('<button class="six" data-a="run" data-v="6">6</button>','<button data-a="run" data-v="5">5</button><button class="six" data-a="run" data-v="6">6</button>');
   if(free)o=o.replace('<div class="card"><div class="exr">','<div class="card"><div class="fh">FREE HIT: only run out, obstructing the field or hit the ball twice</div><div class="exr">');
   const x=`<div class="xrow"><button class="btn sm ghost" data-a="retire" data-v="s">Retire hurt: striker</button><button class="btn sm ghost" data-a="retire" data-v="n">Retire hurt: non-striker</button><button class="btn sm ghost" data-a="retOut" data-v="s">Retired out: striker</button><button class="btn sm ghost" data-a="retOut" data-v="n">Retired out: non-striker</button><button class="btn sm ghost" data-a="timedOut">Timed out</button><button class="btn sm ghost" data-a="chgBowl">Change bowler</button><button class="btn sm ghost" data-a="share">Share score</button><button class="btn sm ghost" data-a="abandon">Abandon match</button></div>`;
@@ -5305,7 +5305,7 @@ function createSHDeliveryEffects({storage=null,now=Date.now}={}){
 /* SH live animation, shared by SH Pulse / SH Stadium and the local cricket scorer. */
 const shDeliveryEffects=createSHDeliveryEffects({storage:typeof sessionStorage!=='undefined'?sessionStorage:null});
 function shDeliveryEffectsHTML(W){const active=['live','cm'].includes(W.tab||'live')&&!document.hidden,fx=shDeliveryEffects.observe(W.m.id,shPulseData(W),{active,ended:!!W.m.ended,fromStart:!!W.m.started&&W.m.score?.at(-1)?.r===0&&cbpOv(W.m.score.at(-1).o)===0});if(!active)return '';const latest=shPulseData(W).at(-1),rest=latest?(latest.wicket?'WICKET':latest.wide?'WIDE':latest.noball?'NO BALL':latest.batRuns===6?'SIX':latest.batRuns===4?'FOUR':latest.runs+' RUN'+(latest.runs===1?'':'S')):'WAITING FOR BALL';const kind=fx?.kind||'idle',age=fx?Math.max(0,Date.now()-fx.at):0;
- return `<section class="sh-delivery-effect ${fx?'sh-fx-'+kind:'sh-fx-idle'}" data-event="${esc(fx?.key||'')}" data-effect="${kind}" style="--sh-fx-delay:-${age}ms" aria-label="Delivery event animation"><div class="sh-fx-heading"><b>${fx?esc(fx.over)+' · '+esc(fx.label):latest?'LAST BALL · '+esc(latest.over+'.'+latest.ball):'BALL FLOW'}</b><small>${fx?esc(fx.caption):'New delivery effects appear here'}</small></div><div class="sh-fx-pitch" aria-hidden="true"><i class="sh-fx-crease left"></i><i class="sh-fx-crease right"></i><div class="sh-fx-stumps"><i></i><i></i><i></i><b></b></div><span class="sh-fx-ball"></span><strong class="sh-fx-call">${fx?esc(fx.label):esc(rest)}</strong><span class="sh-fx-ring"></span></div><small class="sh-fx-note">${fx?'Event effect · not ball tracking':'Recorded balls trigger motion · 4 · 6 · W'}</small></section>`;
+ return `<section class="sh-delivery-effect ${fx?'sh-fx-'+kind:'sh-fx-idle'}" data-event="${esc(fx?.key||'')}" data-effect="${kind}" style="--sh-fx-delay:-${age}ms" aria-label="Delivery event animation"><div class="sh-fx-heading"><b>${fx?esc(fx.over)+' · '+esc(fx.label):latest?'LAST BALL · '+esc(latest.over+'.'+latest.ball):'BALL FLOW'}</b><small>${fx?esc(fx.caption):'New delivery effects appear here'}</small></div><div class="sh-fx-pitch" aria-hidden="true"><i class="sh-fx-crease left"></i><i class="sh-fx-crease right"></i><div class="sh-fx-stumps"><i></i><i></i><i></i><b></b></div><span class="sh-fx-ball"></span><span class="sh-fx-runner" aria-hidden="true">🏃</span><span class="sh-fx-runner second" aria-hidden="true">🏃</span><strong class="sh-fx-call">${fx?esc(fx.label):esc(rest)}</strong><span class="sh-fx-ring"></span></div><small class="sh-fx-note">${fx?'Event effect · not ball tracking':'Recorded balls trigger motion · 4 · 6 · W'}</small></section>`;
 }
 function shLocalDeliveryEffect(m){let rows=[];for(let i=0;i<(m.innings||[]).length;i++){let legal=0;for(const [index,e] of m.innings[i].ev.entries()){const extra=e.x==='wd'||e.x==='nb';rows.push({inning:i+1,over:Math.floor(legal/6),ball:legal%6+1,runs:e.r+(extra?1:0),wicket:!!e.w,wide:e.x==='wd',noball:e.x==='nb',batter:nm(e.bt),bowler:nm(e.bl),index,eventId:e.id||'local-'+i+'-'+index});if(!extra)legal++}}return shDeliveryEffectsHTML({m:{id:'local-'+m.id,ended:m.status==='done'},tab:'live',bb:rows})}
 {
@@ -5328,7 +5328,7 @@ function createSHScorerPhases(){
 }
 
 /* Viewer window and scorer console are separate interfaces using the same saved events. */
-function shLocalWorld(m){const rows=[],scores=[],cards=[];for(let i=0;i<m.innings.length;i++){const inn=m.innings[i],k=calc(m,i),team=T(inn.bat).name;let legal=0;for(const [index,e] of inn.ev.entries()){const extra=e.x==='wd'||e.x==='nb';rows.push({inning:i+1,team,over:Math.floor(legal/BPO),ball:legal%BPO+1,runs:e.r+(e.x==='wd'?1:e.x==='nb'?NBP:0),bruns:e.x===''||e.x==='nb'?e.r:0,xtype:e.x,wicket:!!e.w,out:e.out?nm(e.out):'',kind:e.w||'',batsman:nm(e.bt),bowler:nm(e.bl),_key:e.id||'local-'+i+'-'+index});if(!extra)legal++}const score={inning:team+' Inning '+(i+1),r:k.runs,w:k.wk,o:fmtOv(k.lg)};scores.push(score);cards.push({inning:score.inning,totals:{R:k.runs,W:k.wk,O:fmtOv(k.lg)},batting:[...new Set([...k.ord,inn.cur.s,inn.cur.n].filter(Boolean))].map(id=>{const b=k.bat[id]||{r:0,b:0,f4:0,f6:0,out:''};return{batsman:{id,name:nm(id),playerImg:P(id)?.photo},r:b.r,b:b.b,'4s':b.f4,'6s':b.f6,sr:b.b?(b.r*100/b.b).toFixed(1):0,'dismissal-text':b.out||(!inn.done&&(inn.cur.s===id||inn.cur.n===id)?'batting':'not out')}}),bowling:[...new Set([...Object.keys(k.bowl),inn.cur.bl].filter(Boolean))].map(id=>{const b=k.bowl[id]||{b:0,m:0,r:0,w:0};return({bowler:{id,name:nm(id)},o:fmtOv(b.b),m:b.m,r:b.r,w:b.w,eco:b.b?(b.r*BPO/b.b).toFixed(1):0})}),fow:k.fow})}return{m:{id:'local-'+m.id,name:T(m.a).name+' v '+T(m.b).name,teams:[T(m.a),T(m.b)],score:scores,started:!!m.innings.length,ended:m.status==='done',status:m.result||'Local match · scored in Scoring Heroes',type:m.overs>=40?'odi':'t20',venue:m.venue},bb:{bbb:rows,source:'Scoring Heroes scorer'},sc:{score:scores,scorecard:cards},tab:UI.tab==='comm'?'cm':'live'};}
+function shLocalWorld(m){const rows=[],scores=[],cards=[];for(let i=0;i<m.innings.length;i++){const inn=m.innings[i],k=calc(m,i),team=T(inn.bat).name;let legal=0;for(const [index,e] of inn.ev.entries()){const extra=e.x==='wd'||e.x==='nb';rows.push({inning:i+1,team,over:Math.floor(legal/BPO),ball:legal%BPO+1,runs:e.r+(e.x==='wd'?1:e.x==='nb'?NBP:0),bruns:e.x===''||e.x==='nb'?e.r:0,xtype:e.x,wide:e.x==='wd',noball:e.x==='nb',wicket:!!e.w,out:e.out?nm(e.out):'',kind:e.w||'',batsman:nm(e.bt),bowler:nm(e.bl),_key:e.id||'local-'+i+'-'+index});if(!extra)legal++}const score={inning:team+' Inning '+(i+1),r:k.runs,w:k.wk,o:fmtOv(k.lg)};scores.push(score);cards.push({inning:score.inning,totals:{R:k.runs,W:k.wk,O:fmtOv(k.lg)},batting:[...new Set([...k.ord,inn.cur.s,inn.cur.n].filter(Boolean))].map(id=>{const b=k.bat[id]||{r:0,b:0,f4:0,f6:0,out:''};return{batsman:{id,name:nm(id),playerImg:P(id)?.photo},r:b.r,b:b.b,'4s':b.f4,'6s':b.f6,sr:b.b?(b.r*100/b.b).toFixed(1):0,'dismissal-text':b.out||(!inn.done&&(inn.cur.s===id||inn.cur.n===id)?'batting':'not out')}}),bowling:[...new Set([...Object.keys(k.bowl),inn.cur.bl].filter(Boolean))].map(id=>{const b=k.bowl[id]||{b:0,m:0,r:0,w:0};return({bowler:{id,name:nm(id)},o:fmtOv(b.b),m:b.m,r:b.r,w:b.w,eco:b.b?(b.r*BPO/b.b).toFixed(1):0})}),fow:k.fow})}return{m:{id:'local-'+m.id,name:T(m.a).name+' v '+T(m.b).name,teams:[T(m.a),T(m.b)],score:scores,started:!!m.innings.length,ended:m.status==='done',status:m.result||'Local match · scored in Scoring Heroes',type:m.overs>=40?'odi':'t20',venue:m.venue},bb:{bbb:rows,source:'Scoring Heroes scorer'},sc:{score:scores,scorecard:cards},tab:UI.tab==='comm'?'cm':'live'};}
 const shScorerPhases=createSHScorerPhases();
 function shCurrentPowerplay(m){const s=st(m);if(!s)return false;const key=s.i+':'+Math.floor(s.k.lg/BPO),marked=m.rules?.ppMarked||{};return Object.prototype.hasOwnProperty.call(marked,key)?!!marked[key]:s.k.lg<ppOv(m)}
 {
@@ -5784,6 +5784,72 @@ var shCrexComm=function(W){var G=shOverGroups(W);if(!G.length)return '';
 {var cc0=cbpBbb;cbpBbb=function(W){if(typeof shPulsePanel==='function')return cc0(W);var rows=shAvailableBalls(W);if(rows.length){var h=shCrexComm(W);if(h)return '<div class="cbp-lb">Ball by ball</div>'+h+(W.bb&&W.bb.tracked&&typeof shNotesFn==='function'?shNotesFn(W.bb)+shCrFn(W.bb):'')}return cc0(W)}}
 {var cr0=cbpCrease;cbpCrease=function(W){var o=cr0(W);try{var rows=shAvailableBalls(W);if(!rows.length)return o;var G=shOverGroups(W);if(!G.length)return o;var g=G[0];return o+'<div class="cbp-lb">This over · '+(g.o+1)+'</div><div class="cbp-cd" style="padding:10px 12px">'+shCrexBallChips(g.b)+'</div>'}catch(e){return o}}}
 /* END SH CREX-STYLE COMMENTARY */
+/* SH SCORER ACCEPTANCE: match context, legal delivery state and viewer entry. */
+function shFreeHitPending(m){
+ const events=m?.innings?.[m.cur]?.ev||[];
+ if(m?.overs>=900||m?.rules?.freeHit===false)return false;
+ for(let i=events.length-1;i>=0;i--){if(events[i].x==='nb')return true;if(events[i].x!=='wd')return false}
+ return false;
+}
+function shMatchWorkspace(m,mode){
+ if(!m)return '';
+ const own=!m.rm&&can(),state={setup:'Ready to start',live:'In play',break:'Innings break',done:'Result'}[m.status]||m.status;
+ return `<section class="sh-match-workspace ${mode==='viewer'?'is-viewer':''}" aria-label="Match workspace"><div><small>CRICKET · ${esc(state)}</small><h2>${esc(T(m.a)?.short||T(m.a)?.name)} v ${esc(T(m.b)?.short||T(m.b)?.name)}</h2><p>${esc(m.venue||'Venue not recorded')} · ${esc(m.ball||'Ball type not recorded')}</p></div><nav aria-label="Scorer and viewer"><button class="btn sm ${mode==='viewer'?'':'ghost'}" data-a="shScorerWatch" data-id="${esc(m.id)}">Live window</button>${own?`<button class="btn sm ${mode==='scorer'?'':'ghost'}" data-a="scoreIt" data-id="${esc(m.id)}">${m.status==='setup'?'Start innings':m.status==='done'?'Scorer / undo':'Resume scoring'}</button>`:''}<button class="btn sm ghost" data-a="shWorkspaceCard" data-id="${esc(m.id)}">Scorecard</button></nav></section>`;
+}
+{
+ const score=vScore;
+ vScore=function(){
+  const m=S.matches.find(x=>x.id===UI.sid&&!x.rm)||S.matches.filter(x=>!x.rm&&x.status!=='done').at(-1);
+  if(m)UI.sid=m.id;
+  const html=score.apply(this,arguments);
+  return m&&can()?shMatchWorkspace(m,'scorer')+html:html;
+ };
+ const viewer=XV.match;
+ XV.match=function(){const m=curM();return (m?shMatchWorkspace(m,'viewer'):'')+viewer.apply(this,arguments)};
+ A.shWorkspaceCard=function(d){UI.mid=d.id;UI.tab='card';UI.view='match';UI.liveWindowExpanded=false;render();window.scrollTo(0,0)};
+ const enter=A.scoreIt;
+ A.scoreIt=function(d){const m=S.matches.find(x=>x.id===d.id);if(!m||m.rm||!can())return;UI.ex='';UI.ang=null;UI.ot=null;UI.mid=m.id;UI.liveWindowExpanded=false;enter.call(this,d);window.scrollTo(0,0)};
+ const start=F.startInn;
+ F.startInn=function(fd){
+  const m=S.matches.find(x=>x.id===fd.get('mid')),i=Number(fd.get('i'));
+  if(!can()||!m||m.rm)return toast('Only the match scorer can start an innings');
+  if(!((i===0&&m.status==='setup')||(i===1&&m.status==='break'))||m.innings[i])return toast('This innings has already started');
+  const bat=i===0?m.firstBat:(m.firstBat===m.a?m.b:m.a),bowl=bat===m.a?m.b:m.a;
+  if(fd.get('s')===fd.get('n')||![fd.get('s'),fd.get('n')].every(id=>m.xi[bat]?.includes(id))||!m.xi[bowl]?.includes(fd.get('bl')))return toast('Choose two different batters and an opposition bowler from the playing XI');
+  UI.sid=m.id;UI.mid=m.id;UI.ex='';UI.ang=null;UI.ot=null;
+  return start.call(this,fd);
+ };
+ const consoleView=scoreConsole;
+ scoreConsole=function(m){
+  setFmt(m);const inn=m.innings[m.cur],groups=overList(m,m.cur),last=groups.at(-1),current=Math.floor(inn.lg/BPO)+1;
+  const over=last?.n===current?last:null,prev=groups.find(g=>g.n===current-1);
+  const chips=g=>g.b.map(x=>`<span class="ch ${x.cls}">${esc(x.lab)}</span>`).join('');
+  let html=consoleView(m);
+  const box=document.createElement('div');box.innerHTML=html;
+  box.querySelector('.sh-scorer-title [data-a="shScorerWatch"]')?.remove();
+  const old=[...box.querySelectorAll('.chips')].find(e=>e.textContent.includes('This over'));
+  if(old)old.innerHTML=`<span class="mu sm">Over ${current}</span>${over?chips(over):'<span class="mu sm">Awaiting first ball</span>'}${prev?`<div class="sh-previous-over"><small>Previous over ${prev.n} · ${prev.t} runs</small>${chips(prev)}</div>`:''}`;
+  if(!old){const k=calc(m,m.cur),summary=`<div class="card sh-transition-score"><b>${esc(T(inn.bat).name)} · ${k.runs}/${k.wk} (${fmtOv(k.lg)})</b>${last?`<div class="chips" style="margin-top:8px"><small>Over ${last.n} · ${last.t} runs</small>${chips(last)}</div>`:''}</div>`;box.querySelector('.sh-scorer-tools')?.insertAdjacentHTML('afterend',summary)}
+  return box.innerHTML;
+ };
+ const record=ball;
+ ball=function(m,s){
+  const inn=m?.innings?.[m.cur];if(!inn||m.status!=='live'||!inn.cur.s||!inn.cur.n||!inn.cur.bl)return false;
+  const n=inn.ev.length,r=record.apply(this,arguments);
+  if(inn.ev.length>n){const e=inn.ev.at(-1);e.id=e.id||uid();e.at=e.at||Date.now()}
+  return r;
+ };
+ const revert=undo;
+ undo=function(m){
+  if(!m?.innings?.[m.cur])return false;
+  const inn=m.innings[m.cur],event=inn.ev.at(-1),r=revert.apply(this,arguments);
+  if(r){m.audit=m.audit||[];m.audit.push({type:'scorer_undo',t:Date.now(),by:S.user?.nick||S.user?.name||'Scorer',inning:m.cur,event:event?JSON.parse(JSON.stringify(event)):null});UI.ex='';UI.ang=null;UI.ot=null}
+  return r;
+ };
+ const style=document.createElement('style');style.textContent='.sh-match-workspace{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;margin:0 0 12px}.sh-match-workspace small{color:var(--mu);font-size:10px;letter-spacing:.8px}.sh-match-workspace h2{font-size:19px;margin:4px 0}.sh-match-workspace p{font-size:11px;margin:0;color:var(--mu)}.sh-match-workspace nav{display:flex;gap:6px;flex-wrap:wrap}.sh-match-workspace nav .btn{font-size:11px;padding:7px 8px;min-height:32px}.sh-match-workspace.is-viewer{padding:8px 10px;gap:5px}.sh-match-workspace.is-viewer small,.sh-match-workspace.is-viewer p{display:none}.sh-match-workspace.is-viewer h2{font-size:13px;margin:0}.sh-match-workspace.is-viewer nav{flex-wrap:nowrap;gap:4px;width:100%}.sh-match-workspace.is-viewer nav .btn{font-size:10px;padding:6px;flex:1;white-space:nowrap}.sh-previous-over{flex-basis:100%;display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:7px}.sh-previous-over small{width:100%;color:var(--mu)}.sh-fx-runner{position:absolute;left:20%;top:45px;font-size:24px;opacity:0}.sh-fx-runs .sh-fx-runner{opacity:1;animation:shRunner 1050ms ease-in-out 2 alternate;animation-delay:var(--sh-fx-delay)}.sh-fx-runs .sh-fx-runner.second{top:72px;animation-direction:alternate-reverse}@keyframes shRunner{from{left:20%;transform:scaleX(1)}to{left:74%;transform:scaleX(-1)}}@media(prefers-reduced-motion:reduce){.sh-fx-runs .sh-fx-runner{animation:none;opacity:0}}';document.head.appendChild(style);
+}
+/* END SH SCORER ACCEPTANCE */
+
 </script>
 </body>
 </html>
