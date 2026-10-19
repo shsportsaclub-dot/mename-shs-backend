@@ -49,6 +49,7 @@ const fs=require('node:fs'),http=require('node:http'),assert=require('node:asser
    assert.equal(await p.evaluate(()=>calc(S.matches[0],0).wk),0);
    await p.evaluate(()=>{const m=S.matches[0];while(m.innings[0].lg<6)ball(m,{r:0});commit()});
    assert.match(await p.locator('.sh-scorer-console').innerText(),/Next bowler/);assert.match(await p.locator('.sh-transition-score').innerText(),/Over 1/);
+   const fiveOver=await p.evaluate(()=>{const m=S.matches[0],old=m.overs;m.overs=5;const box=document.createElement('div');box.innerHTML=shPulsePanel(shLocalWorld(m));m.overs=old;return [...box.querySelectorAll('.sh-pulse-metrics>div')].find(e=>e.textContent.includes('Projected'))?.querySelector('b')?.textContent});assert.equal(fiveOver,'65','5-over projection uses 30 balls rather than T20 default');
    await p.reload();await p.evaluate(()=>{UI.stage='app';UI.view='score';render()});
    assert.equal(await p.evaluate(()=>S.matches[0].innings[0].ev.filter(e=>!e.id).length),0,'delivery identities survive reload');
    await p.locator('.sh-match-workspace [data-a="shScorerWatch"]').click();
