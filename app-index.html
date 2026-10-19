@@ -249,6 +249,7 @@ svg text{font-family:var(--ui)}
 @media (prefers-reduced-motion:reduce){.ovfx{animation:ovfxfade 4.5s both}@keyframes ovfxfade{0%,90%{opacity:1}100%{opacity:0}}}
 .sh-drs-row{display:grid;gap:6px;margin:10px 0}.sh-drs-row>span{font:700 12px var(--ui);opacity:.75;text-transform:uppercase;letter-spacing:.04em}.sh-drs-row>div{display:flex;flex-wrap:wrap;gap:6px}.sh-drs-row button{flex:1 1 auto;padding:10px;border:1px solid var(--bd);border-radius:9px;background:transparent;color:var(--tx);font:600 13px var(--ui)}.sh-drs-row button.on{background:var(--bl);border-color:var(--bl);color:#fff}.sh-drs-chk{display:flex!important;flex-direction:row!important;gap:8px;align-items:flex-start;justify-content:flex-start!important;text-align:left;margin:8px 0;font-size:13px}.sh-drs-chk input{width:auto!important;flex:none;margin:2px 0 0}.sh-drs-res{margin:14px 0 8px;padding:14px;border-radius:12px;text-align:center;color:#fff;display:grid;gap:3px}.sh-drs-res b{font:800 28px var(--ui)}.sh-drs-res small{opacity:.9;letter-spacing:.08em}.sh-drs-why{margin:6px 0 0;padding-left:18px;font-size:13px;line-height:1.5}
 .sh-xpbar{height:12px;border-radius:99px;background:var(--c2);overflow:hidden;margin:10px 0}.sh-xpbar i{display:block;height:100%;background:linear-gradient(90deg,#3f7bff,#ffc83d)}.sh-badges{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.sh-badge{display:grid;gap:3px;padding:10px;border:1px dashed var(--bd);border-radius:10px;opacity:.6}.sh-badge.on{border-style:solid;border-color:#ffc83d;opacity:1}.sh-badge span{font-size:12px;opacity:.8}.sh-badge small{font-size:11px;opacity:.7}
+.sh-lad-row{display:flex;align-items:center;gap:6px;margin:10px 0}.sh-lad-row i{flex:0 0 14px;height:2px;background:var(--bd)}.sh-lad{flex:1;display:grid;gap:2px;padding:9px 6px;text-align:center;border:1px dashed var(--bd);border-radius:10px;opacity:.65}.sh-lad b{font-size:13px}.sh-lad span{font-size:11px}.sh-lad.done{border:1px solid #1f9d55;opacity:1;background:rgba(31,157,85,.14)}.sh-lad.live,.sh-lad.next{border:1px solid var(--bl);opacity:1}.sh-champ{margin:6px 0;padding:10px;border-radius:10px;background:linear-gradient(90deg,#8a6a00,#ffc83d);color:#1b1500;font-weight:700}
 </style>
 <style>.cbscore{background:var(--c2,#14213d);border:1px solid var(--bd,#2a3a66);border-radius:12px;padding:12px 14px;margin:8px 0}.cbs2{display:flex;gap:16px;flex-wrap:wrap;margin:6px 0;font-size:13px}.cbst{background:#f5c518;color:#111;font-weight:700;border-radius:8px;padding:8px 10px;margin-top:6px}.cbov{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:6px 0}</style>
 <style>.catabs{display:flex;border-bottom:2px solid var(--bd);margin:8px 0;overflow-x:auto}.catabs button{flex:1;background:none;border:0;color:var(--mu);font-weight:700;padding:12px 8px;white-space:nowrap;border-bottom:3px solid transparent;margin-bottom:-2px}.catabs button.on{color:var(--tx);border-bottom-color:var(--ac)}
@@ -5393,6 +5394,19 @@ function shWorldVoice(){try{const W=UI.wm;if(!W)return;if(UI.view!=='wmatch'||!v
 {const r0=render;render=function(){const o=r0.apply(this,arguments);shWorldVoice();return o}}
 {const x0=XV.wmatch;XV.wmatch=function(){const o=x0.apply(this,arguments),W=UI.wm;if(!W||!['live','cm'].includes(W.tab||'live'))return o;
  let d=0,i=o.indexOf('<div class="cbp-h"');if(i<0)return o;const re=/<div\b|<\/div>/g;re.lastIndex=i;let m;while((m=re.exec(o))){d+=m[0]==='</div>'?-1:1;if(d===0){const e=m.index+6;return o.slice(0,e)+voiceBar()+o.slice(e)}}return o}}
+
+/* ---------------- Tournament progress ladder: League -> Semi-finals -> Final, counted from the fixtures and results ---------------- */
+function shTourProgress(t){const fx=t.fixtures||[],done=f=>{const m=fxResult(f);return !!m&&m.status==='done'},tn=id=>(T(id)||{short:'?',name:'?'});
+ const lg=fx.filter(f=>f.stage==='League'),sf=fx.filter(f=>/^Semi-final/.test(f.stage)),fin=fx.find(f=>f.stage==='Final');
+ const st=(label,n,tot,made)=>({label,n,tot,state:!made?'todo':tot&&n===tot?'done':n>0?'live':'next'});
+ const stages=[st('League',lg.filter(done).length,lg.length,lg.length>0),st('Semi-finals',sf.filter(done).length,sf.length,sf.length>0),st('Final',fin&&done(fin)?1:0,fin?1:0,!!fin)];
+ let champ='';if(fin&&done(fin)){const m=fxResult(fin);if(m.win)champ=tn(m.win).name}
+ const next=fx.find(f=>!done(f)),teamsQ=(!(t.groups&&t.groups.length>1)&&lg.some(done))?standings(t).slice(0,4):[];
+ if(!fx.length)return '';
+ return `<div class="card sh-ladder"><div class="b">Tournament progress</div><div class="sh-lad-row">${stages.map(x=>`<div class="sh-lad ${x.state}"><b>${x.label}</b><span>${x.tot?x.n+'/'+x.tot+' done':'Not created yet'}</span></div>`).join('<i></i>')}</div>
+ ${champ?`<div class="sh-champ">🏆 Champions: <b>${esc(champ)}</b></div>`:''}${next&&!champ?`<div class="mu sm">Next: ${esc(fxLabel(t,next))} · ${esc(tn(next.a).name)} vs ${esc(tn(next.b).name)}${next.date?' · '+esc(next.date):''}</div>`:''}
+ ${teamsQ.length&&!champ?`<div class="mu sm" style="margin-top:6px">In the top 4 now: ${teamsQ.map(r=>esc(tn(r.id).short||tn(r.id).name)+' ('+r.pts+')').join(', ')}</div>`:''}</div>`}
+{const t0=XV.tour;XV.tour=function(){const o=t0.apply(this,arguments),t=trObj(UI.tid);if(!t||o.indexOf('<div class="cbtabs">')<0||(UI.ttab||'fix')!=='fix')return o;let h='';try{h=shTourProgress(t)}catch(e){}return h?o.replace(/(<div class="cbtabs">[\s\S]*?<\/div>)/,'$1'+h):o}}
 
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
