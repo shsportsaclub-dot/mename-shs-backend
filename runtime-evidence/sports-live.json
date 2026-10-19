@@ -1,0 +1,29 @@
+{
+  "scope": "Local isolated backend and browser test; fictional fixtures; no production match/SMS created",
+  "cases": [
+    {
+      "sport": "cricket",
+      "score": 4
+    },
+    {
+      "sport": "football",
+      "score": "1 - 0 | 1st half",
+      "readOnly": true
+    },
+    {
+      "sport": "kabaddi",
+      "score": "1 - 0",
+      "readOnly": true
+    },
+    {
+      "sport": "bd",
+      "score": "0-0 in games | now 1-0",
+      "readOnly": true
+    },
+    {
+      "sport": "vb",
+      "score": "0-0 in games | now 1-0",
+      "readOnly": true
+    }
+  ]
+}
