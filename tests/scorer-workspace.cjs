@@ -55,6 +55,7 @@ const fs=require('node:fs'),http=require('node:http'),assert=require('node:asser
    await p.locator('.sh-match-workspace [data-a="shScorerWatch"]').click();
    await p.evaluate(()=>{S.user={role:'viewer',name:'QA fan'};render()});
    assert.equal(await p.locator('.sh-match-workspace [data-a="scoreIt"]').count(),0);
+   assert.match(await p.locator('#app').innerText(),/Live video is not connected/,'viewer sees missing video connection explicitly');
    assert.equal(await p.locator('.sh-match-workspace').evaluate(e=>e.getBoundingClientRect().right>innerWidth+1||e.scrollWidth>e.clientWidth+1),false);
    await p.evaluate(()=>{S.user={name:'QA scorer',role:'scorer',phone:'+910000000000'};const m=S.matches[0];while(calc(m,0).lg<36){if(!m.innings[0].cur.bl)m.innings[0].cur.bl='p12';ball(m,{r:0})}render()});
    assert.match(await p.locator('.sh-fielding-phase').innerText(),/5 outside circle/);
