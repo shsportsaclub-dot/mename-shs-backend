@@ -1,0 +1,22 @@
+{
+  "scope": "Synthetic shared-server records in actual renderer; provider and all network calls stubbed",
+  "results": [
+    {
+      "width": 320,
+      "serverReplayAfterClearingStorage": true,
+      "squadsSeparateFromXI": true,
+      "benchExcludedFromXI": true,
+      "combinedEleven": true,
+      "observedIntervalsAndGraph": true
+    },
+    {
+      "width": 412,
+      "serverReplayAfterClearingStorage": true,
+      "squadsSeparateFromXI": true,
+      "benchExcludedFromXI": true,
+      "combinedEleven": true,
+      "observedIntervalsAndGraph": true
+    }
+  ],
+  "errors": []
+}

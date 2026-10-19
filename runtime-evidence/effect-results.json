@@ -1,0 +1,54 @@
+{
+  "scope": "Synthetic delivery arrivals in actual app, all external requests stubbed",
+  "results": [
+    {
+      "width": 320,
+      "skin": "cb",
+      "motion": true,
+      "four": true,
+      "six": true,
+      "wicket": true,
+      "noReplay": true,
+      "hiddenTabSuppressed": true,
+      "reducedMotion": true,
+      "localScorer": true
+    },
+    {
+      "width": 320,
+      "skin": "ca",
+      "motion": true,
+      "four": true,
+      "six": true,
+      "wicket": true,
+      "noReplay": true,
+      "hiddenTabSuppressed": true,
+      "reducedMotion": true,
+      "localScorer": true
+    },
+    {
+      "width": 412,
+      "skin": "cb",
+      "motion": true,
+      "four": true,
+      "six": true,
+      "wicket": true,
+      "noReplay": true,
+      "hiddenTabSuppressed": true,
+      "reducedMotion": true,
+      "localScorer": true
+    },
+    {
+      "width": 412,
+      "skin": "ca",
+      "motion": true,
+      "four": true,
+      "six": true,
+      "wicket": true,
+      "noReplay": true,
+      "hiddenTabSuppressed": true,
+      "reducedMotion": true,
+      "localScorer": true
+    }
+  ],
+  "errors": []
+}

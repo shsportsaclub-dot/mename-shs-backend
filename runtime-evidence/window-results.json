@@ -1,0 +1,22 @@
+{
+  "scope": "Actual app with local synthetic scoring events and stubbed external requests",
+  "results": [
+    {
+      "width": 320,
+      "separateViewerAndScorer": true,
+      "powerplaySaved": true,
+      "expandEscape": true,
+      "localBallAnimation": true,
+      "twoOpeningBatters": true
+    },
+    {
+      "width": 412,
+      "separateViewerAndScorer": true,
+      "powerplaySaved": true,
+      "expandEscape": true,
+      "localBallAnimation": true,
+      "twoOpeningBatters": true
+    }
+  ],
+  "errors": []
+}
