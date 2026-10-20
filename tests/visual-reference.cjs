@@ -6,6 +6,7 @@ const fs=require('node:fs');
  const browser=await chromium.launch();fs.mkdirSync('runtime-evidence',{recursive:true});
  for(const width of [320,412,1280]){
   const page=await browser.newPage({viewport:{width,height:936}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
+  await page.route(/^https?:/,route=>route.abort());
   await page.goto('file://'+require('path').resolve(__dirname,'../app-index.html'));
   await page.evaluate(()=>{UI.stage='app';S.user=null;S.prefs={...S.prefs,welcomed:1,asked:1};render()});
   const auth=await page.locator('.auth').boundingBox();assert(auth);assert(Math.abs(auth.x+auth.width/2-width/2)<3,'Auth must be centered in full viewport');
