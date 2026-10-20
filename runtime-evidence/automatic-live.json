@@ -1,0 +1,36 @@
+{
+  "scope": "Synthetic reference replay in actual app; external requests stubbed. Not a production data-feed verification.",
+  "results": [
+    {
+      "width": 320,
+      "compactPanelFirst": true,
+      "singlePanel": true,
+      "referenceEquation": true,
+      "anotherMatch": true,
+      "scoreOnly": true,
+      "noOldInningsBall": true,
+      "noPanelOverflow": true
+    },
+    {
+      "width": 412,
+      "compactPanelFirst": true,
+      "singlePanel": true,
+      "referenceEquation": true,
+      "anotherMatch": true,
+      "scoreOnly": true,
+      "noOldInningsBall": true,
+      "noPanelOverflow": true
+    },
+    {
+      "width": 1280,
+      "compactPanelFirst": true,
+      "singlePanel": true,
+      "referenceEquation": true,
+      "anotherMatch": true,
+      "scoreOnly": true,
+      "noOldInningsBall": true,
+      "noPanelOverflow": true
+    }
+  ],
+  "errors": []
+}
