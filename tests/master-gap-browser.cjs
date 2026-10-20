@@ -44,7 +44,7 @@ const fs = require('node:fs');
    m.rules.fieldingProfile='icc-men-t20';
    m.overs=20;m.innings[0].done=true;m.status='break';m.target=50;m.ovr2=5;startInnings(m,1,'p11','p12','p0');m.target=50;bowl();show();
    o.target=document.querySelector('.sh-pulse-metrics')?.innerText;
-   o.chase=document.querySelector('.lc-line')?.innerText;o.phases=[...document.querySelectorAll('.lc-box')].map(x=>x.innerText).find(t=>t.startsWith('Innings phases'))||'';
+   o.chase=document.querySelector('.lc-line')?.innerText;o.phases=[...document.querySelectorAll('.lc-box')].map(x=>x.textContent).find(t=>t.includes('Innings phases'))||'';
    S.streams={w123:'https://www.youtube.com/live/AAAAAAAAAAA'};UI.streams={};
    o.external=streamCard('w123',true);o.own=embedHTML('https://www.youtube.com/live/AAAAAAAAAAA','m'+m.id);
    S.user={id:'fan',role:'user',kind:'Fan'};o.fanVideo=streamCard('w123',true);o.emptyVideo=streamCard('w999',true);
