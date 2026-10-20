@@ -6357,6 +6357,75 @@ function shWorldManhattan(W){const d=shWorldOverData(W),cols=['#3f7bff','#e11d2e
  const xm=Math.max(+(W.m&&W.m.overs)||20,...ser.flatMap(s=>s.rows.map(x=>x.o)));
  return `<div class="cbp-lb">Runs per over · both teams</div><div class="cbp-cd" style="padding:10px">${grBothSVG(ser,xm)}</div>`}
 shWorldRunProgress=(o=>function(W){const r=o(W),mh=shWorldManhattan(W);return mh+r})(shWorldRunProgress);
+/* ---------------- SH SPORTS 11 v2: fantasy-style team picking (points only, no money) ----------------
+   Rules: 11 players from both teams, 100 credits, max 7 from one team, WK 1-4, BAT 3-6, AR 1-4, BOWL 3-6,
+   captain 2x, vice-captain 1.5x, team locks when the match starts. Points are the SH index (not any company's scoring). */
+const DM2={n:11,cr:100,perTeam:7,roles:{WK:[1,4],BAT:[3,6],AR:[1,4],BOWL:[3,6]}};
+const dm2RoleName={WK:'Wicket-keepers',BAT:'Batters',AR:'All-rounders',BOWL:'Bowlers'};
+const dm2Locked=m=>!!m&&(m.innings.length>0||m.status==='done');
+function dm2Pool(m){return [...new Set([...(m.xi[m.a]||[]),...(m.xi[m.b]||[])])].filter(id=>P(id))}
+function dm2Break(m,pid){const p=P(pid),out=[],add=(l,v)=>{if(v)out.push([l,v])};if(!p||!m.innings.length)return out;
+ const short=(+m.overs||20)<=20&&+m.overs<900;let catches=0,dots=0;
+ m.innings.forEach((inn,i)=>{const k=calc(m,i);setFmt(m);
+  const b=k.bat[pid];if(b&&inn.used.includes(pid)){add('Runs',b.r);add('Fours',b.f4);add('Sixes',b.f6*2);if(b.r>=100)add('Century bonus',16);else if(b.r>=50)add('Half-century bonus',8);else if(b.r>=30)add('30 bonus',4);
+   if(b.r===0&&b.out&&p.role!=='BOWL')add('Duck',-2);
+   if(b.b>=10&&p.role!=='BOWL'&&short){const sr=b.r*100/b.b;add('Strike rate',sr>=170?6:sr>=150?4:sr>=130?2:sr>=70&&sr<80?-2:sr>=60&&sr<70?-4:sr<60&&sr>=50?-6:0)}}
+  const w=k.bowl[pid];if(w){add('Wickets',w.w*25);add('Maidens',w.m*12);if(w.w>=5)add('5-wicket bonus',16);else if(w.w>=4)add('4-wicket bonus',8);else if(w.w>=3)add('3-wicket bonus',4);
+   const lb=inn.ev.filter(e=>e.bl===pid&&(e.w==='Bowled'||e.w==='LBW')).length;add('Bowled / LBW bonus',lb*8);
+   if(w.b>=12){const er=w.r*BPO/w.b;add('Economy',short?(er<5?6:er<6?4:er<=7?2:er>=10&&er<=11?-2:er>11&&er<=12?-4:er>12?-6:0):0)}}
+  inn.ev.forEach(e=>{if(e.fld!==pid||!e.w)return;if(e.w==='Caught')catches++;else if(e.w==='Stumped')add('Stumping',12);else if(e.w==='Run out')add('Run out',12)});
+  if(short)inn.ev.forEach(e=>{if(e.bl===pid&&!e.r&&e.x!=='wd'&&e.x!=='nb'&&e.x!=='b'&&e.x!=='lb'&&!e.w)dots++})});
+ add('Catches',catches*8);if(catches>=3)add('3-catch bonus',4);add('Dot balls',dots);
+ if((m.xi[p.team]||[]).includes(pid))add('In playing XI',4);return out}
+const dm2Pts=(m,pid)=>dm2Break(m,pid).reduce((s,x)=>s+x[1],0);
+const dm2Mult=(D,id)=>id===D.c?2:id===D.vc?1.5:1;
+function dm2Of(m){S.dream.teams=S.dream.teams||{};const D=S.dream.teams[m.id]=S.dream.teams[m.id]||{picks:[],c:null,vc:null};return D}
+function dm2Check(m,D){const pk=D.picks,cr=pk.reduce((s,id)=>s+credit(P(id)),0),tm={},ro={WK:0,BAT:0,AR:0,BOWL:0};pk.forEach(id=>{const p=P(id);tm[p.team]=(tm[p.team]||0)+1;ro[p.role]=(ro[p.role]||0)+1});
+ const L=[['11 players',pk.length===DM2.n,pk.length+'/11'],['Within 100 credits',cr<=DM2.cr+1e-9,cr.toFixed(1)+'/100'],['Max 7 from one team',Math.max(0,...Object.values(tm))<=DM2.perTeam,Object.entries(tm).map(([t,n])=>(T(t)||{short:'?'}).short+' '+n).join(' | ')||'-']];
+ for(const [r,[lo,hi]] of Object.entries(DM2.roles))L.push([dm2RoleName[r]+' '+lo+'-'+hi,ro[r]>=lo&&ro[r]<=hi,String(ro[r])]);
+ L.push(['Captain and vice-captain (different players)',!!D.c&&!!D.vc&&D.c!==D.vc&&pk.includes(D.c)&&pk.includes(D.vc),(D.c?'C ':'')+(D.vc?'VC':'')||'-']);return {L,ok:L.every(x=>x[1]),cr,tm,ro}}
+function dm2Why(m,D,id){const p=P(id),pk=D.picks;if(pk.length>=DM2.n)return '11 players already picked';
+ if(pk.filter(x=>P(x).team===p.team).length>=DM2.perTeam)return 'Max 7 from one team';
+ if(pk.reduce((s,x)=>s+credit(P(x)),0)+credit(p)>DM2.cr+1e-9)return 'Not enough credits';
+ const hi=DM2.roles[p.role]?DM2.roles[p.role][1]:11;if(pk.filter(x=>P(x).role===p.role).length>=hi)return 'Maximum '+hi+' '+dm2RoleName[p.role].toLowerCase();
+ const left=DM2.n-pk.length-1,need=Object.entries(DM2.roles).reduce((s,[r,[lo]])=>s+Math.max(0,lo-(pk.filter(x=>P(x).role===r).length+(p.role===r?1:0))),0);if(need>left)return 'That would leave too few places for the minimum roles';
+ return ''}
+function dm2Auto(m){const D=dm2Of(m);D.picks=[];D.c=D.vc=null;const pool=dm2Pool(m).sort((a,b)=>credit(P(b))-credit(P(a))||P(a).name.localeCompare(P(b).name));
+ const mn=Math.min(...pool.map(id=>credit(P(id))));for(const id of pool){if(D.picks.length>=DM2.n)break;if(dm2Why(m,D,id))continue;const used=D.picks.reduce((s,x)=>s+credit(P(x)),0)+credit(P(id)),left=DM2.n-D.picks.length-1;if(used+left*mn>DM2.cr+1e-9)continue;D.picks.push(id)}
+ D.c=D.picks[0]||null;D.vc=D.picks[1]||null}
+function dm2Board(m,D){const chk=dm2Check(m,D),started=m.innings.length>0,rows=botTeams(m).map(b=>({n:b.n,pts:b.pts,bot:1}));
+ if(chk.ok&&started){rows.push({n:((S.user&&S.user.name)||'You')+' (you)',pts:D.picks.reduce((s,id)=>s+dm2Pts(m,id)*dm2Mult(D,id),0),me:1})}return rows.sort((a,b)=>b.pts-a.pts)}
+UI.dm=UI.dm||{role:'ALL',open:null};
+vDream0=function(){
+ const m=S.matches.find(x=>x.id===S.dream.mid)||curM();
+ if(!m)return '<div class="empty">Create or open a match to build your SH Sports 11.</div>';
+ const D=dm2Of(m),pool=dm2Pool(m),lock=dm2Locked(m),chk=dm2Check(m,D),rf=UI.dm.role,started=m.innings.length>0;
+ const list=pool.filter(id=>rf==='ALL'||P(id).role===rf).sort((a,b)=>credit(P(b))-credit(P(a)));
+ const board=dm2Board(m,D),mine=D.picks.reduce((s,id)=>s+dm2Pts(m,id)*dm2Mult(D,id),0);
+ const st=m.status==='done'?'Match finished':started?'Match started: teams are locked':'Team stays open until the match starts';
+ return `<div class="bar"><h2>SH Sports 11</h2><div class="grow"></div><select data-c="dreamM" style="max-width:240px">${opt(S.matches.map(x=>[x.id,(T(x.a)||{short:'?'}).short+' vs '+(T(x.b)||{short:'?'}).short+(x.status==='done'?' (done)':x.innings.length?' (live)':'')]),m.id)}</select></div>
+ <div class="card"><div class="row" style="align-items:center"><b>${D.picks.length}/11</b><span class="${chk.cr>DM2.cr?'b':''}" style="${chk.cr>DM2.cr?'color:var(--rd)':''}">${(DM2.cr-chk.cr).toFixed(1)} credits left</span><span class="grow"></span><span class="b">${started?'Points '+mine.toFixed(1):''}</span></div>
+  <div class="mu sm">${esc(st)}. Pick 11 from both teams: 100 credits, at most 7 from one team. Captain earns 2x, vice-captain 1.5x. Points only, no money or prizes.</div>
+  <div class="row" style="gap:6px;flex-wrap:wrap;margin-top:6px">${[m.a,m.b].map(t=>`<span class="pill">${esc((T(t)||{short:'?'}).short)} ${chk.tm[t]||0}/7</span>`).join('')}${Object.keys(DM2.roles).map(r=>`<span class="pill ${chk.ro[r]>=DM2.roles[r][0]&&chk.ro[r]<=DM2.roles[r][1]?'ok':''}">${r} ${chk.ro[r]} (${DM2.roles[r][0]}-${DM2.roles[r][1]})</span>`).join('')}</div>
+  ${lock?'':`<div class="row" style="gap:6px;margin-top:8px"><button class="btn sm" data-a="dm2Auto">Auto-pick</button><button class="btn sm ghost" data-a="dm2Clear">Clear</button></div>`}</div>
+ <div class="g2"><div class="card"><div class="gtabs">${['ALL','WK','BAT','AR','BOWL'].map(r=>`<button class="${rf===r?'on':''}" data-a="dm2Role" data-v="${r}">${r==='ALL'?'All':r}</button>`).join('')}</div>
+  ${list.length?list.map(id=>{const p=P(id),on=D.picks.includes(id),br=started?dm2Break(m,id):[],pt=br.reduce((s,x)=>s+x[1],0);return `<div class="item" style="flex-wrap:wrap"><div class="avatar" style="width:34px;height:34px;flex:none">${typeof av==='function'?av(p):''}</div><div style="flex:1;min-width:120px"><div class="b">${esc(p.name)}</div><div class="mu sm">${esc((T(p.team)||{}).short||'')} | ${p.role} | ${credit(p).toFixed(1)} cr${started?' | '+pt+' pts':''}</div></div>
+   ${on&&D.c===id?'<span class="pill ok">C</span>':on&&D.vc===id?'<span class="pill">VC</span>':''}${lock?'':`<button class="btn sm ${on?'':'ghost'}" data-a="dpick" data-id="${id}">${on?'Picked':'Pick'}</button>${on?`<button class="btn sm ${D.c===id?'':'ghost'}" data-a="dcap" data-id="${id}">C</button><button class="btn sm ${D.vc===id?'':'ghost'}" data-a="dvc" data-id="${id}">VC</button>`:''}`}
+   ${started&&br.length?`<details style="width:100%"><summary class="mu sm">Points breakdown</summary>${br.map(([l,v])=>`<div class="r"><span>${esc(l)}</span><b>${v>0?'+':''}${v}</b></div>`).join('')}</details>`:''}</div>`}).join(''):'<div class="mu sm">No players in the playing XI for this filter. Set the playing XI in Start match.</div>'}</div>
+  <div class="card"><div class="b">Team check</div>${chk.L.map(([l,k,v])=>`<div class="row" style="justify-content:space-between;padding:3px 0"><span>${esc(l)}</span><span style="color:var(--${k?'gn':'rd'})">${k?'OK':'Fix'} <span class="mu sm">${esc(v)}</span></span></div>`).join('')}
+  <div class="b" style="margin-top:12px">Leaderboard</div>${started?board.map((b,i)=>`<div class="item"><span class="b">${i+1}</span><span>${esc(b.n)}${b.bot?' <span class="mu sm">(practice team)</span>':''}</span><span class="grow"></span><b>${b.pts.toFixed(1)}</b></div>`).join(''):'<div class="mu sm">Points and leaderboard go live once the match starts.</div>'}
+  ${started&&!chk.ok?'<div class="mu sm" style="margin-top:6px">Your team was not valid when the match started, so it is not on the leaderboard.</div>':''}</div></div>`};
+Object.assign(A,{
+ dpick(d){const m=S.matches.find(x=>x.id===S.dream.mid)||curM();if(!m||dm2Locked(m))return toast('Team is locked, the match has started');const D=dm2Of(m);
+  if(D.picks.includes(d.id)){D.picks=D.picks.filter(x=>x!==d.id);if(D.c===d.id)D.c=null;if(D.vc===d.id)D.vc=null}else{const w=dm2Why(m,D,d.id);if(w)return toast(w,2800);D.picks.push(d.id)}
+  S.dream.mid=m.id;commit()},
+ dcap(d){const m=S.matches.find(x=>x.id===S.dream.mid)||curM();if(!m||dm2Locked(m))return toast('Team is locked, the match has started');const D=dm2Of(m);if(!D.picks.includes(d.id))return;D.c=d.id;if(D.vc===d.id)D.vc=null;commit()},
+ dvc(d){const m=S.matches.find(x=>x.id===S.dream.mid)||curM();if(!m||dm2Locked(m))return toast('Team is locked, the match has started');const D=dm2Of(m);if(!D.picks.includes(d.id))return;D.vc=d.id;if(D.c===d.id)D.c=null;commit()},
+ dm2Auto(){const m=S.matches.find(x=>x.id===S.dream.mid)||curM();if(!m||dm2Locked(m))return;dm2Auto(m);commit();toast('Team picked. Change anyone you like.')},
+ dm2Clear(){const m=S.matches.find(x=>x.id===S.dream.mid)||curM();if(!m||dm2Locked(m))return;S.dream.teams[m.id]={picks:[],c:null,vc:null};commit()},
+ dm2Role(d){UI.dm.role=d.v;render()}});
+dreamTotal=function(m,picks,c,vc){return picks.reduce((s,id)=>s+dm2Pts(m,id)*(id===c?2:id===vc?1.5:1),0)};
+C.dreamM=function(v){S.dream.mid=v;S.dream.teams=S.dream.teams||{};commit()};
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});
