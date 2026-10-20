@@ -18,3 +18,9 @@ for (const m of html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)) {
 JSON.parse(fs.readFileSync('public/manifest.webmanifest', 'utf8'));
 for (const f of ['public/sw.js', 'public/icon-192.png', 'public/icon-512.png']) fs.accessSync(f);
 console.log(`Build PASS: ${sources.length} server modules, ${scripts} browser scripts, PWA manifest and assets`);
+
+// Reject empty or wrongly encoded deployed identity images.
+for (const file of fs.readdirSync('public/emblems').filter(f => f.endsWith('.webp'))) {
+ const data=fs.readFileSync('public/emblems/'+file);
+ if(data.length<128 || data.toString('ascii',0,4)!=='RIFF' || data.toString('ascii',8,12)!=='WEBP')throw new Error('Invalid identity asset: '+file);
+}

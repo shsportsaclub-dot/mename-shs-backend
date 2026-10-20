@@ -1,0 +1,37 @@
+name: Compact live acceptance
+on:
+  push:
+    branches: [main, fix/live-panel-checks-20261020]
+    paths: [app-index.html, public/emblems/**, tests/**, scripts/build.mjs, .github/workflows/live-panel-regressions.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+      - run: npm run build
+      - run: node --test tests/automatic-live-panel.test.cjs tests/cricket-fielding.test.cjs tests/delivery-effects.test.cjs tests/scorer-phases.test.cjs tests/verify-production.test.mjs
+      - run: npm install --no-save --package-lock=false playwright
+      - run: npx playwright install --with-deps chromium
+      - run: node tests/automatic-live-browser.cjs
+      - run: node tests/identity-bundle-browser.cjs
+      - run: node tests/match-ui-browser.cjs
+      - run: node tests/master-gap-browser.cjs
+      - run: node tests/live-centre.cjs
+      - run: node tests/scorer-workspace.cjs
+      - run: node tests/match-journal-browser.cjs
+      - run: node tests/live-window-browser.cjs
+      - run: node tests/delivery-effects-browser.cjs
+      - run: node tests/identity-assets-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: compact-live-acceptance
+          path: runtime-evidence/

@@ -14,13 +14,13 @@ const { chromium } = require('playwright');
     const o = {};
     // 1) live first innings, T20
     const m = mk(20); for (const x of [1, 4, 0, 2, 1, 1]) { bowl(m); ball(m, { r: x }) }
-    let app = show(m); o.head = (app.querySelector('.lc-head')?.innerText || '') + ' ' + (app.querySelector('.sh-pulse-metrics')?.innerText || ''); o.state = app.querySelector('.lc-state')?.textContent; o.phase = app.querySelector('.lc-ph')?.innerText || '';
-    o.bat = [...app.querySelectorAll('.lc-live table')][0]?.innerText || ''; o.over = app.querySelector('.lc-ov')?.innerText || '';
+    let app = show(m); o.head = (app.querySelector('.lc-head')?.innerText || '') + ' ' + (app.querySelector('.cx3r')?.innerText || ''); o.state = app.querySelector('.lc-state')?.textContent; o.phase = app.querySelector('.lc-ph')?.innerText || '';
+    o.bat = [...app.querySelectorAll('.lc-live table')][0]?.innerText || ''; o.over = app.querySelector('.cx3o')?.innerText || '';
     // 2) burst only on a NEW ball after the first observation
     o.burst0 = !!document.querySelector('.lc-burst');
     bowl(m); ball(m, { r: 6 }); app = show(m); o.six = !!document.querySelector('.lc-burst.lc-six'); o.sixTxt = document.querySelector('.lc-bt')?.textContent;
     bowl(m); ball(m, { r: 4 }); app = show(m); o.four = !!document.querySelector('.lc-burst.lc-four');
-    bowl(m); ball(m, { w: 'Bowled', out: m.innings[0].cur.s }); const inn0 = m.innings[0]; if (!inn0.cur.s) { inn0.cur.s = 'p2'; if (!inn0.used.includes('p2')) inn0.used.push('p2') } app = show(m); o.wkt = !!document.querySelector('.lc-burst.lc-wicket'); o.lastW = app.querySelector('.lc-live')?.innerText.includes('Last wicket');
+    bowl(m); ball(m, { w: 'Bowled', out: m.innings[0].cur.s }); const inn0 = m.innings[0]; if (!inn0.cur.s) { inn0.cur.s = 'p2'; if (!inn0.used.includes('p2')) inn0.used.push('p2') } app = show(m); o.wkt = !!document.querySelector('.lc-burst.lc-wicket'); o.lastW = app.querySelector('.lc-live')?.innerText.includes('Last wkt');
     // 3) after the burst's life it is gone
     await new Promise(r => setTimeout(r, 2800)); render(); o.gone = !document.querySelector('.lc-burst');
     // 4) ODI phases
@@ -32,7 +32,7 @@ const { chromium } = require('playwright');
     o.fit = document.documentElement.scrollWidth <= innerWidth; return o;
   });
   ok(r.state === 'LIVE' && /India/.test(r.head) && /CRR/.test(r.head), 'header ' + r.head); ok(/POWERPLAY/.test(r.phase) && /2 fielders/.test(r.phase), 'T20 PP chip: ' + r.phase);
-  ok(/Player 0/.test(r.bat) && /\*/.test(r.bat), 'batters ' + r.bat); ok(/This over/.test(r.over), 'this over');
+  ok(/Player 0/.test(r.bat) && /\*/.test(r.bat), 'batters ' + r.bat); ok(/Over 1/.test(r.over), 'this over');
   ok(!r.burst0, 'no burst on first view'); ok(r.six && r.sixTxt === 'SIX!', 'six burst'); ok(r.four, 'four burst'); ok(r.wkt && r.lastW, 'wicket burst + last wicket'); ok(r.gone, 'burst ends');
   ok(/POWERPLAY 1/.test(r.odi1) && /2 fielders/.test(r.odi1), 'ODI PP1 ' + r.odi1); ok(/POWERPLAY 2/.test(r.odi2) && /4 fielders/.test(r.odi2), 'ODI PP2 ' + r.odi2); ok(/phases/i.test(r.phaseTable || ''), 'phase table');
   ok(r.brk === 'break' && /Australia need 7/.test(r.brkHead), 'break head: ' + r.brkHead); ok(r.endStatus === 'done' && r.won && r.res && /won/i.test(r.endHead), 'result headline: ' + r.endHead + ' / ' + r.result); ok(r.fit, 'no overflow');
