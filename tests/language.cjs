@@ -14,9 +14,11 @@ const { chromium } = require('playwright');
     const chk={ta:['முகப்பு','Home'],kn:['ಮುಖಪುಟ'],ml:['ഹോം'],bn:['হোম'],mr:['होम'],gu:['હોમ'],pa:['ਹੋਮ'],or:['ହୋମ୍'],ur:['ہوم']};o.multi={};
     for(const k in chk){C.setLang(k);await w(100);UI.view='home';render();await w(100);o.multi[k]=T().includes(chk[k][0])&&document.documentElement.lang===k}
     o.rtl=document.documentElement.dir==='rtl';C.setLang('hi');await w(50);o.ltrBack=document.documentElement.dir==='ltr';
-    C.setLang('xx'); o.badIgnored = S.prefs.lang === 'hi';
+    C.setLang('te');await w(50);toast('Saved');await w(300);o.toastTe=/సేవ్ అయింది/.test(document.getElementById('toast').innerText);toast('Ground deleted. Existing bookings are kept.');await w(300);o.toastLong=/గ్రౌండ్ తొలగించబడింది/.test(document.getElementById('toast').innerText);
+    C.setLang('ur');await w(50);toast('Saved');await w(300);o.toastUr=/محفوظ ہو گیا/.test(document.getElementById('toast').innerText);
+    C.setLang('xx'); o.badIgnored = S.prefs.lang === 'ur';
     C.setLang('en'); await w(100); UI.view = 'teams'; render(); o.back = /Create team/.test(T()) && !/టీమ్ సృష్టించు|टीम बनाएं/.test(T()); o.fit = document.documentElement.scrollWidth <= innerWidth; return o;
   });
-  for (const k of ['enHas', 'teNav', 'teTeams', 'teName', 'noEn', 'teBook', 'drawerSel', 'hi', 'hiName', 'badIgnored', 'back', 'fit']) ok(r[k], k + ' ' + JSON.stringify(r)); ok(r.htmlLang === 'te', 'html lang'); for (const k in r.multi) ok(r.multi[k], 'lang ' + k + JSON.stringify(r.multi)); ok(r.rtl && r.ltrBack, 'rtl'); ok(!errs.length, errs.join(';'));
+  for (const k of ['enHas', 'teNav', 'teTeams', 'teName', 'noEn', 'teBook', 'drawerSel', 'hi', 'hiName', 'badIgnored', 'back', 'fit', 'toastTe', 'toastLong', 'toastUr']) ok(r[k], k + ' ' + JSON.stringify(r)); ok(r.htmlLang === 'te', 'html lang'); for (const k in r.multi) ok(r.multi[k], 'lang ' + k + JSON.stringify(r.multi)); ok(r.rtl && r.ltrBack, 'rtl'); ok(!errs.length, errs.join(';'));
   await b.close(); if (!process.exitCode) console.log('PASS: language');
 })();
