@@ -1005,6 +1005,7 @@ http.createServer(async (req, res) => {
     res.write('retry: 2000\n\n'); sseClients.add(res); req.on('close', () => sseClients.delete(res)); return;
   }
   const STATIC = { '/manifest.webmanifest': 'application/manifest+json', '/sw.js': 'application/javascript', '/icon-192.png': 'image/png', '/icon-512.png': 'image/png', '/icon-maskable.png': 'image/png', '/apple-touch-icon.png': 'image/png' };
+  if (req.method === 'GET' && /^\/flags\/(gm|ls|mz|zm)\.svg$/.test(path)) { const f = fs.readFileSync(new URL('./public' + path, import.meta.url)); res.writeHead(200, { 'content-type': 'image/svg+xml', 'cache-control': 'public, max-age=604800' }); return res.end(f); }
   const em = /^\/emblems\/[a-z-]+\.webp$/.exec(path);
   if (req.method === 'GET' && em) { try { const f = fs.readFileSync(new URL('./public' + path, import.meta.url)); res.writeHead(200, { 'content-type': 'image/webp', 'cache-control': 'public, max-age=604800' }); return res.end(f); } catch { /* fall through */ } }
   if (req.method === 'GET' && STATIC[path]) {   // installable-app files (PWA)
