@@ -6503,6 +6503,19 @@ function st2News(c,W,H,u,U,f,head,gold,wrap0,fit,ctr){
 /* poster from any news item */
 function newsPosterOpen(title,src){Object.assign(UI.st2,{tpl:'news',f:{title:String(src||'Scoring Heroes News').slice(0,50),l1:String(title||'').slice(0,160),l2:'',note:new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}),_k:'news|'},photo:'',_pi:null,capEdit:0});UI.view='social';render()}
 A.newsPoster=function(d){const L=UI.nwList||[],x=L[+d.i];if(x)newsPosterOpen(x.t,x.s)};
+/* ---------------- LIVE VIEW from the scorecard when the provider sends no deliveries: batters at the crease, last wicket, bowling figures ---------------- */
+function shCreaseCard(W){
+ const L=(W&&W.sc&&W.sc.scorecard)||[];if(!L.length||(W.m&&W.m.ended&&false))return '';const inn=L[L.length-1];if(!inn)return '';
+ const dis=r=>String(r['dismissal-text']??r.dismissal??'').trim().toLowerCase(),bats=(inn.batting||[]).filter(r=>r.batsman&&r.batsman.name);
+ const at=bats.filter(r=>/^(batting|not out)$/.test(dis(r))&&!(W.m&&W.m.ended&&!/not out/.test(dis(r)))),out=bats.filter(r=>dis(r)&&!/^(batting|not out|did not bat|yet to bat)$/.test(dis(r)));
+ const bowl=(inn.bowling||[]).filter(r=>r.bowler&&r.bowler.name),fow=Array.isArray(inn.fow)?inn.fow:[],lw=out.length?out[out.length-1]:null;
+ if(!at.length&&!bowl.length)return '';
+ const row=r=>`<div class="cbp-kv"><span>${esc(r.batsman.name)}<br><small>${esc(r['4s']||0)}x4 ${esc(r['6s']||0)}x6${r.sr!=null&&r.sr!==''?' · SR '+esc(r.sr):''}</small></span><b>${esc(r.r)} <small>(${esc(r.b)})</small></b></div>`;
+ return `<div class="cbp-lb">At the crease · latest scorecard</div><div class="cbp-cd">${at.length?at.slice(0,2).map(row).join(''):'<div class="cbp-note">No batter is marked at the crease in the latest scorecard.</div>'}
+  ${lw?`<div class="cbp-kv"><span>Last wicket<br><small>${esc(lw.batsman.name)} ${esc(lw['dismissal-text']??lw.dismissal)}</small></span><b>${esc(lw.r)} <small>(${esc(lw.b)})</small></b></div>`:''}</div>
+  ${bowl.length?`<div class="cbp-lb">Bowling · latest scorecard</div><div class="cbp-cd">${bowl.map(r=>`<div class="cbp-kv"><span>${esc(r.bowler.name)}<br><small>${esc(r.o)} ov · ${esc(r.m||0)} maidens${r.eco!=null&&r.eco!==''?' · econ '+esc(r.eco):''}</small></span><b>${esc(r.w)}/${esc(r.r)}</b></div>`).join('')}</div>`:''}
+  <div class="mu sm" style="padding:0 4px 10px">Taken from the latest scorecard the provider sent. This match has no ball-by-ball feed, so individual deliveries and commentary cannot be shown.</div>`}
+shPulsePanel=(o=>function(W){const h=o(W);let extra='';try{const hasBalls=typeof shAvailableBalls==='function'&&shAvailableBalls(W).length>0;if(!hasBalls)extra=shCreaseCard(W)}catch(e){}return h+extra})(shPulsePanel);
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});
