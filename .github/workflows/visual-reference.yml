@@ -1,0 +1,27 @@
+name: Visual reference acceptance
+on:
+  push:
+    branches: [main, fix/visual-reference-20261020]
+    paths: [app-index.html, tests/visual-reference.cjs, .github/workflows/visual-reference.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  visual:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+      - run: npm run build
+      - run: npm install --no-save --package-lock=false playwright
+      - run: npx playwright install --with-deps chromium
+      - run: node tests/visual-reference.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: visual-reference-evidence
+          path: runtime-evidence/visual-reference-*.png
