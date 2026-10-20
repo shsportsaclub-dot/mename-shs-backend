@@ -2,7 +2,7 @@ name: Identity and stadium acceptance
 on:
   push:
     branches: [main, fix/identity-stadium-20261020]
-    paths: [app-index.html, public/emblems/**, scripts/build.mjs, tests/identity-assets-browser.cjs, .github/workflows/identity-stadium.yml]
+    paths: [app-index.html, public/emblems/**, scripts/build.mjs, tests/identity-assets-browser.cjs, tests/setup-comparison-browser.cjs, tests/match-journal-browser.cjs, .github/workflows/identity-stadium.yml]
   workflow_dispatch:
 permissions:
   contents: read
