@@ -1017,8 +1017,53 @@ http.createServer(async (req, res) => {
       return res.end(html);
     } catch { /* fall through to 404 */ }
   }
+  if (path.startsWith('/api/gbook/')) {   // online ground booking: customers request, the ground's owner accepts. Prices and clashes are decided here, never by the client.
+    const [, , , gid, bid] = path.split('/'), tok = String(req.headers.authorization || '').replace(/^Bearer\s+/i, ''), phone = readSession(tok), u = phone && db.users[phone];
+    const gr = (db.shared.grounds || {})[gid], g = gr && gr.data && gr.data.g;
+    if (!g) return out(404, { ok: false, error: 'Ground not found' });
+    const bag = (db.gb = db.gb || {}), L = (bag[gid] = bag[gid] || {}), isOwner = !!phone && (gr.owner === phone || (u && u.role === 'admin'));
+    const mins = s => { const m = /^(\d{1,2}):(\d{2})$/.exec(String(s || '')); return m ? +m[1] * 60 + +m[2] : NaN; };
+    const slotMin = [30, 60, 90, 120].includes(+g.slotMin) ? +g.slotMin : 60, rt = g.rates || {}, base = +rt.base || +g.rate || 0, peak = +rt.peak || base, wk = +rt.wkend || base, pf = +g.peakFrom || 17;
+    const price = (date, s, d) => { const we = [0, 6].includes(new Date(date + 'T12:00:00Z').getUTCDay()); let tot = 0; for (let m = s; m < s + d; m += slotMin) tot += (we ? wk : (m / 60 >= pf ? peak : base)) * Math.min(slotMin, s + d - m) / 60; return Math.round(tot); };
+    const clash = (date, s, e, skip) => Object.values(L).find(b => b.id !== skip && b.date === date && b.status !== 'cancelled' && s < b.start + b.dur && e > b.start);
+    const pub = b => ({ id: b.id, date: b.date, start: b.start, dur: b.dur, status: b.status });
+    const full = b => ({ id: b.id, date: b.date, start: b.start, dur: b.dur, status: b.status, who: b.who, phone: b.phone, note: b.note, amt: b.amt, paid: b.paid, created: b.created, mine: b.owner === phone });
+    if (req.method === 'GET' && !bid) {
+      const q = new URL(req.url, 'http://x').searchParams;
+      if (q.get('busy')) return out(200, { ok: true, busy: Object.values(L).filter(b => b.status !== 'cancelled' && (!q.get('date') || b.date === q.get('date'))).map(pub) });
+      if (!u) return out(401, { ok: false, error: 'Please sign in again' });
+      return out(200, { ok: true, owner: isOwner, items: Object.values(L).filter(b => isOwner || b.owner === phone).sort((a, b) => b.created - a.created).slice(0, 300).map(full) });
+    }
+    if (!u) return out(401, { ok: false, error: 'Please sign in again' });
+    if (limited('gb:' + phone, 60, 36e5)) return out(429, { ok: false, error: 'Too many requests, slow down' });
+    let raw = ''; for await (const c of req) { raw += c; if (raw.length > 4000) return out(413, { ok: false, error: 'Too large' }); }
+    let b = {}; if (raw) { try { b = JSON.parse(raw); } catch { return out(400, { ok: false, error: 'Bad body' }); } }
+    if (req.method === 'POST' && !bid) {
+      const date = String(b.date || ''), s = mins(b.start), d = Math.floor(+b.dur), today = new Date().toISOString().slice(0, 10), str = (v, n) => String(v == null ? '' : v).trim().slice(0, n);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date < today) return out(400, { ok: false, error: 'Pick a valid future date' });
+      if (!(s >= 0) || !(d >= slotMin) || d > 720 || d % slotMin) return out(400, { ok: false, error: 'Pick a valid start time and duration' });
+      if (g.on === false) return out(409, { ok: false, error: 'This ground is not taking bookings' });
+      if ((g.blackout || []).includes(date)) return out(409, { ok: false, error: 'Ground is closed on this date' });
+      if (s < mins(g.open || '06:00') || s + d > mins(g.close || '22:00')) return out(409, { ok: false, error: 'Outside opening hours' });
+      if (clash(date, s, s + d)) return out(409, { ok: false, error: 'That time is already booked' });
+      const who = str(b.who, 60), ph = str(b.phone, 20); if (!who || !/^[+\d][\d\s-]{6,17}$/.test(ph)) return out(400, { ok: false, error: 'Enter your name and a valid mobile number' });
+      const id = crypto.randomBytes(5).toString('hex'), now = Date.now(), status = isOwner ? 'confirmed' : 'requested';
+      L[id] = { id, owner: phone, date, start: s, dur: d, who, phone: ph, note: str(b.note, 100), amt: price(date, s, d), paid: 0, status, created: now };
+      saveDb(); return out(200, { ok: true, booking: full(L[id]) });
+    }
+    const cur = L[bid]; if (!cur) return out(404, { ok: false, error: 'Booking not found' });
+    if (req.method === 'PUT') {
+      const st = String(b.status || '');
+      if (st === 'cancelled') { if (!isOwner && cur.owner !== phone) return out(403, { ok: false, error: 'Not allowed' }); cur.status = 'cancelled'; }
+      else if (['confirmed', 'completed'].includes(st)) { if (!isOwner) return out(403, { ok: false, error: 'Only the ground owner can do this' }); if (cur.status === 'cancelled') return out(409, { ok: false, error: 'Booking was cancelled' }); if (st === 'confirmed' && clash(cur.date, cur.start, cur.start + cur.dur, cur.id)) return out(409, { ok: false, error: 'That time is already booked' }); cur.status = st; }
+      else if (b.paid != null) { if (!isOwner) return out(403, { ok: false, error: 'Only the ground owner can record payments' }); const p = Math.floor(+b.paid); if (!(p >= 0) || p > cur.amt) return out(400, { ok: false, error: 'Amount is more than the total' }); cur.paid = p; }
+      else return out(400, { ok: false, error: 'Nothing to change' });
+      cur.updated = Date.now(); saveDb(); return out(200, { ok: true, booking: full(cur) });
+    }
+    return out(405, { ok: false, error: 'Method not allowed' });
+  }
   if (path.startsWith('/api/shared/')) {   // shared public data: matches, tournaments, auctions (anyone reads, the owner writes)
-    const [, , , col, id] = path.split('/'), COLS = ['matches', 'sports', 'tours', 'auc'];
+    const [, , , col, id] = path.split('/'), COLS = ['matches', 'sports', 'tours', 'auc', 'grounds'];
     if (!COLS.includes(col)) return out(404, { ok: false, error: 'Unknown collection' });
     const bag = db.shared[col] = db.shared[col] || {};
     if (req.method === 'GET' && !id) {

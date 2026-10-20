@@ -125,4 +125,5 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 | Rankings World/Country/State/City | Done | City uses player profile city |
 | App-wide translation beyond commentary/voice | Open | 16 languages exist for commentary and voice only |
 | Referee/umpire ratings | Done | One rating per user, no self-rating |
-| Server-side ground/academy sync, parent login | Open | Next batch |
+| Ground booking online (public directory, server prices + clash check, owner accept) | Done | tests/gbook.test.mjs, ground-online.cjs. Academy sync and parent login still open |
+| Streaming on outside (provider) matches | Removed | Streams only for matches scored in this app |
