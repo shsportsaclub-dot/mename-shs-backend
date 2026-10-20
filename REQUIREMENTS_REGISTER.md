@@ -127,3 +127,5 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 | Referee/umpire ratings | Done | One rating per user, no self-rating |
 | Ground booking online (public directory, server prices + clash check, owner accept) | Done | tests/gbook.test.mjs, ground-online.cjs. Academy sync and parent login still open |
 | Streaming on outside (provider) matches | Removed | Streams only for matches scored in this app |
+
+- Language (2026-10-20): UI translation now covers English + Telugu, Hindi, Tamil, Kannada, Malayalam, Bengali, Marathi, Gujarati, Punjabi, Odia, Urdu (RTL). 383 labels each. Languages beyond te/hi need native-speaker review. Dynamic sentences/toasts still English.

@@ -11,9 +11,12 @@ const { chromium } = require('playwright');
     UI.view = 'book'; UI.gb.tab = 'book'; render(); o.teBook = /గ్రౌండ్ బుక్ చేయండి/.test(T()); const ph = [...document.querySelectorAll('[placeholder]')].map(e => e.placeholder).join('|'); o.ph = ph.length >= 0;
     UI.view = 'home'; UI.drawer = true; render(); o.drawerSel = !!document.querySelector('select[data-c=setLang]') && document.querySelector('select[data-c=setLang]').value === 'te'; UI.drawer = false;
     C.setLang('hi'); await w(100); UI.view = 'teams'; render(); o.hi = /टीम बनाएं/.test(T()); o.hiName = /India Lions/.test(T());
+    const chk={ta:['முகப்பு','Home'],kn:['ಮುಖಪುಟ'],ml:['ഹോം'],bn:['হোম'],mr:['होम'],gu:['હોમ'],pa:['ਹੋਮ'],or:['ହୋମ୍'],ur:['ہوم']};o.multi={};
+    for(const k in chk){C.setLang(k);await w(100);UI.view='home';render();await w(100);o.multi[k]=T().includes(chk[k][0])&&document.documentElement.lang===k}
+    o.rtl=document.documentElement.dir==='rtl';C.setLang('hi');await w(50);o.ltrBack=document.documentElement.dir==='ltr';
     C.setLang('xx'); o.badIgnored = S.prefs.lang === 'hi';
     C.setLang('en'); await w(100); UI.view = 'teams'; render(); o.back = /Create team/.test(T()) && !/టీమ్ సృష్టించు|टीम बनाएं/.test(T()); o.fit = document.documentElement.scrollWidth <= innerWidth; return o;
   });
-  for (const k of ['enHas', 'teNav', 'teTeams', 'teName', 'noEn', 'teBook', 'drawerSel', 'hi', 'hiName', 'badIgnored', 'back', 'fit']) ok(r[k], k + ' ' + JSON.stringify(r)); ok(r.htmlLang === 'te', 'html lang'); ok(!errs.length, errs.join(';'));
+  for (const k of ['enHas', 'teNav', 'teTeams', 'teName', 'noEn', 'teBook', 'drawerSel', 'hi', 'hiName', 'badIgnored', 'back', 'fit']) ok(r[k], k + ' ' + JSON.stringify(r)); ok(r.htmlLang === 'te', 'html lang'); for (const k in r.multi) ok(r.multi[k], 'lang ' + k + JSON.stringify(r.multi)); ok(r.rtl && r.ltrBack, 'rtl'); ok(!errs.length, errs.join(';'));
   await b.close(); if (!process.exitCode) console.log('PASS: language');
 })();
