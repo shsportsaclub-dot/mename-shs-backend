@@ -1,0 +1,17 @@
+{
+  "results": [
+    {
+      "width": 320,
+      "imagesLoaded": 16,
+      "noOverflow": true,
+      "unknownNamesNotMisassigned": true
+    },
+    {
+      "width": 412,
+      "imagesLoaded": 16,
+      "noOverflow": true,
+      "unknownNamesNotMisassigned": true
+    }
+  ],
+  "errors": []
+}
