@@ -1856,7 +1856,7 @@ C.wzoff=function(v,el){S.wiz.off[el.name]=String(v||'').trim();save()};
 C.wzxi=function(v,el){const w=S.wiz,t=el.dataset.t,k=el.dataset.k,o=k==='xi'?'subs':'xi',L=(w[k][t]=w[k][t]||[]);
   if(el.checked){const lim=k==='xi'?11:4;if(L.length>=lim){el.checked=false;return toast('Maximum '+lim+' players here')}L.push(v);w[o][t]=(w[o][t]||[]).filter(x=>x!==v)}else w[k][t]=L.filter(x=>x!==v);save();wzShow()};
 Object.assign(A,{
-  newMatch(){if(!can())return toast('Only Admin or Scorer accounts can start matches');if(!S.teams.length)return toast('Register at least two teams first');S.wiz=S.wiz||wzFresh();if(!S.wiz.a||!T(S.wiz.a)){const f=wzFresh();S.wiz.a=f.a;S.wiz.b=f.b;S.wiz.toss=f.toss}UI.view=UI.view==='score'?'score':UI.view;wzShow()},
+  newMatch(){if(!can())return toast('Only Admin or Scorer accounts can start matches');S.wiz=S.wiz||wzFresh();if(!S.wiz.a||!T(S.wiz.a)){const f=wzFresh();S.wiz.a=f.a;S.wiz.b=f.b;S.wiz.toss=f.toss}UI.view=UI.view==='score'?'score':UI.view;wzShow()},
   wzMode(d){S.wiz.mode=d.v;save();wzShow()},
   wzGo(d){const w=S.wiz,t=+d.v;for(let i=w.step;i<t;i++){const e=wzCheck(i);if(e){w.step=i;save();wzShow();return toast(e,2800)}}w.step=t;save();wzShow()},
   wzNext(){const w=S.wiz,e=wzCheck(w.step);if(e)return toast(e,2800);w.step=Math.min(WSTEPS.length-1,w.step+1);save();wzShow()},
@@ -6311,6 +6311,35 @@ function ay3KidsView(){const k=UI.ay3.kids;if(!ay3Ok())return `<div class="card"
 {const t0=A.ayTab;A.ayTab=function(d){t0(d);if(d.v==='kids')ay3Kids()}}
 {const c0=commit;commit=function(){c0.apply(this,arguments);clearTimeout(ay3Push.t);ay3Push.t=setTimeout(ay3Push,2500)}}
 {const v0=XV.academy;let first=0;XV.academy=function(){if(!first){first=1;setTimeout(ay3Pull,50)}return v0()}}
+/* ---------------- MATCH SETUP: TEAMS STEP v2 (filter, logos, demo teams) ---------------- */
+const WZ_DEMO=[['Demo Lions','DLN','#d97706',['Aarav Rao','Vihaan Reddy','Ishaan Naidu','Kabir Shah','Rohan Iyer','Dev Patel','Arnav Singh','Yash Mehta','Nikhil Das','Tarun Goud','Sai Kiran']],['Demo Tigers','DTG','#2563eb',['Aditya Verma','Karthik Nair','Manav Joshi','Pranav Rao','Siddharth Roy','Harsh Kumar','Varun Pillai','Abhay Sen','Rahul Dev','Teja Varma','Lokesh Babu']]];
+const WZ_ROLES=['WK','BAT','BAT','BAT','AR','BAT','AR','BOWL','BOWL','BOWL','BOWL'];
+function wzTeamBox(slot){const w=S.wiz,t=T(w[slot]);if(!t)return `<div class="card" style="margin:8px 0"><div class="mu sm">Team ${slot==='a'?'A':'B'}: no team yet. Register one below or add the demo teams.</div></div>`;const q=String(w.tq||'').toLowerCase(),f=w.tf||'all';
+ const L=S.teams.filter(x=>x.id===w[slot]||((f==='all'||(x.level||'club')===f)&&(!q||(x.name+' '+x.short).toLowerCase().includes(q))));
+ return `<div class="card" style="margin:8px 0"><div class="row" style="align-items:center">${logo(t,48)}<div style="flex:1;min-width:0"><div class="mu sm">Team ${slot==='a'?'A':'B'}</div><select data-c="wz" name="${slot}" style="width:100%">${opt(L.map(x=>[x.id,x.name]),w[slot])}</select></div></div>
+  <div class="mu sm" style="margin-top:8px">Logo style</div><div class="row" style="gap:4px;flex-wrap:wrap">${[0,1,2,3,4,5].map(i=>`<button type="button" class="btn sm ghost" style="padding:2px;${(t.preset==null?S.settings.defLogo:t.preset)===i&&!t.logo?'border-color:var(--ac)':''}" data-a="wzPreset" data-id="${t.id}" data-v="${i}" aria-label="Logo style ${i+1}">${crest(i,t.color,t.short,30)}</button>`).join('')}<button type="button" class="btn sm ghost" data-a="wzGen" data-id="${t.id}">Generate new logo</button></div>
+  <div class="row" style="margin-top:8px;align-items:flex-end"><label style="flex:2;margin:0">Upload from gallery or camera<input type="file" accept="image/*" data-c="wzLogo" data-id="${t.id}"></label><label style="flex:1;margin:0">Colour<input type="color" data-c="wzColor" data-id="${t.id}" value="${esc(t.color||'#2563eb')}" style="padding:2px;height:40px"></label></div>
+  ${t.logo?`<button type="button" class="btn sm ghost" data-a="wzPreset" data-id="${t.id}" data-v="${t.preset==null?0:t.preset}" style="margin-top:6px">Use generated logo instead</button>`:''}
+  <div class="mu sm" style="margin-top:6px">${t.players.length} player${t.players.length===1?'':'s'} in squad</div></div>`}
+wzStepHTML=(o=>function(){const w=S.wiz;if(w.step!==1)return o();
+ return `<div class="cbxr" style="margin-bottom:6px"><button type="button" class="cbx ${(w.tf||'all')==='all'?'on':''}" data-a="wzTf" data-v="all">All</button>${LEVELS.map(([v,l])=>`<button type="button" class="cbx ${w.tf===v?'on':''}" data-a="wzTf" data-v="${v}">${l}</button>`).join('')}</div>
+  <label>Search teams<input data-c="wzTq" value="${esc(w.tq||'')}" placeholder="Team name or code"></label>
+  ${w.a===w.b?'<div class="need">Pick two different teams.</div>':''}
+  ${wzTeamBox('a')}${wzTeamBox('b')}
+  <div class="card" style="margin-top:10px"><div class="b">Testing? Use two demo teams</div><div class="mu sm">Adds Demo Lions and Demo Tigers with 11 players each and selects them with full playing XI. Demo data is clearly named and can be removed from Teams.</div><button type="button" class="btn sm" data-a="wzDemo" style="margin-top:6px">Add 2 demo teams + players</button></div>
+  <div class="card" style="margin-top:10px"><div class="b">Team not in the list? Register it</div><div class="row"><input id="wz-tn" placeholder="Team name" style="flex:2"><input id="wz-ts" placeholder="Short" maxlength="4" style="flex:1"></div><div class="row" style="margin-top:6px"><select id="wz-tl" style="flex:1">${LEVELS.map(([v,l])=>`<option value="${v}"${v==='club'?' selected':''}>${l}</option>`).join('')}</select><input id="wz-tc" type="color" value="#1d4ed8" style="flex:none;width:52px;padding:2px;height:40px"><button type="button" class="btn sm" data-a="wzTeam">Add team</button></div><div class="mu sm" style="margin-top:6px">The new team is picked for the empty or duplicate slot. Set its logo above afterwards.</div></div>`})(wzStepHTML);
+Object.assign(A,{wzTf(d){S.wiz.tf=d.v;save();wzShow()},
+ wzPreset(d){const t=T(d.id);if(!t)return;t.preset=+d.v;t.logo=null;save();wzShow()},
+ wzGen(d){const t=T(d.id);if(!t)return;t.preset=Math.floor(Math.random()*6);t.logo=null;t.color=PAL[Math.floor(Math.random()*PAL.length)];save();wzShow()},
+ wzDemo(){const w=S.wiz;const ids=WZ_DEMO.map(([name,short,color,names])=>{let t=S.teams.find(x=>x.demo&&x.name===name);if(!t){t={id:uid(),name,short,color,preset:name==='Demo Lions'?2:4,logo:null,players:[],level:'club',demo:true};S.teams.push(t);
+   names.forEach((n,i)=>{const p={id:uid(),name:n,role:WZ_ROLES[i],team:t.id,phone:'',bat:i%4===3?'Left-hand':'Right-hand',bowl:WZ_ROLES[i]==='BOWL'||WZ_ROLES[i]==='AR'?(i%2?'Right-arm fast':'Off spin'):'',jersey:i+1,photo:null,avatar:null,demo:true};S.players.push(p);t.players.push(p.id)})}
+  return t.id});w.a=ids[0];w.b=ids[1];w.toss=w.a;ids.forEach(id=>{w.xi[id]=T(id).players.slice(0,11)});save();wzShow();toast('Demo teams ready with playing XI')}});
+C.wzTq=function(v){S.wiz.tq=v;save();wzShow()};
+C.wzLogo=function(v,el){const f=el.files&&el.files[0];if(!f)return;if(!/^image\//.test(f.type))return toast('That file is not a picture');img(f,128,u=>{const t=T(el.dataset.id);if(t){t.logo=u;save();wzShow()}})};
+C.wzColor=function(v,el){const t=T(el.dataset.id);if(t&&/^#[0-9a-f]{6}$/i.test(v)){t.color=v;save();wzShow()}};
+A.wzTeam=function(){const g=id=>(document.getElementById(id)||{}).value||'',n=g('wz-tn').trim(),s=(g('wz-ts')||n.slice(0,3)).toUpperCase().slice(0,4);if(n.length<2)return toast('Enter the team name');
+ if(S.teams.some(t=>t.name.toLowerCase()===n.toLowerCase()))return toast('That team is already registered');
+ const t={id:uid(),name:n,short:s||n.slice(0,3).toUpperCase(),color:/^#[0-9a-f]{6}$/i.test(g('wz-tc'))?g('wz-tc'):'#1d4ed8',preset:Math.floor(Math.random()*6),logo:null,players:[],level:g('wz-tl')||'club'};S.teams.push(t);const w=S.wiz;if(w.a===w.b||!w.b)w.b=t.id;else if(!w.a)w.a=t.id;save();wzShow();toast('Team registered')};
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});
