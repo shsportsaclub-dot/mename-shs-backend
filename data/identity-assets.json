@@ -346,11 +346,11 @@
       "name": "Sunrisers Hyderabad",
       "kind": "official_franchise_logo",
       "source": "https://www.iplt20.com/teams",
-      "sourceSha256": "33547dbfb9f87baff236c4e070c1c537f6c80c8517650b32e496b20ee8b9004e",
+      "sourceSha256": "3469b3bea4571ad2608e4cfabf31caeb0b24137009670daba3086f7d165e85c8",
       "officialLogo": true,
       "path": "/emblems/ipl-sunrisers-hyderabad.webp",
-      "assetBytes": 7262,
-      "assetSha256": "70ab0508baecb86c7b6526c914256266fc05bd8280d4d941931e3e2f2543419e",
+      "assetBytes": 10692,
+      "assetSha256": "c808be19d54234ecb87b396c8593b2ad79b81c3ae60f6cffb30d28a15b66a478",
       "sourceAsset": "https://www.iplt20.com/api/team-assets?pathname=static%2Fteams%2F1153%2Ficon-dark.svg"
     }
   ]

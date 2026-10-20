@@ -21,6 +21,7 @@ jobs:
       - run: npm install --no-save --package-lock=false playwright
       - run: npx playwright install --with-deps chromium
       - run: node tests/identity-assets-browser.cjs
+      - run: node tests/setup-comparison-browser.cjs
       - run: node tests/live-centre.cjs
       - run: node tests/match-ui-review.cjs
       - run: node tests/match-ui-browser.cjs
@@ -33,3 +34,4 @@ jobs:
             runtime-evidence/identity-*
             runtime-evidence/stadium-*
             runtime-evidence/mobile-coverage-*
+            runtime-evidence/setup-*
