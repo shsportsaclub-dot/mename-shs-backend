@@ -7,7 +7,7 @@ const fs=require('node:fs');
  for(const width of [320,412,1280]){
   const page=await browser.newPage({viewport:{width,height:936}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto('file://'+require('path').resolve(__dirname,'../app-index.html'));
-  await page.evaluate(()=>{UI.stage='app';S.user=null;render()});
+  await page.evaluate(()=>{UI.stage='app';S.user=null;S.prefs={...S.prefs,welcomed:1,asked:1};render()});
   const auth=await page.locator('.auth').boundingBox();assert(auth);assert(Math.abs(auth.x+auth.width/2-width/2)<3,'Auth must be centered in full viewport');
   await page.evaluate(()=>{
    S.user={id:'visual-qa',name:'Visual QA',role:'user',kind:'Fan',guest:true};S.prefs={...S.prefs,asked:1,welcomed:1};UI.view='home';UI.hx='all';UI.sport='cricket';UI.hf.tab='all';
