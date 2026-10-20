@@ -6519,7 +6519,40 @@ function shCreaseCard(W){
   ${lw?`<div class="cbp-kv"><span>Last wicket<br><small>${esc(lw.batsman.name)} ${esc(lw['dismissal-text']??lw.dismissal)}</small></span><b>${esc(lw.r)} <small>(${esc(lw.b)})</small></b></div>`:''}</div>
   ${bowl.length?`<div class="cbp-lb">Bowling · latest scorecard</div><div class="cbp-cd">${bowl.map(r=>`<div class="cbp-kv"><span>${esc(r.bowler.name)}<br><small>${esc(r.o)} ov · ${esc(r.m||0)} maidens${r.eco!=null&&r.eco!==''?' · econ '+esc(r.eco):''}</small></span><b>${esc(r.w)}/${esc(r.r)}</b></div>`).join('')}</div>`:''}
   <div class="mu sm" style="padding:0 4px 10px">Taken from the latest scorecard the provider sent. This match has no ball-by-ball feed, so individual deliveries and commentary cannot be shown.</div>`}
-shPulsePanel=(o=>function(W){const h=o(W);let extra='';try{const hasBalls=typeof shAvailableBalls==='function'&&shAvailableBalls(W).length>0;if(!hasBalls)extra=shCreaseCard(W)}catch(e){}return h+extra})(shPulsePanel);
+shPulsePanel=(o=>function(W){const h=o(W);let extra='';try{const hasBalls=typeof shAvailableBalls==='function'&&shAvailableBalls(W).length>0;extra=shCreaseCard(W)}catch(e){}return h+extra})(shPulsePanel);
+/* ---------------- LIVE TAB, CREX-style: score + big last ball, CRR/RRR/target, need line, this-over strip, batters, partnership, last wicket, bowler ---------------- */
+{const s=document.createElement('style');s.textContent=`.cx3{background:var(--card);border:1px solid var(--bd);border-radius:14px;margin:10px 0;overflow:hidden;color:var(--tx)}
+.cx3h{display:flex;justify-content:space-between;align-items:center;padding:14px 16px}.cx3h b{font-family:var(--dsp);font-size:34px;letter-spacing:.02em}.cx3h small{color:var(--mu);margin-left:6px}.cx3big{font-family:var(--dsp);font-size:64px;line-height:1;min-width:70px;text-align:center}.cx3big.f{color:#ffc83d}.cx3big.s{color:#22c55e}.cx3big.w{color:#ff3b50}
+.cx3r{display:flex;justify-content:space-between;padding:10px 16px;border-top:1px solid var(--bd);color:var(--mu);font-size:13px}.cx3r b{color:var(--tx)}
+.cx3need{text-align:center;padding:10px;background:#0006;color:#ffc83d;font-weight:700}
+.cx3o{display:flex;align-items:center;gap:6px;padding:12px 16px;border-top:1px solid var(--bd);overflow-x:auto}.cx3o span.t{color:var(--mu);font-size:12px;white-space:nowrap}
+.cx3b{width:34px;height:34px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:800;flex:none;background:#1a2a6a;border:1px solid var(--bd)}.cx3b.e{background:transparent;border:1px dashed var(--bd)}.cx3b.f{background:#ffc83d;color:#111}.cx3b.s{background:#22c55e;color:#04210f}.cx3b.w{background:#e11d2e}.cx3b.x{background:#3f7bff}
+.cx3t{width:100%;border-collapse:collapse;font-size:13px}.cx3t th{color:var(--mu);font-weight:600;text-align:right;padding:8px 6px;border-top:1px solid var(--bd)}.cx3t th:first-child,.cx3t td:first-child{text-align:left;padding-left:16px}.cx3t td{text-align:right;padding:9px 6px;border-top:1px solid #ffffff10}.cx3t td:last-child,.cx3t th:last-child{padding-right:16px}.cx3t td:first-child{font-weight:700}
+.cx3ps{display:flex;justify-content:space-between;padding:10px 16px;border-top:1px solid var(--bd);font-size:13px;color:var(--mu)}.cx3ps b{color:#7fb4ff}.cx3src{padding:8px 16px 12px;color:var(--mu);font-size:11px}`;document.head.appendChild(s)}
+function cx3Num(v){const n=parseFloat(v);return isFinite(n)?n:0}
+function cx3Balls(o){const p=String(o||'0').split('.');return (+p[0]||0)*6+(+p[1]||0)}
+function cx3Panel(W){
+ const L=(W&&W.sc&&W.sc.scorecard)||[];if(!L.length)return '';const inn=L[L.length-1],tot=inn.totals||{},R=+(tot.R??inn.r)||0,K=+(tot.W??inn.w)||0,O=String(tot.O??inn.o??'0'),done=!!(W.m&&W.m.ended);
+ const raw=typeof shAvailableBalls==='function'?shAvailableBalls(W):[],list=typeof cbpBbbList==='function'?cbpBbbList(W.bb||[]).slice().reverse():[];
+ const innName=shInningName(inn.inning),ix=L.length,same=list.filter(x=>String(x.inning)===String(ix)||x.inning==null||list.every(y=>String(y.inning)!==String(ix))&&true);
+ const cur=list.filter(x=>x.inning==null||String(x.inning)===String(list.length?list[list.length-1].inning:ix));
+ const last=cur[cur.length-1],lastO=last?last.o:null,thisOv=lastO==null?[]:cur.filter(x=>x.o===lastO),prevOv=lastO==null?[]:cur.filter(x=>x.o===lastO-1);
+ const lab=x=>x.run==='W'?'W':(x.txt&&/wide/i.test(x.txt)?'Wd':x.txt&&/no.?ball/i.test(x.txt)?'Nb':String(x.run===''||+x.run===0?'•':x.run)),cls=x=>x.run==='W'?'w':x.r===4?'f':x.r===6?'s':(/^(Wd|Nb)$/.test(lab(x))?'x':'');
+ const balls=cx3Balls(O),ovs=+(W.m&&W.m.overs)||(W.m&&/odi/i.test(String(W.m.type||''))?50:20),crr=balls?R*6/balls:0,first=L.length>1?(+((L[0].totals||{}).R??L[0].r)||0):null,chase=first!=null&&!done&&!/super/i.test(String(inn.inning)),target=chase?first+1:(W.m&&W.m.target&&L.length>1?+W.m.target:null);
+ const need=target!=null?Math.max(0,target-R):null,left=target!=null?Math.max(0,ovs*6-balls):null,rrr=need!=null&&left?need*6/left:null;
+ const dis=r=>String(r['dismissal-text']??r.dismissal??'').trim().toLowerCase(),bats=(inn.batting||[]).filter(r=>r.batsman&&r.batsman.name),at=bats.filter(r=>/^(batting|not out)$/.test(dis(r))&&!(done&&dis(r)==='batting')).slice(0,2),out=bats.filter(r=>dis(r)&&!/^(batting|not out|did not bat|yet to bat)$/.test(dis(r))),lw=out[out.length-1];
+ let ps=null;if(cur.length){let r=0,b=0;for(let i=cur.length-1;i>=0;i--){const x=cur[i];if(x.run==='W')break;r+=x.r||0;if(!/^(Wd|Nb)$/.test(lab(x)))b++}ps={r,b}}
+ const lr=raw.length?raw[raw.length-1]:null,bnm=lr?(typeof lr.bowler==='object'&&lr.bowler?lr.bowler.name:lr.bowler):'',bowl=(inn.bowling||[]).filter(r=>r.bowler&&r.bowler.name),bw=bowl.find(r=>r.bowler.name===bnm),bshow=bw?[bw]:bowl.slice(-2);
+ const bigc=last?cls(last):'',bigv=last?lab(last):'';
+ return `<section class="cx3" aria-label="Live match view"><div class="cx3h"><div><b>${esc(innName)}</b><br><b style="font-size:40px">${R}-${K}</b><small>${esc(O)}</small></div>${last&&!done?`<div class="cx3big ${bigc}">${esc(bigv)}</div>`:''}</div>
+ <div class="cx3r"><span>CRR: <b>${crr.toFixed(2)}</b></span>${rrr!=null?`<span>RRR: <b>${rrr.toFixed(2)}</b></span>`:''}${target!=null?`<span>Target: <b>${target}</b></span>`:`<span>Projected: <b>${Math.round(balls?crr*ovs:0)}</b></span>`}</div>
+ ${need!=null&&!done?`<div class="cx3need">${esc(innName)} need ${need} run${need===1?'':'s'} in ${left} ball${left===1?'':'s'}</div>`:''}
+ ${thisOv.length?`<div class="cx3o">${prevOv.length?`<span class="t">Over ${lastO}: ${prevOv.reduce((s,x)=>s+(x.r||0),0)}</span>`:''}<span class="t"><b>Over ${lastO+1}</b></span>${thisOv.map(x=>`<span class="cx3b ${cls(x)}">${esc(lab(x))}</span>`).join('')}${Array.from({length:Math.max(0,6-thisOv.filter(x=>!/^(Wd|Nb)$/.test(lab(x))).length)},()=>'<span class="cx3b e"></span>').join('')}<span class="t">= ${thisOv.reduce((s,x)=>s+(x.r||0),0)}</span></div>`:''}
+ <table class="cx3t"><tr><th>Batter</th><th>R (B)</th><th>4s</th><th>6s</th><th>SR</th></tr>${at.length?at.map(r=>`<tr><td>${esc(r.batsman.name)}</td><td>${esc(r.r)} (${esc(r.b)})</td><td>${esc(r['4s']||0)}</td><td>${esc(r['6s']||0)}</td><td>${r.sr!=null&&r.sr!==''&&r.sr!==0?esc(r.sr):(+r.b?(r.r*100/r.b).toFixed(1):'-')}</td></tr>`).join(''):`<tr><td colspan="5" style="text-align:left;color:var(--mu)">No batter is marked at the crease</td></tr>`}</table>
+ <div class="cx3ps"><span>${ps&&at.length?`P'ship: <b>${ps.r} (${ps.b})</b>`:''}</span><span>${lw?`Last wkt: ${esc(lw.batsman.name)} ${esc(lw.r)} (${esc(lw.b)})`:''}</span></div>
+ ${bshow.length?`<table class="cx3t"><tr><th>Bowler</th><th>W-R</th><th>Overs</th><th>Econ</th></tr>${bshow.map(r=>`<tr><td>${esc(r.bowler.name)}</td><td>${esc(r.w)}-${esc(r.r)}</td><td>${esc(r.o)}</td><td>${r.eco!=null&&r.eco!==''&&r.eco!==0?esc(r.eco):'-'}</td></tr>`).join('')}</table>`:''}
+ ${raw.length?'':'<div class="cx3src">From the latest scorecard the provider sent. This match has no ball-by-ball feed, so the over strip, current bowler and commentary cannot be shown.</div>'}</section>`}
+shCreaseCard=function(W){return cx3Panel(W)};
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});

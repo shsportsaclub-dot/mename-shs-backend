@@ -11,7 +11,13 @@ const { chromium } = require('playwright');
       { batsman: { name: 'Batter Also' }, r: 7, b: 6, '4s': 1, '6s': 0, sr: '116.6', 'dismissal-text': 'batting' },
       { batsman: { name: 'Yet Man' }, r: 0, b: 0, 'dismissal-text': 'yet to bat' }], bowling: [{ bowler: { name: 'Bowler X' }, o: '3', m: 0, r: 24, w: 1, eco: '8.0' }], fow: [] }] } };
     const h = shCreaseCard(W), d = document.createElement('div'); d.innerHTML = h; const t = d.innerText;
-    o.batters = /Batter Live/.test(t) && /Batter Also/.test(t) && !/Yet Man/.test(t) && !/Opener One<br>/.test(h.split('Last wicket')[0] || ''); o.last = /Last wicket/.test(t) && /Opener One/.test(t); o.bowl = /Bowler X/.test(t) && /1\/24/.test(t); o.note = /no ball-by-ball feed/i.test(t);
+    o.batters = /Batter Live/.test(t) && /Batter Also/.test(t) && !/Yet Man/.test(t); o.last = /Last wkt/.test(t) && /Opener One/.test(t); o.bowl = /Bowler X/.test(t) && /1-24/.test(t); o.note = /no ball-by-ball feed/i.test(t);
+    const rows = [[0,1],[0,0],[0,4],[0,6],[0,0],[0,1],[1,2],[1,0],[1,4],[1,1]].map((x, i) => ({ inning: 1, over: x[0], ball: i % 6 + 1, runs: x[1], batsman: 'Batter Live', bowler: 'Bowler X' }));
+    const W2 = { m: { started: true, ended: false, overs: 20 }, bb: { bbb: rows }, sc: { scorecard: [{ inning: 'Team A Inning 1', totals: { R: 19, W: 1, O: '1.4' }, batting: W.sc.scorecard[0].batting, bowling: W.sc.scorecard[0].bowling }] } };
+    const d2 = document.createElement('div'); d2.innerHTML = shCreaseCard(W2); const t2 = d2.innerText;
+    o.strip = d2.querySelectorAll('.cx3o .cx3b').length >= 6 && /Over 2/.test(t2) && /CRR/.test(t2) && /= 7/.test(t2); o.big = !!d2.querySelector('.cx3big');
+    const W3 = JSON.parse(JSON.stringify(W2)); W3.sc.scorecard.unshift({ inning: 'Team B Inning 1', totals: { R: 150, W: 6, O: '20' }, batting: [], bowling: [] }); W3.bb = null;
+    const d3 = document.createElement('div'); d3.innerHTML = shCreaseCard(W3); o.chase = /Target:\s*151/.test(d3.innerText) && /need 132 runs in 110 balls/.test(d3.innerText) && /RRR/.test(d3.innerText);
     o.none = shCreaseCard({ m: {}, sc: { scorecard: [] } }) === '';
     o.panel = typeof shPulsePanel === 'function'; return o;
   });
