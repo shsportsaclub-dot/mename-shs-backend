@@ -25,3 +25,4 @@ jobs:
         with:
           name: visual-reference-evidence
           path: runtime-evidence/visual-reference-*.png
+# Screenshots are retained for comparison with the original approved references.
