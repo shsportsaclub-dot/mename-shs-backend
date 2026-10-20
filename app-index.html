@@ -6535,7 +6535,7 @@ function cx3Balls(o){const p=String(o||'0').split('.');return (+p[0]||0)*6+(+p[1
 function cx3Panel(W){
  const m=W.m||{},L=W.sc?.scorecard||[],scores=m.score||[],ix=Math.max(L.length,scores.length,1),inn=L[ix-1]||{},tot=inn.totals||{},score=scores[ix-1]||{},done=!!m.ended;
  // List scores continue updating when a detailed scorecard is absent or behind.
- const innName=shInningName(score.inning||inn.inning||m.name||'Match'),battingTeam=(m.teams||[]).find(t=>String(t.name||t.short).toLowerCase()===String(innName).toLowerCase()),R=score.r??tot.R??inn.r,K=score.w??tot.W??inn.w,O=score.o??tot.O??inn.o;
+ const innName=shInningName(inn.inning||score.inning||m.name||'Match'),battingTeam=(m.teams||[]).find(t=>String(t.name||t.short).toLowerCase()===String(innName).toLowerCase()),R=score.r??tot.R??inn.r,K=score.w??tot.W??inn.w,O=score.o??tot.O??inn.o;
  const raw=typeof shAvailableBalls==='function'?shAvailableBalls(W):[],rows=shPulseData(W),cur=rows.filter(x=>x.inning===String(ix));
  const last=cur.at(-1),lastO=last?.over??null,thisOv=lastO==null?[]:cur.filter(x=>x.over===lastO),prevOv=lastO==null?[]:cur.filter(x=>x.over===lastO-1);
  const lab=x=>x.wicket?'W':x.wide?x.runs+'wd':x.noball?x.runs+'nb':x.xtype==='lb'?x.runs+'lb':x.xtype==='b'?x.runs+'b':x.runs===0?'•':String(x.runs),cls=x=>x.wicket?'w':x.wide||x.noball?'x':x.batRuns===4?'f':x.batRuns===6?'s':'';
