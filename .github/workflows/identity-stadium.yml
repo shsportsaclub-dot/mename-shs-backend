@@ -1,0 +1,32 @@
+name: Identity and stadium acceptance
+on:
+  push:
+    branches: [main, fix/identity-stadium-20261020]
+    paths: [app-index.html, public/emblems/**, scripts/build.mjs, tests/identity-assets-browser.cjs, .github/workflows/identity-stadium.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+      - run: npm run build
+      - run: node --test tests/cricket-fielding.test.cjs tests/delivery-effects.test.cjs tests/scorer-phases.test.cjs tests/verify-production.test.mjs
+      - run: npm install --no-save --package-lock=false playwright
+      - run: npx playwright install --with-deps chromium
+      - run: node tests/identity-assets-browser.cjs
+      - run: node tests/live-centre.cjs
+      - run: node tests/visual-reference.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: identity-stadium-evidence
+          path: |
+            runtime-evidence/identity-*
+            runtime-evidence/stadium-*

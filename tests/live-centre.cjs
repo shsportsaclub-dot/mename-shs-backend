@@ -25,7 +25,7 @@ const { chromium } = require('playwright');
     await new Promise(r => setTimeout(r, 2800)); render(); o.gone = !document.querySelector('.lc-burst');
     // 4) ODI phases
     const od = mk(50); bowl(od); ball(od, { r: 1 }); app = show(od); o.odi1 = app.querySelector('.lc-ph')?.innerText || '';
-    for (let i = 0; i < 70; i++) { bowl(od); ball(od, { r: i % 7 === 0 ? 4 : 1 }) } app = show(od); o.odi2 = app.querySelector('.lc-ph')?.innerText || ''; o.phaseTable = app.querySelector('.lc-box h4')?.innerText;
+    for (let i = 0; i < 70; i++) { bowl(od); ball(od, { r: i % 7 === 0 ? 4 : 1 }) } app = show(od); o.odi2 = app.querySelector('.lc-ph')?.innerText || ''; o.phaseTable = [...app.querySelectorAll('.lc-box h4')].find(e=>/Innings phases/i.test(e.innerText))?.innerText;
     // 5) result headline at the top
     const t = mk(1); for (let i = 0; i < 6; i++) { bowl(t); ball(t, { r: 1 }) } o.brk = t.status; app = show(t); o.brkHead = app.querySelector('.lc-head')?.innerText || '';
     startInnings(t, 1, 'p11', 'p12', 'p0'); for (let i = 0; i < 6 && t.status !== 'done'; i++) { bowl(t); ball(t, { r: 6 }) } o.endStatus = t.status; o.result = t.result; app = show(t); o.endHead = app.querySelector('.lc-head')?.innerText || ''; o.won = !!app.querySelector('.lc-t.won'); o.res = !!app.querySelector('.lc-line.res');
