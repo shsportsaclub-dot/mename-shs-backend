@@ -1554,7 +1554,7 @@ function reelItems(){
       html:`<div class="pphoto" style="width:150px;height:150px;font-size:60px">${av(p)}</div><div class="rtitle">${esc(p.name)}</div><div class="rsub">${esc(T(p.team)?T(p.team).name:'')} | ${best.p} performance points</div><div class="need">Tap the heart if you agree</div>`})}
     const km=keyMoments(lm);if(km.length)R.push({kind:'moments',key:'k'+lm.id,tag:'KEY MOMENTS',cls:'c0',share:km.join('. '),html:`<div class="rtitle">Key moments</div>${km.slice(0,5).map(x=>`<div class="item" style="border-color:#fff3">${esc(x)}</div>`).join('')}`})}
   const nw=(UI.news&&UI.news.ok?UI.news.items:[]).slice(0,8).map(x=>({t:x.title,s:x.source||'News',l:x.link})).concat(newsItems().map(x=>({t:x.t,s:x.s})));
-  nw.slice(0,10).forEach((x,k)=>R.push({kind:'news',title:cleanT(x.t,x.s),key:'n'+hash(x.t),tag:'NEWS',cls:'c'+(k%4),share:x.t+(x.l?' '+x.l:''),html:`<div class="rsub">${esc(x.s)}</div><div class="rtitle" style="font-size:30px">${esc(cleanT(x.t,x.s))}</div>${x.l?`<a class="btn sm" style="width:max-content;text-decoration:none" href="${esc(x.l)}" target="_blank" rel="noopener">Read article</a>`:''}`}));
+  UI.nwList=nw.slice(0,10);nw.slice(0,10).forEach((x,k)=>R.push({kind:'news',title:cleanT(x.t,x.s),key:'n'+hash(x.t),tag:'NEWS',cls:'c'+(k%4),share:x.t+(x.l?' '+x.l:''),html:`<div class="rsub">${esc(x.s)}</div><div class="rtitle" style="font-size:30px">${esc(cleanT(x.t,x.s))}</div>${x.l?`<a class="btn sm" style="width:max-content;text-decoration:none" href="${esc(x.l)}" target="_blank" rel="noopener">Read article</a>`:''}<button class="btn sm ghost" style="margin-left:8px" data-a="newsPoster" data-i="${k}">Make poster</button>`}));
   if(!R.length)R.push({kind:'empty',key:'e',tag:'SCORING HEROES',cls:'c0',share:'Scoring Heroes',html:`<div class="rtitle">Your reels start here</div><div class="rsub">Play a match or connect the live cricket feed in Settings. Matches, star performers and news appear here as swipe-up reels.</div>`});
   return R}
 function vReels(){
@@ -6073,21 +6073,21 @@ UI.st2=UI.st2||{tpl:'result',theme:'sky',size:'sq',f:{},photo:'',src:'',auc:'',p
 const ST2T=[
  ['result','\u{1F3C6}','Result','FULL TIME',1],['live','\u{1F534}','Live score','LIVE SCORE',1],['fix','\u{1F4C5}','Fixture','MATCH DAY',1],['toss','\u{1FA99}','Toss','TOSS',1],['pom','⭐','Player of match','PLAYER OF THE MATCH',1],
  ['mile','\u{1F4AF}','Milestone','MILESTONE',0],['sold','\u{1F528}','Auction SOLD','SOLD',0],['reg','\u{1F4DD}','Registration open','REGISTRATIONS OPEN',0],['sched','\u{1F5D3}️','Schedule','FIXTURES',0],
- ['table','\u{1F4CA}','Points table','POINTS TABLE',0],['adm','\u{1F393}','Academy admission','ADMISSIONS OPEN',0],['gnd','\u{1F3DF}️','Ground booking','BOOK YOUR SLOT',0],['bday','\u{1F382}','Birthday','HAPPY BIRTHDAY',0],['custom','✍️','Own text','',0]];
+ ['table','\u{1F4CA}','Points table','POINTS TABLE',0],['adm','\u{1F393}','Academy admission','ADMISSIONS OPEN',0],['gnd','\u{1F3DF}️','Ground booking','BOOK YOUR SLOT',0],['bday','\u{1F382}','Birthday','HAPPY BIRTHDAY',0],['news','\u{1F4F0}','News poster','BREAKING NEWS',0],['article','\u{1F4C4}','Article card','CRICKET STORY',0],['custom','✍️','Own text','',0]];
 const ST2TH={sky:['Sky Heroes','#0a1f5c','#2a1654','#d91f2e','#ffd24a'],night:['Night','#0b0f1a','#151b2e','#2b3a67','#7ee0ff'],green:['Pitch','#06351f','#0b5a35','#139a55','#ffe066'],saffron:['Saffron','#7a2a00','#c2480b','#ff9a1f','#fff3c4'],mono:['Mono','#111','#222','#444','#fff'],brand:['My brand','','','','#ffffff']};
-const ST2P={result:['Series / league name','Team A','Score A','Team B','Score B','Result line'],mile:['Tournament or match','Player name','CENTURY 112*','vs team','','Short note'],sold:['Auction name','Player name','Team name','SOLD FOR 1200 pts','','Base price / note'],reg:['Tournament name','Dates and venue','Entry fee','Last date','Overs / format','Contact number'],sched:['Series name','Match 1','Match 2','Match 3','Match 4','Venue'],table:['Group / tournament','1. Team  P W L Pts','2. Team  P W L Pts','3. Team  P W L Pts','4. Team  P W L Pts','Updated after match N'],adm:['Academy name','Batch and age group','Fee per month','Coach name','Timings','Contact number'],gnd:['Ground name','Open 6 AM - 10 PM','From 800 per hour','Floodlights, nets, parking','','Contact number'],bday:['','Name','Wishing you a great year','','','From team / club'],custom:['Headline','','','','','']};
+const ST2P={result:['Series / league name','Team A','Score A','Team B','Score B','Result line'],mile:['Tournament or match','Player name','CENTURY 112*','vs team','','Short note'],sold:['Auction name','Player name','Team name','SOLD FOR 1200 pts','','Base price / note'],reg:['Tournament name','Dates and venue','Entry fee','Last date','Overs / format','Contact number'],sched:['Series name','Match 1','Match 2','Match 3','Match 4','Venue'],table:['Group / tournament','1. Team  P W L Pts','2. Team  P W L Pts','3. Team  P W L Pts','4. Team  P W L Pts','Updated after match N'],adm:['Academy name','Batch and age group','Fee per month','Coach name','Timings','Contact number'],gnd:['Ground name','Open 6 AM - 10 PM','From 800 per hour','Floodlights, nets, parking','','Contact number'],bday:['','Name','Wishing you a great year','','','From team / club'],custom:['Headline','','','','',''],news:['Source or section','Headline','Sub-headline (optional)','','','Date or note'],article:['Section or author','Article title','Standfirst (one line summary)','','','Date or note']};
 function st2Theme(){const k=ST2TH[UI.st2.theme]?UI.st2.theme:'sky';if(k==='brand')return [S.brand.c2||'#0a1f5c',S.brand.c2||'#0a1f5c',S.brand.c1||'#d91f2e','#ffffff'];const t=ST2TH[k];return [t[1],t[2],t[3],t[4]]}
 function st2Fill(force){const U=UI.st2,t=U.tpl,tt=ST2T.find(x=>x[0]===t),f=U.f;if(!tt||!tt[4])return;const D=typeof socData==='function'?(UI.soc.src=U.src||UI.soc.src,socData()):null;if(!D)return;
  const map={result:{title:D.series,l1:D.a+(D.as?'  '+D.as:''),l2:D.b+(D.bs?'  '+D.bs:''),note:D.status},live:{title:D.series,l1:D.a+(D.as?'  '+D.as:''),l2:D.b+(D.bs?'  '+D.bs:''),note:D.status},fix:{title:D.series,l1:D.a,l2:D.b,note:D.when+(D.venue?' | '+D.venue:'')},toss:{title:D.series,l1:D.a,l2:D.b,note:D.status},pom:{title:D.series,l1:U.pl?((P(U.pl)||{}).name||''):'Player name',l2:'',note:D.a+' vs '+D.b}}[t];
  if(map&&(force||f._k!==st2K())){Object.assign(f,map);f._k=st2K()}}
 const st2K=()=>UI.st2.tpl+'|'+(UI.st2.src||'');
 function st2Draw(cv){const U=UI.st2,[W,H]=SZ[U.size||'sq'],c=cv.getContext('2d'),f=U.f,tt=ST2T.find(x=>x[0]===U.tpl)||ST2T[0],[a,b,d,gold]=st2Theme(),u=Math.min(W,H)/1080,tall=H>W;cv.width=W;cv.height=H;
- const g=c.createLinearGradient(0,0,W,H);g.addColorStop(0,a);g.addColorStop(.55,b);g.addColorStop(1,d);c.fillStyle=g;c.fillRect(0,0,W,H);c.fillStyle='rgba(255,255,255,.06)';c.beginPath();c.arc(W*.9,H*.12,W*.28,0,7);c.fill();c.beginPath();c.arc(W*.05,H*.9,W*.2,0,7);c.fill();
+ const g=c.createLinearGradient(0,0,W,H);g.addColorStop(0,a);g.addColorStop(.55,b);g.addColorStop(1,d);c.fillStyle=g;c.fillRect(0,0,W,H);st2Deco(c,W,H,u,gold);c.fillStyle='rgba(255,255,255,.06)';c.beginPath();c.arc(W*.9,H*.12,W*.28,0,7);c.fill();c.beginPath();c.arc(W*.05,H*.9,W*.2,0,7);c.fill();
  const F2=(sz,wt)=>(wt||'800')+' '+Math.round(sz*u)+'px Inter,Arial,sans-serif',ctr=(t,y,sz,col,wt)=>{c.fillStyle=col||'#fff';c.font=F2(sz,wt);c.textAlign='center';c.fillText(t,W/2,y)};
  const fit=(t,y,sz,col,wt)=>{t=String(t||'');if(!t)return;let s=sz;c.font=F2(s,wt);while(c.measureText(t).width>W*.88&&s>20){s-=4;c.font=F2(s,wt)}ctr(t,y,s,col,wt)};
  const wrap=(t,y,sz,col)=>{t=String(t||'');if(!t)return;c.font=F2(sz,'700');c.fillStyle=col||'#fff';c.textAlign='center';let line='',yy=y;t.split(' ').forEach(x=>{const q=line?line+' '+x:x;if(c.measureText(q).width>W*.86&&line){c.fillText(line,W/2,yy);line=x;yy+=sz*1.2*u}else line=q});c.fillText(line,W/2,yy)};
  const head=tt[3]||'';let y=tall?H*.2:H*.2;
- const body=()=>{if(head)fit(head,y,64,gold,'900');if(f.title)ctr(String(f.title).slice(0,46),y+(head?58:0)*u,head?34:78,head?'rgba(255,255,255,.85)':'#fff',head?'600':'900');
+ const body=()=>{if(U.tpl==='news'||U.tpl==='article'){st2News(c,W,H,u,U,f,head,gold,wrap,fit,ctr);return}if(head)fit(head,y,64,gold,'900');st2Crests(c,U,f,W,H,u,tall);if(f.title)ctr(String(f.title).slice(0,46),y+(head?58:0)*u,head?34:78,head?'rgba(255,255,255,.85)':'#fff',head?'600':'900');
   if(U.photo){const r=(tall?190:150)*u,cx=W/2,cy=H*.4;c.save();c.beginPath();c.arc(cx,cy,r,0,7);c.clip();const im=U._pi;if(im&&im.complete){const k=Math.max(2*r/im.width,2*r/im.height);c.drawImage(im,cx-im.width*k/2,cy-im.height*k/2,im.width*k,im.height*k)}c.restore();c.lineWidth=8*u;c.strokeStyle=gold;c.beginPath();c.arc(cx,cy,r,0,7);c.stroke()}
   const py=U.photo?H*.4+((tall?190:150)+90)*u:H*.42;
   if(['sched','table'].includes(U.tpl)){[f.l1,f.l2,f.l3,f.l4].forEach((t,i)=>fit(t,py-(tall?0:50*u)+i*92*u,48,i?'#fff':gold,'800'))}
@@ -6095,7 +6095,7 @@ function st2Draw(cv){const U=UI.st2,[W,H]=SZ[U.size||'sq'],c=cv.getContext('2d')
   if(f.note)wrap(f.note,H*.84,44,'#fff')};
  body();const logo=S.brand.logo||logoSrc(),im=new Image();im.onload=()=>{const h=96*u,w=Math.min(220*u,im.width*h/im.height);if(S.brand.logo){c.fillStyle='#fff';c.beginPath();c.arc(36*u+h/2,32*u+h/2,h/2+6*u,0,7);c.fill()}c.drawImage(im,36*u,32*u,w,h);foot()};im.onerror=foot;im.src=logo;
  function foot(){c.fillStyle='rgba(0,0,0,.4)';c.fillRect(0,H-70*u,W,70*u);const nm=S.brand.name||S.settings.appName||'Scoring Heroes',tail=[S.brand.handle,S.brand.tag].filter(Boolean).join('  |  ')||(S.brand.name?'':'Free live scoring');ctr(nm+(tail?'  |  '+tail:''),H-24*u,30,'#fff','700');U.ready=1}}
-function st2Cap(){const U=UI.st2,f=U.f,t=U.tpl,tag='#'+(S.brand.name||S.settings.appName||'ScoringHeroes').replace(/\W/g,'')+' #Cricket '+({sold:'#Auction #SOLD',mile:'#Milestone',reg:'#Tournament #Registration',adm:'#Academy #Cricket',gnd:'#GroundBooking',bday:'#HappyBirthday',live:'#LiveScore',result:'#MatchResult'}[t]||'#ScoringHeroes'),ln=[f.title,[f.l1,f.l2].filter(Boolean).join(' vs '),f.l3,f.l4,f.note].filter(Boolean);
+function st2Cap(){const U=UI.st2,f=U.f,t=U.tpl,tag='#'+(S.brand.name||S.settings.appName||'ScoringHeroes').replace(/\W/g,'')+' #Cricket '+({news:'#CricketNews #BreakingNews',article:'#Cricket #CricketStory',sold:'#Auction #SOLD',mile:'#Milestone',reg:'#Tournament #Registration',adm:'#Academy #Cricket',gnd:'#GroundBooking',bday:'#HappyBirthday',live:'#LiveScore',result:'#MatchResult'}[t]||'#ScoringHeroes'),ln=[f.title,[f.l1,f.l2].filter(Boolean).join(' vs '),f.l3,f.l4,f.note].filter(Boolean);
  const e={result:'\u{1F3CF} ',live:'\u{1F534} LIVE: ',mile:'\u{1F4AF} ',sold:'\u{1F528} SOLD! ',reg:'\u{1F4E2} ',adm:'\u{1F393} ',gnd:'\u{1F3DF}️ ',bday:'\u{1F382} ',fix:'\u{1F4C5} ',toss:'\u{1FA99} '}[t]||'';return e+ln.join('\n')+'\n'+(S.brand.handle?S.brand.handle+' ':'')+tag}
 function st2Form(){const U=UI.st2,t=U.tpl,tt=ST2T.find(x=>x[0]===t),p=ST2P[t]||ST2P.result,f=U.f,L=typeof socMatches==='function'?socMatches():[],sold=(S.auc||[]).flatMap(a=>a.players.filter(x=>x.st==='sold').map(x=>({a,p:x,t:a.teams.find(q=>q.id===x.team)})));
  const fld=(k,lab)=>lab?`<label>${esc(lab)}<input value="${esc(f[k]||'')}" maxlength="80" data-c="st2F" data-k="${k}"></label>`:'';
@@ -6108,7 +6108,7 @@ function st2Brand(){const B=S.brand;return `<details class="card" style="margin-
  <label>Brand name<input value="${esc(B.name)}" maxlength="40" data-c="stB" data-k="name"></label><div class="row"><label style="flex:1">Handle<input value="${esc(B.handle)}" maxlength="30" placeholder="@yourclub" data-c="stB" data-k="handle"></label><label style="flex:1">Tagline<input value="${esc(B.tag)}" maxlength="40" data-c="stB" data-k="tag"></label></div>
  <div class="row"><label style="flex:1">Colour 1<input type="color" value="${esc(B.c1)}" data-c="stB" data-k="c1"></label><label style="flex:1">Colour 2<input type="color" value="${esc(B.c2)}" data-c="stB" data-k="c2"></label></div><label>Logo<input type="file" accept="image/*" data-c="stLogo"></label>${B.logo?'<button class="btn sm ghost" data-a="stNoLogo">Remove logo</button>':''}</details>`}
 XV.social=function(){const U=UI.st2;st2Fill(false);setTimeout(()=>{const cv=document.getElementById('socCv');if(cv){const go=()=>st2Draw(cv);if(U.photo&&!U._pi){U._pi=new Image();U._pi.onload=go;U._pi.src=U.photo}else go()}const ta=document.getElementById('socCap');if(ta&&!U.capEdit)ta.value=st2Cap()},30);
- return `<div class="bar"><h2>Social studio</h2></div><div class="mu sm" style="margin-bottom:8px">Posters for WhatsApp, Instagram and Facebook. 14 templates, your own brand, no watermark.</div>
+ return `<div class="bar"><h2>Social studio</h2></div><div class="mu sm" style="margin-bottom:8px">Posters for WhatsApp, Instagram and Facebook. 16 templates incl. News and Article, team crests, your own brand, no watermark.</div>
  <div class="svg" style="flex-wrap:wrap">${ST2T.map(([k,e,l])=>`<button class="${U.tpl===k?'on':''}" style="${U.tpl===k?'border-color:var(--ac)':''}" data-a="st2Tpl" data-v="${k}"><span>${e}</span>${l}</button>`).join('')}</div>
  <div class="card" style="margin-top:8px"><div class="row"><label style="flex:1">Theme<select data-c="st2Theme">${Object.entries(ST2TH).map(([k,v])=>`<option value="${k}" ${U.theme===k?'selected':''}>${v[0]}</option>`).join('')}</select></label><label style="flex:1">Size<select data-c="st2Size">${Object.entries(SZ).map(([k,v])=>`<option value="${k}" ${U.size===k?'selected':''}>${v[2]}</option>`).join('')}</select></label></div></div>
  ${st2Form()}${st2Brand()}<canvas id="socCv" class="pst" aria-label="Poster preview"></canvas>
@@ -6426,6 +6426,83 @@ Object.assign(A,{
  dm2Role(d){UI.dm.role=d.v;render()}});
 dreamTotal=function(m,picks,c,vc){return picks.reduce((s,id)=>s+dm2Pts(m,id)*(id===c?2:id===vc?1.5:1),0)};
 C.dreamM=function(v){S.dream.mid=v;S.dream.teams=S.dream.teams||{};commit()};
+/* ---------------- AUCTION v3: app-matching dark look + franchise logo choice ---------------- */
+{const s=document.createElement('style');s.textContent=`
+.aucwrap .auchead{background:var(--grad);font-family:var(--dsp);letter-spacing:.06em;text-transform:uppercase;font-size:30px;padding:22px 16px 30px;border-bottom:1px solid var(--bd);text-shadow:0 2px 12px #0008}
+.aucwrap .aucsheet{background:linear-gradient(180deg,#0b1a45cc,#050c26);color:var(--tx);border:1px solid var(--bd);border-bottom:0;backdrop-filter:blur(8px)}
+.aucwrap .aucsheet .mu,.aucwrap .aucmu{color:var(--mu)}
+.aucwrap .aucsheet .card,.aucwrap .aucsheet .item,.aucwrap .aucsheet form.card{background:var(--card);border:1px solid var(--bd);color:var(--tx)}
+.aucwrap .aucsheet label{color:var(--mu)}
+.aucwrap .aucsheet input,.aucwrap .aucsheet select,.aucwrap .aucsheet textarea{background:#071235;color:var(--tx);border:1px solid var(--bd)}
+.aucwrap .auch{font-family:var(--dsp);text-transform:uppercase;letter-spacing:.05em}
+.aucwrap .auccard{background:linear-gradient(135deg,var(--card),#17235f);border:1px solid var(--bd);color:var(--tx)}
+.aucwrap .auccard.hot{background:linear-gradient(135deg,#6a1b54,#e11d2e);border-color:#ff7a88}
+.aucwrap .aucbot{border-top:1px solid var(--bd)}
+.aucwrap .aucc{border-color:#fff4}
+.aucwrap .aucb.red{background:linear-gradient(90deg,#a3152a,var(--ac))}.aucwrap .aucb.grn{background:linear-gradient(90deg,#0f7a3a,var(--gn))}
+.aucwrap .aucseg{border-bottom:1px solid var(--bd);overflow-x:auto}.aucwrap .aucseg button{color:var(--mu);white-space:nowrap}.aucwrap .aucseg button.on{color:var(--tx);border-bottom-color:var(--ac)}
+.aucwrap .aucbar{background:#071235;border-top:1px solid var(--bd)}.aucwrap .aucbar button{color:var(--tx)}.aucwrap .aucbar button.on{color:var(--ac)}
+.aucwrap .aucfab{background:linear-gradient(135deg,#a3152a,var(--ac))}
+.aucwrap .aucempty{color:var(--mu)}
+.aucwrap .aucplayer{background:linear-gradient(135deg,#1a2a7a,#6a1b54 60%,#e11d2e);border:1px solid var(--bd)}
+.aucwrap .aucbid b{color:var(--ac2);font-family:var(--dsp)}
+.aucwrap .auctile{background:var(--card);border:1px solid var(--bd);color:var(--tx)}.aucwrap .auctile.lead{border-color:var(--gn);background:#0d3a2a}.aucwrap .auctile small{color:var(--mu)}
+.au3p{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}.au3p button{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:3px}.au3p button.on{border-color:var(--ac2);box-shadow:0 0 0 2px #ffc83d55}
+`;document.head.appendChild(s)}
+function au3Crest(t,sz){return crest(t.preset==null?0:t.preset,t.color||'#2563eb',t.short||'?',sz)}
+aucCrestT=function(t,sz){sz=sz||40;if(t&&t.logo)return `<img class="aucc" src="${esc(t.logo)}" alt="" style="width:${sz}px;height:${sz}px;object-fit:cover;background:#fff">`;
+ if(t&&t.preset!=null)return `<span class="aucc" style="width:${sz}px;height:${sz}px;background:transparent;border:0">${au3Crest(t,sz)}</span>`;return aucCrest(t&&t.name,sz)};
+au2TeamForm=(o=>function(a,t){const h=o(a,t),cur=t||{preset:a.teams.length%6,color:PAL[a.teams.length%PAL.length],short:'?'},mine=S.teams.filter(x=>!(a.teams||[]).some(y=>y.srcTeam===x.id));
+ const blk=`<div class="card" style="margin:8px 0"><div class="b">Team logo</div>
+  ${mine.length?`<label>Use one of my teams<select data-c="au2FromTeam"><option value="">Choose a team (fills name, logo, colour)</option>${mine.map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join('')}</select></label>`:''}
+  <div class="mu sm">Pick a logo style, generate one, or upload your own above.</div>
+  <input type="hidden" name="lm" value="keep"><input type="hidden" name="preset" value="${cur.preset==null?0:cur.preset}">
+  <div class="au3p" id="au3p">${[0,1,2,3,4,5].map(i=>`<button type="button" class="${(cur.preset==null?0:cur.preset)===i&&!(t&&t.logo)?'on':''}" data-a="au3Preset" data-v="${i}" aria-label="Logo style ${i+1}">${crest(i,cur.color||'#2563eb',cur.short||'?',34)}</button>`).join('')}</div>
+  <div class="row" style="align-items:flex-end"><label style="flex:1;margin:0">Colour<input type="color" name="color" data-c="au3Col" value="${esc(cur.color||'#2563eb')}" style="padding:2px;height:40px"></label><button type="button" class="btn sm ghost" data-a="au3Gen">Generate new logo</button></div></div>`;
+ return h.replace(/(<div id="au2LogoPrev">[\s\S]*?<\/div>)/,'$1'+blk)})(au2TeamForm);
+function au3Redraw(){const f=document.querySelector('form[data-f=au2Team]');if(!f)return;const col=f.querySelector('input[name=color]').value,pre=+f.querySelector('input[name=preset]').value,sh=(f.querySelector('input[name=short]').value||'?').toUpperCase().slice(0,3);
+ const box=document.getElementById('au3p');if(box)box.innerHTML=[0,1,2,3,4,5].map(i=>`<button type="button" class="${i===pre&&f.querySelector('input[name=lm]').value!=='upload'?'on':''}" data-a="au3Preset" data-v="${i}" aria-label="Logo style ${i+1}">${crest(i,col,sh,34)}</button>`).join('')}
+Object.assign(A,{au3Preset(d){const f=document.querySelector('form[data-f=au2Team]');if(!f)return;f.querySelector('input[name=preset]').value=d.v;f.querySelector('input[name=lm]').value='preset';UI.au2Logo=null;const pv=document.getElementById('au2LogoPrev');if(pv)pv.innerHTML='';au3Redraw()},
+ au3Gen(){const f=document.querySelector('form[data-f=au2Team]');if(!f)return;f.querySelector('input[name=preset]').value=Math.floor(Math.random()*6);f.querySelector('input[name=color]').value=PAL[Math.floor(Math.random()*PAL.length)];f.querySelector('input[name=lm]').value='preset';UI.au2Logo=null;const pv=document.getElementById('au2LogoPrev');if(pv)pv.innerHTML='';au3Redraw()}});
+C.au3Col=function(){const f=document.querySelector('form[data-f=au2Team]');if(f&&f.querySelector('input[name=lm]').value==='keep')f.querySelector('input[name=lm]').value='preset';au3Redraw()};
+C.au2FromTeam=function(v){const x=T(v),f=document.querySelector('form[data-f=au2Team]');if(!x||!f)return;f.querySelector('input[name=name]').value=x.name;f.querySelector('input[name=short]').value=x.short;f.querySelector('input[name=color]').value=x.color||'#2563eb';f.querySelector('input[name=preset]').value=x.preset==null?0:x.preset;
+ const lm=f.querySelector('input[name=lm]');if(x.logo){UI.au2Logo=x.logo;lm.value='upload';const pv=document.getElementById('au2LogoPrev');if(pv)pv.innerHTML=`<img src="${esc(x.logo)}" style="width:56px;height:56px;border-radius:8px">`}else{UI.au2Logo=null;lm.value='preset'}au3Redraw()};
+{const l0=C.au2Logo;C.au2Logo=function(v,el){l0(v,el);const f=document.querySelector('form[data-f=au2Team]');if(f)f.querySelector('input[name=lm]').value='upload'}}
+F.au2Team=(o=>function(fd){const a=aucOf(fd.get('aid')),before=a?a.teams.length:0,tid=fd.get('tid');o(fd);if(!a)return;
+ const nm=String(fd.get('name')||'').trim(),sh=String(fd.get('short')||'').trim().toUpperCase(),t=tid?a.teams.find(x=>x.id===tid):a.teams.find(x=>x.name===nm&&x.short===sh);if(!t)return;
+ const lm=fd.get('lm'),pre=+fd.get('preset'),col=String(fd.get('color')||'');if(/^#[0-9a-f]{6}$/i.test(col))t.color=col;if(lm==='preset'&&pre>=0&&pre<6){t.preset=pre;t.logo=null}else if(t.preset==null&&!t.logo)t.preset=pre>=0&&pre<6?pre:0;
+ const src=fd.get('src');if(src)t.srcTeam=src;save();render()})(F.au2Team);
+/* ---------------- POSTERS v3: stadium look, team crests, News and Article templates ---------------- */
+function st2Deco(c,W,H,u,gold){
+ c.save();for(const [x,w,al] of [[.18,.2,.1],[.5,.26,.08],[.82,.2,.1]]){const g=c.createLinearGradient(W*x,0,W*x,H*.75);g.addColorStop(0,'rgba(255,255,255,'+al+')');g.addColorStop(1,'rgba(255,255,255,0)');c.fillStyle=g;c.beginPath();c.moveTo(W*x-W*.02,0);c.lineTo(W*x+W*.02,0);c.lineTo(W*x+W*w,H*.75);c.lineTo(W*x-W*w,H*.75);c.closePath();c.fill()}
+ const gg=c.createRadialGradient(W/2,H*1.02,10,W/2,H*1.02,W*.75);gg.addColorStop(0,'rgba(34,197,94,.30)');gg.addColorStop(1,'rgba(34,197,94,0)');c.fillStyle=gg;c.fillRect(0,H*.45,W,H*.55);
+ c.strokeStyle='rgba(255,255,255,.10)';c.lineWidth=3*u;c.beginPath();c.ellipse(W/2,H*.98,W*.62,H*.2,0,Math.PI,2*Math.PI);c.stroke();c.beginPath();c.ellipse(W/2,H*.98,W*.4,H*.12,0,Math.PI,2*Math.PI);c.stroke();
+ const rb=c.createLinearGradient(0,0,W,0);rb.addColorStop(0,'rgba(10,31,92,0)');rb.addColorStop(1,'#e11d2e');c.fillStyle=rb;c.fillRect(0,0,W,10*u);c.restore()}
+const st2Cache={};
+function st2Img(src,done){let e=st2Cache[src];if(!e){e=st2Cache[src]=new Image();e.onload=()=>done&&done();e.src=src}return e}
+function st2TeamBy(name){name=String(name||'').replace(/\s{2,}.*$/,'').trim().toLowerCase();if(!name)return null;let t=S.teams.find(x=>x.name.toLowerCase()===name||String(x.short).toLowerCase()===name);if(t)return t;
+ for(const a of (S.auc||[])){t=(a.teams||[]).find(x=>String(x.name).toLowerCase()===name);if(t)return t}return null}
+function st2CrestSrc(t,name){if(t&&t.logo&&/^data:image\//.test(t.logo))return t.logo;
+ const nm=(t&&t.name)||name||'?',pre=t&&t.preset!=null?t.preset:hash(nm)%6,col=(t&&t.color)||PAL[hash(nm)%PAL.length],sh=(t&&t.short)||String(nm).split(/\s+/).map(x=>x[0]).join('').slice(0,3).toUpperCase();
+ return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(crest(pre,col,sh,200).replace('<svg ','<svg xmlns="http://www.w3.org/2000/svg" '))}
+function st2DrawCrest(c,name,cx,cy,r,u){const t=st2TeamBy(name),im=st2Img(st2CrestSrc(t,name),()=>st2Redraw());if(!im.complete||!im.naturalWidth)return false;
+ c.save();c.fillStyle='rgba(255,255,255,.14)';c.beginPath();c.arc(cx,cy,r+10*u,0,7);c.fill();c.beginPath();c.arc(cx,cy,r,0,7);c.clip();const k=Math.max(2*r/im.naturalWidth,2*r/im.naturalHeight)*(t&&t.logo?1:.8);c.drawImage(im,cx-im.naturalWidth*k/2,cy-im.naturalHeight*k/2,im.naturalWidth*k,im.naturalHeight*k);c.restore();return true}
+function st2Crests(c,U,f,W,H,u,tall){const t=U.tpl;
+ if(['result','live','fix','toss'].includes(t)&&!U.photo){const cy=H*.31,r=(tall?86:70)*u;if(f.l1)st2DrawCrest(c,f.l1,W*.27,cy,r,u);if(f.l2)st2DrawCrest(c,f.l2,W*.73,cy,r,u);c.fillStyle='rgba(255,255,255,.85)';c.font='900 '+Math.round(44*u)+'px Inter,Arial,sans-serif';c.textAlign='center';c.fillText('VS',W/2,cy+16*u)}
+ if(t==='sold'&&f.l2){if(U.photo)st2DrawCrest(c,f.l2,W/2+(tall?150:120)*u,H*.4+(tall?150:120)*u,48*u,u);else st2DrawCrest(c,f.l2,W/2,H*(tall?.31:.3),(tall?80:50)*u,u)}}
+function st2News(c,W,H,u,U,f,head,gold,wrap0,fit,ctr){
+ const im=U._pi;if(U.photo&&im&&im.complete&&im.naturalWidth){const k=Math.max(W/im.naturalWidth,H/im.naturalHeight);c.drawImage(im,(W-im.naturalWidth*k)/2,(H-im.naturalHeight*k)/2,im.naturalWidth*k,im.naturalHeight*k);const g=c.createLinearGradient(0,0,0,H);g.addColorStop(0,'rgba(5,12,38,.55)');g.addColorStop(.45,'rgba(5,12,38,.7)');g.addColorStop(1,'rgba(5,12,38,.95)');c.fillStyle=g;c.fillRect(0,0,W,H)}
+ const F2=(sz,wt)=>(wt||'800')+' '+Math.round(sz*u)+'px Inter,Arial,sans-serif',lines=(t,sz,wt,maxW)=>{c.font=F2(sz,wt);const out=[];let line='';String(t||'').split(/\s+/).forEach(w=>{const q=line?line+' '+w:w;if(c.measureText(q).width>maxW&&line){out.push(line);line=w}else line=q});if(line)out.push(line);return out};
+ const chip=head||'NEWS';c.font=F2(40,'900');const cw=c.measureText(chip).width+64*u,cy0=H*.15;c.fillStyle='#e11d2e';c.beginPath();c.roundRect?c.roundRect((W-cw)/2,cy0-44*u,cw,64*u,14*u):c.rect((W-cw)/2,cy0-44*u,cw,64*u);c.fill();c.fillStyle='#fff';c.textAlign='center';c.fillText(chip,W/2,cy0);
+ if(f.title){c.fillStyle=gold;c.font=F2(34,'700');c.textAlign='center';c.fillText(String(f.title).slice(0,50).toUpperCase(),W/2,cy0+70*u)}
+ let sz=U.tpl==='article'?76:92,L;const maxW=W*.84,top=H*.3,avail=H*.44;do{L=lines(f.l1||'Headline goes here',sz,'900',maxW);sz-=4}while(L.length*(sz+4)*1.16*u>avail&&sz>34);sz+=4;
+ c.fillStyle='#fff';c.font=F2(sz,'900');c.textAlign='center';let y=top+sz*u;L.forEach(t=>{c.fillText(t,W/2,y);y+=sz*1.16*u});
+ c.fillStyle='#e11d2e';c.fillRect(W/2-60*u,y-sz*.3*u,120*u,8*u);y+=sz*.55*u;
+ if(f.l2){const s2=U.tpl==='article'?44:40;c.fillStyle='rgba(255,255,255,.88)';c.font=F2(s2,'600');lines(f.l2,s2,'600',maxW).slice(0,4).forEach(t=>{c.fillText(t,W/2,y);y+=s2*1.3*u})}
+ if(f.note){c.fillStyle='rgba(255,255,255,.7)';c.font=F2(34,'700');c.fillText(String(f.note).slice(0,70),W/2,H*.9)}}
+/* poster from any news item */
+function newsPosterOpen(title,src){Object.assign(UI.st2,{tpl:'news',f:{title:String(src||'Scoring Heroes News').slice(0,50),l1:String(title||'').slice(0,160),l2:'',note:new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}),_k:'news|'},photo:'',_pi:null,capEdit:0});UI.view='social';render()}
+A.newsPoster=function(d){const L=UI.nwList||[],x=L[+d.i];if(x)newsPosterOpen(x.t,x.s)};
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});
