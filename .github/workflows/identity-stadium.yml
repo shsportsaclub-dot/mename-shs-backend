@@ -22,6 +22,8 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: node tests/identity-assets-browser.cjs
       - run: node tests/live-centre.cjs
+      - run: node tests/match-ui-review.cjs
+      - run: node tests/match-ui-browser.cjs
       - run: node tests/visual-reference.cjs
       - uses: actions/upload-artifact@v4
         if: always()
@@ -30,3 +32,4 @@ jobs:
           path: |
             runtime-evidence/identity-*
             runtime-evidence/stadium-*
+            runtime-evidence/mobile-coverage-*

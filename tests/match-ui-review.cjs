@@ -5,12 +5,12 @@ for(const m of h.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi))new vm.S
 assert.ok(h.indexOf('/* SH MATCH CENTRE REVIEW:')>h.indexOf('<script'));
 const a=h.indexOf('/* SH MATCH CENTRE REVIEW:'),b=h.indexOf('/* END SH MATCH CENTRE REVIEW */',a),styles=[];
 const ctx={FLAGS:{canada:'ca',oman:'om',england:'gb-eng',scotland:'gb-sct'},SH_PH:/generic|icon512|default/,esc:s=>String(s??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('"','&quot;'),cbpIni:n=>String(n).split(' ').map(s=>s[0]).slice(0,2).join(''),wIn:()=> 'Starts soon',cbpInfoDate:()=> '16 October 2026',cbpVenue:()=>'',cbpInfo:()=>'',cbpCard:()=>'',cbpBbb:()=>'',wBadge:()=>'',document:{createElement:()=>({}),head:{appendChild:s=>styles.push(s)}}};
-ctx.shIdentityAssets=createSHIdentityAssets();
+ctx.shIdentityAssets=createSHIdentityAssets();ctx.SH_FLAG_ART=JSON.parse(h.match(/const SH_FLAG_ART=(.*);\n/)[1]);
 vm.createContext(ctx);vm.runInContext(h.slice(a,b),ctx);
 assert.match(ctx.shTeamMark({name:'Canada',img:'https://bad.test/generic.png'}),/\/emblems\/country-canada\.webp/);
 assert.match(ctx.shTeamMark({name:'Oman Women'}),/\/emblems\/country-oman\.webp/);
 assert.match(ctx.shTeamMark({name:'England'}),/\/emblems\/country-england\.webp/);
-assert.match(ctx.shTeamMark({name:'Canada',sport:'football'}),/🇨🇦/);
+assert.match(ctx.shTeamMark({name:'Canada',sport:'football'}),/data:image\/svg\+xml/);
 assert.match(ctx.shTeamMark({name:'England',sport:'football'}),/<svg/);
 assert.match(ctx.shTeamMark({name:'A very long club name'}),/official emblem unavailable/);
 const W={m:{started:true,teams:[{name:'Canada'},{name:'Oman'}],score:[{inning:'Canada Inning 1',r:256,w:10,o:50},{inning:'Oman Inning 1',r:198,w:10,o:46.3}]},sc:{scorecard:[{inning:'Canada Inning 1',batting:[{batsman:{name:'Long Player Name'},r:0,b:2,'4s':0,'6s':0}],bowling:[]},{inning:'Oman Inning 1',batting:[],bowling:[]}]},bb:[{innings:1,over:0,ball:1,runs:4},{innings:2,over:0,ball:1,runs:1,wicket:true}]};

@@ -27,6 +27,13 @@ const {chromium}=require('playwright'),fs=require('fs'),http=require('http'),ass
    if(width===1280){const a=await p.locator('.sh-arena-main').boundingBox(),b=await p.locator('.sh-arena-side').boundingBox();assert(b.x>=a.x+a.width,'Commentary belongs beside field on desktop')}
    await p.locator('.sh-live-window').screenshot({path:`runtime-evidence/stadium-${width}.png`});
    await p.getByRole('button',{name:'Expand live window',exact:true}).click();assert(await p.locator('.sh-live-window .lc-head').isVisible());await p.keyboard.press('Escape');assert.equal(await p.locator('.sh-live-window.expanded').count(),0);
+   for(const skin of ['cb','ca']){
+    const state=await p.evaluate(skin=>{const W=shLocalWorld(curM());W.m.bbb=false;W.bb={bbb:[],providerNote:'bbbEnabled=false · ERR: unavailable'};W.sc=null;W.err='ERR: Scorecard private-fixture-id not found';W.tab='sc';UI.wm=W;UI.view='wmatch';S.settings.mskin=skin;render();return {card:document.querySelector('main').innerText,palette:getComputedStyle(document.querySelector('.msk')).getPropertyValue('--tx').trim(),header:getComputedStyle(document.querySelector('.cbp-h')).position}},skin);
+    assert.equal(state.palette,'#edf3fc');assert.equal(state.header,'relative');assert.match(state.card,/Detailed scorecard unavailable/);assert(!state.card.includes('private-fixture-id'));
+    await p.evaluate(()=>{UI.wm.tab='cm';render()});assert.match(await p.locator('.sh-coverage-status').first().innerText(),/Ball-by-ball not supplied/);assert(!await p.locator('main').innerText().then(t=>t.includes('bbbEnabled')));
+    await p.screenshot({path:`runtime-evidence/mobile-coverage-${width}-${skin}.png`,fullPage:true});
+    const retained=await p.evaluate(()=>{const W=shLocalWorld(curM());W.err='temporary provider error';return cbpCard(W)});assert.match(retained,/QA Player/);assert.match(retained,/last received/);
+   }
    await p.evaluate(()=>{UI.view='score';UI.sid=UI.mid;render()});assert.equal(await p.locator('.sh-arena-scene').count(),0,'Scorer controls keep their own compact workspace');
    assert.deepEqual(errors,[]);results.push({width,emblems:files.length,flags:audit.flags,stadium:true,noOverflow:true});await p.close();
   }
