@@ -1,0 +1,11 @@
+const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),{createSHLiveView}=require('../live-view.cjs'),M=createSHLiveView();
+const fixture=()=>({m:{id:'fixture',started:true,type:'t20',score:[{inning:'Team A Inning 1',r:155,w:6,o:20},{inning:'Team B Inning 2',r:151,w:3,o:19.1}]},sc:{scorecard:[{},{}]}});
+test('screenshot chase: five runs in five balls',()=>{const x=M.model(fixture());assert.equal(x.need,5);assert.equal(x.left,5);assert.equal(x.rrr,6);assert.equal(x.crr.toFixed(2),'7.88')});
+test('revised target takes priority over first innings',()=>{const w=fixture();w.m.target=160;assert.equal(M.model(w).need,9)});
+test('Test cricket never gets a limited-over target or projection',()=>{const w=fixture();w.m.type='test';const x=M.model(w);assert.equal(x.target,null);assert.equal(x.maxBalls,null)});
+test('new innings must not display last ball from previous innings',()=>{const x=M.model(fixture(),[{inning:'1',over:19,ball:6,runs:6}]);assert.equal(x.last,null);assert.equal(x.partnership,null)});
+test('missing scores stay missing',()=>{const x=M.model({m:{started:false}});assert.equal(x.r,null);assert.equal(x.o,undefined);assert.equal(x.crr,null)});
+test('partial delivery history does not manufacture partnership',()=>{const w=fixture();const x=M.model(w,[{inning:'2',over:19,ball:1,runs:4}]);assert.equal(x.partnership,null)});
+test('verified wicket resets partnership; extras do not use a ball',()=>{const w=fixture(),rows=[{inning:'2',over:0,ball:1,runs:0,wicket:true},{inning:'2',over:0,ball:2,runs:1,wide:true},{inning:'2',over:0,ball:2,runs:4}];const x=M.model(w,rows);assert.deepEqual(x.partnership,{r:5,b:1});assert.equal(x.legal,2)});
+test('Hundred uses five-ball sets and hundred balls',()=>{const w=fixture();w.m.type='hundred';w.m.score[1].o='19.1';const x=M.model(w);assert.equal(x.maxBalls,100);assert.equal(x.left,4)});
+test('embedded engine stays identical to source',()=>{const source=fs.readFileSync('live-view.cjs','utf8').split("if(typeof module")[0];assert(fs.readFileSync('app-index.html','utf8').includes(source))});
