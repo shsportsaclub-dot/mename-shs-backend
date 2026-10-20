@@ -6272,6 +6272,29 @@ try{new MutationObserver(ms=>{if(i18nBusy||i18nLang()==='en')return;clearTimeout
 {const d0=drawer;drawer=function(){const h=d0();if(!h)return h;const i=h.lastIndexOf('</aside>');return i<0?h:h.slice(0,i)+`<div class="notr" style="padding:10px 14px"><label>Language / భాష / भाषा / மொழி<select data-c="setLang">${I18N_LANGS.map(([k,n])=>`<option value="${k}" ${i18nLang()===k?'selected':''}>${n}</option>`).join('')}</select></label></div>`+h.slice(i)}}
 {const s=document.createElement('style');s.textContent='html:not([lang=en]) *{letter-spacing:0!important;text-transform:none!important}html[lang=ur] body{font-family:"Noto Nastaliq Urdu","Noto Naskh Arabic","Jameel Noori Nastaleeq",Tahoma,sans-serif}';document.head.appendChild(s)}
 C.setLang=function(v){if(!I18N_LANGS.some(x=>x[0]===v))return;S.prefs.lang=v;S.prefs.ts=Date.now();document.documentElement.lang=v;document.documentElement.dir=v==='ur'?'rtl':'ltr';commit();render()};
+/* ---------------- ACADEMY SERVER SYNC + PARENT VIEW ---------------- */
+UI.ay3=UI.ay3||{kids:null,busy:0,hash:'',err:''};
+const ay3Ok=()=>apiBase()&&shTok()&&S.user;
+async function ay3Push(){if(!ay3Ok()||UI.ay3.busy)return;const a=ayD();if(!a.students.length&&!a.batches.length)return;const h=JSON.stringify([a.students,a.batches,a.coaches]);if(h===UI.ay3.hash)return;UI.ay3.busy=1;
+ try{const r=await fetch(apiBase()+'/api/academy',{method:'PUT',headers:shHdr(),body:JSON.stringify({academy:{name:a.name||(S.brand&&S.brand.name)||'',students:a.students,batches:a.batches,coaches:a.coaches}})});const j=await r.json();if(j&&j.ok)UI.ay3.hash=h}catch(e){}finally{UI.ay3.busy=0}}
+async function ay3Pull(){if(!ay3Ok())return;try{const r=await fetch(apiBase()+'/api/academy',{headers:shHdr()}),j=await r.json(),a=ayD();
+ if(j&&j.ok&&j.academy&&!a.students.length&&!a.batches.length&&(j.academy.students||[]).length){a.students=j.academy.students;a.batches=j.academy.batches||[];a.coaches=j.academy.coaches||[];save();UI.ay3.hash=JSON.stringify([a.students,a.batches,a.coaches]);if(UI.view==='academy')render()}}catch(e){}}
+async function ay3Kids(){if(!ay3Ok()){UI.ay3.kids=[];return}try{const r=await fetch(apiBase()+'/api/academy/mine',{headers:shHdr()}),j=await r.json();UI.ay3.kids=j&&j.ok?j.items:[];UI.ay3.err=j&&j.ok?'':(j&&j.error)||''}catch(e){UI.ay3.kids=[];UI.ay3.err='Could not reach the server'}if(UI.view==='academy')render()}
+function ay3KidsView(){const k=UI.ay3.kids;if(!ay3Ok())return `<div class="card"><div class="b">Parent login</div><div class="sub">Sign in with the mobile number you gave the academy to see your child's batch, attendance and fees.</div></div>`;
+ if(k==null)return '<div class="card"><div class="sub">Loading...</div></div>';
+ if(!k.length)return `<div class="card"><div class="b">No child found</div><div class="sub">${esc(UI.ay3.err||'No academy has this mobile number as the parent mobile. Ask the academy to save the number you signed in with.')}</div></div>`;
+ return k.map(c=>{const pct=c.att.n?Math.round(c.att.p*100/c.att.n):null,mk=c.thisMonth,pd=+c.paid[mk]||0,due=Math.max(0,c.fee-pd);
+ return `<div class="card"><div class="b">${esc(c.name)} <span class="mu sm">${esc(c.sport)}${c.level?' | '+esc(c.level):''}</span></div><div class="src">${esc(c.academy)}</div>
+ <div class="r"><span>Batch</span><span>${c.batch?esc(c.batch.name)+' '+esc((c.batch.days||[]).join(' '))+' '+esc(c.batch.time||''):'Not assigned'}</span></div>
+ <div class="r"><span>Coach</span><span>${esc(c.coach||'-')}</span></div>
+ <div class="r"><span>Attendance</span><span>${pct==null?'No sessions yet':c.att.p+'/'+c.att.n+' ('+pct+'%)'}</span></div>
+ <div class="r"><span>Fee ${esc(mk)}</span><span>${pd>=c.fee?'Paid':'Due '+due+' of '+c.fee}</span></div>
+ <div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:6px">${c.att.last.map(([d,p])=>`<span title="${esc(d)}" style="width:14px;height:14px;border-radius:3px;background:${p?'#1a9e5a':'#c0392b'}"></span>`).join('')}</div></div>`}).join('')}
+{const x0=XV.academy;XV.academy=function(){if(UI.ay.tab==='kids'){return `<div class="bar"><h2>Academy</h2></div><div class="aucseg" style="overflow-x:auto">${['students','batches','attend','fees','coaches','train','kids'].map(k=>`<button class="${UI.ay.tab===k?'on':''}" data-a="ayTab" data-v="${k}">${({students:'Students',batches:'Batches',attend:'Attendance',fees:'Fees',coaches:'Coaches',train:'Training',kids:'My child'})[k]}</button>`).join('')}</div>`+ay3KidsView()}
+ return x0().replace(/(<div class="aucseg"[^>]*>[\s\S]*?)(<\/div>)/,'$1<button data-a="ayTab" data-v="kids">My child</button>$2')}}
+{const t0=A.ayTab;A.ayTab=function(d){t0(d);if(d.v==='kids')ay3Kids()}}
+{const c0=commit;commit=function(){c0.apply(this,arguments);clearTimeout(ay3Push.t);ay3Push.t=setTimeout(ay3Push,2500)}}
+{const v0=XV.academy;let first=0;XV.academy=function(){if(!first){first=1;setTimeout(ay3Pull,50)}return v0()}}
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});

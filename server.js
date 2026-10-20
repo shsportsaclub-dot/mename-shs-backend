@@ -1017,6 +1017,34 @@ http.createServer(async (req, res) => {
       return res.end(html);
     } catch { /* fall through to 404 */ }
   }
+  if (path === '/api/academy' || path === '/api/academy/mine') {   // academy backup/sync for the owner; parents read only their own child's record by signed-in mobile number
+    const tok = String(req.headers.authorization || '').replace(/^Bearer\s+/i, ''), phone = readSession(tok), u = phone && db.users[phone];
+    if (!u) return out(401, { ok: false, error: 'Please sign in again' });
+    const bag = (db.academy = db.academy || {}), d10 = v => String(v || '').replace(/\D/g, '').slice(-10);
+    if (path === '/api/academy/mine' && req.method === 'GET') {
+      const me = d10(phone), items = [], mk = new Date().toISOString().slice(0, 7);
+      if (me.length === 10) for (const [own, ac] of Object.entries(bag)) for (const st of (ac.students || [])) {
+        if (d10(st.phone) !== me) continue;
+        const b = (ac.batches || []).find(x => x.id === st.batch), c = (ac.coaches || []).find(x => x.id === st.coachId || x.name === st.coach), days = Object.keys(st.att || {}).sort(), paid = st.paid || {};
+        items.push({ academy: String(ac.name || 'Academy').slice(0, 60), ownerPhone: own === phone ? '' : own.slice(0, 3) + '*****' + own.slice(-2), id: st.id, name: st.name, sport: st.sport || 'Cricket', level: st.level || '', batch: b ? { name: b.name, days: b.days || [], time: b.time || '' } : null, coach: (c && c.name) || st.coach || '', fee: +st.fee || 0, paid: Object.fromEntries(Object.keys(paid).sort().slice(-6).map(k => [k, typeof paid[k] === 'number' ? paid[k] : (paid[k] ? +st.fee || 0 : 0)])), thisMonth: mk, att: { n: days.length, p: days.filter(x => st.att[x]).length, last: days.slice(-14).map(x => [x, st.att[x] ? 1 : 0]) } });
+      }
+      return out(200, { ok: true, items });
+    }
+    if (path === '/api/academy' && req.method === 'GET') return out(200, { ok: true, academy: bag[phone] || null });
+    if (path === '/api/academy' && req.method === 'PUT') {
+      if (limited('ay:' + phone, 120, 36e5)) return out(429, { ok: false, error: 'Too many requests, slow down' });
+      let raw = ''; for await (const c of req) { raw += c; if (raw.length > 400000) return out(413, { ok: false, error: 'Too large' }); }
+      let b; try { b = JSON.parse(raw); } catch { return out(400, { ok: false, error: 'Bad body' }); }
+      const a = b && b.academy; if (!a || typeof a !== 'object' || !Array.isArray(a.students)) return out(400, { ok: false, error: 'Bad academy data' });
+      const str = (v, n) => String(v == null ? '' : v).slice(0, n), arr = (v, n) => (Array.isArray(v) ? v : []).slice(0, n);
+      const clean = { name: str(a.name, 60), updated: Date.now(),
+        students: arr(a.students, 2000).map(x => ({ id: str(x.id, 24), name: str(x.name, 60), sport: str(x.sport, 30), dob: str(x.dob, 10), batch: str(x.batch, 24), coach: str(x.coach, 60), coachId: str(x.coachId, 24), fee: Math.max(0, +x.fee || 0), level: str(x.level, 20), parent: str(x.parent, 60), phone: str(x.phone, 20), paid: x.paid && typeof x.paid === 'object' ? Object.fromEntries(Object.entries(x.paid).slice(-36).map(([k, v]) => [str(k, 7), typeof v === 'number' ? v : (v ? 1 : 0)])) : {}, att: x.att && typeof x.att === 'object' ? Object.fromEntries(Object.entries(x.att).slice(-400).map(([k, v]) => [str(k, 10), v ? 1 : 0])) : {} })),
+        batches: arr(a.batches, 200).map(x => ({ id: str(x.id, 24), name: str(x.name, 60), days: arr(x.days, 7).map(d => str(d, 3)), time: str(x.time, 30) })),
+        coaches: arr(a.coaches, 100).map(x => ({ id: str(x.id, 24), name: str(x.name, 60) })) };
+      bag[phone] = clean; saveDb(); return out(200, { ok: true, students: clean.students.length });
+    }
+    return out(405, { ok: false, error: 'Method not allowed' });
+  }
   if (path.startsWith('/api/gbook/')) {   // online ground booking: customers request, the ground's owner accepts. Prices and clashes are decided here, never by the client.
     const [, , , gid, bid] = path.split('/'), tok = String(req.headers.authorization || '').replace(/^Bearer\s+/i, ''), phone = readSession(tok), u = phone && db.users[phone];
     const gr = (db.shared.grounds || {})[gid], g = gr && gr.data && gr.data.g;

@@ -129,3 +129,5 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 | Streaming on outside (provider) matches | Removed | Streams only for matches scored in this app |
 
 - Language (2026-10-20): UI translation now covers English + Telugu, Hindi, Tamil, Kannada, Malayalam, Bengali, Marathi, Gujarati, Punjabi, Odia, Urdu (RTL). 383 labels each. Languages beyond te/hi need native-speaker review. Dynamic sentences/toasts still English.
+
+- Academy (2026-10-20): server backup/restore (`/api/academy`) and parent login view "My child" (`/api/academy/mine`, matched by signed-in mobile number; shows only that parent's child, owner number masked). Needs Render Manual Deploy.
