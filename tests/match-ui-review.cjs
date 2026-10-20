@@ -10,7 +10,7 @@ vm.createContext(ctx);vm.runInContext(h.slice(a,b),ctx);
 assert.match(ctx.shTeamMark({name:'Canada',img:'https://bad.test/generic.png'}),/\/emblems\/country-canada\.webp/);
 assert.match(ctx.shTeamMark({name:'Oman Women'}),/\/emblems\/country-oman\.webp/);
 assert.match(ctx.shTeamMark({name:'England'}),/\/emblems\/country-england\.webp/);
-assert.match(ctx.shTeamMark({name:'Canada',sport:'football'}),/🇨🇦/);
+assert.match(ctx.shTeamMark({name:'Canada',sport:'football'}),/data:image\/svg\+xml;base64/);
 assert.match(ctx.shTeamMark({name:'England',sport:'football'}),/<svg/);
 assert.match(ctx.shTeamMark({name:'A very long club name'}),/official emblem unavailable/);
 const W={m:{started:true,teams:[{name:'Canada'},{name:'Oman'}],score:[{inning:'Canada Inning 1',r:256,w:10,o:50},{inning:'Oman Inning 1',r:198,w:10,o:46.3}]},sc:{scorecard:[{inning:'Canada Inning 1',batting:[{batsman:{name:'Long Player Name'},r:0,b:2,'4s':0,'6s':0}],bowling:[]},{inning:'Oman Inning 1',batting:[],bowling:[]}]},bb:[{innings:1,over:0,ball:1,runs:4},{innings:2,over:0,ball:1,runs:1,wicket:true}]};

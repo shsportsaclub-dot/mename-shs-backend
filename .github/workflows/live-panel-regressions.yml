@@ -20,6 +20,7 @@ jobs:
       - run: node --test tests/automatic-live-panel.test.cjs tests/cricket-fielding.test.cjs tests/delivery-effects.test.cjs tests/scorer-phases.test.cjs tests/verify-production.test.mjs
       - run: npm install --no-save --package-lock=false playwright
       - run: npx playwright install --with-deps chromium
+      - run: node tests/match-ui-review.cjs
       - run: node tests/automatic-live-browser.cjs
       - run: node tests/identity-bundle-browser.cjs
       - run: node tests/match-ui-browser.cjs
