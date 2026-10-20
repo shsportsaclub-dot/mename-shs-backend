@@ -1,0 +1,71 @@
+// Synthetic acceptance: auction allocation, reduced powerplay, DLS target and authorized video UI.
+const { chromium } = require('playwright');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+(async()=>{
+ const browser=await chromium.launch(), evidence=[];
+ fs.mkdirSync('runtime-evidence',{recursive:true});
+ for(const width of [320,412,1280]){
+  const page=await browser.newPage({viewport:{width,height:900}}),errors=[];
+  page.on('pageerror',e=>errors.push(e.message));
+  await page.goto('file://'+require('path').resolve(__dirname,'../app-index.html'));
+  const result=await page.evaluate(async()=>{
+   UI.stage='app';S.user={id:'qa-owner',name:'QA',role:'admin',kind:'Scorer'};
+   S.prefs={...S.prefs,asked:1,welcomed:1};S.settings.apiUrl='';S.tok='';
+   const fd=o=>{const f=new FormData();for(const [k,v]of Object.entries(o))f.set(k,v);return f};
+   const o={};F.auCreate(fd({name:'Money Cup',mode:'money',currency:'INR',ppt:3,pts:1000,base:100,inc:50}));
+   const a=aucOf(UI.au.open);o.mode=a.mode;o.currency=a.currency;
+   F.au2Team(fd({aid:a.id,name:'Lions',short:'LIO'}));F.au2Team(fd({aid:a.id,name:'Hawks',short:'HAW'}));
+   // Missing photo must not silently add a player.
+   await F.auPlayer(fd({aid:a.id,name:'No photo',cat:'A'}));o.missingPhotoRejected=a.players.length===0;
+   const cv=document.createElement('canvas');cv.width=40;cv.height=40;cv.getContext('2d').fillRect(0,0,40,40);
+   const blob=await new Promise(r=>cv.toBlob(r,'image/png'));
+   await F.auPlayer(fd({aid:a.id,name:'Player One',cat:'A',skill:'Batter',photo:new File([blob],'player.png',{type:'image/png'})}));
+   o.photo=a.players[0]?.photo?.startsWith('data:image/jpeg;');
+   A.auNext({v:'order'});A.auBid({v:a.teams[0].id});o.bid=a.bid;
+   const rules={aid:a.id,pts:1000,base:100,ppt:3,min:0,slabs:'*:50',quota:'',mode:'points',currency:'INR'};
+   F.au2Rules(fd(rules));o.modeLocked=a.mode==='money';
+   A.auSold();o.purse=a.teams[0].purse;o.sold=a.players[0].price;
+   F.au2Rules(fd({...rules,mode:'money',pts:50}));o.budgetRejected=a.pts===1000&&a.teams[0].purse===900;
+   F.au2Rules(fd({...rules,mode:'money',ppt:0}));o.squadRejected=a.ppt===3;
+   o.csv=au2Rows(a);UI.view='auction';UI.au.dtab='res';render();
+   o.moneyUI=document.getElementById('app').innerText;
+   save();o.persisted=localStorage.getItem('sh')||Object.keys(localStorage).map(k=>localStorage[k]).join('');
+   S.players=Array.from({length:22},(_,i)=>({id:'p'+i,name:'Player '+i,role:'BAT'}));
+   S.teams=[{id:'a',name:'India',short:'IND',players:S.players.slice(0,11).map(p=>p.id)},{id:'b',name:'Australia',short:'AUS',players:S.players.slice(11).map(p=>p.id)}];
+   const m=newMatch({a:'a',b:'b',overs:5,toss:'a',dec:'bat',xiA:S.teams[0].players,xiB:S.teams[1].players});
+   m.rules={...m.rules,fieldingProfile:'icc-men-t20'};startInnings(m,0,'p0','p1','p11');
+   const bowl=()=>{const i=m.innings[m.cur];if(!i.cur.bl)i.cur.bl=m.cur?'p0':'p11';ball(m,{r:1})};
+   const show=()=>{UI.mid=m.id;UI.view='match';UI.tab='live';render()};
+   for(let i=0;i<8;i++)bowl();show();o.before=document.querySelector('.lc-ph')?.innerText;
+   bowl();show();o.after=document.querySelector('.lc-ph')?.innerText;
+   m.rules.slowOverRate=true;show();o.penalty=document.querySelector('.lc-ph')?.innerText;
+   m.rules.fieldingProfile='custom';show();o.customNoICC=!document.querySelector('.lc-ph');
+   m.rules.fieldingProfile='icc-men-t20';
+   m.innings[0].done=true;m.status='break';m.target=50;m.ovr2=5;startInnings(m,1,'p11','p12','p0');m.target=50;bowl();show();
+   o.target=document.querySelector('.sh-pulse-metrics')?.innerText;
+   o.chase=document.querySelector('.lc-line')?.innerText;
+   S.streams={w123:'https://www.youtube.com/live/AAAAAAAAAAA'};UI.streams={};
+   o.external=streamCard('w123',true);o.own=embedHTML('https://www.youtube.com/live/AAAAAAAAAAA','m'+m.id);
+   S.user={id:'fan',role:'user',kind:'Fan'};o.fanVideo=streamCard('w123',true);o.emptyVideo=streamCard('w999',true);
+   show();o.fit=document.documentElement.scrollWidth<=innerWidth;return o;
+  });
+  assert.equal(result.mode,'money');assert.equal(result.currency,'INR');assert(result.missingPhotoRejected&&result.photo);
+  assert.equal(result.bid,100);assert.equal(result.purse,900);assert.equal(result.sold,100);
+  assert(result.modeLocked&&result.budgetRejected&&result.squadRejected);
+  assert.equal(result.csv[0][6],'Unit');assert.equal(result.csv[1][6],'INR');
+  assert.match(result.moneyUI,/INR/);assert.match(result.persisted,/"mode":"money"/);
+  assert.match(result.before,/POWERPLAY/);assert.match(result.before,/0\.1 ov left/);
+  assert.match(result.after,/AFTER POWERPLAY/);assert.match(result.after,/max 5 fielders/);
+  assert.match(result.penalty,/max 4 fielders/);assert(result.customNoICC);
+  assert.match(result.target,/50/);assert.match(result.chase,/49 run/);
+  assert.match(result.external,/AAAAAAAAAAA/);assert(!/class="swlogo"|class="swbug"/.test(result.external));
+  assert.match(result.own,/class="swlogo"/);assert.match(result.fanVideo,/AAAAAAAAAAA/);
+  assert(!/data-f="stream4"/.test(result.fanVideo));assert.equal(result.emptyVideo,'');assert(result.fit);
+  assert.deepEqual(errors,[]);
+  await page.screenshot({path:`runtime-evidence/master-gap-${width}.png`,fullPage:true});
+  evidence.push({width,passed:true,fixture:'synthetic',...result,persisted:undefined});await page.close();
+ }
+ fs.writeFileSync('runtime-evidence/master-gap.json',JSON.stringify(evidence,null,2));
+ await browser.close();console.log('PASS: Money/Points auction, photo, purse safety, exact powerplay, revised target, authorized streams at 320/412/1280');
+})().catch(e=>{console.error(e);process.exit(1)});

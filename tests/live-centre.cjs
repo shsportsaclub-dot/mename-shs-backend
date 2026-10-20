@@ -8,7 +8,7 @@ const { chromium } = require('playwright');
     UI.stage = 'app'; S.user = { name: 'QA', role: 'admin', kind: 'Scorer' }; S.prefs = { ...S.prefs, asked: 1, welcomed: 1 };
     S.players = Array.from({ length: 22 }, (_, i) => ({ id: 'p' + i, name: 'Player ' + i, role: 'BAT' }));
     S.teams = [{ id: 'a', name: 'India', short: 'IND', color: '#235bbb', players: S.players.slice(0, 11).map(p => p.id) }, { id: 'b', name: 'Australia', short: 'AUS', color: '#c9a400', players: S.players.slice(11).map(p => p.id) }];
-    const mk = ov => { const m = newMatch({ a: 'a', b: 'b', overs: ov, toss: 'a', dec: 'bat', xiA: S.teams[0].players, xiB: S.teams[1].players, venue: 'QA Ground', date: '2026-10-19' }); startInnings(m, 0, 'p0', 'p1', 'p11'); return m };
+    const mk = ov => { const m = newMatch({ a: 'a', b: 'b', overs: ov, toss: 'a', dec: 'bat', xiA: S.teams[0].players, xiB: S.teams[1].players, venue: 'QA Ground', date: '2026-10-19' }); m.rules={...m.rules,fieldingProfile:ov===50?'icc-men-odi':ov===20?'icc-men-t20':'custom'}; startInnings(m, 0, 'p0', 'p1', 'p11'); return m };
     const bowl = (m, k) => { const inn = m.innings[m.cur]; if (inn.cur.bl == null) inn.cur.bl = 'p' + (11 + (Math.floor(inn.lg / 6) % 5)); };
     const show = (m, tab) => { UI.mid = m.id; UI.view = 'match'; UI.tab = tab || 'live'; UI.drawer = false; render(); return document.getElementById('app'); };
     const o = {};
