@@ -123,7 +123,7 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 | ePaper (brand masthead, Local/Global editions, poster from article) | Done | AI desk articles already generated from match data |
 | QR generator/scanner, CSV import from other apps | Done | No scraping of other apps. Link scan only opens SH links |
 | Rankings World/Country/State/City | Done | City uses player profile city |
-| App-wide translation beyond commentary/voice | Open | 16 languages exist for commentary and voice only |
+| App-wide UI translation | Telugu + Hindi done (383 labels); more languages need translated dictionaries | Names, scores and user text are never translated; picker is in the drawer |
 | Referee/umpire ratings | Done | One rating per user, no self-rating |
 | Ground booking online (public directory, server prices + clash check, owner accept) | Done | tests/gbook.test.mjs, ground-online.cjs. Academy sync and parent login still open |
 | Streaming on outside (provider) matches | Removed | Streams only for matches scored in this app |
