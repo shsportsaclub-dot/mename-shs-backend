@@ -254,7 +254,7 @@ async function fetchLiveMatches() {
     }
     const seen = new Set(), rows = [...currentRows, ...sched.rows].filter(m => m && m.id && !seen.has(m.id) && seen.add(m.id));
     const matches = rows.map(m => ({
-      id: m.id, name: m.name, type: m.matchType, status: m.status, venue: m.venue, date: m.date, time: m.dateTimeGMT || '',
+      id: m.id, name: m.name, type: m.matchType, seriesId: m.series_id || m.seriesId || '', seriesName: m.seriesName || m.series_name || '', status: m.status, venue: m.venue, date: m.date, time: m.dateTimeGMT || '',
       started: !!m.matchStarted, ended: !!m.matchEnded,
       teams: (m.teamInfo && m.teamInfo.length ? m.teamInfo : (m.teams || []).map(n => ({ name: n, shortname: String(n).slice(0, 3).toUpperCase() })))
         .map(t => ({ name: t.name, short: t.shortname, img: t.img || '' })),
@@ -769,6 +769,16 @@ function svcStatus() {
     tracker: { enabled: E.TRACKER !== '0', seconds: TRACK_SECONDS, maxMatches: TRACK_MAX, callsToday: trackStat.calls, dailyBudget: TRACK_DAILY, saved: Object.keys(db.track).length, note: trackStat.note }
   };
 }
+// Home carousel: one fixture per provider-identified series; no guessed series IDs.
+routes['GET /api/home-series'] = async () => {
+  const feed = await liveMatches(), now = Date.now();
+  const priority = m => { if(m.started&&!m.ended)return [0,0]; const when=Date.parse(m.time||m.date||'')||Infinity; if(!m.ended&&when>=now)return [1,when]; if(m.ended)return [2,-when]; return [3,when]; };
+  const compare=(a,b)=>{const x=priority(a),y=priority(b);return x[0]-y[0]||x[1]-y[1]};
+  const groups=new Map();
+  for(const m of feed.matches||[]){const key=m.seriesId?'series:'+m.seriesId:'match:'+m.id;const prev=groups.get(key);if(!prev||compare(m,prev)<0)groups.set(key,m)}
+  return [200,{ok:true,matches:[...groups.values()].sort(compare),totalSeries:groups.size,updated:feed.updated,stale:!!feed.stale}];
+};
+
 routes['GET /api/status'] = async () => { const x = svcStatus(); return [200, { ok: true, emailReady: x.email.ready, smsReady: x.sms.ready, liveReady: x.live.ready }]; };
 routes['POST /api/admin/probe'] = async (req, body) => {
   const phone = readSession((req.headers.authorization || '').replace(/^Bearer /, '')), u = phone && db.users[phone];
