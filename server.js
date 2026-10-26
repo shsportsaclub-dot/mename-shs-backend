@@ -212,18 +212,47 @@ function liveTtl(info) {
   const now = new Date(), end = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1), secs = (end - now) / 1000;
   return Math.min(60 * 60e3, Math.max(5 * 60e3, secs / left * 1000 * 1.15));
 }
+// Share in-flight refreshes between the background engine and HTTP viewers.
+let liveRefreshPromise = null;
 async function liveMatches() {
   if (SM) return smLive();
+  if (liveRefreshPromise) return liveRefreshPromise;
+  liveRefreshPromise = fetchLiveMatches();
+  try { return await liveRefreshPromise; }
+  finally { liveRefreshPromise = null; }
+}
+async function fetchLiveMatches() {
   if (!CRIC_KEY) throw Object.assign(new Error('CRIC_API_KEY is not set on the server'), { code: 503 });
   if (live.data && Date.now() - live.t < live.ttl) return live.data;
   try {
     const get = async ep => (await fetch(`${CRIC_BASE}/${ep}?apikey=${encodeURIComponent(CRIC_KEY)}&offset=0`)).json();
     const j = await get('currentMatches');
     if (j.status !== 'success') throw new Error(j.reason || 'Cricket API error');
+    // Discover additional current-match pages; preserve primary results if
+    // later pages fail. Page count is bounded to protect provider quotas.
+    const currentRows = [...(Array.isArray(j.data) ? j.data : [])];
+    const pages = Math.max(1, Math.min(4, Number(E.CRICKETDATA_SYNC_PAGES) || 2));
+    const pageSize = 25;
+    if (currentRows.length >= pageSize) {
+      for (let page = 1; page < pages; page++) {
+        try {
+          const extra = await (await fetch(`${CRIC_BASE}/currentMatches?apikey=${encodeURIComponent(CRIC_KEY)}&offset=${page * pageSize}`, { signal: AbortSignal.timeout(10000) })).json();
+          if (extra.status !== 'success' || !Array.isArray(extra.data) || !extra.data.length) break;
+          const existing = new Set(currentRows.map(m => m && m.id));
+          const unseen = extra.data.filter(m => m && m.id && !existing.has(m.id));
+          if (!unseen.length) break;
+          currentRows.push(...unseen);
+          if (extra.data.length < pageSize) break;
+        } catch (error) {
+          console.warn('CricketData additional currentMatches page unavailable:', error.message);
+          break;
+        }
+      }
+    }
     if (Date.now() - sched.t > 3 * 3600e3) {
       try { const j2 = await get('matches'); if (j2.status === 'success') sched = { t: Date.now(), rows: j2.data || [] }; else sched.t = Date.now() - 2 * 3600e3; } catch (e) { sched.t = Date.now() - 2 * 3600e3; }
     }
-    const seen = new Set(), rows = [...(j.data || []), ...sched.rows].filter(m => m && m.id && !seen.has(m.id) && seen.add(m.id));
+    const seen = new Set(), rows = [...currentRows, ...sched.rows].filter(m => m && m.id && !seen.has(m.id) && seen.add(m.id));
     const matches = rows.map(m => ({
       id: m.id, name: m.name, type: m.matchType, status: m.status, venue: m.venue, date: m.date, time: m.dateTimeGMT || '',
       started: !!m.matchStarted, ended: !!m.matchEnded,
@@ -252,6 +281,20 @@ async function smLive() {
     smLiveC = { t: Date.now(), data: { ok: true, matches, info: {}, refreshEverySec: 60, updated: new Date().toISOString() } };
     return smLiveC.data;
   } catch (e) { if (smLiveC.data) return { ...smLiveC.data, stale: true, note: e.message }; throw e; }
+}
+// Automatic discovery continues without visitors or daily GitHub pushes.
+// The provider TTL (including low-quota backoff) remains authoritative.
+if (E.LIVE_AUTO_SYNC !== '0') {
+  const tick = () => {
+    if (!CRIC_KEY && !SM) return;
+    if (liveRefreshPromise) return;
+    const age = Date.now() - live.t;
+    const due = SM ? 60000 : Math.max(1000, live.ttl || LIVE_TTL);
+    if (live.t && age < due) return;
+    liveMatches().catch(error => console.warn('Automatic live discovery:', error.message));
+  };
+  setTimeout(tick, 2000).unref();
+  setInterval(tick, 1000).unref();
 }
 const routes = {
   'POST /api/otp/send': async (req, body, ip) => {
