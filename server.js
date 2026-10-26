@@ -212,8 +212,16 @@ function liveTtl(info) {
   const now = new Date(), end = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1), secs = (end - now) / 1000;
   return Math.min(60 * 60e3, Math.max(5 * 60e3, secs / left * 1000 * 1.15));
 }
+// Share in-flight refreshes between the background engine and HTTP viewers.
+let liveRefreshPromise = null;
 async function liveMatches() {
   if (SM) return smLive();
+  if (liveRefreshPromise) return liveRefreshPromise;
+  liveRefreshPromise = fetchLiveMatches();
+  try { return await liveRefreshPromise; }
+  finally { liveRefreshPromise = null; }
+}
+async function fetchLiveMatches() {
   if (!CRIC_KEY) throw Object.assign(new Error('CRIC_API_KEY is not set on the server'), { code: 503 });
   if (live.data && Date.now() - live.t < live.ttl) return live.data;
   try {
@@ -273,6 +281,20 @@ async function smLive() {
     smLiveC = { t: Date.now(), data: { ok: true, matches, info: {}, refreshEverySec: 60, updated: new Date().toISOString() } };
     return smLiveC.data;
   } catch (e) { if (smLiveC.data) return { ...smLiveC.data, stale: true, note: e.message }; throw e; }
+}
+// Automatic discovery continues without visitors or daily GitHub pushes.
+// The provider TTL (including low-quota backoff) remains authoritative.
+if (E.LIVE_AUTO_SYNC !== '0') {
+  const tick = () => {
+    if (!CRIC_KEY && !SM) return;
+    if (liveRefreshPromise) return;
+    const age = Date.now() - live.t;
+    const due = SM ? 60000 : Math.max(1000, live.ttl || LIVE_TTL);
+    if (live.data && age < due) return;
+    liveMatches().catch(error => console.warn('Automatic live discovery:', error.message));
+  };
+  setTimeout(tick, 2000).unref();
+  setInterval(tick, 1000).unref();
 }
 const routes = {
   'POST /api/otp/send': async (req, body, ip) => {
