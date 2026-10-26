@@ -772,10 +772,10 @@ function svcStatus() {
 // Home carousel: one fixture per provider-identified series; no guessed series IDs.
 routes['GET /api/home-series'] = async () => {
   const feed = await liveMatches(), now = Date.now();
-  const priority = m => { if(m.started&&!m.ended)return [0,0]; const when=Date.parse(m.time||m.date||'')||Infinity; if(!m.ended&&when>=now)return [1,when]; if(m.ended)return [2,-when]; return [3,when]; };
+  const priority = m => { if(m.started&&!m.ended&&!/\b(?:won by|beat|defeated|match ended|result)\b/i.test(m.status||''))return [0,0]; const when=Date.parse(m.time||m.date||'')||Infinity; if(!m.ended&&when>=now)return [1,when]; if(m.ended)return [2,-when]; return [3,when]; };
   const compare=(a,b)=>{const x=priority(a),y=priority(b);return x[0]-y[0]||x[1]-y[1]};
   const groups=new Map();
-  for(const m of feed.matches||[]){const key=m.seriesId?'series:'+m.seriesId:'match:'+m.id;const prev=groups.get(key);if(!prev||compare(m,prev)<0)groups.set(key,m)}
+  for(const m of feed.matches||[]){const parts=String(m.name||'').split(',').map(x=>x.trim()).filter(Boolean);const tail=parts.length>=3?parts.slice(-2).join(' ').toLowerCase().replace(/\b(?:1st|2nd|3rd|[0-9]+th)\s+(?:t20i?|odi|test|match)\b/g,'').replace(/\s+/g,' ').trim():'';const key=m.seriesId?'series:'+m.seriesId:tail?'name:'+tail:'match:'+m.id;const prev=groups.get(key);if(!prev||compare(m,prev)<0)groups.set(key,m)}
   return [200,{ok:true,matches:[...groups.values()].sort(compare),totalSeries:groups.size,updated:feed.updated,stale:!!feed.stale}];
 };
 
