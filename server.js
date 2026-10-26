@@ -1063,9 +1063,13 @@ http.createServer(async (req, res) => {
   if (req.method === 'GET' && STATIC[path]) {   // installable-app files (PWA)
     try { const f = fs.readFileSync(new URL('./public' + path, import.meta.url)); res.writeHead(200, { 'content-type': STATIC[path], 'cache-control': path === '/sw.js' ? 'no-cache' : 'public, max-age=86400' }); return res.end(f); } catch { /* fall through */ }
   }
+  if (req.method === 'GET' && path === '/live-studio') {
+    try { const html = fs.readFileSync(new URL('./public/live-studio.html', import.meta.url)); res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' }); return res.end(html); }
+    catch { return out(404, { ok: false, error: 'Live studio not installed' }); }
+  }
   if (req.method === 'GET' && (path === '/' || path === '/index.html')) {   // serve the app itself, same address as the API
     try {
-      const html = Buffer.from(fs.readFileSync(new URL('./app-index.html', import.meta.url), 'utf8').replace('__SH_BUILD__', String(E.RENDER_GIT_COMMIT || '').slice(0, 7) || 'local'));
+      const html = Buffer.from(fs.readFileSync(new URL('./app-index.html', import.meta.url), 'utf8').replace('__SH_BUILD__', String(E.RENDER_GIT_COMMIT || '').slice(0, 7) || 'local').replace('</body>', '<a href="/live-studio" style="position:fixed;right:16px;bottom:82px;z-index:2147483000;background:#bb203b;color:white;padding:11px 15px;border-radius:22px;text-decoration:none;font:700 13px system-ui;box-shadow:0 3px 18px #0008">LIVE STUDIO</a></body>'));
       res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store', 'x-sh-commit': String(E.RENDER_GIT_COMMIT || 'local') });
       return res.end(html);
     } catch { /* fall through to 404 */ }
