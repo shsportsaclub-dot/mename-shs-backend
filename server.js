@@ -220,10 +220,31 @@ async function liveMatches() {
     const get = async ep => (await fetch(`${CRIC_BASE}/${ep}?apikey=${encodeURIComponent(CRIC_KEY)}&offset=0`)).json();
     const j = await get('currentMatches');
     if (j.status !== 'success') throw new Error(j.reason || 'Cricket API error');
+    // Discover additional current-match pages; preserve primary results if
+    // later pages fail. Page count is bounded to protect provider quotas.
+    const currentRows = [...(Array.isArray(j.data) ? j.data : [])];
+    const pages = Math.max(1, Math.min(4, Number(E.CRICKETDATA_SYNC_PAGES) || 2));
+    const pageSize = 25;
+    if (currentRows.length >= pageSize) {
+      for (let page = 1; page < pages; page++) {
+        try {
+          const extra = await (await fetch(`${CRIC_BASE}/currentMatches?apikey=${encodeURIComponent(CRIC_KEY)}&offset=${page * pageSize}`, { signal: AbortSignal.timeout(10000) })).json();
+          if (extra.status !== 'success' || !Array.isArray(extra.data) || !extra.data.length) break;
+          const existing = new Set(currentRows.map(m => m && m.id));
+          const unseen = extra.data.filter(m => m && m.id && !existing.has(m.id));
+          if (!unseen.length) break;
+          currentRows.push(...unseen);
+          if (extra.data.length < pageSize) break;
+        } catch (error) {
+          console.warn('CricketData additional currentMatches page unavailable:', error.message);
+          break;
+        }
+      }
+    }
     if (Date.now() - sched.t > 3 * 3600e3) {
       try { const j2 = await get('matches'); if (j2.status === 'success') sched = { t: Date.now(), rows: j2.data || [] }; else sched.t = Date.now() - 2 * 3600e3; } catch (e) { sched.t = Date.now() - 2 * 3600e3; }
     }
-    const seen = new Set(), rows = [...(j.data || []), ...sched.rows].filter(m => m && m.id && !seen.has(m.id) && seen.add(m.id));
+    const seen = new Set(), rows = [...currentRows, ...sched.rows].filter(m => m && m.id && !seen.has(m.id) && seen.add(m.id));
     const matches = rows.map(m => ({
       id: m.id, name: m.name, type: m.matchType, status: m.status, venue: m.venue, date: m.date, time: m.dateTimeGMT || '',
       started: !!m.matchStarted, ended: !!m.matchEnded,
