@@ -290,7 +290,7 @@ if (E.LIVE_AUTO_SYNC !== '0') {
     if (liveRefreshPromise) return;
     const age = Date.now() - live.t;
     const due = SM ? 60000 : Math.max(1000, live.ttl || LIVE_TTL);
-    if (live.data && age < due) return;
+    if (live.t && age < due) return;
     liveMatches().catch(error => console.warn('Automatic live discovery:', error.message));
   };
   setTimeout(tick, 2000).unref();
