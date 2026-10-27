@@ -11,6 +11,8 @@ const { chromium } = require('playwright');
   const t = () => p.evaluate(() => document.getElementById('app').innerText);
   let x = await t(); ok(/RUNS COMPARISON/i.test(x) && /Tim Seifert/.test(x) && /Finn Allen/.test(x), 'worm + batters incl out');
   ok(await p.locator('.rp [data-a="grMk"]').count() === 1, 'wicket marker');
+  ok(/OVER CHART/i.test(x) && await p.locator('.rp svg rect[fill="#ffffff"]').count() > 0 && await p.locator('.rp svg rect[fill="#e3122d"]').count() > 0 && await p.locator('.rp svg rect[fill="#1de9a0"]').count() > 0, 'over-by-over ball blocks: dot white, six green, wicket red');
+  await p.locator('.rp h3:has-text("Over by over")').scrollIntoViewIfNeeded(); await p.locator('.rp h3:has-text("Over chart")').locator('xpath=..').screenshot({ path: '/tmp/ovc.png' });
   await p.locator('.rp [data-a="grMk"]').click(); x = await t(); ok(/Tim Seifert\s*out/i.test(x) && /b Mukesh Kumar/.test(x), 'marker info: ' + x.slice(x.indexOf('RUNS'), x.indexOf('RUNS') + 160));
   await p.locator('.rp [data-a="grSel"][data-v="Tim Seifert"]').click(); x = await t(); ok(/TIM SEIFERT — 12 \(14\)/i.test(x) && /c X b Mukesh Kumar/.test(x), 'out batter graph');
   await p.locator('.rp [data-a="grTab"][data-v="bowl"]').click(); x = await t(); ok(/MUKESH KUMAR · 6-0-70-1/i.test(x) && /\d+ R/.test(x), 'bowler overs');
