@@ -1,3 +1,4 @@
+const __np=async(b,o)=>{const p=await b.newPage(o);await p.addInitScript(()=>{window.__legacyLive=1});return p};
 const {chromium}=require('playwright'),fs=require('node:fs'),http=require('node:http'),assert=require('node:assert/strict');
 (async()=>{
  const html=fs.readFileSync('app-index.html');const server=http.createServer((req,res)=>{res.setHeader('content-type','text/html');res.end(html)});await new Promise(r=>server.listen(18958,'127.0.0.1',r));let browser;
@@ -7,7 +8,7 @@ const {chromium}=require('playwright'),fs=require('node:fs'),http=require('node:
  const sc={score,matchEnded:false,status:'Synthetic live data fixture',scorecard:score.map(s=>({inning:s.inning,totals:{R:s.r,W:s.w,O:s.o},batting:[{batsman:{name:'Fixture Batter'},r:s.r,b:6,'4s':1,'6s':0}],bowling:[],partnerships:[{batsmen:['Fixture Batter A','Fixture Batter B'],runs:s.r,balls:6}]}))};
  const mi={score,matchStarted:true,matchEnded:false,bbbEnabled:false,status:'Synthetic live data fixture',venue:'Fixture Ground'};
  try{browser=await chromium.launch({headless:true});fs.mkdirSync('runtime-evidence',{recursive:true});const results=[],errors=[];
- for(const width of [320,412]){const p=await browser.newPage({viewport:{width,height:920}});p.on('pageerror',e=>errors.push(e.message));let details=0;
+ for(const width of [320,412]){const p=await __np(browser,{viewport:{width,height:920}});p.on('pageerror',e=>errors.push(e.message));let details=0;
  await p.route('**/*',r=>{const u=new URL(r.request().url());if(u.origin==='http://127.0.0.1:18958'&&u.pathname==='/')return r.continue();if(/\/cric$/.test(u.pathname)){details++;const ep=u.searchParams.get('ep');return r.fulfill({contentType:'application/json',body:JSON.stringify({ok:true,data:ep==='match_bbb'?{bbb,source:'Synthetic fallback fixture'}:ep==='match_info'?mi:sc})})}return r.fulfill({contentType:'application/json',body:JSON.stringify({ok:true,matches:[],items:[],data:[],version:'fixture'})})});
  await p.goto('http://127.0.0.1:18958/');await p.evaluate(({bbb,sc,mi,score})=>{UI.stage='app';UI.view='wmatch';S.user={nick:'Flow Test',name:'Flow Test',role:'viewer',kind:'Fan'};S.prefs={...S.prefs,asked:1,welcomed:1};UI.wm={tab:'cm',m:{id:'fixture',name:'Australia Women v Bangladesh Women',type:'odi',started:true,ended:false,status:'Synthetic fixture — not a live match',venue:'Fixture Ground',teams:[{name:'Australia Women',short:'AUSW'},{name:'Bangladesh Women',short:'BANW'}],score},mi,sc,bb:{bbb,source:'Synthetic fallback fixture'},bbErr:'old provider failure',sq:[],vs:{n:0}};render()},{bbb,sc,mi,score});
  assert.ok((await p.locator('main').innerText()).includes('Fixture Bowler to Fixture Batter'));assert.ok(!(await p.locator('main').innerText()).includes('Commentary unavailable'));

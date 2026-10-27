@@ -1,3 +1,4 @@
+const __np=async(b,o)=>{const p=await b.newPage(o);await p.addInitScript(()=>{window.__legacyLive=1});return p};
 // Synthetic acceptance: auction allocation, reduced powerplay, DLS target and authorized video UI.
 const { chromium } = require('playwright');
 const assert = require('node:assert/strict');
@@ -6,7 +7,7 @@ const fs = require('node:fs');
  const browser=await chromium.launch(), evidence=[];
  fs.mkdirSync('runtime-evidence',{recursive:true});
  for(const width of [320,412,1280]){
-  const page=await browser.newPage({viewport:{width,height:900}}),errors=[];
+  const page=await __np(browser,{viewport:{width,height:900}}),errors=[];
   page.on('pageerror',e=>errors.push(e.message));
   await page.goto('file://'+require('path').resolve(__dirname,'../app-index.html'));
   const result=await page.evaluate(async()=>{
