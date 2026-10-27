@@ -36,3 +36,46 @@ test('dismissal parser preserves distinct wicket kinds',()=>{
  assert.equal(parseDismissal('run out (Fielder)').kind,'run out');
  assert.equal(parseDismissal('st Keeper b Bowler').kind,'stumped');
 });
+
+test('wide is not counted as a legal delivery',()=>{
+ const before=snap(25,40);
+ const after=snap(25,41);
+ after.bowl.Bowler.wd=1;
+ after.bowl.Bowler.r=41;
+ const d=diffSnapshots(before,after);
+ assert.equal(d.rows.length,1);
+ assert.equal(d.rows[0].wide,true);
+ assert.equal(d.rows[0].ball,2);
+});
+
+test('no-ball is not counted as a legal delivery',()=>{
+ const before=snap(25,40);
+ const after=snap(25,42,0,41);
+ after.bat.Batter.b=26;
+ after.bowl.Bowler.nb=1;
+ after.bowl.Bowler.r=42;
+ const d=diffSnapshots(before,after);
+ assert.equal(d.rows.length,1);
+ assert.equal(d.rows[0].noball,true);
+ assert.equal(d.rows[0].bruns,1);
+ assert.equal(d.rows[0].total_runs,2);
+});
+
+test('unresolved extras do not create invented deliveries',()=>{
+ const before=snap(25,40);
+ const after=snap(26,42,0,40);
+ after.bat.Batter.b=26;
+ const d=diffSnapshots(before,after);
+ assert.equal(d.rows.length,0);
+ assert.ok(d.note);
+});
+
+test('new innings begins with a note, never a synthetic ball',()=>{
+ const before=snap(120,140);
+ const after=snap(0,0);
+ after.idx=1;
+ after.team='Team B';
+ const d=diffSnapshots(before,after);
+ assert.equal(d.rows.length,0);
+ assert.match(d.note.text,/New innings/);
+});
