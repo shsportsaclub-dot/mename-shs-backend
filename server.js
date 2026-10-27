@@ -1069,7 +1069,7 @@ http.createServer(async (req, res) => {
   }
   if (req.method === 'GET' && (path === '/' || path === '/index.html')) {   // serve the app itself, same address as the API
     try {
-      const html = Buffer.from(fs.readFileSync(new URL('./app-index.html', import.meta.url), 'utf8').replace('__SH_BUILD__', String(E.RENDER_GIT_COMMIT || '').slice(0, 7) || 'local').replace('</body>', '<a href="/live-studio" style="position:fixed;right:16px;bottom:82px;z-index:2147483000;background:#bb203b;color:white;padding:11px 15px;border-radius:22px;text-decoration:none;font:700 13px system-ui;box-shadow:0 3px 18px #0008">LIVE STUDIO</a></body>'));
+      const html = Buffer.from(fs.readFileSync(new URL('./app-index.html', import.meta.url), 'utf8').replace('__SH_BUILD__', String(E.RENDER_GIT_COMMIT || '').slice(0, 7) || 'local'));
       res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store', 'x-sh-commit': String(E.RENDER_GIT_COMMIT || 'local') });
       return res.end(html);
     } catch { /* fall through to 404 */ }
