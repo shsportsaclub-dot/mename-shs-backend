@@ -10,6 +10,6 @@ const { chromium } = require('playwright');
     UI.view = 'wmatch'; render(); });
   const t = await p.evaluate(() => { const a = document.getElementById('app'); return { txt: a.innerText, tabs: [...a.querySelectorAll('.rp nav button')].map(x => x.innerText.trim().toUpperCase()), fit: document.documentElement.scrollWidth <= innerWidth + 1, hero: !!a.querySelector('.rp .hero'), lw: 'none' } });
   ok(t.hero && /96-4/.test(t.txt), 'hero score'); ok(/CURRENT BOWLER/i.test(t.txt) && /Tom Blundell/.test(t.txt), 'cards'); ok(/OVER\s*\d+/i.test(t.txt), 'ball by ball');
-  ok(['Commentary', 'Insights', 'Graphs', 'Player Stats', 'Series'].every(x => t.txt.includes(x)), '5 buttons'); ok(t.tabs.join().toUpperCase() === 'INFO,LIVE,SCORECARD,SQUADS,OVERS,GRAPHS', 'tab order ' + t.tabs); ok(t.fit, 'fits'); ok(t.lw === 'none', 'old live window head hidden');
+  ok(['Commentary', 'Insights', 'Graphs', 'Player Stats', 'Series'].every(x => t.txt.includes(x)), '5 buttons'); ok(t.tabs.join().toUpperCase() === 'INFO,LIVE,SCORER,SCORECARD,SQUADS,HEROES 11,OVERS,GRAPHS', 'tab order ' + t.tabs); ok(t.fit, 'fits'); ok(t.lw === 'none', 'old live window head hidden');
   ok(!errs.length, errs.join(';')); await b.close(); if (!process.exitCode) console.log('PASS: live mock-up layout');
 })();

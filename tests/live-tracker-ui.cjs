@@ -19,7 +19,7 @@ const { chromium } = require('playwright');
   need(/Updates between checks/.test(r.cm) && /5 runs from 4 legal balls/.test(r.cm), 'notes shown');
   need(/Ball records: Scoring Heroes live tracker/.test(r.cm), 'tracker credit');
   need(/Observed participant/.test(r.sq) && /Hasan Nawaz/.test(r.sq), 'squads tab falls back to players seen + XI: ' + r.sq.slice(0, 200));
-  need(/SH Sports 11/.test(r.el) && /Eshan Malinga/.test(r.el), 'SH Sports 11 tab lists our top XI: ' + r.el.slice(0, 160));
+  need(/Heroes 11/.test(r.el) && /Eshan Malinga/.test(r.el), 'Heroes 11 tab lists our top XI: ' + r.el.slice(0, 160));
   need(r.xi.length === 8 && r.xi[0] === 'Eshan Malinga:62' && r.xi[1] === 'Babar Azam:53', 'XI ranked by points: ' + r.xi.join(', '));
   
   need(!errs.length, 'page errors ' + errs.join(';'));
