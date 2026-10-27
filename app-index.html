@@ -7186,6 +7186,47 @@ render=(o=>function(){try{ar17Norm(UI.wm)}catch(e){}return o.apply(this,argument
  'html[data-plat=desktop] .rp .dk-r{max-height:calc(100vh - 150px);overflow:auto;position:sticky;top:8px}html[data-plat=desktop] .rp .cbp-cd svg,html[data-plat=desktop] .rp .gr svg{max-height:380px;margin-inline:auto;display:block}';
  document.head.appendChild(st);
 }
+/* ---------------- MARKETPLACE: Rent equipment (MK-021/022): rate, deposit, requests, no overlapping confirmed bookings */
+{
+ S.rentals=S.rentals||[];
+ const day=s=>/^\d{4}-\d\d-\d\d$/.test(s||'')?Date.parse(s+'T00:00:00Z'):NaN;
+ const overlap=(a,b)=>day(a.from)<=day(b.to)&&day(b.from)<=day(a.to);
+ window.rentClash=(lid,from,to,skipId)=>S.rentals.find(r=>r.lid===lid&&r.status==='confirmed'&&r.id!==skipId&&overlap(r,{from,to}));
+ const days=r=>Math.round((day(r.to)-day(r.from))/864e5)+1;
+ const rentList=()=>{const U=UI.mk,q=(U.q||'').toLowerCase(),c=(U.city||'').toLowerCase();return S.market.filter(x=>x.kind==='rent'&&x.status!=='removed'&&x.status!=='sold'&&(!q||(x.title+' '+(x.desc||'')).toLowerCase().includes(q))&&(!U.cat||x.cat===U.cat)&&(!c||(x.loc||'').toLowerCase().includes(c))).sort((a,b)=>(b.t||0)-(a.t||0))};
+ const rentCard=x=>{const bk=S.rentals.filter(r=>r.lid===x.id&&r.status==='confirmed').sort((a,b)=>day(a.from)-day(b.from)),open=UI.rentOpen===x.id,mine=S.user&&(x.uid===me2()||isAdm());
+  return `<div class="card" style="margin-bottom:10px"><div class="row" style="justify-content:space-between;flex-wrap:nowrap"><div class="b">${esc(x.title)}</div><span class="pill">${esc(x.cat||'')}</span></div>
+  <div class="pr">Rs ${esc(x.rate||x.price||'?')} / day${x.deposit?` <span class="mu sm">· deposit Rs ${esc(x.deposit)}</span>`:''}</div><div class="mu sm">${esc(x.loc||'')}${x.by?' | '+esc(x.by):''}</div>${x.desc?`<div class="mu sm" style="margin-top:4px">${esc(x.desc).slice(0,140)}</div>`:''}
+  <div class="mu sm" style="margin-top:6px">${bk.length?'Booked: '+bk.map(r=>esc(r.from)+' to '+esc(r.to)).join(', '):'No confirmed bookings yet'}</div>
+  <div class="row" style="margin-top:8px">${S.user&&!mine?`<button class="btn sm" data-a="rentOpen" data-id="${x.id}">Request dates</button>`:''}${mine?`<button class="btn sm ghost" data-a="mkDel" data-id="${x.id}">Remove</button>`:''}</div>
+  ${open?`<form data-f="rentReq" style="margin-top:8px"><input type="hidden" name="lid" value="${x.id}"><div class="row"><label style="flex:1">From<input type="date" name="from" required></label><label style="flex:1">To<input type="date" name="to" required></label></div><button class="btn wide">Send request</button><div class="mu sm" style="margin-top:4px">The owner confirms. Deposit and condition are agreed at pickup.</div></form>`:''}</div>`};
+ const rentMine=()=>{const mine=new Set(S.market.filter(x=>x.uid===me2()).map(x=>x.id)),inc=S.rentals.filter(r=>mine.has(r.lid)),out=S.rentals.filter(r=>r.uid===me2());
+  const row=(r,own)=>{const x=S.market.find(z=>z.id===r.lid)||{};return `<div class="item" style="flex-wrap:wrap"><div style="flex:1;min-width:170px"><div class="b">${esc(x.title||'Item')}</div><div class="mu sm">${esc(r.from)} to ${esc(r.to)} · ${days(r)} day(s)${x.rate?' · about Rs '+(+x.rate*days(r)):''} · ${esc(r.by||'')}</div></div><span class="pill ${r.status==='confirmed'?'ok':''}">${esc(r.status)}</span>${own&&r.status==='requested'?`<button class="btn sm" data-a="rentOk" data-id="${r.id}">Confirm</button><button class="btn sm ghost" data-a="rentNo" data-id="${r.id}">Decline</button>`:''}${own&&r.status==='confirmed'?`<button class="btn sm ghost" data-a="rentRet" data-id="${r.id}">Mark returned</button>`:''}</div>`};
+  return `<div class="card"><h3>Requests for my items</h3>${inc.length?inc.slice().reverse().map(r=>row(r,true)).join(''):'<div class="mu sm">None yet.</div>'}</div><div class="card" style="margin-top:10px"><h3>My rental requests</h3>${out.length?out.slice().reverse().map(r=>row(r,false)).join(''):'<div class="mu sm">None yet.</div>'}</div>`};
+ const rentPost=()=>`<div class="card" style="margin-top:12px"><h3>List equipment for rent</h3><form data-f="rentAdd"><div class="row"><label style="flex:1">Category<select name="cat">${MKCATS.map(c=>`<option>${c}</option>`).join('')}</select></label><label style="flex:1">Item<input name="title" required maxlength="80" placeholder="e.g. Bowling machine"></label></div><div class="row"><label style="flex:1">Rate per day (Rs)<input name="rate" inputmode="numeric" required></label><label style="flex:1">Deposit (Rs)<input name="deposit" inputmode="numeric"></label></div><div class="row"><label style="flex:1">City / area<input name="loc" required></label><label style="flex:1">Phone<input name="phone" inputmode="tel" required value="${esc((S.user&&S.user.phone)||'')}"></label></div><label>Details<textarea name="desc" rows="2" maxlength="300" placeholder="Condition, accessories, pickup place"></textarea></label><button class="btn wide">Post for rent</button></form></div>`;
+ const m0=XV.market;
+ XV.market=function(){const o=m0.apply(this,arguments);const U=UI.mk;
+  let out=o.replace(`<button class="btn sm ${U.tab==='orders'?'':'ghost'}" data-a="mkTab" data-v="orders">`,`<button class="btn sm ${U.tab==='rent'?'':'ghost'}" data-a="mkTab" data-v="rent">Rent</button><button class="btn sm ${U.tab==='orders'?'':'ghost'}" data-a="mkTab" data-v="orders">`);
+  if(U.tab!=='rent')return out;
+  const head=out.slice(0,out.indexOf('</div>',out.indexOf('class="hscroll"'))+6);
+  const L=rentList();
+  return head+`<div class="row" style="margin-bottom:8px"><input data-c="mkQ" placeholder="Search rentals" value="${esc(U.q||'')}" style="flex:2;min-width:140px"><input data-c="mkCity" placeholder="City / area" value="${esc(U.city||'')}" style="flex:1;min-width:110px"></div>`+(L.length?L.map(rentCard).join(''):'<div class="card mu">No equipment listed for rent yet.</div>')+(S.user?rentMine()+rentPost():'<div class="card mu">Sign in to rent or list equipment.</div>')+'<div class="mu sm" style="margin-top:10px">Rental agreements, deposit and damage terms are settled between owner and renter. Online deposit handling needs the payment gateway, which is not connected yet.</div>'};
+ Object.assign(A,{
+  rentOpen(d){UI.rentOpen=UI.rentOpen===d.id?'':d.id;render()},
+  rentOk(d){const r=S.rentals.find(x=>x.id===d.id);if(!r)return;const x=S.market.find(z=>z.id===r.lid);if(!x||(x.uid!==me2()&&!isAdm()))return;const c=rentClash(r.lid,r.from,r.to,r.id);if(c)return toast('Dates overlap a confirmed booking ('+c.from+' to '+c.to+')',3500);r.status='confirmed';r.at=Date.now();commit();toast('Booking confirmed')},
+  rentNo(d){const r=S.rentals.find(x=>x.id===d.id),x=r&&S.market.find(z=>z.id===r.lid);if(r&&x&&(x.uid===me2()||isAdm())){r.status='declined';commit()}},
+  rentRet(d){const r=S.rentals.find(x=>x.id===d.id),x=r&&S.market.find(z=>z.id===r.lid);if(r&&x&&(x.uid===me2()||isAdm())){r.status='returned';commit()}}
+ });
+ Object.assign(F,{
+  rentAdd(fd){if(!S.user)return toast('Sign in first');const g=k=>String(fd.get(k)||'').trim();if(!g('title')||!(+g('rate')>0))return toast('Item and a rate per day are needed');
+   S.market.push({id:uid(),kind:'rent',tab:'rent',title:g('title').slice(0,80),cat:g('cat'),rate:g('rate'),deposit:g('deposit'),loc:g('loc'),phone:g('phone'),desc:g('desc').slice(0,300),uid:me2(),by:S.user.name||'',t:Date.now(),status:'active'});commit();toast('Listed for rent')},
+  rentReq(fd){if(!S.user)return toast('Sign in first');const lid=fd.get('lid'),from=fd.get('from'),to=fd.get('to'),x=S.market.find(z=>z.id===lid);if(!x)return;
+   if(isNaN(day(from))||isNaN(day(to))||day(to)<day(from))return toast('Pick valid dates (To is not before From)');
+   if(x.uid===me2())return toast('This is your own item');
+   const c=rentClash(lid,from,to);if(c)return toast('Not available: booked '+c.from+' to '+c.to,3500);
+   S.rentals.push({id:uid(),lid,uid:me2(),by:S.user.name||'',from,to,status:'requested',t:Date.now()});UI.rentOpen='';commit();toast('Request sent to the owner')}
+ });
+}
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});
