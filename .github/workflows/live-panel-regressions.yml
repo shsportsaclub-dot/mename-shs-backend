@@ -2,7 +2,7 @@ name: Compact live acceptance
 on:
   push:
     branches: [main, fix/live-panel-checks-20261020]
-    paths: [app-index.html, public/emblems/**, tests/**, scripts/build.mjs, .github/workflows/live-panel-regressions.yml]
+    paths: [app-index.html, public/emblems/**, tests/**, scripts/build.mjs, scripts/verify-production.mjs, server.js, public/main-live-reference.css, .github/workflows/live-panel-regressions.yml]
   workflow_dispatch:
 permissions:
   contents: read
@@ -40,15 +40,28 @@ jobs:
     if: github.ref == 'refs/heads/main'
     needs: browser
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: node scripts/verify-production.mjs
+      - name: Wait for Render deployment and verify exact build
         env:
           SH_EXPECTED_COMMIT: ${{ github.sha }}
+        run: |
+          for attempt in $(seq 1 30); do
+            echo "Production verification attempt $attempt/30"
+            if node scripts/verify-production.mjs; then
+              echo "Production build verified"
+              exit 0
+            fi
+            if [ "$attempt" -eq 30 ]; then
+              echo "Production verification timed out: expected commit was not served"
+              exit 1
+            fi
+            sleep 20
+          done
       - uses: actions/upload-artifact@v4
         if: always()
         with:
