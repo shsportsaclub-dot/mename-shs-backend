@@ -7133,6 +7133,23 @@ render=(o=>function(){try{ar17Norm(UI.wm)}catch(e){}return o.apply(this,argument
   async pkClear(){try{const j=await call('POST',{clear:true});UI.pk=undefined;toast(j.ok?'Saved key removed':(j.error||'Failed'));if(UI.view==='svc')render()}catch(e){toast('Cannot reach the server')}}
  });
 }
+/* ---------------- SCORER: shot type + foot movement recorded per delivery (SH-053/054) */
+{
+ const SHOTS=['Drive','Cut','Pull','Sweep','Flick','Defence','Glance','Hook','Upper cut','Other'],FOOT=['Front foot','Back foot','Down the track'];
+ const b0=ball;
+ ball=function(m,s){const inn=m&&m.innings&&m.innings[m.cur],n=inn?inn.ev.length:0,r=b0.apply(this,arguments);
+  if(inn&&inn.ev.length>n){const e=inn.ev.at(-1);if(UI.shot&&!e.x||UI.shot&&e.x==='nb')e.shot=UI.shot;if(UI.foot&&(!e.x||e.x==='nb'))e.foot=UI.foot;UI.shot='';UI.foot=''}
+  return r};
+ const base=scoreConsole;
+ scoreConsole=function(m){
+  const h=base.apply(this,arguments);if(!h.includes('class="runs"'))return h;
+  const chip=(k,v,cur)=>`<button type="button" class="${cur===v?'on':''}" data-a="shotSet" data-k="${k}" data-v="${esc(v)}">${esc(v)}</button>`;
+  const panel=`<div class="sc2-shot"><div class="sc2-h" style="margin-top:0">Shot type (optional)</div><div class="sc2-chips">${SHOTS.map(v=>chip('shot',v,UI.shot)).join('')}</div><div class="sc2-h">Foot movement (optional)</div><div class="sc2-chips">${FOOT.map(v=>chip('foot',v,UI.foot)).join('')}</div></div>`;
+  let last='';try{const e=m.innings[m.cur].ev.at(-1);if(e&&(e.shot||e.foot))last=`<div class="mu sm" style="margin-top:6px">Last ball: ${esc([e.shot,e.foot].filter(Boolean).join(' · '))}</div>`}catch(x){}
+  return h.replace('<div class="sc2-h">Runs</div>',panel+'<div class="sc2-h">Runs</div>')},
+ A.shotSet=d=>{UI[d.k]=UI[d.k]===d.v?'':d.v;render()};
+ const st=document.createElement('style');st.textContent='.sc2-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}.sc2-chips button{padding:6px 10px;border:1px solid var(--bd);border-radius:18px;background:var(--card);color:var(--fg);font-size:11px}.sc2-chips button.on{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 25%,transparent)}';document.head.appendChild(st);
+}
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});
