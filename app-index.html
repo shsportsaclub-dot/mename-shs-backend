@@ -7119,6 +7119,20 @@ render=(o=>function(){try{ar17Norm(UI.wm)}catch(e){}return o.apply(this,argument
  A.wzSwap=()=>{const w=S.wiz,x=w.a;w.a=w.b;w.b=x;save();wzShow()};
  const st=document.createElement('style');st.textContent='.mf-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}.mf-grid button{text-align:left;padding:10px;border:1px solid var(--bd);border-radius:12px;background:var(--card);color:var(--fg)}.mf-grid button b{display:block;font-size:15px}.mf-grid button small{color:var(--mu);font-size:11px}.mf-grid button.on{border-color:var(--ac);box-shadow:0 0 0 1px var(--ac) inset}.mr-hero{border-radius:14px;padding:12px;background:linear-gradient(120deg,#0d2238,#1d4366);color:#fff;margin-bottom:10px}.mr-t{display:flex;align-items:center;justify-content:space-between;gap:8px;font-weight:700;font-size:15px;margin-bottom:8px}.mr-t b{color:#ff5a5f}.mr-kv{display:grid;grid-template-columns:90px 1fr;gap:4px 10px;font-size:12px}.mr-kv div:nth-child(odd){color:#a9c3dc}.modal [data-a=wzStart]{background:#c62828;color:#fff;font-size:16px;letter-spacing:1px;text-transform:uppercase;min-height:50px}';document.head.appendChild(st);
 }
+/* ---------------- ADMIN: save the data provider key from the phone (no Render dashboard needed) */
+{
+ const x1=XV.svc;
+ const call=async(m,b)=>{const r=await fetch(apiBase()+'/api/admin/provider-key',{method:m,headers:{'content-type':'application/json',authorization:'Bearer '+(S.tok||'')},body:m==='POST'?JSON.stringify(b):undefined});return r.json()};
+ XV.svc=function(){let o=x1.apply(this,arguments);if(!o||o.indexOf('Cricket data provider')<0)return o;
+  if(UI.pk===undefined){UI.pk=null;call('GET').then(j=>{UI.pk=j;if(UI.view==='svc')render()}).catch(()=>{UI.pk={ok:false,error:'Cannot reach the server'};if(UI.view==='svc')render()})}
+  const k=UI.pk,st=k&&k.ok?(k.sportmonks?`Sportmonks is ON (${esc(k.source)})`:'Sportmonks is not set'):(k&&k.error?esc(k.error):'Checking...');
+  const card=`<div class="cbp-cd" style="padding:12px 14px"><div style="font:600 14px var(--ui);margin-bottom:6px">Sportmonks key (ball-by-ball commentary)</div><div class="mu sm" style="margin-bottom:8px">${st}. Paste your Sportmonks API token here once. It is saved on the server and never shown again.</div>${k&&k.ok&&k.source==='saved in app'?'<button class="btn sm ghost" data-a="pkClear">Remove saved key</button>':`<input id="pk-in" type="password" autocomplete="off" placeholder="Sportmonks API token" style="width:100%"><button class="btn sm" style="margin-top:8px" data-a="pkSave">Save key</button>`}</div>`;
+  return o.replace('<div class="cbp-cd" style="padding:12px 14px"><div style="font:600 14px var(--ui);margin-bottom:6px">Cricket data provider',card+'<div class="cbp-cd" style="padding:12px 14px"><div style="font:600 14px var(--ui);margin-bottom:6px">Cricket data provider')};
+ Object.assign(A,{
+  async pkSave(){const el=document.getElementById('pk-in'),t=el&&el.value.trim();if(!t)return toast('Paste the token first');try{const j=await call('POST',{sportmonks:t});if(el)el.value='';UI.pk=undefined;toast(j.ok?'Key saved. Sportmonks is now on.':(j.error||'Not saved'),3500);if(UI.view==='svc')render()}catch(e){toast('Cannot reach the server')}},
+  async pkClear(){try{const j=await call('POST',{clear:true});UI.pk=undefined;toast(j.ok?'Saved key removed':(j.error||'Failed'));if(UI.view==='svc')render()}catch(e){toast('Cannot reach the server')}}
+ });
+}
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});

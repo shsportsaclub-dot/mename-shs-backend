@@ -30,7 +30,7 @@ const COUNTRY = E.COUNTRY_CODE || '91';
 const CRIC_KEY = E.CRIC_API_KEY || '';
 const CRIC_BASE = E.CRIC_BASE || 'https://api.cricapi.com/v1';
 const SM_TOKEN = E.SPORTMONKS_TOKEN || '';
-const SM = SM_TOKEN ? createSportmonks({ token: SM_TOKEN, base: E.SPORTMONKS_BASE || undefined }) : null;
+let SM = SM_TOKEN ? createSportmonks({ token: SM_TOKEN, base: E.SPORTMONKS_BASE || undefined }) : null;
 const LIVE_TTL = (+E.LIVE_CACHE_SECONDS || 60) * 1000;
 const envKey = s => { const d = String(s).replace(/\D/g, ''); return d.length === 10 ? d : (d.startsWith('91') && d.length === 12 ? d.slice(2) : d); };
 const ADMINS = (E.ADMIN_PHONES || '').split(',').map(envKey).filter(Boolean);
@@ -64,6 +64,8 @@ if (DATABASE_URL) {
   } catch (e) { console.error('DATABASE_URL set but not usable, using the local file only:', e.message); }
 }
 db.users = db.users || {}; db.shared = db.shared || {};
+db.providerKeys = db.providerKeys || {};
+if (!SM && db.providerKeys.sportmonks) SM = createSportmonks({ token: db.providerKeys.sportmonks, base: E.SPORTMONKS_BASE || undefined });
 // Server journal: a shared replay log; observations never become invented deliveries.
 const JOURNAL_FILE=E.MATCH_JOURNAL_FILE||path.join(path.dirname(DATA_FILE),'match-journal.json');
 let journalState={},journalTimer=null,journalRemote=Promise.resolve();
@@ -796,6 +798,24 @@ routes['GET /api/viewers'] = async () => {
   return [200, { ok: true, windowSeconds: 180, v }];
 };
 routes['GET /api/status'] = async () => { const x = svcStatus(); return [200, { ok: true, emailReady: x.email.ready, smsReady: x.sms.ready, liveReady: x.live.ready }]; };
+routes['GET /api/admin/provider-key'] = async (req) => {
+  const phone = readSession((req.headers.authorization || '').replace(/^Bearer /, '')), u = phone && db.users[phone];
+  if (!u) return [401, { ok: false, error: 'Please sign in again' }];
+  if (u.role !== 'admin') return [403, { ok: false, error: 'Only an admin can see this' }];
+  return [200, { ok: true, sportmonks: !!SM, source: SM_TOKEN ? 'server environment' : db.providerKeys.sportmonks ? 'saved in app' : 'none', cricketdata: !!CRIC_KEY }];
+};
+routes['POST /api/admin/provider-key'] = async (req, body) => {
+  const phone = readSession((req.headers.authorization || '').replace(/^Bearer /, '')), u = phone && db.users[phone];
+  if (!u) return [401, { ok: false, error: 'Please sign in again' }];
+  if (u.role !== 'admin') return [403, { ok: false, error: 'Only an admin can change data provider keys' }];
+  if (limited('pk:' + phone, 10, 36e5)) return [429, { ok: false, error: 'Too many attempts' }];
+  if (body.clear === true || body.clear === 1) { delete db.providerKeys.sportmonks; if (!SM_TOKEN) SM = null; saveDb(); return [200, { ok: true, sportmonks: !!SM }]; }
+  const t = String(body.sportmonks || '').trim();
+  if (!/^[A-Za-z0-9_\-]{16,200}$/.test(t)) return [400, { ok: false, error: 'That does not look like a Sportmonks token (letters and numbers, 16+ characters)' }];
+  if (SM_TOKEN) return [409, { ok: false, error: 'A token is already set in the server environment, which takes priority' }];
+  db.providerKeys.sportmonks = t; SM = createSportmonks({ token: t, base: E.SPORTMONKS_BASE || undefined }); saveDb();
+  return [200, { ok: true, sportmonks: true }];
+};
 routes['POST /api/admin/probe'] = async (req, body) => {
   const phone = readSession((req.headers.authorization || '').replace(/^Bearer /, '')), u = phone && db.users[phone];
   if (!u) return [401, { ok: false, error: 'Please sign in again' }];
