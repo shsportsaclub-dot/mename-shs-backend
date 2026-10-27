@@ -6953,6 +6953,43 @@ render=(o=>function(){try{ar17Norm(UI.wm)}catch(e){}return o.apply(this,argument
  };
  const st2=document.createElement('style');st2.textContent=`.sc2{display:grid;gap:8px;margin-bottom:9px}.sc2-hero{display:flex;justify-content:space-between;align-items:flex-end;background:linear-gradient(120deg,#0d2238,#1d4366);color:#fff;border-radius:14px;padding:12px 14px}.sc2-hero small{display:block;font-size:10px;letter-spacing:.8px;color:#a9c3dc;text-transform:uppercase}.sc2-sc b{font-size:34px;line-height:1.1}.sc2-sc span{margin-left:8px;color:#cfe0ef;font-size:14px}.sc2-r{text-align:right}.sc2-r b{font-size:20px}.sc2-bats{display:grid;grid-template-columns:1fr 1fr;gap:8px}.sc2-bat{display:grid;grid-template-columns:30px 1fr auto;gap:2px 8px;align-items:center;border:1px solid var(--bd);border-radius:12px;padding:8px;background:var(--card);min-width:0}.sc2-bat.on{border-color:var(--ac);box-shadow:0 0 0 1px var(--ac) inset}.sc2-av{width:30px;height:30px;border-radius:50%;background:var(--c2);display:grid;place-items:center;font-weight:700}.sc2-bi{min-width:0}.sc2-bi b{display:block;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.sc2-bi small{font-size:9px;color:var(--mu)}.sc2-bs{text-align:right}.sc2-bs b{font-size:18px}.sc2-bs span{font-size:10px;color:var(--mu);margin-left:2px}.sc2-bx{grid-column:1/-1;display:flex;gap:8px;font-size:10px;color:var(--mu)}.sc2-bowl{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--bd);border-radius:12px;padding:8px 12px;background:var(--card);font-size:12px}.sc2-fig{font-weight:700;font-variant-numeric:tabular-nums}.sc2-over{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.sc2-over small{color:var(--mu);font-size:11px;margin-right:4px}.sc2-h{font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:var(--mu);margin:8px 0 6px}.sh-scorer-console .runs .sc2-wk{grid-column:span 2;background:#c62828;color:#fff;font-size:15px;letter-spacing:1px;border:0}`;document.head.appendChild(st2);
 }
+/* ---------------- SCORER CONCEPT: wicket entry + match control */
+{
+ const wm0=wicketModal;
+ wicketModal=function(m){
+  const c=m.innings[m.cur].cur,fid=m.innings[m.cur].bat===m.a?m.b:m.a,xi=(m.xi&&m.xi[fid])||(T(fid)||{}).players||[];
+  const types=[['Bowled','🎯'],['Caught','🧤'],['LBW','🦵'],['Run out','🏃'],['Stumped','🧢'],['Hit wicket','🏏'],['Retired out','🚪'],['Obstructing the field','✋']];
+  const real=['Bowled','Caught','LBW','Run out','Stumped','Hit wicket','Obstructing the field','Hit the ball twice'];
+  return `<h3>Wicket details</h3><form data-f="wicket"><input type="hidden" name="w" value="Caught" id="wk-w">
+  <div class="sc2-h">How out</div><div class="sc2-wt">${types.filter(t=>real.includes(t[0])).map(([t,i])=>`<button type="button" class="${t==='Caught'?'on':''}" data-a="wkType" data-v="${esc(t)}"><span>${i}</span>${esc(t==='Obstructing the field'?'Obstructing':t)}</button>`).join('')}</div>
+  <label>Batter out<select name="out">${opt([[c.s,nm(c.s)+' (striker)'],[c.n,nm(c.n)+' (non-striker)']],c.s)}</select></label>
+  <label>Bowler<input value="${esc(nm(c.bl))}" disabled></label>
+  <label>Fielder (optional)<select name="fld"><option value="">Select fielder</option>${xi.map(id=>`<option value="${esc(nm(id))}">${esc(nm(id))}</option>`).join('')}</select></label>
+  <label>Runs completed before the wicket<select name="r">${opt([0,1,2,3].map(x=>[String(x),String(x)]),'0')}</select></label>
+  <div class="mu sm">Run out, Obstructing the field and Hit the ball twice give the bowler no credit.</div>
+  <div class="row"><button type="button" class="btn ghost" style="flex:1" data-a="closeModal">Cancel</button><button class="btn red" style="flex:1">Save wicket</button></div></form>`};
+ A.wkType=d=>{document.getElementById('wk-w').value=d.v;document.querySelectorAll('.sc2-wt button').forEach(b=>b.classList.toggle('on',b.dataset.v===d.v))};
+ if(!A.closeModal)A.closeModal=()=>{UI.modal=null;renderModal()};
+ const base=scoreConsole;
+ scoreConsole=function(m){
+  const html=base.apply(this,arguments);
+  const box=document.createElement('div');box.innerHTML=html;
+  const x=box.querySelector('.xrow');
+  if(x&&!box.querySelector('.sc2-ctl')){
+   const keep=[...x.querySelectorAll('button')];
+   const sec=document.createElement('div');sec.className='card';
+   sec.innerHTML='<div class="sc2-h" style="margin-top:0">Match control</div><div class="sc2-ctl"></div>';
+   const g=sec.querySelector('.sc2-ctl');
+   const rules=box.querySelector('[data-a="rulesOpen"]'),rain=box.querySelector('[data-a="rainOpen"]'),pen=box.querySelector('[data-a="penOpen"]');
+   const mk=(a,l,id)=>`<button class="btn ghost" data-a="${a}"${id?` data-id="${esc(m.id)}"`:''}>${l}</button>`;
+   g.innerHTML=mk('undoBall','↶ Undo last ball')+mk('swap','⇄ Swap strike')+mk('rulesOpen','⚡ Powerplay settings',1)+mk('rainOpen','🌧 Rain / interruption',1)+mk('penOpen','⚠ Penalty runs',1)+mk('endInn','■ End innings');
+   keep.forEach(b=>g.appendChild(b));x.remove();
+   const ref=box.querySelector('.sc2-wk')?.closest('.card');(ref||box.firstElementChild).after(sec);
+   [rules,rain,pen].forEach(b=>{if(b&&b.closest('.row')&&!b.closest('.sc2-ctl'))b.closest('.row').remove()});
+  }
+  return box.innerHTML};
+ const s=document.createElement('style');s.textContent='.sc2-wt{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px}.sc2-wt button{display:grid;gap:2px;place-items:center;padding:8px 2px;border:1px solid var(--bd);border-radius:10px;background:var(--card);color:var(--fg);font-size:10px}.sc2-wt button span{font-size:18px}.sc2-wt button.on{border-color:#e11d2e;background:#e11d2e33;box-shadow:0 0 0 1px #e11d2e inset}.sc2-ctl{display:grid;grid-template-columns:1fr 1fr;gap:6px}.sc2-ctl .btn,.sc2-ctl button{font-size:11px;padding:10px 6px;text-align:left;margin:0;width:auto}';document.head.appendChild(s);
+}
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});
