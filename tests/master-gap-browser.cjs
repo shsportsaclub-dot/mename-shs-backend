@@ -1,4 +1,4 @@
-const __np=async(b,o)=>{const p=await b.newPage(o);await p.addInitScript(()=>{window.__legacyLive=1});return p};
+const __np=async(b,o)=>{const p=await b.newPage(o);await p.addInitScript(()=>{window.__legacyLive=1;document.addEventListener('DOMContentLoaded',()=>{const s=document.createElement('style');s.textContent='html{scroll-behavior:auto!important}';document.head.appendChild(s)})});return p};
 // Synthetic acceptance: auction allocation, reduced powerplay, DLS target and authorized video UI.
 const { chromium } = require('playwright');
 const assert = require('node:assert/strict');

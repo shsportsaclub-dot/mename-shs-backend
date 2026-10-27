@@ -1,4 +1,4 @@
-const __np=async(b,o)=>{const p=await b.newPage(o);await p.addInitScript(()=>{window.__legacyLive=1});return p};
+const __np=async(b,o)=>{const p=await b.newPage(o);await p.addInitScript(()=>{window.__legacyLive=1;document.addEventListener('DOMContentLoaded',()=>{const s=document.createElement('style');s.textContent='html{scroll-behavior:auto!important}';document.head.appendChild(s)})});return p};
 const {chromium}=require('playwright'),fs=require('node:fs'),http=require('node:http'),assert=require('node:assert/strict');
 (async()=>{
  const html=fs.readFileSync('app-index.html');const server=http.createServer((req,res)=>{res.setHeader('content-type','text/html');res.end(html)});await new Promise(r=>server.listen(18958,'127.0.0.1',r));let browser;
