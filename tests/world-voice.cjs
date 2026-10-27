@@ -1,7 +1,8 @@
+const __np=async(b,o)=>{const p=await b.newPage(o);await p.addInitScript(()=>{window.__legacyLive=1});return p};
 // Voice commentary for watched matches: voice bar shown, new deliveries spoken once in en/te/hi, first load silent.
 const { chromium } = require('playwright');
 (async () => {
-  const b = await chromium.launch(), errs = [], p = await b.newPage({ viewport: { width: 360, height: 800 } }); p.on('pageerror', e => errs.push(e.message));
+  const b = await chromium.launch(), errs = [], p = await __np(b,{ viewport: { width: 360, height: 800 } }); p.on('pageerror', e => errs.push(e.message));
   await p.goto('file://' + require('path').resolve(__dirname, '../app-index.html')); await p.waitForTimeout(400);
   const ok = (c, m) => { if (!c) { console.error('FAIL', m); process.exitCode = 1; } };
   const r = await p.evaluate(() => {
