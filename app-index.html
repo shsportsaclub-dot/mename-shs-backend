@@ -513,7 +513,7 @@ function engDism(k,bowl,fld){
   if(k==='stumped')return fld?'st '+fld+' b '+bowl:'stumped b '+bowl;
   if(k==='run out')return 'run out'+(fld?' ('+fld+')':'');
   if(k==='hit wicket')return 'hit wicket b '+bowl;
-  return k||'out'}
+  return (k&&k!=='out')?k:(fld?'out ('+fld+' fielding)':'out')}
 /* n = {bat,bowl,brun (runs off the bat),tot (all runs on the ball),x:''|'wd'|'nb'|'b'|'lb',wk:null|{out,kind,fld}}; st = running state from engNew(), or null for a plain line */
 function engText(n,st){
   const head=n.bat?n.bowl+' to '+n.bat:n.bowl;let B=null,Bw=null,pre=0;
