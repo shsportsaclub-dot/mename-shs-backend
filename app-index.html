@@ -7167,6 +7167,25 @@ render=(o=>function(){try{ar17Norm(UI.wm)}catch(e){}return o.apply(this,argument
  C.wfBat=v=>{UI.wf=Object.assign({},UI.wf,{b:v});render()};
  const st=document.createElement('style');st.textContent='.wf-ctl{display:grid;gap:6px;margin-bottom:8px}.wf-ctl select{width:100%}.wf-leg{display:flex;flex-wrap:wrap;gap:10px;font-size:11px;color:var(--mu);margin-top:6px}.wf-leg i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px}.wf-leg b{color:var(--fg)}';document.head.appendChild(st);
 }
+/* ---------------- WINDOWS/DESKTOP match page: real wide layout (not a zoomed phone column) */
+{
+ const isD=()=>document.documentElement.dataset.plat==='desktop';
+ const z0=ar9Zoom;
+ ar9Zoom=function(){if(!isD())return z0.apply(this,arguments);document.querySelectorAll('.rp').forEach(e=>{e.style.zoom=1.08})};
+ const dk=()=>{if(!isD())return;document.querySelectorAll('.sh-live-window .rp').forEach(rp=>{
+   const inner=rp.children[2];if(!inner||inner.classList.contains('dk-done')||!inner.querySelector('.bats'))return;
+   const L=document.createElement('div'),R=document.createElement('div');L.className='dk-l';R.className='dk-r';
+   [...inner.children].forEach(c=>{(c.matches('.ovs,.bats,.bw,.bbt')?L:R).appendChild(c)});
+   inner.appendChild(L);inner.appendChild(R);inner.classList.add('dk-done')})};
+ const r2=render;render=function(){const o=r2.apply(this,arguments);try{dk()}catch(e){}return o};
+ const st=document.createElement('style');st.textContent=
+ 'html[data-plat=desktop] .rp{width:100%;max-width:1240px;margin-inline:auto}'+
+ 'html[data-plat=desktop] .sh-live-window .rp:not(.rph){display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:14px;align-items:stretch}'+
+ 'html[data-plat=desktop] .sh-live-window .rp>.hero{grid-column:1}html[data-plat=desktop] .sh-live-window .rp>.sv{grid-column:2;grid-row:1;display:grid;grid-template-columns:1fr;align-content:stretch;gap:10px}html[data-plat=desktop] .sh-live-window .rp>div:last-child{grid-column:1/-1}'+
+ 'html[data-plat=desktop] .rp .dk-done{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:start}html[data-plat=desktop] .rp .dk-l,html[data-plat=desktop] .rp .dk-r{display:flex;flex-direction:column;gap:10px;min-width:0}'+
+ 'html[data-plat=desktop] .rp .dk-r{max-height:calc(100vh - 150px);overflow:auto;position:sticky;top:8px}html[data-plat=desktop] .rp .cbp-cd svg,html[data-plat=desktop] .rp .gr svg{max-height:380px;margin-inline:auto;display:block}';
+ document.head.appendChild(st);
+}
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});
