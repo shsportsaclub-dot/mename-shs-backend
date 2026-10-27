@@ -1,7 +1,8 @@
+const __np=async(b,o)=>{const p=await b.newPage(o);await p.addInitScript(()=>{window.__legacyLive=1;document.addEventListener('DOMContentLoaded',()=>{const s=document.createElement('style');s.textContent='html{scroll-behavior:auto!important}';document.head.appendChild(s)})});return p};
 // Info tab shows head to head when the archive has it, and nothing when it does not.
 const { chromium } = require('playwright');
 (async () => {
-  const b = await chromium.launch(), errs = [], p = await b.newPage({ viewport: { width: 360, height: 780 } }); p.on('pageerror', e => errs.push(e.message));
+  const b = await chromium.launch(), errs = [], p = await __np(b,{ viewport: { width: 360, height: 780 } }); p.on('pageerror', e => errs.push(e.message));
   await p.goto('file://' + require('path').resolve(__dirname, '../app-index.html')); await p.waitForTimeout(400);
   const ok = (c, m) => { if (!c) { console.error('FAIL', m); process.exitCode = 1; } };
   const r = await p.evaluate(async () => {
