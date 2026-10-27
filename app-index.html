@@ -6637,6 +6637,31 @@ document.addEventListener('click',e=>{const i=e.target.closest&&e.target.closest
  const up=()=>{if(!d)return;const sl=d.sl,m=d.m,l0=d.l;d=null;if(m){sl._nc=Date.now();const c=sl.querySelector('.ig-sq'),step=c?c.getBoundingClientRect().width+12:sl.clientWidth,mv=sl.scrollLeft-l0,k=Math.max(0,Math.abs(mv)>30?(mv>0?Math.ceil(l0/step+0.02):Math.floor(l0/step-0.02)):Math.round(sl.scrollLeft/step));sl.classList.remove('drag');sl.scrollTo({left:Math.min(k*step,sl.scrollWidth-sl.clientWidth),behavior:'smooth'})}else sl.classList.remove('drag')};document.addEventListener('pointerup',up);document.addEventListener('pointercancel',up);
  document.addEventListener('click',e=>{const sl=e.target.closest&&e.target.closest('.ig-sl');if(sl&&sl._nc&&Date.now()-sl._nc<250){e.stopPropagation();e.preventDefault()}},true)}
 setTimeout(igSync,300);
+/* ---------------- HOME / MATCHES RANKING: Men | Women filter, viewer's country first (from IP), then most-watched matches ---------------- */
+{const st=document.createElement('style');st.textContent=`.mwf{display:flex;gap:8px;margin:8px 0 10px}.mwf button{background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:99px;padding:7px 16px;font-weight:700;cursor:pointer}.mwf button.on{background:#e11d2e;border-color:#e11d2e;color:#fff}.ig-pin{display:inline-block;font-size:10px;font-weight:800;border-radius:99px;padding:2px 8px;margin-left:6px;background:#22c55e22;color:#22c55e;border:1px solid #22c55e}.ig-eye{display:inline-block;font-size:10px;font-weight:700;margin-left:6px;color:#ffc83d}`;document.head.appendChild(st)}
+const mwStore={get(){try{return localStorage.getItem('sh.mwf')||'all'}catch(e){return 'all'}},set(v){try{localStorage.setItem('sh.mwf',v)}catch(e){}}};
+function mwGender(m){const g=String(m.gender||m.sex||'').toLowerCase();if(/^(f|female|women|woman|w)$/.test(g))return 'women';if(/^(m|male|men|man)$/.test(g))return 'men';
+ const txt=[m.name,m.series,m.league,m.matchType,...((m.teams||[]).flatMap(t=>[t&&t.name,t&&t.short,t&&t.shortname]))].filter(Boolean).join(' | ');
+ return /\b(women|womens|women's|ladies|girls|female)\b|[-\s(]W\)?(\s|\||$)|\bWBBL\b|\bWPL\b|\bWCPL\b|Women/i.test(txt)?'women':'men'}
+const MW_ALIAS={IN:'India(n)?',PK:'Pakistan(i)?',BD:'Bangladesh(i)?',LK:'Sri Lanka(n)?',NP:'Nepal(ese)?',AU:'Australia(n)?',NZ:'New Zealand(er)?|Kiwi',GB:'England|Scotland|Wales|Great Britain|British|United Kingdom',US:'USA|United States|American',AE:'UAE|United Arab Emirates|Emirates',ZA:'South Africa(n)?',WI:'West Indies|Windies',AF:'Afghanistan|Afghan',IE:'Ireland|Irish',NL:'Netherlands|Dutch',OM:'Oman(i)?',CA:'Canada|Canadian',ZW:'Zimbabwe(an)?',KE:'Kenya(n)?',NA:'Namibia(n)?',SG:'Singapore',HK:'Hong Kong',MY:'Malaysia(n)?',JP:'Japan(ese)?',DE:'Germany|German',IT:'Italy|Italian'};
+function mwCountryHit(m,iso){if(!iso)return false;const c=(typeof COUNTRIES!=='undefined'?COUNTRIES:[]).find(x=>x[0]===iso),pat=MW_ALIAS[iso]||(c?c[1].replace(/[.*+?^${}()|[\]\\]/g,'\\$&'):'');if(!pat)return false;
+ const re=new RegExp('(^|[^A-Za-z])('+pat+')([^A-Za-z]|$)','i');return [m.name,m.series,m.league,...((m.teams||[]).map(t=>t&&t.name))].some(x=>x&&re.test(String(x)))}
+const mwViewers=id=>(UI.vw&&UI.vw[id])||0;
+function mwRank(list){const iso=viewerISO(),f=UI.mwf||(UI.mwf=mwStore.get());
+ let L=list.filter(m=>f==='all'||mwGender(m)===f);
+ return L.map((m,i)=>({m,i,c:mwCountryHit(m,iso)?1:0,v:mwViewers(m.id)})).sort((a,b)=>(b.c-a.c)||(b.v-a.v)||(((b.m.started&&!b.m.ended)?1:0)-((a.m.started&&!a.m.ended)?1:0))||(a.i-b.i)).map(x=>x.m)}
+hhMatches=(o=>function(){const r=o.apply(this,arguments);return Array.isArray(r)?mwRank(r):r})(hhMatches);
+A.mwf=function(d){UI.mwf=d.v;mwStore.set(d.v);render()};
+heroHome=(o=>function(){const h=o.apply(this,arguments);if(typeof h!=='string')return h;const f=UI.mwf||(UI.mwf=mwStore.get());
+ const bar=`<div class="mwf" role="group" aria-label="Men or women">${[['all','All'],['men',"Men's"],['women',"Women's"]].map(([k,l])=>`<button type="button" class="${f===k?'on':''}" data-a="mwf" data-v="${k}">${l}</button>`).join('')}</div>`;
+ return h.includes('<div class="hh-tabs">')?h.replace('<div class="hh-tabs">',bar+'<div class="hh-tabs">'):h})(heroHome);
+/* viewer pings (while a match page is open) and viewer counts (for ranking) */
+const vidStore=(()=>{try{let v=localStorage.getItem('sh.vid');if(!v){v=Math.random().toString(36).slice(2,12)+Date.now().toString(36);localStorage.setItem('sh.vid',v)}return v}catch(e){return 'v'+Math.random().toString(36).slice(2,12)}})();
+let mwLastPing=0;
+setInterval(()=>{try{const b=typeof apiBase==='function'&&apiBase();if(!b)return;const id=UI.view==='wmatch'&&UI.wm&&UI.wm.m&&UI.wm.m.id;if(id&&!/^local-/.test(String(id))&&Date.now()-mwLastPing>40000&&document.visibilityState!=='hidden'){mwLastPing=Date.now();fetch(b+'/view',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:String(id),vid:vidStore})}).catch(()=>{})}}catch(e){}},8000);
+async function mwPull(){try{const b=typeof apiBase==='function'&&apiBase();if(!b)return;const j=await (await fetch(b+'/viewers')).json();if(j&&j.ok){const old=JSON.stringify(UI.vw||{});UI.vw=j.v||{};if(old!==JSON.stringify(UI.vw)&&UI.view==='home'&&!UI.drawer&&!UI.sheet)render()}}catch(e){}}
+setInterval(mwPull,60000);setTimeout(mwPull,3000);
+try{if(typeof detectISO==='function')setTimeout(()=>{detectISO()},800)}catch(e){}
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});

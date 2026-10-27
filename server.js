@@ -779,6 +779,22 @@ routes['GET /api/home-series'] = async () => {
   return [200,{ok:true,matches:[...groups.values()].sort(compare),totalSeries:groups.size,updated:feed.updated,stale:!!feed.stale}];
 };
 
+// ---- Who is watching what: anonymous viewer pings (match id + random device id), counted over a sliding 3-minute window. Used only to rank matches on the home list.
+const viewMap = new Map();
+const viewPrune = () => { const cut = Date.now() - 3 * 60e3; for (const [id, m] of viewMap) { for (const [v, t] of m) if (t < cut) m.delete(v); if (!m.size) viewMap.delete(id); } };
+routes['POST /api/view'] = async (req, body, ip) => {
+  const id = String(body.id || '').slice(0, 80), vid = String(body.vid || '').replace(/[^\w-]/g, '').slice(0, 40);
+  if (!id || !vid || /^local-/.test(id)) return [400, { ok: false, error: 'id and vid are required' }];
+  if (limited('view:' + vid, 8, 60e3) || limited('viewip:' + ip, 60, 60e3)) return [429, { ok: false, error: 'Too many pings' }];
+  if (viewMap.size > 5000 && !viewMap.has(id)) viewPrune();
+  if (viewMap.size > 5000 && !viewMap.has(id)) return [200, { ok: true }];
+  (viewMap.get(id) || viewMap.set(id, new Map()).get(id)).set(vid, Date.now());
+  return [200, { ok: true }];
+};
+routes['GET /api/viewers'] = async () => {
+  viewPrune(); const v = {}; for (const [id, m] of viewMap) v[id] = m.size;
+  return [200, { ok: true, windowSeconds: 180, v }];
+};
 routes['GET /api/status'] = async () => { const x = svcStatus(); return [200, { ok: true, emailReady: x.email.ready, smsReady: x.sms.ready, liveReady: x.live.ready }]; };
 routes['POST /api/admin/probe'] = async (req, body) => {
   const phone = readSession((req.headers.authorization || '').replace(/^Bearer /, '')), u = phone && db.users[phone];
