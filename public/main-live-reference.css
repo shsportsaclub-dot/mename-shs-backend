@@ -1,0 +1,20 @@
+/* Main application LIVE window: compact navy/red reference adaptation.
+   Scoped to match viewer; no score, player, or delivery data is fabricated. */
+.sh-live-window{--bg:#050c24;--card:#081236;--c2:#0c1d4a;--tx:#f5f8ff;--mu:#aebddc;--bd:#2a4cb0;--ac:#e3122d;--on:#fff;--grad:linear-gradient(90deg,#0b1f5c,#b5102a);border:1px solid #2a4cb0!important;border-radius:9px!important;background:#050c24!important;color:#f5f8ff!important;box-shadow:0 10px 30px #02061455}
+.sh-live-window-head{background:linear-gradient(90deg,#0b1f5c,#b5102a)!important;padding:10px 13px!important}
+.sh-live-window-head b{font-size:14px!important;letter-spacing:.04em!important}
+.sh-live-window-head small{color:#d5ddf1!important}
+.sh-live-window .sh-pulse{background:linear-gradient(145deg,#0c1d4a,#050c24 70%,#220718)!important;border:0!important;color:#f5f8ff!important;margin:0!important;border-radius:0!important}
+.sh-live-window .sh-pulse-top{background:linear-gradient(90deg,#12306f,#a40e2b)!important;color:#fff!important}
+.sh-live-window .sh-pulse-event{background:radial-gradient(ellipse at 8% 50%,#1a65bb55,transparent 60%),radial-gradient(ellipse at 92% 50%,#c20e3255,transparent 60%),#050c24!important;padding:12px!important}
+.sh-live-window .sh-pulse-event h2{color:#fff!important;font-size:clamp(27px,4vw,43px)!important;margin:6px 0!important}
+.sh-live-window .sh-pulse-event p{color:#d9e4fa!important}
+.sh-live-window .sh-pulse-metrics{background:#081236!important;border-color:#2a4cb0!important;flex-wrap:wrap}
+.sh-live-window .sh-pulse-metrics>div{padding:8px 11px!important;border-color:#2a4cb0!important}
+.sh-live-window .sh-pulse-metrics b{color:#ffc61a!important}
+.sh-live-window .sh-pulse :is(.sh-pulse-bat,.sh-pulse-bowl,.sh-pulse-over,.sh-pulse-overs,.sh-pulse-timeline){background:#081236!important;color:#fff!important}
+.sh-live-window .sh-delivery-effect{border-color:#2a4cb0!important;background:#081236!important}
+.sh-live-window .sh-fx-heading{background:linear-gradient(90deg,#12306f,#5a0716)!important;color:#fff!important}
+.sh-live-window .sh-fx-note{color:#aebddc!important}
+.sh-live-window .sh-fx-pitch{height:72px!important}
+@media(max-width:650px){.sh-live-window{margin:6px 0 9px!important}.sh-live-window .sh-pulse-event{padding:9px!important}.sh-live-window .sh-pulse-metrics>div{min-width:70px!important}.sh-live-window .sh-pulse-event h2{font-size:30px!important}}
