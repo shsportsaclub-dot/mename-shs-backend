@@ -5,11 +5,11 @@ import {spawn} from 'node:child_process';
 import fs from 'node:fs';
 import crypto from 'node:crypto';
 test('deployment verification checks both source and rendered build, rejecting wrong commit or changed HTML',async()=>{
- const source=fs.readFileSync('app-index.html','utf8'),sha='1234567890abcdef1234567890abcdef12345678';let corrupt=false;
+ const source=fs.readFileSync('app-index.html','utf8'),style=fs.readFileSync('public/main-live-reference.css','utf8'),sha='1234567890abcdef1234567890abcdef12345678';let corrupt=false;
  const sourceHash=crypto.createHash('sha256').update(source).digest('hex');
  const server=createServer((req,res)=>{
   if(req.url==='/health'){res.setHeader('Content-Type','application/json');res.end(JSON.stringify({ok:true,commit:sha,version:sha.slice(0,7),appSha256:sourceHash}))}
-  else res.end(source.replace('__SH_BUILD__',sha.slice(0,7))+(corrupt?'changed':''));
+  else res.end(source.replace('__SH_BUILD__',sha.slice(0,7)).replace('</head>', '<style id="sh-main-live-reference">'+style+'</style></head>')+(corrupt?'changed':''));
  });
  await new Promise(r=>server.listen(0,'127.0.0.1',r));
  const run=expected=>new Promise((resolve,reject)=>{const child=spawn(process.execPath,['scripts/verify-production.mjs'],{env:{...process.env,SH_VERIFY_BASE:`http://127.0.0.1:${server.address().port}`,SH_EXPECTED_COMMIT:expected}});let out='';child.stdout.on('data',d=>out+=d);child.on('error',reject);child.on('close',code=>resolve({code,evidence:JSON.parse(out)}))});
