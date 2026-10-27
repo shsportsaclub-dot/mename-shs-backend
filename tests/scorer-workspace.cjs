@@ -40,7 +40,7 @@ const fs=require('node:fs'),http=require('node:http'),assert=require('node:asser
    assert.match(await p.locator('.sh-live-window').innerText(),/SIX|6/);
    for(const tab of ['card','comm','xi','squads','ovr','graphs','info']){await p.locator('.cbp-tabs [data-a="tab"][data-v="'+tab+'"]').click();assert.equal(await p.evaluate(()=>UI.tab),tab)}
    await p.locator('.sh-match-workspace [data-a="scoreIt"]').click();
-   await p.locator('[data-a="wicket"]').click();await p.locator('form[data-f="wicket"]').getByRole('button',{name:'Confirm wicket'}).click();
+   await p.locator('[data-a="wicket"]').click();await p.locator('form[data-f="wicket"]').getByRole('button',{name:'Save wicket'}).click();
    assert.match(await p.locator('.sh-scorer-console').innerText(),/New batter in/);
    await p.locator('[data-a="pickBat"]').first().click();
    await p.locator('.sh-match-workspace [data-a="shScorerWatch"]').click();
