@@ -1,0 +1,29 @@
+/* Scoring Heroes LIVE Match Centre — user-supplied navy/red design adapted to real provider data. */
+:root{--sh-navy:#050c24;--sh-panel:#0c1d4a;--sh-red:#e3122d;--sh-gold:#ffc61a;--sh-mint:#1de9a0}
+body{background:radial-gradient(90% 40% at 0% 0%,#14307a,transparent 70%),radial-gradient(90% 40% at 100% 100%,#5a0716,transparent 70%),linear-gradient(180deg,#081236,#050c24);color:#fff;font-family:"Roboto Condensed","Arial Narrow",Roboto,Arial,sans-serif}
+.brandHeader{height:56px;background:linear-gradient(90deg,#0b1f5c 0%,#0b1f5c 38%,#b5102a 100%);border-bottom:1px solid #ffffff77}
+.brandName strong{font-style:normal;letter-spacing:.01em}.brandName em{color:#ffbfc9}
+.layout{max-width:1120px;grid-template-columns:minmax(0,1fr) 260px}
+.panel{background:linear-gradient(180deg,#0c1d4a,#081236);border:1px solid #2a4cb0;box-shadow:none}
+.matchCentre{border-color:#2a4cb0;box-shadow:none}
+.matchCentre .tabbar{background:linear-gradient(90deg,#0b1f5c,#b5102a);border-bottom:1px solid #ffffffaa}
+.matchCentre .tabbar button{font-weight:700;color:#e9edff;text-transform:uppercase}
+.matchCentre .tabbar button[aria-selected=true]{border-bottom:3px solid #ff3b4f;background:none;box-shadow:none;color:#fff}
+.statusline{background:linear-gradient(90deg,#06102b,#1b071a);border:0;border-radius:5px}
+.scoreHero{background:radial-gradient(40% 70% at 8% 40%,#1a73ff44,transparent 70%),radial-gradient(40% 70% at 92% 40%,#e3122d44,transparent 70%),linear-gradient(90deg,#040b22,#081236 50%,#1a0614);border:0;box-shadow:none;border-radius:6px}
+.score{font-size:clamp(29px,5vw,48px);color:#fff;text-shadow:none;font-variant-numeric:tabular-nums}
+.heroMeta{border-color:#ffffff44}.heroMeta strong{color:var(--sh-gold)}
+.deliveryRail{background:linear-gradient(90deg,#0c1d4a,#081236 70%,#2a0a1c);border:1.5px solid #2a4cb0;box-shadow:none}
+.deliveryBall{border-radius:50%;background:#1a6dff;box-shadow:none}
+.deliveryBall.boundary{background:var(--sh-gold);color:#171100}
+.deliveryBall.wicket{background:var(--sh-red)}
+#stadiumPanel{border-color:#2a4cb0}#stadiumPanel h2{background:linear-gradient(90deg,#12306f,#5a0716);border:0}
+.batterCards{background:#081236}
+#commentaryPanel{border-color:#2a4cb0}#commentaryPanel h2{background:linear-gradient(90deg,#12306f,#5a0716)}
+.feed .event{background:transparent;border-bottom:1px solid #ffffff1a}
+.feed .event strong{color:var(--sh-gold)}
+#liveModes .toolbar:first-child button{min-height:58px;box-shadow:none;border:1px solid #2a4cb0}
+#liveModes .toolbar:first-child #virtualMode{box-shadow:none;border-color:#2a4cb0}
+#liveModes .toolbar:first-child button[aria-pressed=true]{border-color:#ff3b4f}
+@media(max-width:900px){.layout{display:block;padding:5px}.matchCentre>.body{padding:8px}.scoreHero{grid-template-columns:minmax(0,1fr);padding:10px}.heroMeta{border-left:0;border-top:1px solid #ffffff33;padding-top:8px;text-align:center}.brandHeader{height:54px}.brandName strong{font-size:18px}}
+@media(max-width:430px){.matchCentre .tabbar button{padding:11px 5px;font-size:11px}.score{font-size:clamp(22px,6vw,32px)}.deliveryBall{width:28px;height:28px}}
