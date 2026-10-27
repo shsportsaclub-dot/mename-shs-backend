@@ -13,7 +13,7 @@ const { chromium } = require('playwright');
       S.settings.vlang = lang; said = [];
       const m = newMatch({ a: 'a', b: 'b', overs: 3, toss: 'a', dec: 'bat', xiA: S.teams[0].players, xiB: S.teams[1].players }); startInnings(m, 0, 'p0', 'p1', 'p11'); const inn = m.innings[0];
       for (let k = 0; k < 9; k++) { inn.cur.s = 'p0'; inn.cur.n = 'p1'; if (inn.cur.bl == null) inn.cur.bl = 'p' + (11 + inn.lg / 6); ball(m, { r: 6 }) }
-      inn.cur.s = 'p0'; inn.cur.n = 'p1'; ball(m, { w: 'Bowled', out: 'p0' }); ball(m, { r: 2 }); ball(m, { x: 'wd' }); ball(m, { x: 'nb', r: 1 }); ball(m, { r: 4 });
+      inn.cur.s = 'p0'; inn.cur.n = 'p1'; ball(m, { w: 'Bowled', out: 'p0' }); inn.cur.s = 'p2'; ball(m, { r: 2 }); ball(m, { x: 'wd' }); ball(m, { x: 'nb', r: 1 }); ball(m, { r: 4 });
       const e = cLine(inn.ev[0], lang), w = cLine({ w: 'Bowled', out: 'p0', bt: 'p0', bl: 'p11', r: 0, x: '' }, lang), res = vResult({ result: 'India won by 12 runs' }, lang), rw = vResult({ result: 'India won by 4 wickets' }, lang), tie = vResult({ result: 'Match tied' }, lang);
       out[lang] = { said: said.join(' | '), six: e, w, res, rw, tie, test: (A.vtest(), said[said.length - 1]) };
     }
