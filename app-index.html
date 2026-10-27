@@ -7045,6 +7045,27 @@ render=(o=>function(){try{ar17Norm(UI.wm)}catch(e){}return o.apply(this,argument
  const vt=vTeams;vTeams=function(){return `<div class="card"><button class="btn wide" data-a="ctwOpen">+ Create new team (search first)</button></div>`+vt.apply(this,arguments)};
  const s=document.createElement('style');s.textContent='.ctw-dots{display:flex;justify-content:space-between;margin:6px 0 12px}.ctw-dots span{display:grid;place-items:center;width:20%;font-size:12px;color:var(--mu)}.ctw-dots span small{font-size:9px}.ctw-dots span.on{color:var(--ac);font-weight:700}.ctw-dots span.ok{color:#22a559}.ctw-cats{display:grid;grid-template-columns:1fr 1fr;gap:6px}.ctw-cats button{text-align:left;padding:8px;border:1px solid var(--bd);border-radius:10px;background:var(--card);color:var(--fg)}.ctw-cats button b{display:block;font-size:12px}.ctw-cats small{font-size:10px;color:var(--mu)}.ctw-cats button.on,.ctw-sp button.on{border-color:var(--ac);box-shadow:0 0 0 1px var(--ac) inset}.ctw-sp{display:flex;flex-wrap:wrap;gap:6px}.ctw-sp button{padding:7px 10px;border:1px solid var(--bd);border-radius:20px;background:var(--card);color:var(--fg);font-size:12px}';document.head.appendChild(s);
 }
+/* ---------------- PER-DEVICE SCORER LAYOUT (tablet/desktop/TV two-pane, keyboard on desktop) */
+{
+ const st=document.createElement('style');st.textContent=
+ '@media(min-width:700px){.sh-scorer-console{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:12px;align-items:start}.sh-scorer-console>.sh-scorer-title,.sh-scorer-console>.sh-scorer-tools{grid-column:1/-1}.sh-scorer-console>.sc2,.sh-scorer-console>.sh-previous,.sh-scorer-console>.sh-transition-score{grid-column:1}.sh-scorer-console>.card:has(.runs){grid-column:2;grid-row:3/span 3}.sh-scorer-console>.card{margin:0}.sh-scorer-console>.sc2{grid-column:1;grid-row:3}.sh-scorer-console>.card:has(.sc2-ctl),.sh-scorer-console>.card:has(#wag),.sh-scorer-console>.card:has(.pick){grid-column:1}.sh-scorer-console .runs button{min-height:58px}}'+
+ 'html[data-plat=desktop] .sh-scorer-console .runs button{min-height:52px;font-size:21px}html[data-plat=desktop] .sc2-sc b{font-size:38px}'+
+ 'html[data-plat=desktop] .sc2-kbd{display:flex}html[data-plat=tv] .sh-scorer-console .runs button{min-height:84px;font-size:34px}html[data-plat=tv] .sc2-sc b{font-size:56px}'+
+ '.sh-scorer-console:has(.sc2) .sh-transition-score{display:none}.sc2-kbd{display:none;gap:10px;flex-wrap:wrap;font-size:10px;color:var(--mu);margin-top:6px}.sc2-kbd kbd{border:1px solid var(--bd);border-bottom-width:2px;border-radius:5px;padding:1px 6px;margin-right:3px;background:var(--card);color:var(--fg);font:inherit}'+
+ 'html[data-os=windows] .btn,html[data-os=windows] .sh-scorer-console .runs button{border-radius:6px}html[data-os=windows] .card{border-radius:8px}'+
+ 'html[data-os=mac] .card{border-radius:14px}html[data-os=mac] .drawer{backdrop-filter:blur(20px) saturate(1.5)}html[data-os=android] .sh-scorer-console .runs button,html[data-os=android] .sc2-bat{border-radius:16px}html[data-os=ios] .sh-scorer-console .runs button{border-radius:14px}html[data-os=ios] .sc2-hero{border-radius:20px}';
+ document.head.appendChild(st);
+ const base=scoreConsole;
+ scoreConsole=function(m){const h=base.apply(this,arguments);return h.includes('class="runs"')?h.replace('<div class="sc2-h">Runs</div>','<div class="sc2-h">Runs</div><div class="sc2-kbd"><span><kbd>0</kbd>–<kbd>6</kbd> runs</span><span><kbd>W</kbd> wicket</span><span><kbd>U</kbd> undo</span><span><kbd>S</kbd> swap</span><span><kbd>D</kbd> wide</span><span><kbd>N</kbd> no ball</span></div>'):h};
+ document.addEventListener('keydown',e=>{
+  if(document.documentElement.dataset.plat!=='desktop'||e.ctrlKey||e.metaKey||e.altKey)return;
+  const t=e.target;if(t&&/^(INPUT|SELECT|TEXTAREA)$/.test(t.tagName)||UI.modal)return;
+  const k=e.key.toLowerCase(),q=s=>document.querySelector('.sh-scorer-console '+s);let b=null;
+  if(/^[0-6]$/.test(k))b=q('.runs [data-v="'+k+'"]');
+  else if(k==='w')b=q('[data-a="wicket"]');else if(k==='u')b=q('[data-a="undoBall"]');else if(k==='s')b=q('[data-a="swap"]');
+  else if(k==='d')b=q('[data-a="ex"][data-v="wd"]');else if(k==='n')b=q('[data-a="ex"][data-v="nb"]');
+  if(b){b.click();e.preventDefault()}});
+}
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});
