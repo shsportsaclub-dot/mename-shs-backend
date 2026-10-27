@@ -6623,6 +6623,20 @@ XV.hub=function(){
  ${view?`<button class="btn" style="margin-top:12px" data-a="go" data-v="${view}">Open ${esc(M.n)}</button>`:`<div class="mu sm" style="margin-top:12px">Nothing to show yet: no records exist and nothing is simulated. This tab will appear here once the feature is built.</div>`}</div></div>`};
 Object.assign(A,{hubMod(d){UI.hub={m:d.v||'',t:0};render();window.scrollTo&&window.scrollTo(0,0)},hubTab(d){UI.hub=UI.hub||{m:'',t:0};UI.hub.t=+d.v;render()}});
 if(!MENU2.some(g=>g[0]==='All features'))MENU2.unshift(['All features',[['hub','\u{1F9ED}','All features and tabs']]]);
+/* ---------------- HOME MATCH SLIDER: arrow buttons, clickable dots, mouse drag (desktop had no way to move past the first cards) ---------------- */
+{const st=document.createElement('style');st.textContent=`.ig-wrap{position:relative}.ig-nav{position:absolute;top:calc(50% - 22px);z-index:5;width:40px;height:40px;border-radius:50%;border:1px solid #ffffff44;background:#0a1230e6;color:#fff;font-size:22px;line-height:1;cursor:pointer;display:grid;place-items:center;box-shadow:0 4px 14px #0008}.ig-nav.l{left:-6px}.ig-nav.r{right:-6px}.ig-nav[disabled]{opacity:.25;cursor:default}.ig-sl{cursor:grab}.ig-sl.drag{cursor:grabbing;scroll-snap-type:none!important;scroll-behavior:auto!important}.ig-dots i{cursor:pointer}@media(hover:none){.ig-nav{display:none}}`;document.head.appendChild(st)}
+function igStep(sl,dir){const c=sl.querySelector('.ig-sq');const w=c?c.getBoundingClientRect().width+12:sl.clientWidth*.9;sl.scrollBy({left:dir*Math.max(w,sl.clientWidth*.9),behavior:'smooth'})}
+function igSync(){const sl=document.getElementById('igsl');if(!sl)return;const w=sl.parentNode;if(!w.classList.contains('ig-wrap')){w.classList.add('ig-wrap');
+  [['l','‹',-1],['r','›',1]].forEach(([c,t,d])=>{const b=document.createElement('button');b.type='button';b.className='ig-nav '+c;b.textContent=t;b.setAttribute('aria-label',d<0?'Previous matches':'Next matches');b.addEventListener('click',()=>igStep(sl,d));w.insertBefore(b,sl)})}
+ const l=w.querySelector('.ig-nav.l'),r=w.querySelector('.ig-nav.r');if(l)l.disabled=sl.scrollLeft<4;if(r)r.disabled=sl.scrollLeft+sl.clientWidth>=sl.scrollWidth-4}
+{const r0=render;render=function(){const o=r0.apply(this,arguments);try{igSync()}catch(e){}return o}}
+document.addEventListener('scroll',e=>{if(e.target&&e.target.id==='igsl')igSync()},true);
+document.addEventListener('click',e=>{const i=e.target.closest&&e.target.closest('#igdots i');if(!i)return;const sl=document.getElementById('igsl');if(!sl)return;const k=[...i.parentNode.children].indexOf(i),c=sl.querySelectorAll('.ig-sq')[k];if(c)sl.scrollTo({left:c.offsetLeft-sl.offsetLeft,behavior:'smooth'})});
+{let d=null;document.addEventListener('pointerdown',e=>{const sl=e.target.closest&&e.target.closest('.ig-sl');if(!sl||e.pointerType!=='mouse'||e.button!==0)return;d={sl,x:e.clientX,l:sl.scrollLeft,m:false}});
+ document.addEventListener('pointermove',e=>{if(!d)return;const dx=e.clientX-d.x;if(!d.m&&Math.abs(dx)>6){d.m=true;d.sl.classList.add('drag')}if(d.m)d.sl.scrollLeft=d.l-dx});
+ const up=()=>{if(!d)return;const sl=d.sl,m=d.m,l0=d.l;d=null;if(m){sl._nc=Date.now();const c=sl.querySelector('.ig-sq'),step=c?c.getBoundingClientRect().width+12:sl.clientWidth,mv=sl.scrollLeft-l0,k=Math.max(0,Math.abs(mv)>30?(mv>0?Math.ceil(l0/step+0.02):Math.floor(l0/step-0.02)):Math.round(sl.scrollLeft/step));sl.classList.remove('drag');sl.scrollTo({left:Math.min(k*step,sl.scrollWidth-sl.clientWidth),behavior:'smooth'})}else sl.classList.remove('drag')};document.addEventListener('pointerup',up);document.addEventListener('pointercancel',up);
+ document.addEventListener('click',e=>{const sl=e.target.closest&&e.target.closest('.ig-sl');if(sl&&sl._nc&&Date.now()-sl._nc<250){e.stopPropagation();e.preventDefault()}},true)}
+setTimeout(igSync,300);
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});

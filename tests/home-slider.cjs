@@ -1,0 +1,26 @@
+// Home match slider: arrows, clickable dots and mouse drag move past the first cards on desktop.
+const { chromium } = require('playwright');
+(async () => {
+  const b = await chromium.launch(), errs = [], p = await b.newPage({ viewport: { width: 1200, height: 800 } }); p.on('pageerror', e => errs.push(e.message));
+  await p.goto('file://' + require('path').resolve(__dirname, '../app-index.html')); await p.waitForTimeout(400);
+  const ok = (c, m) => { if (!c) { console.error('FAIL', m); process.exitCode = 1; } };
+  await p.evaluate(() => {
+    document.body.innerHTML = '<div id="host" style="width:900px;margin:20px"><div class="ig-sl" id="igsl">' + Array.from({ length: 7 }, (_, i) => `<div class="ig-sq" style="min-width:255px;flex:0 0 calc((100% - 24px)/3);height:120px;background:#123">Match ${i + 1}</div>`).join('') + '</div><div class="ig-dots" id="igdots">' + Array.from({ length: 7 }, (_, i) => `<i style="display:inline-block;width:10px;height:10px;background:#888;margin:3px"></i>`).join('') + '</div></div>';
+    igSync();
+  });
+  const left = () => p.evaluate(() => document.getElementById('igsl').scrollLeft);
+  ok(await p.locator('.ig-nav').count() === 2, 'two arrow buttons');
+  ok(await p.locator('.ig-nav.l').isDisabled(), 'left arrow disabled at start');
+  await p.click('.ig-nav.r'); await p.waitForTimeout(700);
+  const a = await left(); ok(a > 200, 'right arrow scrolls (' + a + ')');
+  ok(!(await p.locator('.ig-nav.l').isDisabled()), 'left arrow enabled after scrolling');
+  await p.click('#igdots i:nth-child(6)'); await p.waitForTimeout(800);
+  ok(await left() > a, 'dot click jumps further');
+  await p.click('.ig-nav.l'); await p.waitForTimeout(700);
+  const mid = await left();
+  const box = await p.locator('#igsl').boundingBox();
+  await p.mouse.move(box.x + 400, box.y + 60); await p.mouse.down(); await p.mouse.move(box.x + 250, box.y + 60, { steps: 6 }); await p.mouse.up(); await p.waitForTimeout(300);
+  ok(await left() > mid + 80, 'mouse drag scrolls');
+  ok(!errs.length, errs.join(';'));
+  await b.close(); if (!process.exitCode) console.log('PASS: home slider');
+})();
