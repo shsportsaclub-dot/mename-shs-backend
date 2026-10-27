@@ -6710,6 +6710,17 @@ function ar9Panel(W){if(window.__legacyLive)return '';const m=W.m||{},L=(W.sc&&W
 cx3Panel=(o=>function(W){const h=o.apply(this,arguments);if(!h||UI.view!=='wmatch')return h;const p=ar9Panel(W);if(p){setTimeout(ar9Zoom,0);return p}return h})(cx3Panel);
 /* tracker notes + credit must survive later commentary rewrites */
 cbpBbb=(o=>function(W){const h=o.apply(this,arguments),bb=W&&W.bb;if(typeof h!=='string'||!bb||typeof shNotesFn!=='function')return h;let a='';if(bb.tracked&&h.indexOf('Updates between checks')<0)a+=shNotesFn(bb);if(h.indexOf('Ball records:')<0)a+=shCrFn(bb);return h+a})(cbpBbb);
+/* ---------------- SMOOTH SIDE-SCROLL: no visible scrollbars, arrows only while the pointer is over a scrollable row ---------------- */
+{const st=document.createElement('style');st.textContent=`html{scroll-behavior:smooth}*:not(html):not(body){scrollbar-width:none;-ms-overflow-style:none}*:not(html):not(body)::-webkit-scrollbar{display:none;width:0;height:0}.ig-nav{display:none!important}.hnav{position:fixed;z-index:9999;width:34px;height:34px;border-radius:50%;border:1px solid #ffffff55;background:#0b1f5ccc;color:#fff;font-size:18px;line-height:1;display:grid;place-items:center;cursor:pointer;opacity:0;pointer-events:none;transition:opacity .15s;backdrop-filter:blur(4px)}.hnav.on{opacity:1;pointer-events:auto}`;document.head.appendChild(st)}
+{const L=document.createElement('button'),R=document.createElement('button');L.className=R.className='hnav';L.type=R.type='button';L.textContent='‹';R.textContent='›';L.setAttribute('aria-label','Scroll left');R.setAttribute('aria-label','Scroll right');
+ let cur=null,hide=0;const fine=()=>matchMedia('(hover:hover) and (pointer:fine)').matches;
+ const scroller=el=>{for(let n=el;n&&n!==document.body;n=n.parentElement){if(n.closest&&n.closest('.hnav'))return null;const o=getComputedStyle(n).overflowX;if((o==='auto'||o==='scroll')&&n.scrollWidth>n.clientWidth+6)return n}return null};
+ const place=()=>{if(!cur||!document.contains(cur)){L.classList.remove('on');R.classList.remove('on');return}const r=cur.getBoundingClientRect(),y=Math.max(8,Math.min(innerHeight-42,r.top+Math.min(r.height,innerHeight-r.top)/2-17));
+  L.style.top=R.style.top=y+'px';L.style.left=Math.max(4,r.left+4)+'px';R.style.left=Math.min(innerWidth-38,r.right-38)+'px';L.classList.toggle('on',cur.scrollLeft>4);R.classList.toggle('on',cur.scrollLeft<cur.scrollWidth-cur.clientWidth-4)};
+ document.addEventListener('mouseover',e=>{if(!fine())return;if(!L.isConnected){document.body.appendChild(L);document.body.appendChild(R)}if(e.target.closest&&e.target.closest('.hnav')){clearTimeout(hide);return}const s=scroller(e.target);if(s){clearTimeout(hide);cur=s;place()}else{clearTimeout(hide);hide=setTimeout(()=>{cur=null;place()},250)}},true);
+ document.addEventListener('scroll',()=>{if(cur)place()},true);addEventListener('resize',()=>{if(cur)place()});
+ const go=d=>{if(cur){cur.scrollBy({left:d*Math.max(160,cur.clientWidth*.8),behavior:'smooth'});setTimeout(place,350)}};
+ L.onclick=()=>go(-1);R.onclick=()=>go(1);document.body.appendChild(L);document.body.appendChild(R)}
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});
