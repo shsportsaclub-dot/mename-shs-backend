@@ -10,7 +10,9 @@ try{
  const health=await fetch(base+'/health',{cache:'no-store',signal:AbortSignal.timeout(20000)});
  const status=await health.json();
  const build=String(status.commit||status.version||'local').slice(0,7);
- const expectedServedHash=crypto.createHash('sha256').update(source.replace('__SH_BUILD__',build)).digest('hex');
+ const stylePath=new URL('../public/main-live-reference.css',import.meta.url);
+ const servedSource=source.replace('__SH_BUILD__',build).replace('</head>', '<style id="sh-main-live-reference">'+fs.readFileSync(stylePath,'utf8')+'</style></head>');
+ const expectedServedHash=crypto.createHash('sha256').update(servedSource).digest('hex');
  const response=await fetch(base+'/?deployment-check='+Date.now(),{cache:'no-store',signal:AbortSignal.timeout(20000)});
  const html=await response.text();
  const actualHash=crypto.createHash('sha256').update(html).digest('hex');
