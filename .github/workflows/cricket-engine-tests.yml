@@ -1,0 +1,29 @@
+name: Cricket Engine Evidence Tests
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'observer.mjs'
+      - 'score-update-commentary.cjs'
+      - 'match-journal.mjs'
+      - 'tests/icc-engine-evidence.test.mjs'
+      - 'package.json'
+      - '.github/workflows/cricket-engine-tests.yml'
+  pull_request:
+    paths:
+      - 'observer.mjs'
+      - 'score-update-commentary.cjs'
+      - 'match-journal.mjs'
+      - 'tests/icc-engine-evidence.test.mjs'
+      - 'package.json'
+jobs:
+  cricket-engine:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify evidence-based scoring behavior
+        run: npm run test:engine
