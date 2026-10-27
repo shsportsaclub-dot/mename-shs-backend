@@ -7228,6 +7228,53 @@ render=(o=>function(){try{ar17Norm(UI.wm)}catch(e){}return o.apply(this,argument
  });
 }
 {const s2=document.createElement('style');s2.textContent='.sh-scorer-console .runs .sc2-wk{grid-column:span 1!important}.sc2-top{display:flex;align-items:center;gap:10px;font-size:12px}.sc2-top b{letter-spacing:1px}.sc2-top small{margin-left:auto;color:var(--mu)}.sc2-live{background:#e11d2e;color:#fff;border-radius:6px;padding:2px 8px;font-size:10px;font-weight:700}.sh-scorer-console .runs button[data-v="0"],.sh-scorer-console .runs button[data-v="1"],.sh-scorer-console .runs button[data-v="2"],.sh-scorer-console .runs button[data-v="3"],.sh-scorer-console .runs button[data-v="5"],.sh-scorer-console .runs button[data-v="6"]{background:#1d5fd1;color:#fff;border-color:#2c74ee}.sh-scorer-console .runs button[data-v="4"]{background:#f5b335;color:#1a1200;border-color:#ffd166}.sh-scorer-console .runs button[data-v="6"]{background:#1d5fd1}.sh-scorer-console .row:has([data-a="undoBall"]){display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.sh-scorer-console .row:has([data-a="undoBall"]) .btn{margin:0;width:100%;text-align:center}';document.head.appendChild(s2)}
+/* ---------------- SCORE ANY MATCH: "Score this match" on provider matches, with opening score (universal scorer) */
+{
+ // opening balance support for matches joined mid-innings
+ const c0=calc;
+ calc=function(m,i){const o=c0.apply(this,arguments),inn=m.innings&&m.innings[i];if(inn&&inn.open){o.runs+=inn.open.r|0;o.wk+=inn.open.w|0;o.lg+=inn.open.b|0}return o};
+ const ol0=overList;
+ overList=function(m,i){const inn=m.innings[i];if(!inn||!inn.open||!inn.open.b)return ol0.apply(this,arguments);
+  const saved=inn.ev;let lg=inn.open.b%BPO;
+  // keep chips of the over in progress aligned: pad with the balls already bowled in that over (unknown, so they are not invented)
+  const L=ol0.apply(this,arguments),first=Math.floor(inn.open.b/BPO);L.forEach((q,ix)=>{q.n=first+1+ix});return L};
+ const fmtOf=m=>{const t=String(m.type||m.matchType||'').toLowerCase();return /test|first.?class/.test(t)?905:/odi|list/.test(t)?50:/t10/.test(t)?10:20};
+ const sqNames=(W,team)=>{try{const sq=W.sq||[];const nmT=String(team.name||'').toLowerCase();const hit=(Array.isArray(sq)?sq:[]).find(s=>String(s.teamName||s.name||s.team||'').toLowerCase()===nmT);const pl=(hit&&(hit.players||hit.squad))||[];return pl.map(p=>p.name||p.player||p).filter(x=>typeof x==='string')}catch(e){return[]}};
+ const dlg=()=>{const W=UI.wm;if(!W)return;const m=W.m,t=(m.teams||[]).slice(0,2),sc=(m.score||[]).slice(-1)[0]||{},ov=fmtOf(m);
+  const nb=sc.o!=null?String(sc.o):'';
+  UI.modal={t:'html',html:`<h3>Score this match</h3><div class="mu sm" style="margin-bottom:8px">You become the scorer for ${esc(t.map(x=>x.name).join(' v '))}. Balls you enter here give real over-by-over data. Enter the score as it is right now.</div>
+  <form data-f="wsMake"><input type="hidden" name="wid" value="${esc(m.id)}">
+  <div class="row"><label style="flex:1">Batting now<select name="bat">${t.map((x,i)=>`<option value="${i}" ${(m.score||[]).length&&String((sc.inning||'')).toLowerCase().includes(String(x.name||'').toLowerCase())?'selected':''}>${esc(x.name)}</option>`).join('')}</select></label><label style="flex:1">Innings<select name="inn"><option value="1" ${(m.score||[]).length<2?'selected':''}>1st innings</option><option value="2" ${(m.score||[]).length>=2?'selected':''}>2nd innings</option></select></label></div>
+  <div class="row"><label style="flex:1">Overs per side<input name="overs" inputmode="numeric" value="${ov>=900?'':ov}" placeholder="${ov>=900?'Test: days 1-5':''}"></label><label style="flex:1">Runs now<input name="r" inputmode="numeric" value="${sc.r!=null?sc.r:0}"></label></div>
+  <div class="row"><label style="flex:1">Wickets now<input name="w" inputmode="numeric" value="${sc.w!=null?sc.w:0}"></label><label style="flex:1">Overs bowled (e.g. 17.3)<input name="o" value="${esc(nb||'0')}"></label></div>
+  <label>Target (only for 2nd innings: 1st innings total + 1)<input name="target" inputmode="numeric" placeholder="e.g. 161"></label>
+  ${t.map((x,i)=>`<label>${esc(x.name)} players (one name per line, at least 2)<textarea name="p${i}" rows="4" placeholder="Type the playing XI">${esc(sqNames(W,x).join('\n'))}</textarea></label>`).join('')}
+  <button class="btn wide">Create and open scorer</button><div class="mu sm" style="margin-top:6px">Overs before now are not invented: the match page shows them as provider data only.</div></form>`};renderModal()};
+ const pass=s=>String(s||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean).slice(0,15);
+ Object.assign(A,{wmScore(){const W=UI.wm;if(!W)return;
+   const ex=S.matches.find(x=>x.worldId===W.m.id);if(ex){UI.sid=ex.id;UI.view='score';render();return}
+   if(!can())return toast('Only Scorer or Admin accounts can score a match. Change the role in Settings.',3500);dlg()}});
+ Object.assign(F,{wsMake(fd){const W=UI.wm;if(!W||!can())return;const m0=W.m,t=(m0.teams||[]).slice(0,2);if(t.length<2)return toast('This match has no two teams');
+   const inn=+fd.get('inn')===2?1:0,bi=+fd.get('bat')===1?1:0,r=Math.max(0,parseInt(fd.get('r'),10)||0),w=Math.min(9,Math.max(0,parseInt(fd.get('w'),10)||0));
+   const ovs=parseFloat(fd.get('overs'))||(/test/i.test(String(m0.type))?905:20);
+   const os=String(fd.get('o')||'0').split('.'),balls=(parseInt(os[0],10)||0)*6+Math.min(5,parseInt(os[1],10)||0);
+   const tg=parseInt(fd.get('target'),10)||0;if(inn===1&&tg<2)return toast('Enter the target for the 2nd innings');
+   const lists=[pass(fd.get('p0')),pass(fd.get('p1'))];if(lists[0].length<2||lists[1].length<2)return toast('Enter at least 2 players for each team');
+   const tids=t.map((x,i)=>{let tm=S.teams.find(z=>z.worldKey===m0.id+':'+i);if(!tm){tm={id:uid(),name:x.name,short:(x.short||x.name).slice(0,3).toUpperCase(),color:i?'#dc2626':'#2563eb',preset:null,logo:null,players:[],level:'club',state:'',board:'',country:'',worldKey:m0.id+':'+i};S.teams.push(tm)}
+     lists[i].forEach(n=>{let p=S.players.find(z=>z.team===tm.id&&z.name===n);if(!p){p={id:uid(),name:n,role:'BAT',team:tm.id};S.players.push(p)}if(!tm.players.includes(p.id))tm.players.push(p.id)});return tm.id});
+   const battingTeam=tids[bi],bowlTeam=tids[1-bi],firstBat=inn===0?battingTeam:bowlTeam;
+   const xiOf=(tid)=>S.teams.find(z=>z.id===tid).players.slice(0,11);
+   const m=newMatch({a:tids[0],b:tids[1],overs:ovs,toss:firstBat,dec:'bat',xiA:xiOf(tids[0]),xiB:xiOf(tids[1]),venue:m0.venue||'',name:m0.name||''});
+   m.worldId=m0.id;m.firstBat=firstBat;m.status='setup';
+   if(inn===1){m.innings[0]={bat:firstBat,bowl:battingTeam,ev:[],cur:{s:null,n:null,bl:null},used:[],lg:0,done:true,open:{r:tg-1,w:0,b:0}};m.status='break'}
+   m.pendingOpen={r,w,b:balls};
+   UI.sid=m.id;UI.modal=null;UI.view='score';commit();toast('Scorer ready. Pick the two batters and the bowler to start.',4000)}});
+ const si0=F.startInn;
+ F.startInn=function(fd){const m=S.matches.find(x=>x.id===fd.get('mid')),po=m&&m.pendingOpen;si0.apply(this,arguments);
+  if(m&&po){const inn=m.innings[m.cur];if(inn&&!inn.ev.length){inn.open={r:po.r,w:po.w,b:po.b};inn.lg=po.b;delete m.pendingOpen;commit()}}};
+ // the Scorer tab on a provider match now opens (or creates) the scorer for that match
+ const h0=ar9Header;ar9Header=function(){return h0.apply(this,arguments).replace(/data-a="go" data-v="score"/,'data-a="wmScore"')};
+}
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});
