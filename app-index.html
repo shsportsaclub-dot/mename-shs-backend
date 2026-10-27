@@ -6990,6 +6990,61 @@ render=(o=>function(){try{ar17Norm(UI.wm)}catch(e){}return o.apply(this,argument
   return box.innerHTML};
  const s=document.createElement('style');s.textContent='.sc2-wt{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px}.sc2-wt button{display:grid;gap:2px;place-items:center;padding:8px 2px;border:1px solid var(--bd);border-radius:10px;background:var(--card);color:var(--fg);font-size:10px}.sc2-wt button span{font-size:18px}.sc2-wt button.on{border-color:#e11d2e;background:#e11d2e33;box-shadow:0 0 0 1px #e11d2e inset}.sc2-ctl{display:grid;grid-template-columns:1fr 1fr;gap:6px}.sc2-ctl .btn,.sc2-ctl button{font-size:11px;padding:10px 6px;text-align:left;margin:0;width:auto}';document.head.appendChild(s);
 }
+/* ---------------- M014 CREATE TEAM (search-first, claim, affiliation states) */
+{
+ const CATS=[['Independent Local Team','Village / street / friends team'],['Club Team','Registered or local club'],['Academy Team','Coaching academy squad'],['Corporate Team','Company / office team'],['School/College Team','Educational institution'],['Franchise Team','League franchise'],['District Representative','District side'],['State Representative','State / province side'],['National Representative','National side'],['Other Sport-Specific Team','Anything else']];
+ const SPORTS=['Cricket','Football','Kabaddi','Badminton','Volleyball','Basketball','Hockey','Tennis','Table Tennis','Baseball','Rugby','Other'];
+ const AFF=['Independent','Club','Academy','Corporate Organization','Franchise','Association / Board'];
+ const norm=s=>String(s||'').toLowerCase().replace(/\b(team|cc|xi|club|cricket|the)\b/g,'').replace(/[^a-z0-9]/g,'');
+ const tok=s=>new Set(String(s||'').toLowerCase().replace(/[^a-z0-9 ]/g,' ').split(/\s+/).filter(w=>w.length>1));
+ const same=(a,b)=>String(a||'').trim().toLowerCase()===String(b||'').trim().toLowerCase()&&a;
+ window.ctwMatches=function(d){
+  const n=norm(d.name),A1=tok(d.name);if(!n)return [];
+  return S.teams.map(t=>{const m=norm(t.name);let sc=0;
+   if(m===n)sc=100;else if(m&&n&&(m.includes(n)||n.includes(m)))sc=70;
+   else{const B=tok(t.name),i=[...A1].filter(x=>B.has(x)).length,u=new Set([...A1,...B]).size;sc=u?Math.round(60*i/u):0}
+   if(sc&&t.loc){if(same(t.loc.district,d.district))sc+=10;if(same(t.loc.city,d.city))sc+=10}
+   return {t,sc}}).filter(x=>x.sc>=30).sort((a,b)=>b.sc-a.sc).slice(0,6)};
+ const get=()=>UI.ctw||(UI.ctw={step:1,d:{cat:'Independent Local Team',sport:'Cricket',country:'India',aff:'Independent',vis:'public',color:'#2563eb'}});
+ const grab=()=>{const w=UI.ctw;if(!w)return;document.querySelectorAll('#modal input[data-k],#modal select[data-k]').forEach(e=>{w.d[e.dataset.k]=e.value})};
+ const show=()=>{UI.modal={t:'html',html:ctwHtml()};renderModal()};
+ const dots=s=>`<div class="ctw-dots">${['Type','Location','Search','Identity','Create'].map((n,i)=>`<span class="${i+1===s?'on':i+1<s?'ok':''}">${i+1}<small>${n}</small></span>`).join('')}</div>`;
+ const inp=(k,l,v,x)=>`<label>${l}<input data-k="${k}" value="${esc(v||'')}" ${x||''}></label>`;
+ window.ctwHtml=function(){
+  const w=get(),d=w.d,s=w.step;let b='';
+  if(s===1)b=`<div class="sc2-h">Team category</div><div class="ctw-cats">${CATS.map(([c,t])=>`<button type="button" class="${d.cat===c?'on':''}" data-a="ctwSet" data-k="cat" data-v="${esc(c)}"><b>${esc(c)}</b><small>${esc(t)}</small></button>`).join('')}</div><div class="sc2-h">Sport</div><div class="ctw-sp">${SPORTS.map(c=>`<button type="button" class="${d.sport===c?'on':''}" data-a="ctwSet" data-k="sport" data-v="${c}">${c}</button>`).join('')}</div>`;
+  else if(s===2)b=`<label>Country<select data-k="country">${Object.keys(STATES).map(c=>`<option ${c===d.country?'selected':''}>${c}</option>`).join('')}</select></label>${inp('state','State / Province / Region',d.state,'list="ctw-st"')}<datalist id="ctw-st">${(STATES[d.country]||[]).map(x=>`<option>${esc(x)}</option>`).join('')}</datalist>${inp('district','District / County',d.district)}${inp('city','City / Town',d.city)}${inp('locality','Village / Locality',d.locality)}<p class="mu sm">Names are entered as you know them. They are not checked against an official registry yet.</p>`;
+  else if(s===3){const q=d.name?ctwMatches(d):[];b=`${inp('name','Search by team name',d.name,'placeholder="Type the team name"')}<button type="button" class="btn sm" data-a="ctwSearch">Search</button>
+   <div class="sc2-h">${d.searched?(q.length?q.length+' possible match(es)':'No existing team found'):'Always search before creating'}</div>
+   ${d.searched?q.map(({t,sc})=>`<div class="item" style="flex-wrap:wrap"><b>${esc(t.name)}</b><span class="pill">${sc}% match</span><div class="mu sm" style="width:100%">${esc([t.loc&&t.loc.city,t.loc&&t.loc.district,t.state].filter(Boolean).join(' · ')||'Location not recorded')} · ${esc(t.verified?'Verified':'Not verified')}</div><div class="row" style="width:100%"><button type="button" class="btn sm ghost" data-a="ctwOpenTeam" data-id="${t.id}">Open existing</button><button type="button" class="btn sm ghost" data-a="ctwRequest" data-id="${t.id}" data-v="membership">Request membership</button><button type="button" class="btn sm ghost" data-a="ctwRequest" data-id="${t.id}" data-v="claim">Claim ownership</button></div></div>`).join(''):''}
+   <p class="mu sm">A claim is only a request. Editing rights are granted after ownership is verified.</p>`}
+  else if(s===4)b=`${inp('name','Team name',d.name,'required')}<div class="row">${inp('short','Short name (3 letters)',d.short,'maxlength="3"')}${inp('year','Established year (if known)',d.year,'inputmode="numeric"')}</div>${inp('ground','Home ground',d.ground)}${inp('contact','Contact / manager',d.contact)}<label>Colour<input data-k="color" type="color" value="${esc(d.color||'#2563eb')}" style="padding:2px;height:40px"></label><label>Organization / affiliation<select data-k="aff">${AFF.map(a=>`<option ${a===d.aff?'selected':''}>${a}</option>`).join('')}</select></label>${d.aff&&d.aff!=='Independent'?inp('affName','Organization / board name',d.affName):''}<label>Visibility<select data-k="vis"><option value="public" ${d.vis==='public'?'selected':''}>Public</option><option value="private" ${d.vis==='private'?'selected':''}>Private</option></select></label><p class="mu sm">Affiliation starts as <b>Not claimed</b> or <b>Requested</b>. Official verification needs approval evidence from the board.</p>`;
+  else b=`<div class="card"><h3>${esc(d.name||'Team')}</h3><div class="kv"><div>Category</div><div>${esc(d.cat)}</div><div>Sport</div><div>${esc(d.sport)}</div><div>Location</div><div>${esc([d.locality,d.city,d.district,d.state,d.country].filter(Boolean).join(', ')||'-')}</div><div>Ground</div><div>${esc(d.ground||'-')}</div><div>Affiliation</div><div>${esc(d.aff)}${d.aff!=='Independent'?' · Requested (not verified)':''}</div><div>Admin</div><div>${esc(S.user&&S.user.name||'You')}</div><div>Roster</div><div>Empty, add players next</div><div>Source</div><div>User-submitted</div></div></div><p class="mu sm">Creating a team does not mean official board approval.</p>`;
+  const nxt=s<5?`<button type="button" class="btn" style="flex:1" data-a="ctwNext">Next</button>`:`<button type="button" class="btn red" style="flex:1" data-a="ctwCreate">Create team</button>`;
+  return `<h3>Create team</h3>${dots(s)}${b}<div class="row" style="margin-top:10px">${s>1?'<button type="button" class="btn ghost" style="flex:1" data-a="ctwBack">Back</button>':''}${nxt}</div>`};
+ Object.assign(A,{
+  ctwOpen(){UI.ctw=null;get();show()},
+  ctwSet(d){grab();get().d[d.k]=d.v;show()},
+  ctwSearch(){grab();get().d.searched=1;show()},
+  ctwBack(){grab();const w=get();w.step=Math.max(1,w.step-1);show()},
+  ctwNext(){grab();const w=get(),d=w.d;
+   if(w.step===2&&!d.state&&!d.city){toast('Enter at least a state or city');return}
+   if(w.step===3&&!d.name){toast('Search by name first');return}
+   if(w.step===4&&!String(d.name||'').trim()){toast('Team name needed');return}
+   if(w.step===3)d.searched=1;
+   w.step++;show()},
+  ctwOpenTeam(d){UI.modal=null;UI.ctw=null;UI.view='teams';render();toast('Existing team shown in Teams list')},
+  ctwRequest(d){const t=S.teams.find(x=>x.id===d.id);if(!t)return;(t.requests=t.requests||[]).push({type:d.v,by:S.user&&S.user.name||'User',at:Date.now(),status:'Requested'});save();UI.modal=null;UI.ctw=null;renderModal();toast((d.v==='claim'?'Ownership claim':'Membership request')+' sent. Status: Requested.',3500)},
+  ctwCreate(){grab();const d=UI.ctw.d,name=String(d.name||'').trim();if(!name){toast('Team name needed');return}
+   const dup=ctwMatches(d).find(x=>x.sc>=100&&!UI.ctw.force);
+   if(dup){UI.ctw.force=1;UI.ctw.step=3;d.searched=1;show();toast('A team with this name exists. Open or claim it, or press Create again to continue.',4500);return}
+   const short=(d.short||name.replace(/[^A-Za-z0-9 ]/g,'').split(' ').map(w=>w[0]).join('')).toUpperCase().slice(0,3)||'TM';
+   const t={id:uid(),name,short,color:d.color||'#2563eb',preset:null,logo:null,players:[],level:'club',state:d.state||'',board:'',country:d.country||'',cat:d.cat,sport:d.sport,loc:{country:d.country,state:d.state,district:d.district,city:d.city,locality:d.locality},ground:d.ground||'',est:d.year||'',contact:d.contact||'',vis:d.vis,aff:{type:d.aff,name:d.affName||'',state:d.aff==='Independent'?'Not Claimed':'Requested'},owner:S.user&&(S.user.phone||S.user.name)||'',admins:[S.user&&(S.user.phone||S.user.name)||''],verified:false,prov:'user-submitted',createdAt:Date.now(),rev:1};
+   S.teams.push(t);UI.modal=null;UI.ctw=null;commit();toast(name+' created. Add players next.',3500)}
+ });
+ const vt=vTeams;vTeams=function(){return `<div class="card"><button class="btn wide" data-a="ctwOpen">+ Create new team (search first)</button></div>`+vt.apply(this,arguments)};
+ const s=document.createElement('style');s.textContent='.ctw-dots{display:flex;justify-content:space-between;margin:6px 0 12px}.ctw-dots span{display:grid;place-items:center;width:20%;font-size:12px;color:var(--mu)}.ctw-dots span small{font-size:9px}.ctw-dots span.on{color:var(--ac);font-weight:700}.ctw-dots span.ok{color:#22a559}.ctw-cats{display:grid;grid-template-columns:1fr 1fr;gap:6px}.ctw-cats button{text-align:left;padding:8px;border:1px solid var(--bd);border-radius:10px;background:var(--card);color:var(--fg)}.ctw-cats button b{display:block;font-size:12px}.ctw-cats small{font-size:10px;color:var(--mu)}.ctw-cats button.on,.ctw-sp button.on{border-color:var(--ac);box-shadow:0 0 0 1px var(--ac) inset}.ctw-sp{display:flex;flex-wrap:wrap;gap:6px}.ctw-sp button{padding:7px 10px;border:1px solid var(--bd);border-radius:20px;background:var(--card);color:var(--fg);font-size:12px}';document.head.appendChild(s);
+}
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});
