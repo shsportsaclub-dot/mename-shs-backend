@@ -7103,6 +7103,22 @@ render=(o=>function(){try{ar17Norm(UI.wm)}catch(e){}return o.apply(this,argument
  'html[data-plat=tv] .tv :focus,html[data-plat=tv] .tv :focus-visible{outline:6px solid #ffd166!important;outline-offset:3px;transform:scale(1.03)}.tv-empty{font-size:34px;color:#9cb4d8;padding:80px 0;text-align:center}.tv-hint{margin-top:36px;font-size:20px;color:#6f86ad;text-align:center}.tv-back{font-size:26px;font-weight:700;padding:14px 32px;border-radius:40px;background:#0f1d3d;color:#fff;border:3px solid #1d3566;margin:20px 0}html[data-plat=tv] #app:has(.tv-m){zoom:1.25}';
  document.head.appendChild(st);
 }
+/* ---------------- CREATE MATCH CONCEPT: format cards, swap teams, Match Ready hero */
+{
+ const FM=[['20','T20','20 overs a side'],['50','ODI','50 overs a side'],['905','Test','Multi-day'],['10','T10','10 overs a side'],['20.5','The Hundred','100 balls a side'],['30','Custom','Pick below']];
+ const o0=wzStepHTML;
+ wzStepHTML=function(){
+  const w=S.wiz,h=o0.apply(this,arguments);
+  if(w.step===1)return h.replace('<div class="card" style="margin-top:10px"><div class="b">Team not',`<div class="row" style="margin-top:8px"><button type="button" class="btn ghost wide" data-a="wzSwap">⇄ Swap teams</button></div><div class="card" style="margin-top:10px"><div class="b">Team not`);
+  if(w.step===2){const cur=String(w.overs),sel=FM.find(f=>f[0]===cur||(f[0]==='905'&&+cur>=901))||FM[5];
+   return `<div class="sc2-h" style="margin-top:0">Match format</div><div class="mf-grid">${FM.map(f=>`<button type="button" class="${sel===f?'on':''}" data-a="wzFmt" data-v="${f[0]}"><b>${f[1]}</b><small>${f[2]}</small></button>`).join('')}</div>`+h}
+  if(w.step===8){const v=typeof wzVenue==='function'?wzVenue():null,ta=T(w.a),tb=T(w.b),fm=String(w.overs)==='20.5'?'The Hundred':+w.overs>=901?(+w.overs-900)+'-day Test':w.overs+' overs',tn=T(w.toss)?T(w.toss).name:'';
+   return `<div class="mr-hero"><div class="mr-t"><span>${esc(ta.name)}</span><b>VS</b><span>${esc(tb.name)}</span></div><div class="mr-kv"><div>Format</div><div>${esc(fm)}</div><div>Date</div><div>${esc(w.date||'-')}</div><div>Venue</div><div>${esc(v?v.name:'Not chosen')}</div><div>Toss</div><div>${esc(tn)} chose to ${esc(w.dec==='bowl'?'bowl':'bat')}</div><div>Umpires</div><div>${esc([w.off&&w.off.u1,w.off&&w.off.u2].filter(Boolean).join(', ')||'Not entered')}</div></div></div>`+h}
+  return h};
+ A.wzFmt=d=>{S.wiz.overs=+d.v;save();wzShow()};
+ A.wzSwap=()=>{const w=S.wiz,x=w.a;w.a=w.b;w.b=x;save();wzShow()};
+ const st=document.createElement('style');st.textContent='.mf-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}.mf-grid button{text-align:left;padding:10px;border:1px solid var(--bd);border-radius:12px;background:var(--card);color:var(--fg)}.mf-grid button b{display:block;font-size:15px}.mf-grid button small{color:var(--mu);font-size:11px}.mf-grid button.on{border-color:var(--ac);box-shadow:0 0 0 1px var(--ac) inset}.mr-hero{border-radius:14px;padding:12px;background:linear-gradient(120deg,#0d2238,#1d4366);color:#fff;margin-bottom:10px}.mr-t{display:flex;align-items:center;justify-content:space-between;gap:8px;font-weight:700;font-size:15px;margin-bottom:8px}.mr-t b{color:#ff5a5f}.mr-kv{display:grid;grid-template-columns:90px 1fr;gap:4px 10px;font-size:12px}.mr-kv div:nth-child(odd){color:#a9c3dc}.modal [data-a=wzStart]{background:#c62828;color:#fff;font-size:16px;letter-spacing:1px;text-transform:uppercase;min-height:50px}';document.head.appendChild(st);
+}
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});

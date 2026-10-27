@@ -1,0 +1,15 @@
+const {chromium}=require('playwright');const fs=require('node:fs'),http=require('node:http'),assert=require('node:assert/strict');
+(async()=>{const html=fs.readFileSync('app-index.html'),sv=http.createServer((q,r)=>{r.setHeader('content-type','text/html');r.end(html)});await new Promise(r=>sv.listen(18993,'127.0.0.1',r));
+const b=await chromium.launch();try{const p=await b.newPage({viewport:{width:412,height:900}}),errs=[];p.on('pageerror',e=>errs.push(e.message));
+await p.route('**/*',r=>r.request().url()==='http://127.0.0.1:18993/'?r.continue():r.fulfill({contentType:'application/json',body:'{"ok":false}'}));
+await p.goto('http://127.0.0.1:18993/');
+await p.evaluate(()=>{UI.stage='app';S.user={name:'QA',role:'scorer',kind:'Scorer',phone:'+910000000000'};S.prefs={...S.prefs,asked:1,welcomed:1};
+S.players=Array.from({length:4},(_,i)=>({id:'p'+i,name:'P'+i,role:'BAT'}));S.teams=[{id:'a',name:'Alpha',short:'ALP',color:'#00f',players:['p0','p1']},{id:'b',name:'Beta',short:'BET',color:'#f00',players:['p2','p3']}];S.wiz=wzFresh();S.wiz.step=1;wzShow()});
+assert.equal(await p.evaluate(()=>[S.wiz.a,S.wiz.b].join()),'a,b');
+await p.locator('[data-a="wzSwap"]').click();assert.equal(await p.evaluate(()=>[S.wiz.a,S.wiz.b].join()),'b,a','swap');
+await p.evaluate(()=>{S.wiz.step=2;wzShow()});assert.equal(await p.locator('.mf-grid button').count(),6);
+await p.locator('[data-a="wzFmt"][data-v="50"]').click();assert.equal(await p.evaluate(()=>+S.wiz.overs),50);assert.match(await p.locator('.mf-grid button.on').innerText(),/ODI/);
+await p.locator('[data-a="wzFmt"][data-v="905"]').click();assert.match(await p.locator('.mf-grid button.on').innerText(),/Test/);
+await p.evaluate(()=>{S.wiz.step=8;wzShow()});assert.match(await p.locator('.mr-hero').innerText(),/Beta[\s\S]*VS[\s\S]*Alpha[\s\S]*Test/);assert.equal(await p.locator('[data-a="wzStart"]').count(),1);
+assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true);assert.deepEqual(errs,[]);
+console.log('PASS create match concept: format cards, swap teams, match ready hero')}finally{await b.close();sv.close()}})().catch(e=>{console.error(e);process.exit(1)});
