@@ -18,6 +18,8 @@ const { chromium } = require('playwright');
     o.strip = d2.querySelectorAll('.cx3o .cx3b').length >= 6 && /Over 2/.test(t2) && /CRR/.test(t2) && /= 7/.test(t2); o.big = !!d2.querySelector('.cx3big');
     const W3 = JSON.parse(JSON.stringify(W2)); W3.sc.scorecard.unshift({ inning: 'Team B Inning 1', totals: { R: 150, W: 6, O: '20' }, batting: [], bowling: [] }); W3.bb = null;
     const d3 = document.createElement('div'); d3.innerHTML = shCreaseCard(W3); o.chase = /Target:\s*151/.test(d3.innerText) && /need 132 runs in 110 balls/.test(d3.innerText) && /RRR/.test(d3.innerText);
+    const W4 = JSON.parse(JSON.stringify(W2)); W4.sc.scorecard[0].batting[1].on = true; const d4 = document.createElement('div'); d4.innerHTML = shCreaseCard(W4);
+    o.arena = /ON STRIKE/.test(d4.innerText) && d4.querySelectorAll('.ar5act button').length === 5 && d4.querySelectorAll('.ar5row').length >= 6 && /Over 2 \(R: 7\)/.test(d4.innerText);
     o.none = /—-—/.test(shCreaseCard({ m: {}, sc: { scorecard: [] } }));
     o.panel = typeof shPulsePanel === 'function'; return o;
   });
