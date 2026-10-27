@@ -1,0 +1,23 @@
+const { chromium } = require('playwright');
+(async () => {
+  const b = await chromium.launch(), errs = [], p = await b.newPage({ viewport: { width: 390, height: 844 } }); p.on('pageerror', e => errs.push(e.message));
+  await p.goto('file://' + require('path').resolve(__dirname, '../app-index.html')); await p.waitForTimeout(400);
+  const ok = (c, m) => { if (!c) { console.error('FAIL', m); process.exitCode = 1; } };
+  await p.evaluate(() => { S.prefs = S.prefs || {}; S.prefs.welcomed = 1; S.user = { name: 'T', phone: '+919999999999', role: 'admin' }; UI.stage = 'app'; UI.view = 'hub'; UI.hub = { m: '', t: 0 }; render(); });
+  await p.waitForTimeout(500);
+  ok(await p.locator('.hubc').count() === 24, 'all 24 modules listed');
+  ok(await p.locator('.hubc:has-text("interface only")').count() > 0 && await p.locator('.hubc:has-text("LIVE")').count() > 0, 'live and interface-only flagged');
+  await p.click('.hubc:has-text("Ticketing")'); await p.waitForTimeout(200);
+  let t = await p.innerText('.hub');
+  ok(/NOT BUILT YET/.test(t) && /Scanner/.test(t) && !(await p.locator('.hubp button').count()), 'ticketing shows honest empty state with no dead button');
+  await p.click('.hubt button:has-text("Scanner")'); await p.waitForTimeout(150);
+  ok(/Scanner/.test(await p.innerText('.hubp h3')), 'tab switches');
+  await p.click('text=All features'); await p.waitForTimeout(150);
+  await p.click('.hubc:has-text("Auction")'); await p.waitForTimeout(150);
+  ok(/LIVE FEATURE/.test(await p.innerText('.hub')), 'auction marked live');
+  await p.click('.hubp button'); await p.waitForTimeout(400);
+  ok(await p.evaluate(() => UI.view) === 'auction', 'open button navigates to real auction view');
+  const menu = await p.evaluate(() => MENU2[0][0]); ok(menu === 'All features', 'menu entry');
+  ok(!errs.length, errs.join(';'));
+  await b.close(); if (!process.exitCode) console.log('PASS: all-features hub');
+})();

@@ -136,3 +136,5 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 - Not possible without a data source: ball-by-ball towers and commentary for provider matches where the provider sends no deliveries (e.g. CricketData bbbEnabled=false). Needs a paid ball-by-ball feed (e.g. Sportmonks token). Own-scored matches have full towers and commentary.
 
 - 2026-10-20 Live tab (CREX-style `cx3Panel`): score + big last ball, CRR/RRR/Target, need line, this-over strip, batters, partnership, last wicket, bowler. Provider matches without ball-by-ball show scorecard-derived parts only.
+
+- 2026-10-27 All features hub (XV.hub, menu 'All features'): 24 modules / tabs from the master report with icons. LIVE modules open the real feature; the rest show an honest 'interface ready, feature not built yet' state. QR, payments and login are deliberately last (owner instruction).
