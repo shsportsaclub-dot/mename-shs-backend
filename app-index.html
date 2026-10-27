@@ -7150,6 +7150,23 @@ render=(o=>function(){try{ar17Norm(UI.wm)}catch(e){}return o.apply(this,argument
  A.shotSet=d=>{UI[d.k]=UI[d.k]===d.v?'':d.v;render()};
  const st=document.createElement('style');st.textContent='.sc2-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}.sc2-chips button{padding:6px 10px;border:1px solid var(--bd);border-radius:18px;background:var(--card);color:var(--fg);font-size:11px}.sc2-chips button.on{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 25%,transparent)}';document.head.appendChild(st);
 }
+/* ---------------- WAGON WHEEL concept (SH-057): batter filter, run filter, legend counts */
+{
+ const COL={1:'#f5b335',2:'#22a559',3:'#f08a24',4:'#3b82f6',6:'#e11d2e'};
+ window.wagonSVG=function(m,i){
+  const inn=m.innings[i];if(!inn)return '';const R=110,F=UI.wf||{},ev=inn.ev.filter(e=>e.ang&&e.r>0&&e.x!=='b'&&e.x!=='lb'&&!e.w);
+  const bats=[...new Set(ev.map(e=>e.bt))],pick=ev.filter(e=>(!F.b||e.bt===F.b)&&(!F.r||e.r===F.r||(F.r===5&&e.r>=5)));
+  let s=`<circle cx="120" cy="120" r="${R}" fill="color-mix(in srgb,var(--gn) 24%,transparent)" stroke="var(--bd)"/><circle cx="120" cy="120" r="${R*.5}" fill="none" stroke="var(--bd)" stroke-dasharray="3 3"/><rect x="116" y="104" width="8" height="32" fill="var(--c2)" stroke="var(--bd)"/>`;
+  pick.forEach(e=>{const d=Math.min(1.05,e.ang.d)*R,x=120+Math.cos(e.ang.a)*d,y=120+Math.sin(e.ang.a)*d,c=COL[Math.min(e.r,6)]||COL[1];s+=`<line x1="120" y1="120" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="${c}" stroke-width="${e.r>=4?2:1.2}" opacity=".9"/><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="2.6" fill="${c}"/>`});
+  const cnt=r=>pick.filter(e=>e.r===r).length,tot=pick.reduce((a,e)=>a+e.r,0);
+  const chip=(k,v,l,on)=>`<button type="button" class="${on?'on':''}" data-a="wfSet" data-k="${k}" data-v="${v}">${l}</button>`;
+  return `<div class="wf-ctl"><select data-c="wfBat" aria-label="Batter"><option value="">All batters</option>${bats.map(b=>`<option value="${esc(b)}" ${F.b===b?'selected':''}>${esc(nm(b))}</option>`).join('')}</select><div class="sc2-chips">${[[0,'All runs'],[1,'1s'],[2,'2s'],[3,'3s'],[4,'4s'],[6,'6s']].map(([v,l])=>chip('r',v,l,(F.r||0)===v)).join('')}</div></div>
+  <svg viewBox="0 0 240 240" style="width:100%;max-width:300px">${s}</svg>
+  <div class="wf-leg">${[1,2,3,4,6].map(r=>`<span><i style="background:${COL[r]}"></i>${r}s <b>${cnt(r)}</b></span>`).join('')}<span>Runs shown <b>${tot}</b></span></div>${ev.length?'':'<div class="mu sm">No shot direction recorded yet. Tap the field in the Scorer before the run.</div>'}`};
+ A.wfSet=d=>{UI.wf=Object.assign({},UI.wf,{[d.k]:d.k==='r'?+d.v:d.v});render()};
+ C.wfBat=v=>{UI.wf=Object.assign({},UI.wf,{b:v});render()};
+ const st=document.createElement('style');st.textContent='.wf-ctl{display:grid;gap:6px;margin-bottom:8px}.wf-ctl select{width:100%}.wf-leg{display:flex;flex-wrap:wrap;gap:10px;font-size:11px;color:var(--mu);margin-top:6px}.wf-leg i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px}.wf-leg b{color:var(--fg)}';document.head.appendChild(st);
+}
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});
