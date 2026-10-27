@@ -1069,7 +1069,7 @@ http.createServer(async (req, res) => {
   }
   if (req.method === 'GET' && (path === '/' || path === '/index.html')) {   // serve the app itself, same address as the API
     try {
-      const html = Buffer.from(fs.readFileSync(new URL('./app-index.html', import.meta.url), 'utf8').replace('__SH_BUILD__', String(E.RENDER_GIT_COMMIT || '').slice(0, 7) || 'local'));
+      const html = Buffer.from(fs.readFileSync(new URL('./app-index.html', import.meta.url), 'utf8').replace('__SH_BUILD__', String(E.RENDER_GIT_COMMIT || '').slice(0, 7) || 'local').replace('</head>', '<style id="sh-main-live-reference">'+fs.readFileSync(new URL('./public/main-live-reference.css', import.meta.url), 'utf8')+'</style></head>'));
       res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store', 'x-sh-commit': String(E.RENDER_GIT_COMMIT || 'local') });
       return res.end(html);
     } catch { /* fall through to 404 */ }
