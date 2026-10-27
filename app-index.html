@@ -6982,7 +6982,7 @@ render=(o=>function(){try{ar17Norm(UI.wm)}catch(e){}return o.apply(this,argument
    const g=sec.querySelector('.sc2-ctl');
    const rules=box.querySelector('[data-a="rulesOpen"]'),rain=box.querySelector('[data-a="rainOpen"]'),pen=box.querySelector('[data-a="penOpen"]');
    const mk=(a,l,id)=>`<button class="btn ghost" data-a="${a}"${id?` data-id="${esc(m.id)}"`:''}>${l}</button>`;
-   g.innerHTML=mk('undoBall','↶ Undo last ball')+mk('swap','⇄ Swap strike')+mk('rulesOpen','⚡ Powerplay settings',1)+mk('rainOpen','🌧 Rain / interruption',1)+mk('penOpen','⚠ Penalty runs',1)+mk('endInn','■ End innings');
+   g.innerHTML=mk('rulesOpen','⚡ Powerplay settings',1)+mk('rainOpen','🌧 Rain / interruption',1)+mk('penOpen','⚠ Penalty runs',1);
    keep.forEach(b=>g.appendChild(b));x.remove();
    const ref=box.querySelector('.sc2-wk')?.closest('.card');(ref||box.firstElementChild).after(sec);
    [rules,rain,pen].forEach(b=>{if(b&&b.closest('.row')&&!b.closest('.sc2-ctl'))b.closest('.row').remove()});
