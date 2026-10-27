@@ -7066,6 +7066,43 @@ render=(o=>function(){try{ar17Norm(UI.wm)}catch(e){}return o.apply(this,argument
   else if(k==='d')b=q('[data-a="ex"][data-v="wd"]');else if(k==='n')b=q('[data-a="ex"][data-v="nb"]');
   if(b){b.click();e.preventDefault()}});
 }
+/* ---------------- TV EXPERIENCE: its own 10-foot UI (no sidebar, big rails, remote-first) */
+{
+ const isTV=()=>document.documentElement.dataset.plat==='tv';
+ const clock=()=>new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+ const tabs=[['live','LIVE'],['up','UPCOMING'],['rec','RESULTS'],['sh','SH MATCHES']];
+ const tvCard=(m,big)=>{const live=m.started&&!m.ended,tm=(m.teams||[]).slice(0,2),sp=wSplit(m);
+  return `<button class="tv-card ${big?'big':''}" data-a="wOpen" data-id="${esc(m.id)}"><span class="tv-tag ${live?'lv':m.ended?'rs':'up'}">${live?'LIVE':m.ended?'RESULT':'UPCOMING'}</span><small>${esc((sp.series||'')+' · '+(cbFm(m)[0]||''))}</small>${tm.map(t=>`<div class="tv-tm">${wBadge(t)}<b>${esc(t.name||t.short)}</b><span>${wTeamScore(m,t)||''}</span></div>`).join('')}<div class="tv-st">${esc(m.started||m.ended?(m.status||'Result not published'):wIn(m))}</div></button>`};
+ const localCard=m=>{let s='';try{const a=calc(m,0),b=m.innings[1]?calc(m,1):null;s=`${T(m.a).name} ${a.runs}/${a.wk}`+(b?` · ${T(m.b).name} ${b.runs}/${b.wk}`:'')}catch(e){}
+  return `<button class="tv-card" data-a="open" data-id="${esc(m.id)}"><span class="tv-tag ${m.status==='live'?'lv':'up'}">${m.status==='live'?'LIVE':String(m.status||'').toUpperCase()}</span><small>Scoring Heroes · ${m.overs>=900?'Test':m.overs+' overs'}</small><div class="tv-tm"><b>${esc(T(m.a).name)}</b></div><div class="tv-tm"><b>${esc(T(m.b).name)}</b></div><div class="tv-st">${esc(s||m.result||'')}</div></button>`};
+ window.tvHome=function(){
+  const t=UI.tvt||'live',F2=wFilter(),ok=UI.live&&UI.live.ok;
+  let list=t==='sh'?[]:(F2[t]||[]).slice(0,24);
+  const feat=t==='live'&&list[0]?list[0]:null,rest=feat?list.slice(1):list;
+  const loc=(S.matches||[]).filter(m=>t==='sh'||(t==='live'&&m.status==='live'));
+  return `<div class="tv"><div class="tv-top"><div class="tv-logo">SCORING <b>HEROES</b></div><nav class="tv-tabs">${tabs.map(([k,l])=>`<button class="${t===k?'on':''}" data-a="tvTab" data-v="${k}">${l}</button>`).join('')}<button data-a="go" data-v="dream">HEROES 11</button><button data-a="go" data-v="matches">MATCHES</button></nav><div class="tv-clock">${clock()}</div></div>
+  ${feat?`<div class="tv-hero">${tvCard(feat,true)}</div>`:''}
+  ${loc.length?`<h2 class="tv-h">Scoring Heroes matches</h2><div class="tv-row">${loc.map(localCard).join('')}</div>`:''}
+  ${rest.length?`<h2 class="tv-h">${{live:'More live matches',up:'Upcoming matches',rec:'Recent results'}[t]||''}</h2><div class="tv-grid">${rest.map(m=>tvCard(m)).join('')}</div>`:''}
+  ${!feat&&!rest.length&&!loc.length?`<div class="tv-empty">${ok?'No matches in this list right now':'Live matches load only on the real app link'}</div>`:''}
+  <div class="tv-hint">◀ ▲ ▼ ▶ move · OK select · Back to return</div></div>`};
+ const h0=vHome;vHome=function(){return isTV()?tvHome():h0.apply(this,arguments)};
+ A.tvTab=d=>{UI.tvt=d.v;render()};
+ const wm0=XV.wmatch;XV.wmatch=function(){const o=wm0.apply(this,arguments);return isTV()?`<div class="tv tv-m"><button class="tv-back" data-a="wBack">◀ Back</button></div>`+o:o};
+ document.addEventListener('keydown',e=>{if(!isTV())return;const k=e.key,c=e.keyCode;
+  if(k==='Escape'||k==='Backspace'||k==='GoBack'||c===10009||c===461||c===27){const t=e.target;if(t&&/^(INPUT|TEXTAREA)$/.test(t.tagName))return;
+   if(UI.modal){UI.modal=null;renderModal();e.preventDefault();return}
+   if(UI.view==='wmatch'){A.wBack();e.preventDefault()}else if(UI.view!=='home'){UI.view='home';render();e.preventDefault()}}});
+ setInterval(()=>{if(isTV()&&UI.view==='home'&&S.user){const el=document.querySelector('.tv-clock');if(el)el.textContent=clock()}},20000);
+ const st=document.createElement('style');st.textContent=
+ 'html[data-plat=tv] body{zoom:1;font-size:22px;background:#050b1e}html[data-plat=tv] #app{margin:0!important;padding:0 56px 48px!important;max-width:none!important}html[data-plat=tv] .drawer,html[data-plat=tv] .hdr,html[data-plat=tv] .bnav,html[data-plat=tv] .fabfloat,html[data-plat=tv] .fab{display:none!important}'+
+ 'html[data-plat=tv] .tv-top{display:flex;align-items:center;gap:36px;padding:28px 0 20px;position:sticky;top:0;background:linear-gradient(#050b1e 80%,transparent);z-index:5}.tv-logo{font-size:34px;font-weight:800;letter-spacing:2px;color:#ff5a5f}.tv-logo b{color:#9cc2ff}.tv-tabs{display:flex;gap:12px;flex:1;flex-wrap:nowrap}.tv-tabs button{font-size:22px;font-weight:700;letter-spacing:1px;padding:12px 24px;border-radius:40px;background:#0f1d3d;border:3px solid transparent;color:#cfe0ff}.tv-tabs button.on{background:#e11d2e;color:#fff}.tv-clock{font-size:30px;color:#9cb4d8;font-variant-numeric:tabular-nums}'+
+ '.tv-h{font-size:30px;margin:28px 0 14px;color:#fff}.tv-hero .tv-card{width:100%;min-height:300px;justify-content:center;gap:14px}.tv-card.big .tv-tm b{font-size:44px}.tv-card.big .tv-tm span{font-size:52px}'+
+ '.tv-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px}.tv-row{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(520px,1fr);gap:22px;overflow-x:auto;padding:6px}'+
+ '.tv-card{text-align:left;color:#fff;background:linear-gradient(135deg,#102349,#0a1634);border:3px solid #1d3566;border-radius:24px;padding:24px 28px;display:flex;flex-direction:column;gap:10px;min-width:0}.tv-card small{color:#9cb4d8;font-size:20px}.tv-tag{align-self:flex-start;font-size:18px;font-weight:800;letter-spacing:2px;padding:4px 14px;border-radius:8px;background:#334}.tv-tag.lv{background:#e11d2e}.tv-tag.up{background:#2455b8}.tv-tag.rs{background:#2b7a4b}.tv-tm{display:flex;align-items:center;gap:16px}.tv-tm b{font-size:30px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.tv-tm span{font-size:32px;font-weight:700;font-variant-numeric:tabular-nums}.tv-tm img,.tv-tm .tbadge{width:56px;height:56px;flex:none}.tv-st{font-size:22px;color:#ffd166}'+
+ 'html[data-plat=tv] .tv :focus,html[data-plat=tv] .tv :focus-visible{outline:6px solid #ffd166!important;outline-offset:3px;transform:scale(1.03)}.tv-empty{font-size:34px;color:#9cb4d8;padding:80px 0;text-align:center}.tv-hint{margin-top:36px;font-size:20px;color:#6f86ad;text-align:center}.tv-back{font-size:26px;font-weight:700;padding:14px 32px;border-radius:40px;background:#0f1d3d;color:#fff;border:3px solid #1d3566;margin:20px 0}html[data-plat=tv] #app:has(.tv-m){zoom:1.25}';
+ document.head.appendChild(st);
+}
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});

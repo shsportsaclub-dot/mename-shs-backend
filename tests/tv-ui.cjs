@@ -1,0 +1,18 @@
+const {chromium}=require('playwright');const fs=require('node:fs'),http=require('node:http'),assert=require('node:assert/strict');
+(async()=>{const html=fs.readFileSync('app-index.html'),sv=http.createServer((q,r)=>{r.setHeader('content-type','text/html');r.end(html)});await new Promise(r=>sv.listen(18991,'127.0.0.1',r));
+const b=await chromium.launch();try{const c=await b.newContext({viewport:{width:1920,height:1080},userAgent:'Mozilla/5.0 (Linux; Android 11; BRAVIA 4K) Chrome/110 Safari/537.36'}),p=await c.newPage(),errs=[];p.on('pageerror',e=>errs.push(e.message));
+await p.route('**/*',r=>r.request().url().startsWith('http://127.0.0.1:18991/')?r.continue():r.fulfill({contentType:'application/json',body:'{"ok":false}'}));
+await p.goto('http://127.0.0.1:18991/');await p.waitForTimeout(1500);
+await p.evaluate(()=>{window.pullLive=async()=>{};UI.stage='app';S.user={name:'QA',role:'viewer',phone:'+910000000000'};S.prefs={...S.prefs,asked:1,welcomed:1};
+const t=(n,s)=>({name:n,short:s}),mk=(i,st,en)=>({id:'m'+i,name:'A v B, '+i+'th Match, Series',venue:'Ground, City',started:st,ended:en,status:en?'A won':st?'B need 120 runs':'',dateTimeGMT:new Date(Date.now()+i*3.6e6).toISOString(),teams:[t('India','IND'),t('Australia','AUS')],score:[{inning:'India Inning 1',r:182,w:4,o:25.4}],matchType:'t20'});
+UI.live={ok:true,matches:[mk(1,true,false),mk(2,true,false),mk(3,false,false),mk(4,false,true)]};UI.view='home';render()});
+assert.equal(await p.locator('.tv-card').count(),2,'live featured + 1 more');
+assert.equal(await p.locator('.drawer:visible,.hdr:visible,.bnav:visible').count(),0,'no sidebar/header/bottom nav on TV');
+const x=await p.evaluate(()=>document.querySelector('.tv-top').getBoundingClientRect().x);assert.ok(x<80,'full-width layout');
+const fs2=await p.evaluate(()=>parseFloat(getComputedStyle(document.querySelector('.tv-tm b')).fontSize));assert.ok(fs2>=28,'10-foot font size');
+await p.locator('[data-a="tvTab"][data-v="up"]').click();assert.equal(await p.locator('.tv-card').count(),1);
+await p.locator('[data-a="tvTab"][data-v="rec"]').click();assert.match(await p.locator('.tv-card').innerText(),/RESULT/);
+await p.locator('.tv-card').click();assert.equal(await p.evaluate(()=>UI.view),'wmatch');
+await p.keyboard.press('Escape');assert.equal(await p.evaluate(()=>UI.view),'home','remote Back returns');
+await p.keyboard.press('ArrowRight');assert.ok(await p.evaluate(()=>!!document.activeElement&&document.activeElement!==document.body),'D-pad focus');
+assert.deepEqual(errs,[]);console.log('PASS TV UI: dedicated 10-foot home, tabs, match open, remote back')}finally{await b.close();sv.close()}})().catch(e=>{console.error(e);process.exit(1)});
