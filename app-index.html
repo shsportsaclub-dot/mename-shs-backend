@@ -7699,7 +7699,7 @@ S.stream.scene=S.stream.scene||'bug';S.stream.card=S.stream.card||{t:'Starting s
   return o0.apply(this,arguments)};
  const base=()=>location.href.split('#')[0].split('?')[0];
  const vs=vStream;vStream=function(){let h=vs.apply(this,arguments);const cur=UI.ovScene||'bug';
-  const bx=`<div class="card"><h3>Studio scenes</h3><div class="mu sm" style="margin-bottom6px">Add each scene as its own OBS Browser Source (1920x1080). Pick one to preview it above.</div>${SC.map(([k,l,d])=>`<div class="item" style="flex-wrap:wrap;gap:6px"><div style="flex:1;min-width:150px"><b>${l}</b>${cur===k?' <span class="pill">Previewing</span>':''}<div class="mu sm">${d}</div></div><button class="btn sm ghost" data-a="ovPrev" data-v="${k}">Preview</button><button class="btn sm" data-a="ovCopy" data-v="${k}">Copy URL</button></div>`).join('').replace('margin-bottom6px','margin-bottom:6px')}
+  const bx=`<div class="card"><h3>Studio scenes</h3><div class="mu sm" style="margin-bottom:6px">Add each scene as its own OBS Browser Source (1920x1080). Pick one to preview it above.</div>${SC.map(([k,l,d])=>`<div class="item" style="flex-wrap:wrap;gap:6px"><div style="flex:1;min-width:150px"><b>${l}</b>${cur===k?' <span class="pill">Previewing</span>':''}<div class="mu sm">${d}</div></div><button class="btn sm ghost" data-a="ovPrev" data-v="${k}">Preview</button><button class="btn sm" data-a="ovCopy" data-v="${k}">Copy URL</button></div>`).join('').replace('margin-bottom:6px','margin-bottom:6px')}
   <form data-f="ovCard" style="margin-top:10px"><div class="b">Break card text</div><div class="row" style="gap:6px"><input name="t" value="${esc((S.stream.card||{}).t||'')}" placeholder="Starting soon" style="flex:1"><input name="s" value="${esc((S.stream.card||{}).s||'')}" placeholder="Second line (optional)" style="flex:1"></div><button class="btn sm" style="margin-top:6px">Save</button></form></div>`;
   const i=h.indexOf('<div class="g2"><div class="card"><h3>Overlay settings</h3>');return i<0?h+bx:h.slice(0,i)+bx+h.slice(i)};
  Object.assign(A,{ovPrev(d){UI.ovScene=d.v;render()},ovCopy(d){const u=base()+(d.v==='bug'?'':'?scene='+d.v)+'#overlay';try{navigator.clipboard.writeText(u);toast('URL copied')}catch(e){toast(u,6000)}}});
@@ -8763,6 +8763,57 @@ S.stream.scene=S.stream.scene||'bug';S.stream.card=S.stream.card||{t:'Starting s
  };
  setInterval(()=>{if(!document.hidden&&UI.view==='sxmatch'&&UI.sxm&&HLS[UI.sxm.sp])load(UI.sxm.sp,false)},30000);
  const sb1=shBody;shBody=function(sp){const o=sb1.apply(this,arguments);return HLS[sp]?window.shWorldScores(sp)+o:o};
+}
+
+/* ---------------- 56 HOME EXTRAS: News, Social (channel latest videos, pinned posts, links) and Sponsored banners under the match cards ---------------- */
+{
+ UI.hc=UI.hc||{cfg:null,feed:null,at:0,fat:0};
+ const hcGet=async(path,opt)=>{const r=await fetch(apiBase()+path,Object.assign({signal:AbortSignal.timeout(12000),cache:'no-store'},opt||{}));return r.json()};
+ const hcLoad=()=>{const h=UI.hc;if(!apiBase())return;
+  if(Date.now()-h.at>300000&&!h.busy){h.busy=1;h.at=Date.now();hcGet('/api/home-config').then(j=>{if(j&&j.ok)h.cfg=j;h.busy=0;if(UI.view==='home')render()}).catch(()=>{h.busy=0})}
+  if(h.cfg&&h.cfg.youtube&&Date.now()-h.fat>600000&&!h.fbusy){h.fbusy=1;h.fat=Date.now();hcGet('/api/social/feed').then(j=>{if(j&&j.ok)h.feed=j.items||[];h.fbusy=0;if(UI.view==='home')render()}).catch(()=>{h.fbusy=0})}};
+ const ICON={youtube:['▶','YouTube'],instagram:['◎','Instagram'],facebook:['f','Facebook'],whatsapp:['✆','WhatsApp'],x:['𝕏','X'],telegram:['✈','Telegram']};
+ const ago=t=>{const d=Date.now()-new Date(t).getTime();if(!(d>0))return '';const h=Math.floor(d/36e5);return h<1?'just now':h<24?h+'h ago':Math.floor(h/24)+'d ago'};
+ window.shHomeExtras=function(){
+  hcLoad();const h=UI.hc,c=h.cfg||{ads:[],links:{},pins:[]},adm=S.user&&S.user.role==='admin';let o='';
+  // News
+  let N=[];try{N=(UI.news&&UI.news.ok?UI.news.items:[]).slice(0,4).map(x=>({t:x.title,s:x.source||'News',l:x.link}))}catch(e){}
+  if(N.length)o+=`<div class="sec"><h3>News</h3><button class="btn sm ghost" data-a="go" data-v="epaper">More news</button></div><div class="hh-box" style="padding:4px 12px">${N.map(x=>`<div style="padding:9px 0;border-bottom:1px solid var(--bd)"><div style="font-weight:700;line-height:1.3">${x.l?`<a href="${esc(x.l)}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">${esc(x.t)}</a>`:esc(x.t)}</div><div class="mu sm">${esc(x.s)}</div></div>`).join('')}</div>`;
+  // Social
+  const F=h.feed||[],links=Object.entries(c.links||{}).filter(([k])=>ICON[k]),pins=c.pins||[];
+  if(F.length||links.length||pins.length||adm){o+=`<div class="sec"><h3>Social media</h3></div>`;
+   if(F.length)o+=`<div class="hscroll" style="margin-bottom:8px">${F.map(v=>`<a href="${esc(v.link)}" target="_blank" rel="noopener" style="flex:none;width:190px;text-decoration:none;color:inherit"><div style="position:relative"><img src="${esc(v.thumb)}" alt="" loading="lazy" style="width:190px;height:107px;object-fit:cover;border-radius:10px;display:block"><span style="position:absolute;right:6px;bottom:6px;background:#000a;color:#fff;font-size:11px;padding:1px 6px;border-radius:6px">▶ Watch</span></div><div style="font-size:13px;font-weight:600;line-height:1.25;margin-top:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${esc(v.title)}</div><div class="mu sm">${ago(v.published)}</div></a>`).join('')}</div>`;
+   if(pins.length)o+=`<div class="hh-box" style="padding:4px 12px;margin-bottom:8px">${pins.map(x=>`<a href="${esc(x.link)}" target="_blank" rel="noopener" style="display:block;padding:9px 0;border-bottom:1px solid var(--bd);text-decoration:none;color:inherit"><div style="font-weight:700">📌 ${esc(x.title)}</div>${x.note?`<div class="mu sm">${esc(x.note)}</div>`:''}</a>`).join('')}</div>`;
+   if(links.length)o+=`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">${links.map(([k,u])=>`<a class="btn sm ghost" href="${esc(u)}" target="_blank" rel="noopener" style="text-decoration:none"><b>${ICON[k][0]}</b> ${ICON[k][1]}</a>`).join('')}</div>`;
+   if(adm&&!F.length&&!links.length&&!pins.length)o+=`<div class="hh-box"><div class="mu sm">Admin: add your YouTube channel, social links and pinned posts in Services (More → Server status). Viewers see this section only after you add something.</div></div>`}
+  // Ads
+  const ads=c.ads||[];
+  if(ads.length)o+=`<div class="sec"><h3>Sponsored</h3></div><div id="shad" style="position:relative;margin-bottom:12px">${ads.map((a,i)=>{const im=`<img src="${esc(a.img)}" alt="${esc(a.title||'Sponsor')}" style="width:100%;max-height:160px;object-fit:cover;border-radius:12px;display:block">`;return `<div class="shad-s" style="${i?'display:none':''}">${a.link?`<a href="${esc(a.link)}" target="_blank" rel="noopener sponsored">${im}</a>`:im}</div>`}).join('')}${ads.length>1?`<div style="display:flex;gap:5px;justify-content:center;margin-top:6px">${ads.map((_,i)=>`<i class="shad-d" style="width:7px;height:7px;border-radius:50%;background:${i?'#7f8aa8':'var(--ac)'}"></i>`).join('')}</div>`:''}</div>`;
+  return o};
+ setInterval(()=>{const w=document.getElementById('shad');if(!w)return;const S2=[...w.querySelectorAll('.shad-s')];if(S2.length<2)return;let i=S2.findIndex(x=>x.style.display!=='none');i=(i+1)%S2.length;S2.forEach((x,k)=>x.style.display=k===i?'':'none');w.querySelectorAll('.shad-d').forEach((d,k)=>d.style.background=k===i?'var(--ac)':'#7f8aa8')},5000);
+ // place it right under the match cards
+ const hh0=heroHome;heroHome=function(){const o=hh0.apply(this,arguments);let x='';try{x=window.shHomeExtras()}catch(e){x=''}if(!x)return o;
+  if(UI.sport&&UI.sport!=='cricket')return o+x;
+  const m=/(<div class="ig-dots" id="igdots">.*?<\/div>)/s.exec(o);if(m){const k=m.index+m[1].length;return o.slice(0,k)+x+o.slice(k)}
+  const q=o.indexOf('<div class="sec"><h3>Posts</h3>');return q>=0?o.slice(0,q)+x+o.slice(q):o+x};
+ // ADMIN card
+ const post=async b=>{const r=await fetch(apiBase()+'/api/admin/home-config',{method:'POST',headers:{'content-type':'application/json',authorization:'Bearer '+(S.tok||'')},body:JSON.stringify(b)});return r.json()};
+ const shrink=(file,cb)=>{const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{let w=Math.min(960,im.width),q=.82,out='';for(let t=0;t<6;t++){const k=w/im.width,c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);out=c.toDataURL('image/jpeg',q);if(out.length<240000)break;w=Math.round(w*.8);q=Math.max(.5,q-.08)}cb(out)};im.onerror=()=>cb('');im.src=r.result};r.readAsDataURL(file)};
+ const sv0=XV.svc;
+ XV.svc=function(){let o=sv0.apply(this,arguments);if(typeof o!=='string'||o.indexOf('Scorers (who can score')<0)return o;
+  const c=(UI.hc&&UI.hc.cfg)||{ads:[],links:{},pins:[]};const inp=(id,ph,v)=>`<input id="${id}" placeholder="${ph}" value="${esc(v||'')}" autocomplete="off" style="width:100%;margin:3px 0">`;
+  const card=`<div class="cbp-cd" style="padding:12px 14px"><div style="font:600 14px var(--ui);margin-bottom:6px">Home page: social links, pinned posts and sponsor banners</div>
+   <div class="mu sm" style="margin:6px 0 2px">YouTube channel (link or id starting with UC). Its latest videos show on Home.</div>${inp('hc-yt','https://www.youtube.com/@yourchannel','')}<button class="btn sm" data-a="hcYt">Save channel</button>
+   <div class="mu sm" style="margin:12px 0 2px">Channel links (https). Empty ones are not shown.</div>${['youtube','instagram','facebook','whatsapp','x','telegram'].map(k=>inp('hc-l-'+k,ICON[k][1]+' link',(c.links||{})[k])).join('')}<button class="btn sm" data-a="hcLinks">Save links</button>
+   <div class="mu sm" style="margin:12px 0 2px">Pin a post (Instagram, Facebook, anything with an https link)</div>${inp('hc-pt','Title','')}${inp('hc-pl','https://...','')}${inp('hc-pn','Short note (optional)','')}<button class="btn sm" data-a="hcPin">Pin post</button>${(c.pins||[]).map(x=>`<div style="display:flex;justify-content:space-between;gap:8px;margin-top:6px"><span style="min-width:0;overflow:hidden;text-overflow:ellipsis">📌 ${esc(x.title)}</span><button class="btn sm ghost" data-a="hcRmPin" data-v="${esc(x.id)}">Remove</button></div>`).join('')}
+   <div class="mu sm" style="margin:12px 0 2px">Sponsor banner (image, up to 8). Shown under Social on Home, rotating.</div><input id="hc-af" type="file" accept="image/*" style="width:100%;margin:3px 0">${inp('hc-at','Sponsor name (optional)','')}${inp('hc-al','Click link https://... (optional)','')}<button class="btn sm" data-a="hcAd">Add banner</button>${(c.ads||[]).map(a=>`<div style="display:flex;gap:8px;align-items:center;margin-top:6px"><img src="${esc(a.img)}" alt="" style="width:64px;height:36px;object-fit:cover;border-radius:6px"><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis">${esc(a.title||'Banner')}</span><button class="btn sm ghost" data-a="hcRmAd" data-v="${esc(a.id)}">Remove</button></div>`).join('')}</div>`;
+  const i=o.indexOf('<div class="cbp-cd" style="padding:12px 14px"><div style="font:600 14px var(--ui);margin-bottom:6px">Scorers (who can score');return i<0?o:o.slice(0,i)+card+o.slice(i)};
+ const val=id=>{const e=document.getElementById(id);return e?e.value.trim():''};
+ const done=j=>{if(j&&j.ok){UI.hc.cfg=Object.assign({},UI.hc.cfg||{},j);UI.hc.fat=0;UI.hc.at=Date.now();toast('Saved');if(UI.view==='svc'||UI.view==='home')render()}else toast((j&&j.error)||'Failed',4000)};
+ const go2=async b=>{try{done(await post(b))}catch(e){toast('Cannot reach the server')}};
+ Object.assign(A,{hcYt(){go2({act:'yt',yt:val('hc-yt')})},hcLinks(){const b={act:'links'};['youtube','instagram','facebook','whatsapp','x','telegram'].forEach(k=>b[k]=val('hc-l-'+k));go2(b)},
+  hcPin(){go2({act:'addPin',title:val('hc-pt'),link:val('hc-pl'),note:val('hc-pn')})},hcRmPin(d){go2({act:'rmPin',id:d.v})},hcRmAd(d){go2({act:'rmAd',id:d.v})},
+  hcAd(){const f=document.getElementById('hc-af'),file=f&&f.files&&f.files[0];if(!file)return toast('Choose a banner image first');const t=val('hc-at'),l=val('hc-al');shrink(file,u=>{if(!u)return toast('Could not read that image');go2({act:'addAd',img:u,title:t,link:l})})}});
 }
 
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */

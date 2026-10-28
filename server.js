@@ -906,6 +906,43 @@ routes['GET /api/fb/match'] = async (req, body, ip) => {
   try { const m = await fbCached('m' + id, 12e3, () => FB.match(id)); return [200, { ok: true, match: m }]; }
   catch (e) { const stale = fbCache.get('m' + id); if (stale) return [200, { ok: true, match: stale.d, stale: true }]; return [502, { ok: false, error: String(e.message || 'Football feed error').slice(0, 160) }]; }
 };
+// Home page extras: sponsor banners (Ads), channel links and a real YouTube latest-videos feed. Admin sets them in the app; everyone can read them.
+const homeCfg = () => (db.shared.homeCfg = db.shared.homeCfg || { ads: [], links: {}, yt: '', pins: [] });
+const okLink = v => /^https:\/\/[^\s]{3,300}$/i.test(String(v || '')) ? String(v) : '';
+routes['GET /api/home-config'] = async () => { const c = homeCfg(); return [200, { ok: true, ads: c.ads, links: c.links, pins: c.pins, youtube: !!c.yt }]; };
+routes['POST /api/admin/home-config'] = async (req, body) => {
+  const phone = readSession((req.headers.authorization || '').replace(/^Bearer /, '')), u = phone && db.users[phone];
+  if (!u) return [401, { ok: false, error: 'Please sign in again' }];
+  promote(u, phone); if (u.role !== 'admin') return [403, { ok: false, error: 'Only an admin can change the home page' }];
+  const c = homeCfg(), act = String(body.act || '');
+  if (act === 'addAd') {
+    const img = String(body.img || ''), link = okLink(body.link); if (!/^data:image\/(png|jpeg|webp|gif);base64,/.test(img) || img.length > 350000) return [400, { ok: false, error: 'Add a banner image under 250 KB' }];
+    if (c.ads.length >= 8) return [400, { ok: false, error: 'Up to 8 banners' }];
+    c.ads.push({ id: crypto.randomUUID().slice(0, 8), img, link, title: String(body.title || '').slice(0, 60) });
+  } else if (act === 'rmAd') c.ads = c.ads.filter(a => a.id !== String(body.id));
+  else if (act === 'links') { const L = {}; for (const k of ['youtube', 'instagram', 'facebook', 'whatsapp', 'x', 'telegram']) { const v = okLink(body[k]); if (v) L[k] = v; } c.links = L; }
+  else if (act === 'yt') {   // channel id (UC...), channel URL, or @handle URL
+    const raw = String(body.yt || '').trim(); let id = (/(UC[\w-]{22})/.exec(raw) || [])[1] || '';
+    if (!id && /^(https:\/\/(www\.)?youtube\.com\/)?@[\w.-]{2,60}\/?$/i.test(raw)) { try { const h = raw.replace(/^https:\/\/(www\.)?youtube\.com\//i, '').replace(/\/$/, ''), r = await fetch('https://www.youtube.com/' + h, { signal: AbortSignal.timeout(10000), headers: { 'accept-language': 'en' } }), t = await r.text(); id = (/"channelId":"(UC[\w-]{22})"/.exec(t) || /channel_id=(UC[\w-]{22})/.exec(t) || [])[1] || ''; } catch { /* handled below */ } }
+    if (raw && !id) return [400, { ok: false, error: 'Could not find that YouTube channel. Paste the channel link or the id that starts with UC' }];
+    c.yt = id; socCache.clear();
+  } else if (act === 'addPin') { const link = okLink(body.link), title = String(body.title || '').trim().slice(0, 120); if (!link || !title) return [400, { ok: false, error: 'Add a title and an https link' }]; if (c.pins.length >= 10) return [400, { ok: false, error: 'Up to 10 pinned posts' }]; c.pins.unshift({ id: crypto.randomUUID().slice(0, 8), title, link, note: String(body.note || '').slice(0, 160) }); }
+  else if (act === 'rmPin') c.pins = c.pins.filter(x => x.id !== String(body.id));
+  else return [400, { ok: false, error: 'Unknown action' }];
+  saveDb(); return [200, { ok: true, ads: c.ads, links: c.links, pins: c.pins, youtube: !!c.yt }];
+};
+const socCache = new Map();
+routes['GET /api/social/feed'] = async (req, body, ip) => {
+  const c = homeCfg(); if (!c.yt) return [200, { ok: true, items: [], youtube: false }];
+  if (limited('soc:' + ip, 60, 6e4)) return [429, { ok: false, error: 'Too many requests, wait a moment' }];
+  const hit = socCache.get(c.yt); if (hit && Date.now() - hit.t < 600000) return [200, { ok: true, items: hit.d, youtube: true }];
+  try {
+    const r = await fetch('https://www.youtube.com/feeds/videos.xml?channel_id=' + c.yt, { signal: AbortSignal.timeout(10000) }); if (!r.ok) throw new Error('YouTube feed ' + r.status);
+    const x = await r.text(), items = [...x.matchAll(/<entry>([\s\S]*?)<\/entry>/g)].slice(0, 8).map(m => { const e = m[1], g = re => (re.exec(e) || [])[1] || '', un = t => t.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'"), id = g(/<yt:videoId>([\w-]{11})</);
+      return { id, title: un(g(/<title>([\s\S]*?)<\/title>/)), link: 'https://www.youtube.com/watch?v=' + id, thumb: id ? 'https://i.ytimg.com/vi/' + id + '/hqdefault.jpg' : '', published: g(/<published>([^<]+)</) }; }).filter(i => i.id);
+    socCache.set(c.yt, { t: Date.now(), d: items }); return [200, { ok: true, items, youtube: true }];
+  } catch (e) { return hit ? [200, { ok: true, items: hit.d, stale: true, youtube: true }] : [502, { ok: false, error: String(e.message || 'Feed error').slice(0, 120) }]; }
+};
 routes['GET /api/admin/scorers'] = async (req) => {   // who can score matches: admins see and manage the Scorer list from the app
   const phone = readSession((req.headers.authorization || '').replace(/^Bearer /, '')), u = phone && db.users[phone];
   if (!u) return [401, { ok: false, error: 'Please sign in again' }];
@@ -1612,7 +1649,7 @@ http.createServer(async (req, res) => {
   const h = routes[req.method + ' ' + pth];
   if (!h) return out(404, { ok: false, error: 'Not found' });
   let raw = '';
-  for await (const c of req) { raw += c; if (raw.length > (pth === '/api/paper' ? 300000 : 20000)) return out(413, { ok: false, error: 'Too large' }); }
+  for await (const c of req) { raw += c; if (raw.length > (pth === '/api/paper' ? 300000 : pth === '/api/admin/home-config' ? 400000 : 20000)) return out(413, { ok: false, error: 'Too large' }); }
   let body = {};
   try { body = raw ? (raw.trim().startsWith('{') ? JSON.parse(raw) : Object.fromEntries(new URLSearchParams(raw))) : {}; } catch { return out(400, { ok: false, error: 'Bad body' }); }
   if (req.method === 'GET') body = { ...Object.fromEntries(new URL(req.url, 'http://x').searchParams), ...body };

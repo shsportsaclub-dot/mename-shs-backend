@@ -1,0 +1,27 @@
+// Home: matches slider first, then News, Social media, Sponsored banners (rotating); admin sees the setup card.
+const {chromium}=require('playwright');
+(async()=>{const b=await chromium.launch(),p=await b.newPage({viewport:{width:412,height:900}}),errs=[];p.on('pageerror',e=>errs.push(e.message));
+const ok=(c,m)=>{if(!c){console.log('FAIL',m);process.exitCode=1}};
+await p.addInitScript(()=>{const px='data:image/svg+xml;base64,'+btoa('<svg xmlns="http://www.w3.org/2000/svg" width="600" height="200"><rect width="600" height="200" fill="#c33"/></svg>'),px2='data:image/svg+xml;base64,'+btoa('<svg xmlns="http://www.w3.org/2000/svg" width="600" height="200"><rect width="600" height="200" fill="#36c"/></svg>');
+ window.fetch=async(u)=>{u=String(u);const J=o=>({ok:true,status:200,json:async()=>o,text:async()=>JSON.stringify(o)});
+ if(u.includes('/api/home-config'))return J({ok:true,youtube:true,ads:[{id:'a',img:px,link:'https://sp.example/a',title:'A'},{id:'b',img:px2,title:'B'}],links:{youtube:'https://youtube.com/@sh',instagram:'https://instagram.com/sh'},pins:[{id:'p',title:'Season opener photos',link:'https://instagram.com/p/1',note:'Watch now'}]});
+ if(u.includes('/api/social/feed'))return J({ok:true,items:[{id:'abcdefghijk',title:'Final over thriller',link:'https://www.youtube.com/watch?v=abcdefghijk',thumb:px,published:new Date(Date.now()-3*36e5).toISOString()}]});
+ return J({ok:true})}});
+await p.goto('file://'+require('path').resolve(__dirname,'../app-index.html'));await p.waitForTimeout(400);
+await p.evaluate(()=>{window.pullLive=async()=>{};window.apiBase=()=>'http://x';UI.stage='app';S.tok='t';S.user={id:'u',name:'T',phone:'1',role:'admin'};S.prefs=Object.assign({},S.prefs,{asked:1,welcomed:1});
+ UI.news={ok:true,items:[{title:'India win the toss',source:'Cricket Wire',link:'https://n.example/1'}]};UI.live={ok:true,matches:[]};UI.view='home';render()});
+await p.waitForTimeout(1500);
+const t=await p.evaluate(()=>document.body.innerText);
+ok(/News/.test(t)&&/India win the toss/.test(t),'news');
+ok(/Social media/.test(t)&&/Final over thriller/.test(t)&&/Season opener photos/.test(t)&&/YouTube/.test(t),'social');
+ok(/Sponsored/.test(t)&&!!(await p.$('#shad')),'ads');
+const iN=t.indexOf('News\n'),iS=t.indexOf('Social media'),iA=t.indexOf('Sponsored');ok(iN<iS&&iS<iA,'order news>social>ads '+[iN,iS,iA]);
+const first=await p.evaluate(()=>[...document.querySelectorAll('.shad-s')].map(x=>x.style.display));ok(first[0]===''&&first[1]==='none','first banner shown '+first);
+await p.waitForTimeout(5400);
+const second=await p.evaluate(()=>[...document.querySelectorAll('.shad-s')].map(x=>x.style.display));ok(second[0]==='none'&&second[1]==='','rotates '+second);
+await p.screenshot({path:'/tmp/home-x.png',fullPage:false});
+await p.evaluate(()=>{UI.svc={loading:1};UI.scl={ok:true,scorers:[]};UI.pk={ok:true};UI.view='svc';render()});await p.waitForTimeout(300);
+ok(await p.evaluate(()=>/Home page: social links/.test(document.body.innerText)),'admin card');
+await p.evaluate(()=>{S.user.role='viewer';UI.view='home';render()});await p.waitForTimeout(300);
+ok(await p.evaluate(()=>/Sponsored/.test(document.body.innerText)),'viewer sees ads');
+ok(!errs.length,errs.join(';'));await b.close();if(!process.exitCode)console.log('PASS: home extras');})();
