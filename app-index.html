@@ -7864,19 +7864,19 @@ S.stream.scene=S.stream.scene||'bug';S.stream.card=S.stream.card||{t:'Starting s
   let m=W.m;const lv=UI.live&&UI.live.ok&&UI.live.matches?UI.live.matches.find(x=>x.id===m.id):null;if(lv&&lv.score)m=lv;
   const id=W.m.id,a=load(id),cur=snap(m);if(!cur.length)return a;
   const last=a.length?a[a.length-1]:null,tail=cur[cur.length-1];
-  const key=c=>c.i+'|'+c.r+'|'+c.w+'|'+c.o;
-  if(!last||last.k!==key(tail)){
+  const key=c=>String(c.i).toLowerCase().trim()+'|'+c.r+'|'+c.w+'|'+(+c.o||0);
+  if(!last||key(last)!==key(tail)){
    let d='';
-   if(last&&last.i===tail.i){const dr=tail.r-last.r,dw=tail.w-last.w;
+   if(last&&String(last.i).toLowerCase()===String(tail.i).toLowerCase()){const dr=tail.r-last.r,dw=tail.w-last.w;
     d=(dw>0?dw+' wicket'+(dw>1?'s':'')+(dr?' and ':''):'')+(dr>0?dr+' run'+(dr>1?'s':''):'');if(!d)d='no runs';}
    else if(last)d='New innings';
-   a.push({t:Date.now(),k:key(tail),i:tail.i,r:tail.r,w:tail.w,o:tail.o,d,ev:last&&last.i===tail.i?((tail.w>last.w)?'W':(tail.r-last.r)>=6?'6':(tail.r-last.r)===4?'4':''):''});
+   a.push({t:Date.now(),k:key(tail),i:tail.i,r:tail.r,w:tail.w,o:tail.o,d,ev:last&&String(last.i).toLowerCase()===String(tail.i).toLowerCase()?((tail.w>last.w)?'W':(tail.r-last.r)>=6?'6':(tail.r-last.r)===4?'4':''):''});
    store(id,a);
   }
   return a;
  };
  const tlHTML=a=>{
-  const rows=a.slice().reverse().slice(0,40);
+  const nk=c=>String(c.i).toLowerCase().trim()+'|'+c.r+'|'+c.w+'|'+(+c.o||0),rows=a.slice().reverse().filter((x,i,ar)=>!i||nk(x)!==nk(ar[i-1])).slice(0,40);
   return `<div class="ovh"><span>Match timeline</span><span>from score updates</span></div>`+
   rows.map(x=>{const t=new Date(x.t).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
    const c=x.ev==='W'?'rw':x.ev==='6'?'r6':x.ev==='4'?'r4':'r0';

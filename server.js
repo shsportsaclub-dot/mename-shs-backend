@@ -36,7 +36,7 @@ let SM = SM_TOKEN ? createSportmonks({ token: SM_TOKEN, base: E.SPORTMONKS_BASE 
 const FB_TOKEN = E.FOOTBALL_TOKEN || '';
 let FB = FB_TOKEN ? createFootball({ token: FB_TOKEN, base: E.FOOTBALL_BASE || undefined }) : null;
 const LIVE_TTL = (+E.LIVE_CACHE_SECONDS || 60) * 1000;
-const envKey = s => { const d = String(s).replace(/\D/g, ''); return d.length === 10 ? d : (d.startsWith('91') && d.length === 12 ? d.slice(2) : d); };
+const envKey = s => { if (String(s).includes('@')) return 'e:' + String(s).trim().toLowerCase().replace(/^e:/i, ''); const d = String(s).replace(/\D/g, ''); return d.length === 10 ? d : (d.startsWith('91') && d.length === 12 ? d.slice(2) : d); };
 const ADMINS = (E.ADMIN_PHONES || '').split(',').map(envKey).filter(Boolean);
 const SCORERS = (E.SCORER_PHONES || '').split(',').map(envKey).filter(Boolean);
 const MO_NUMBER = E.MO_NUMBER || '';            // the SH Sports number users send the SMS to, e.g. +919XXXXXXXXX
@@ -124,6 +124,11 @@ function limited(key, max, windowMs) {
   if (arr.length >= max) { sends.set(key, arr); return true; }
   arr.push(now); sends.set(key, arr); return false;
 }
+function promote(u, key) {   // ADMIN_PHONES / SCORER_PHONES (numbers or emails) apply to existing accounts too, not only at sign-up
+  const k = key || (u && u.phone); if (!u || !k) return u;
+  if (ADMINS.includes(k)) u.role = 'admin'; else if (SCORERS.includes(k) && u.role !== 'admin') u.role = 'scorer';
+  return u;
+}
 function roleFor(phone, kind) {
   if (ADMINS.includes(phone) || Object.keys(db.users).length === 0) return 'admin';   // the very first user becomes admin
   if (kind === 'Scorer' && SCORERS.includes(phone)) return 'scorer';
@@ -146,7 +151,8 @@ function cleanProfile(p) {
   if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return { error: 'That email does not look right. Fix it or leave it empty.' };   // optional
   return { profile: { nick, name: nick, email, age, dob, loc: String(p.loc || '').trim().slice(0, 60), kind } };
 }
-const pub = u => ({ nick: u.nick, name: u.nick, email: u.email, age: u.age, loc: u.loc, kind: u.kind, role: u.role, phone: u.phone });
+const pub = u => { promote(u); return pubRaw(u); };
+const pubRaw = u => ({ nick: u.nick, name: u.nick, email: u.email, age: u.age, loc: u.loc, kind: u.kind, role: u.role, phone: u.phone });
 
 async function sendSms(phone, code, link, cc) {
   cc = String(cc || '').replace(/\D/g, '').slice(0, 4) || COUNTRY;
@@ -1315,6 +1321,7 @@ http.createServer(async (req, res) => {
     if (req.method === 'GET') { if (!list.length) delete bag[mid]; return out(200, { ok: true, balls: list, n: list.length }); }
     const tok = String(req.headers.authorization || '').replace(/^Bearer\s+/i, ''), phone = readSession(tok), u = phone && db.users[phone];
     if (!u) return out(401, { ok: false, error: 'Please sign in first' });
+    promote(u, phone);
     if (!['admin', 'scorer'].includes(u.role)) return out(403, { ok: false, error: 'Only an Admin or Scorer account can score a world match' });
     if (limited('wbb:' + phone, 600, 36e5)) return out(429, { ok: false, error: 'Too many balls, slow down' });
     let raw = ''; for await (const c of req) { raw += c; if (raw.length > 4000) return out(413, { ok: false, error: 'Too large' }); }
