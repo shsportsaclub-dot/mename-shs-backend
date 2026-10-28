@@ -55,6 +55,12 @@ export function createHighlightly({ key, base = BASE, fetchImpl = fetch }) {
     }
     return out;
   }
+  // Admin probe for detail endpoints (match / box-score / lineups): returns the raw JSON so the app can be matched to the real shape.
+  async function detail(sport, kind, id) {
+    if (!SPORTS.includes(sport) || !/^(matches|box-score|lineups)$/.test(kind) || !/^\d{1,12}$/.test(String(id))) throw new Error('Bad request');
+    const r = await fetchImpl(`${base}/${sport}/${kind}/${id}`, { headers: { 'x-rapidapi-key': key }, signal: AbortSignal.timeout(12000) });
+    const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error((j && (j.message || j.error)) || 'Highlightly error ' + r.status); return j;
+  }
   async function raw(sport, date) { const j = await get(sport, { date, timezone: 'Etc/UTC', limit: 2 }); return { plan: j.plan || null, pagination: j.pagination || null, first: Array.isArray(j.data) ? j.data[0] || null : null }; }
-  return { list, raw };
+  return { list, raw, detail };
 }

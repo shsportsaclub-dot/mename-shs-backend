@@ -888,6 +888,7 @@ routes['GET /api/admin/sx-probe'] = async (req, body) => {   // admin only: show
   promote(u, phone); if (u.role !== 'admin') return [403, { ok: false, error: 'Only an admin can see this' }];
   if (String(body.sport) === 'tennis') { if (!TN) return [200, { ok: false, error: 'Live Tennis key is not set' }]; try { return [200, { ok: true, sport: 'tennis', ...(await TN.raw()), usedToday: hlDay.n }]; } catch (e) { return [200, { ok: false, error: String(e.message || 'error').slice(0, 200) }]; } }
   if (!HL) return [200, { ok: false, error: 'Highlightly key is not set' }];
+  if (body.kind && body.id) { try { hlDay.n++; const j = await HL.detail(String(body.sport), String(body.kind), String(body.id)); return [200, { ok: true, kind: body.kind, json: JSON.stringify(j).slice(0, 6000) }]; } catch (e) { return [200, { ok: false, error: String(e.message || 'error').slice(0, 200) }]; } }
   const sport = HL_SPORTS.includes(String(body.sport)) ? String(body.sport) : 'basketball';
   try { return [200, { ok: true, sport, ...(await HL.raw(sport, new Date().toISOString().slice(0, 10))), usedToday: hlDay.n }]; } catch (e) { return [200, { ok: false, error: String(e.message || 'error').slice(0, 200) }]; }
 };
