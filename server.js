@@ -239,9 +239,14 @@ let hy = { t: 0, src: null, data: null };
 const normT = s => String(s || '').toLowerCase().replace(/\b(womens?|w)\b/g, 'women').replace(/[^a-z]/g, '');
 const pairKey = m => [m && m.teams && m.teams[0] && m.teams[0].name, m && m.teams && m.teams[1] && m.teams[1].name].map(normT).sort().join('|');
 const dayOf = d => Date.parse(String(d || '').slice(0, 10) + 'T00:00:00Z');
-async function smBalls(num) {
+const smHits = [];   // timestamps of Sportmonks ball-by-ball calls in the last hour, kept under the plan's hourly API limit
+const SM_HOURLY = +E.SPORTMONKS_HOURLY_BUDGET || 700;
+async function smBalls(num, ttl = 15e3) {
   const c = smBbbC.get(num);
-  if (c && Date.now() - c.t < 15e3) return c.b || [];
+  if (c && Date.now() - c.t < ttl) return c.b || [];
+  const cut = Date.now() - 36e5; while (smHits.length && smHits[0] < cut) smHits.shift();
+  if (smHits.length >= SM_HOURLY) return c ? c.b || [] : [];   // budget used up: keep what we have, call again later
+  smHits.push(Date.now());
   try { const b = await SM.bbb(num); smBbbC.set(num, { t: Date.now(), n: b.length, b }); if (smBbbC.size > 300) smBbbC.clear(); return b; }
   catch { smBbbC.set(num, { t: Date.now(), n: 0, b: [] }); return []; }
 }
@@ -256,7 +261,7 @@ async function hybridLive(base) {
     smBy.set(m.id, String(c.id).replace(/^sm/, ''));
     return { ...m, smId: c.id };
   });
-  await Promise.all(out.filter(m => m.smId && m.started && !m.ended).slice(0, 6).map(async m => { const b = await smBalls(m.smId.slice(2)); if (b.length) { m.bbb = true; m.bbbSrc = 'sportmonks'; } }));
+  await Promise.all(out.filter(m => m.smId && m.started && !m.ended).slice(0, 6).map(async m => { const b = await smBalls(m.smId.slice(2), 90e3); if (b.length) { m.bbb = true; m.bbbSrc = 'sportmonks'; } }));
   hy = { t: Date.now(), src: base, data: { ...base, matches: out } };
   return hy.data;
 }

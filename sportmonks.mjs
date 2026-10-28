@@ -92,10 +92,13 @@ export function createSportmonks({ token, base = BASE, fetchImpl = fetch }) {
       players: L.filter(x => +x.team_id === +t.id || (x.lineup && +x.lineup.team_id === +t.id)).map(x => { const p = obj(x.player) || x; const l = x.lineup || {};
         return { id: String(x.id || p.id || ''), name: nm(p) || 'Player', role: ((p.position && p.position.name) || '') + (l.captain ? ' (c)' : '') + (l.wicketkeeper ? ' (wk)' : ''), playerImg: p.image_path || '', playing: !(l.substitution === true), isPlaying: !(l.substitution === true) }; }) }));
   }
+  let bbbInc = '', bbbTried = 0;
   async function bbb(id) {
-    const attempts = ['balls.score,balls.batsman,balls.bowler,balls.batsmanout,balls.catchstump,balls.runoutby', 'balls.score,balls.batsman,balls.bowler', 'balls.score', 'balls'];
+    const all = ['balls.score,balls.batsman,balls.bowler,balls.batsmanout,balls.catchstump,balls.runoutby', 'balls.score,balls.batsman,balls.bowler', 'balls.score', 'balls'];
+    const attempts = bbbInc ? [bbbInc] : Date.now() - bbbTried < 6e5 ? ['balls'] : all;   // remember the include that works, so each call costs one API hit, not up to four
     let f = null, last = null;
-    for (const inc of attempts) { try { f = await get('fixtures/' + id, { include: inc }); break; } catch (e) { last = e; } }
+    for (const inc of attempts) { try { f = await get('fixtures/' + id, { include: inc }); if (!bbbInc && all.includes(inc)) bbbInc = inc; break; } catch (e) { last = e; } }
+    if (!bbbInc) bbbTried = Date.now();
     if (!f) throw last || new Error('No ball by ball');
     return arr(f.balls).map(b => { const s = obj(b.score) || {}, runs = s.runs != null ? s.runs : b.runs;
       const inn = b.inning ?? b.innings ?? b.scoreboard; const inning = typeof inn === 'string' && /^S[1-4]$/i.test(inn) ? Number(inn.slice(1)) : inn;
