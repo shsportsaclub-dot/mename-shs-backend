@@ -2463,7 +2463,7 @@ XV.market=function(){
   if(U.tab==='used'||U.tab==='shop'||U.tab==='brand'){const L=mkList(U.tab);body=mkFilters(U.tab)+(L.length?`<div class="mk">${L.map(mkCard).join('')}</div>`:`<div class="card mu">${U.tab==='used'?'Nothing listed yet. Be the first to post.':'No verified listings yet.'}</div>`)+postForm(U.tab)}
   else if(U.tab==='orders')body=ordersView();
   else if(U.tab==='admin'&&isAdm())body=adminView();
-  else{const mine=S.market.filter(x=>x.uid===me2()&&x.status!=='removed'),offs=S.offers.filter(o=>mine.some(x=>x.id===o.lid)),fav=S.market.filter(x=>(S.favs[me2()]||[]).includes(x.id)&&x.status!=='removed');
+  else{const mine=S.market.filter(x=>x.uid===me2()&&x.kind!=='rfq'&&x.status!=='removed'),offs=S.offers.filter(o=>mine.some(x=>x.id===o.lid)),fav=S.market.filter(x=>(S.favs[me2()]||[]).includes(x.id)&&x.status!=='removed');
     body=`<div class="card"><h3>My listings</h3>${mine.length?`<div class="mk">${mine.map(mkCard).join('')}</div>`:'<div class="mu">You have not posted anything.</div>'}</div><div class="card" style="margin-top:10px"><h3>Offers I received</h3>${offs.length?offs.map(o=>{const x=S.market.find(z=>z.id===o.lid);return `<div class="item" style="flex-wrap:wrap"><div style="flex:1;min-width:160px"><div class="b">Rs ${esc(o.amt)} for ${esc(x?x.title:'')}</div><div class="mu sm">${esc(o.by)} | ${esc(o.phone)} ${esc(o.msg||'')}</div></div><a class="btn sm" href="${waLink(o.phone,'Hi, about your offer for '+(x?x.title:''))}" target="_blank" rel="noopener">Reply</a></div>`}).join(''):'<div class="mu">No offers yet.</div>'}</div><div class="card" style="margin-top:10px"><h3>Saved items</h3>${fav.length?`<div class="mk">${fav.map(mkCard).join('')}</div>`:'<div class="mu">Tap the heart on a listing to save it.</div>'}</div>`}
   return `<div class="bar"><h2>Marketplace</h2></div><div class="hscroll" style="gap:6px;margin-bottom:10px">${tabs.map(([k,l])=>`<button class="btn sm ${U.tab===k?'':'ghost'}" data-a="mkTab" data-v="${k}">${l}</button>`).join('')}</div>${body}
   <div class="mu sm" style="margin-top:10px">Cart and online payment need a payment gateway, which is not connected yet. Buyers and sellers contact each other directly by WhatsApp or phone. Always meet in a public place and check the item before paying.</div>`};
@@ -7456,7 +7456,7 @@ window.shNoteGroups=function(notes){
  Object.assign(F,{mkCounterSend(fd){const amt=String(fd.get('amt')||'').replace(/[^\d.]/g,'');if(!amt)return toast('Enter your price');mkReply(fd.get('oid'),'countered',amt)}});
  const mm=XV.market;XV.market=function(){let h=mm.apply(this,arguments);const U=UI.mk;if(U.tab!=='mine')return h;
   const a=h.indexOf('<h3>Offers I received</h3>'),b=h.indexOf('<div class="card" style="margin-top:10px"><h3>Saved items</h3>');if(a<0||b<0)return h;
-  const mine=S.market.filter(x=>x.uid===me2()&&x.status!=='removed'),offs=S.offers.filter(o=>mine.some(x=>x.id===o.lid)).slice().reverse(),mk=S.offers.filter(o=>o.by&&S.user&&o.by===(S.user.nick||S.user.name)&&!mine.some(x=>x.id===o.lid)).slice().reverse();
+  const mine=S.market.filter(x=>x.uid===me2()&&x.kind!=='rfq'&&x.status!=='removed'),offs=S.offers.filter(o=>mine.some(x=>x.id===o.lid)).slice().reverse(),mk=S.offers.filter(o=>o.by&&S.user&&o.by===(S.user.nick||S.user.name)&&!mine.some(x=>x.id===o.lid)).slice().reverse();
   const pill=o=>o.status?`<span class="pill">${esc(o.status==='countered'?'Counter Rs '+o.counter:o.status)}</span>`:'<span class="pill">New</span>';
   const rows=offs.length?offs.map(o=>{const x=S.market.find(z=>z.id===o.lid);return `<div class="item" style="flex-wrap:wrap"><div style="flex:1;min-width:160px"><div class="b">Rs ${esc(o.amt)} for ${esc(x?x.title:'')} ${pill(o)}</div><div class="mu sm">${esc(o.by)} | ${esc(o.phone)} ${esc(o.msg||'')}</div></div><div class="row" style="gap:6px"><button class="btn sm" data-a="mkAcc" data-id="${o.id}">Accept</button><button class="btn sm ghost" data-a="mkCounter" data-id="${o.id}">Counter</button><button class="btn sm ghost" data-a="mkDec" data-id="${o.id}">Decline</button></div></div>`}).join(''):'<div class="mu">No offers yet.</div>';
   const made=mk.length?`<div class="card" style="margin-top:10px"><h3>Offers I made</h3>${mk.map(o=>{const x=S.market.find(z=>z.id===o.lid);return `<div class="item"><div class="b">Rs ${esc(o.amt)} for ${esc(x?x.title:'')}</div></div>`}).join('')}<div class="mu sm">The seller replies on WhatsApp.</div></div>`:'';
@@ -7771,6 +7771,23 @@ S.stream.scene=S.stream.scene||'bug';S.stream.card=S.stream.card||{t:'Starting s
   let h=mv.apply(this,arguments);const note=UI.mkSync.state==='login'?'Sign in again to publish your listings.':'';return note?h+`<div class="mu sm" style="margin:8px 12px">${note}</div>`:h};
  setInterval(()=>{if(document.visibilityState==='visible'&&UI.view==='market'){mkPull();mkPush()}},20000);
  setTimeout(()=>{if(S.user){mkPull();mkPush()}},3000);
+}
+/* ---------------- Bulk requests (RFQ): shared through the server so sellers can see them and quote on WhatsApp ---------------- */
+{
+ const open=()=>S.market.filter(x=>x.kind==='rfq'&&x.status==='open');
+ const fm=F.mkOrder;F.mkOrder=function(fd){const n=S.orders.length;fm.apply(this,arguments);
+  if(fd.get('kind')==='bulk'&&S.orders.length>n){const o=S.orders[S.orders.length-1];
+   S.market.push({id:'rfq-'+o.id,kind:'rfq',title:String(o.item||'').slice(0,120),qty:o.qty,org:o.org,loc:o.loc,phone:o.phone,by:(S.user&&(S.user.nick||S.user.name))||'',uid:me2(),status:'open',cat:'Bulk request',t:Date.now()});commit()}};
+ const ov=ordersView;ordersView=function(){let h=ov.apply(this,arguments);
+  h=h.replace('Tell us what you need. Verified sellers send you quotes.','Sellers can see your request and your phone number, and send quotes on WhatsApp.');
+  const L=open().filter(x=>x.uid!==me2()||isAdm()).slice().reverse(),mineOpen=open().filter(x=>x.uid===me2());
+  const card=x=>{const w=waLink(x.phone,'Hi, I can supply your request on Scoring Heroes: '+x.title+(x.qty?' (qty '+x.qty+')':'')+'. My quote: Rs ____ for the lot, delivery in ____ days.');
+   return `<div class="item" style="flex-wrap:wrap;gap:6px"><div style="flex:1;min-width:170px"><div class="b">${esc(x.title)}</div><div class="mu sm">Qty ${esc(x.qty||'-')}${x.org?' | '+esc(x.org):''}${x.loc?' | '+esc(x.loc):''}${x.by?' | '+esc(x.by):''}</div></div>${x.uid===me2()?`<button class="btn sm ghost" data-a="rfqClose" data-id="${x.id}">Close</button>`:w?`<a class="btn sm" href="${w}" target="_blank" rel="noopener">Send quote</a>`:''}${isAdm()&&x.uid!==me2()?`<button class="btn sm ghost" data-a="rfqClose" data-id="${x.id}">Remove</button>`:''}</div>`};
+  const mineCard=mineOpen.length?`<div class="card" style="margin-top:10px"><h3>My open requests</h3>${mineOpen.map(card).join('')}<div class="mu sm">Sellers contact you on WhatsApp. Close the request when you are done.</div></div>`:'';
+  const pub=`<div class="card" style="margin-top:10px"><h3>Open bulk requests from buyers</h3>${L.length?L.slice(0,40).map(card).join(''):'<div class="mu">No open requests right now.</div>'}</div>`;
+  return h+mineCard+pub};
+ A.rfqClose=function(d){const x=S.market.find(z=>z.id===d.id);if(!x||!(x.uid===me2()||isAdm()))return;x.status='removed';const o=S.orders.find(z=>'rfq-'+z.id===x.id);if(o)o.status='closed';
+  if(x.rm){S.market=S.market.filter(z=>z.id!==x.id);x.rm=0;S.market.push(x)}commit();toast('Closed')};
 }
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());

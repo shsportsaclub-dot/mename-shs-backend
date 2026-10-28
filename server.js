@@ -1220,7 +1220,7 @@ http.createServer(async (req, res) => {
       }
       delete x.rm; delete x._sh; delete x._pv;
       const was = cur && cur.data && cur.data.x && cur.data.x.verified;
-      if (u.role !== 'admin') { if (x.kind && !['used', 'rent'].includes(x.kind)) x.verified = was === true ? true : false; else delete x.verified; }
+      if (u.role !== 'admin') { if (x.kind && !['used', 'rent', 'rfq'].includes(x.kind)) x.verified = was === true ? true : false; else delete x.verified; }
     }
     if (limited('shw:' + phone, 600, 36e5)) return out(429, { ok: false, error: 'Too many saves, slow down' });
     bag[id] = { id, owner: cur ? cur.owner : phone, ownerName: u.nick || u.name || '', updated: Date.now(), data: b.data };
