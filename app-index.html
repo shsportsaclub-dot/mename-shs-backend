@@ -7706,6 +7706,25 @@ S.stream.scene=S.stream.scene||'bug';S.stream.card=S.stream.card||{t:'Starting s
 }
 /* ghost buttons inside the dark live-match pages must stay readable */
 {const st=document.createElement('style');st.textContent='.rp .btn.ghost,.rp button.ghost,.msk .btn.ghost,.h16 .btn.ghost,.sh-sports-eleven .btn.ghost{color:#e8eefc!important;border-color:#ffffff55!important}.msk .btn.ghost[disabled]{opacity:.55}.msk .mu,.h16 .mu{color:#9fb3c8}';document.head.appendChild(st)}
+/* ---------------- TV MATCH SCREEN: wide live layout for the 10-foot UI (score + animation left, batters / bowlers right) ---------------- */
+{
+ const isTV=()=>document.documentElement.dataset.plat==='tv';
+ const st=document.createElement('style');st.textContent=`html[data-plat=tv] .rp{max-width:none;width:100%;min-height:100vh}
+.tvl{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:16px;padding:14px 12px 24px;align-items:start}
+.tvl>div:first-child .hero{margin:0;zoom:2}html[data-plat=tv] .rp header{zoom:1.7}.tvl .tvb{background:#0c1d4a;border:1px solid #2a4cb0;border-radius:16px;padding:14px 16px;margin-bottom:14px}
+.tvl .tvb h3{margin:0 0 8px;font:800 20px var(--ui,system-ui);letter-spacing:.04em;color:#9fb3c8;text-transform:uppercase}
+.tvl .tvr{display:flex;justify-content:space-between;gap:12px;font:600 26px var(--ui,system-ui);padding:8px 0;border-bottom:1px solid #ffffff1f;color:#fff}.tvl .tvr:last-child{border:0}.tvl .tvr small{font-size:18px;color:#9fb3c8;font-weight:500;display:block}.tvl .tvr b{font-variant-numeric:tabular-nums}
+.tvl .tvs{color:#ffd24a}`;document.head.appendChild(st);
+ const w0=XV.wmatch;XV.wmatch=function(){const W=UI.wm;if(!isTV()||!W||!W.m||(W.tab||'live')!=='live'||!W.m.started)return w0.apply(this,arguments);
+  try{const full=ar9Panel(W),hm=/<section class="hero">[\s\S]*?<\/section>/.exec(full);if(!hm)return w0.apply(this,arguments);
+   const L=(W.sc&&W.sc.scorecard)||[],inn=L[L.length-1]||{},bats=(inn.batting||[]),bowls=(inn.bowling||[]);
+   const cur=bats.filter(b=>/^(batting|not out)$/i.test(String(b['dismissal-text']||b.dismissal||'').trim())).slice(0,2),
+     shown=cur.length?cur:[],sr=b=>+b.b>0?(b.r*100/b.b).toFixed(1):'-';
+   const bt=shown.length?shown.map(b=>`<div class="tvr"><span>${esc((b.batsman||{}).name||'')} *</span><b>${b.r} <small style="display:inline">(${b.b})</small></b></div>`).join(''):'<div class="tvr"><span class="tvs">Batters not supplied</span></div>';
+   const bw=bowls.length?bowls.slice(0,5).map(b=>`<div class="tvr"><span>${esc((b.bowler||{}).name||'')}</span><b>${b.o}-${b.m}-${b.r}-${b.w}</b></div>`).join(''):'<div class="tvr"><span class="tvs">Bowling not supplied</span></div>';
+   return `<div class="rp">${ar9Header(W,'live')}<div class="tvl"><div>${hm[0]}</div><div><div class="tvb"><h3>At the crease</h3>${bt}</div><div class="tvb"><h3>Bowling</h3>${bw}</div></div></div></div>`}
+  catch(e){return w0.apply(this,arguments)}};
+}
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});
