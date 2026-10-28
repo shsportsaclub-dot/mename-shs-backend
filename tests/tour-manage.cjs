@@ -1,0 +1,23 @@
+const { chromium } = require('playwright');
+(async () => {
+  const b = await chromium.launch(), errs = [], p = await b.newPage({ viewport: { width: 390, height: 900 } }); p.on('pageerror', e => errs.push(e.message));
+  await p.goto('file://' + require('path').resolve(__dirname, '../app-index.html')); await p.waitForTimeout(400);
+  const ok = (c, m) => { if (!c) { console.error('FAIL', m); process.exitCode = 1; } };
+  const c = f => p.evaluate(f);
+  await c(() => { window.pullLive = async () => {}; UI.stage = 'app'; S.user = { name: 'QA', role: 'admin', kind: 'Scorer' }; S.prefs = { ...S.prefs, asked: 1, welcomed: 1 };
+    S.players = Array.from({ length: 22 }, (_, i) => ({ id: 'p' + i, name: 'Player ' + i, role: 'BAT' }));
+    S.teams = [{ id: 'a', name: 'India', short: 'IND', color: '#235bbb', players: [] }, { id: 'b', name: 'Australia', short: 'AUS', color: '#c9a400', players: [] }, { id: 'c', name: 'Nepal', short: 'NEP', color: '#c00', players: [] }];
+    const m = newMatch({ a: 'a', b: 'b', overs: 20, toss: 'a', dec: 'bat', xiA: [], xiB: [] }); m.status = 'done'; m.win = 'a'; m.tid = 'tt';
+    S.tours = [{ id: 'tt', name: 'QA Cup', kind: 'tournament', overs: 20, teams: ['a', 'b', 'c'], groups: [], fixtures: [{ id: 'f1', a: 'a', b: 'b', stage: 'League', date: '2026-10-20', mid: m.id }, { id: 'f2', a: 'a', b: 'c', stage: 'League', date: '2026-10-22', mid: null }] }];
+    UI.tid = 'tt'; UI.ttab = 'fix'; UI.view = 'tour'; render(); });
+  ok(await c(() => /Schedule/.test(document.body.innerText) && document.querySelectorAll('[data-a="fxEdit"]').length === 1), 'edit only for unplayed fixture');
+  await p.click('[data-a="fxEdit"]'); await p.fill('form[data-f="fxSave"] input[name=venue]', 'Hapur Ground'); await p.fill('form[data-f="fxSave"] input[name=time]', '14:30'); await p.click('form[data-f="fxSave"] button');
+  ok(await c(() => S.tours[0].fixtures[1].venue === 'Hapur Ground' && S.tours[0].fixtures[1].time === '14:30' && /Hapur Ground/.test(document.body.innerText)), 'venue and time saved and shown');
+  await p.selectOption('form[data-f="fxAdd"] select[name=a]', 'b'); await p.selectOption('form[data-f="fxAdd"] select[name=b]', 'c'); await p.fill('form[data-f="fxAdd"] input[name=date]', '2026-10-25'); await p.click('form[data-f="fxAdd"] button');
+  ok(await c(() => S.tours[0].fixtures.length === 3), 'fixture added');
+  await c(() => A.fxDel({ id: 'f1' })); ok(await c(() => S.tours[0].fixtures.some(f => f.id === 'f1')), 'played fixture cannot be removed');
+  await p.click('[data-a="fxDel"]'); ok(await c(() => S.tours[0].fixtures.length === 2), 'unplayed removed');
+  await c(() => { S.user.role = 'viewer'; render(); }); ok(await c(() => !document.querySelector('[data-a="fxEdit"]') && !document.querySelector('form[data-f="fxAdd"]')), 'viewer has no edit controls');
+  ok(await c(() => document.documentElement.scrollWidth <= innerWidth), 'fits 390');
+  ok(!errs.length, errs.join(';')); await b.close(); if (!process.exitCode) console.log('PASS: tournament manage');
+})();

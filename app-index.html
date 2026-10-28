@@ -7679,6 +7679,28 @@ S.stream.scene=S.stream.scene||'bug';S.stream.card=S.stream.card||{t:'Starting s
  Object.assign(A,{ovPrev(d){UI.ovScene=d.v;render()},ovCopy(d){const u=base()+(d.v==='bug'?'':'?scene='+d.v)+'#overlay';try{navigator.clipboard.writeText(u);toast('URL copied')}catch(e){toast(u,6000)}}});
  Object.assign(F,{ovCard(fd){S.stream.card={t:String(fd.get('t')||'').slice(0,60),s:String(fd.get('s')||'').slice(0,100)};commit();toast('Saved')}});
 }
+/* ---------------- TOURNAMENT: manage fixtures (date, time, venue, add, remove unplayed) and share ---------------- */
+{
+ const tn=id=>(T(id)||{name:'?',short:'?'});
+ const t0=XV.tour;XV.tour=function(){const o=t0.apply(this,arguments),t=trObj(UI.tid);if(!t||UI.ttab!=='fix')return o;
+  const sh=`<button class="btn sm ghost" data-a="tShare" data-id="${t.id}">Share on WhatsApp</button>`;
+  const fx=t.fixtures.slice().sort((a,b)=>String(a.date||'').localeCompare(String(b.date||'')));
+  const ed=can();
+  const rows=fx.map(f=>{const played=!!(f.mid&&fxResult(f)&&fxResult(f).status==='done');
+   return `<div class="item" style="flex-wrap:wrap;gap:6px"><div style="flex:1;min-width:170px"><b>${esc(tn(f.a).short)} v ${esc(tn(f.b).short)}</b> <span class="mu sm">${esc(f.stage||'')}</span><div class="mu sm">${esc(f.date||'Date not set')}${f.time?' '+esc(f.time):''}${f.venue?' | '+esc(f.venue):''}${played?' | played':''}</div></div>${ed&&!played?`<button class="btn sm ghost" data-a="fxEdit" data-id="${f.id}">Edit</button><button class="btn sm ghost" data-a="fxDel" data-id="${f.id}">Remove</button>`:''}</div>`}).join('');
+  const add=ed?`<form data-f="fxAdd" style="margin-top:10px"><div class="b">Add a fixture</div><div class="row" style="gap:6px;flex-wrap:wrap"><select name="a" style="flex:1 1 120px">${t.teams.map(i=>`<option value="${i}">${esc(tn(i).name)}</option>`).join('')}</select><select name="b" style="flex:1 1 120px">${t.teams.map((i,k)=>`<option value="${i}" ${k===1?'selected':''}>${esc(tn(i).name)}</option>`).join('')}</select></div><div class="row" style="gap:6px;flex-wrap:wrap"><input name="stage" placeholder="Stage (League, Quarter-final...)" style="flex:1 1 140px"><input name="date" type="date" style="flex:1 1 120px"><input name="time" type="time" style="flex:1 1 90px"></div><input name="venue" placeholder="Venue / ground" style="width:100%;margin-top:6px"><button class="btn sm" style="margin-top:6px">Add fixture</button></form>`:'';
+  const card=`<div class="card"><div class="row" style="justify-content:space-between"><h3>Schedule</h3>${sh}</div>${rows||'<div class="mu">No fixtures.</div>'}${add}</div>`;
+  return o.replace(/<\/div>\s*$/,card+'</div>')};
+ Object.assign(A,{
+  fxEdit(d){const t=trObj(UI.tid),f=t&&t.fixtures.find(x=>x.id===d.id);if(!f||!can())return;UI.modal={t:'html',html:`<h3>${esc(tn(f.a).short)} v ${esc(tn(f.b).short)}</h3><form data-f="fxSave"><input type="hidden" name="id" value="${esc(f.id)}"><label>Date<input name="date" type="date" value="${esc(f.date||'')}"></label><label>Time<input name="time" type="time" value="${esc(f.time||'')}"></label><label>Venue<input name="venue" value="${esc(f.venue||'')}"></label><label>Stage<input name="stage" value="${esc(f.stage||'')}"></label><button class="btn wide">Save</button></form>`};renderModal()},
+  fxDel(d){const t=trObj(UI.tid);if(!t||!can())return;const f=t.fixtures.find(x=>x.id===d.id);if(!f||(f.mid&&fxResult(f)&&fxResult(f).status==='done'))return toast('Played fixtures cannot be removed');t.fixtures=t.fixtures.filter(x=>x.id!==d.id);commit();toast('Fixture removed')},
+  tShare(d){const t=S.tours.find(x=>x.id===d.id);if(!t)return;const up=t.fixtures.filter(f=>!(f.mid&&fxResult(f)&&fxResult(f).status==='done')).sort((a,b)=>String(a.date||'').localeCompare(String(b.date||''))).slice(0,5).map(f=>`${tn(f.a).short} v ${tn(f.b).short}${f.date?' - '+f.date:''}${f.time?' '+f.time:''}${f.venue?' @ '+f.venue:''}`);
+   const txt=t.name+' on Scoring Heroes\n'+t.teams.length+' teams | '+t.overs+' overs'+(up.length?'\nNext:\n'+up.join('\n'):'');window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank','noopener')}});
+ Object.assign(F,{
+  fxAdd(fd){const t=trObj(UI.tid);if(!t||!can())return;const a=fd.get('a'),b=fd.get('b');if(!a||!b||a===b)return toast('Pick two different teams');
+   t.fixtures.push({id:uid(),a,b,stage:String(fd.get('stage')||'League'),date:String(fd.get('date')||''),time:String(fd.get('time')||''),venue:String(fd.get('venue')||''),mid:null});commit();toast('Fixture added')},
+  fxSave(fd){const t=trObj(UI.tid),f=t&&t.fixtures.find(x=>x.id===fd.get('id'));if(!f||!can())return;f.date=String(fd.get('date')||'');f.time=String(fd.get('time')||'');f.venue=String(fd.get('venue')||'');f.stage=String(fd.get('stage')||f.stage||'');UI.modal=null;commit();toast('Saved')}});
+}
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});
