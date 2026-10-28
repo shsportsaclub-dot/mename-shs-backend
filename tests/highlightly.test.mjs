@@ -17,3 +17,8 @@ test('row keeps only what was sent and paging stops on a short page', async () =
   const L = await hl.list('basketball', '2026-10-28'); assert.equal(L.length, 1); assert.equal(calls, 1);
   await assert.rejects(() => hl.list('cricket', '2026-10-28'));
 });
+test('sets sports show sets won and keep set points; points sports keep totals and periods', () => {
+  const st = { description: 'In progress', score: { homeTeam: [25, 20, 25], awayTeam: [20, 25, 18] } };
+  const v = row('volleyball', { id: 1, state: st }); assert.equal(v.home.score, 2); assert.equal(v.away.score, 1); assert.deepEqual(v.periods, [[25, 20], [20, 25], [25, 18]]);
+  const b = row('basketball', { id: 2, state: st }); assert.equal(b.home.score, 70); assert.equal(b.periods.length, 3);
+});

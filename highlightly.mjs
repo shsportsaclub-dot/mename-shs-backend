@@ -21,10 +21,20 @@ export function stateOf(state) {
   return { live: false, ended: false, label: d || 'Scheduled' };
 }
 const team = t => t ? { id: t.id != null ? String(t.id) : '', name: String(t.displayName || t.name || ''), short: String(t.abbreviation || t.shortName || ''), img: String(t.logo || '') } : { id: '', name: '', short: '', img: '' };
+// Per-period / per-set points when the provider sends them as arrays. Sets sports (volleyball, tennis) show sets won as the main score.
+export function periodsOf(state) {
+  const sc = state && state.score; if (!sc || !Array.isArray(sc.homeTeam) || !Array.isArray(sc.awayTeam)) return [];
+  const n = Math.max(sc.homeTeam.length, sc.awayTeam.length), out = [];
+  for (let i = 0; i < n; i++) out.push([num(sc.homeTeam[i]), num(sc.awayTeam[i])]);
+  return out;
+}
+const SETS = new Set(['volleyball', 'tennis']);
+export function setsWon(periods) { let h = 0, a = 0; for (const [x, y] of periods) { if (x == null || y == null) continue; if (x > y) h++; else if (y > x) a++; } return { home: h, away: a }; }
 export function row(sport, m) {
-  const st = stateOf(m.state), sc = scoreOf(m.state), lg = m.league && typeof m.league === 'object' ? m.league : { name: m.league };
+  const st = stateOf(m.state), sc0 = scoreOf(m.state), pr = periodsOf(m.state), sc = SETS.has(sport) && pr.length ? setsWon(pr) : sc0, lg = m.league && typeof m.league === 'object' ? m.league : { name: m.league };
   return { id: 'hl' + sport + ':' + m.id, sport, league: String(lg.name || ''), country: String((m.country && m.country.name) || ''), startsAt: m.date || '', live: st.live, ended: st.ended, state: st.label,
     period: m.state && m.state.period != null ? m.state.period : null, clock: m.state && m.state.clock != null ? m.state.clock : null,
+    periods: periodsOf(m.state),
     home: { ...team(m.homeTeam), score: sc.home }, away: { ...team(m.awayTeam), score: sc.away } };
 }
 export function createHighlightly({ key, base = BASE, fetchImpl = fetch }) {
