@@ -9055,6 +9055,11 @@ html[data-visual-stage=auth] #app,html[data-visual-stage=welcome] #app{margin-le
 /* Ball Flow animation card removed from every live match screen (owner asked: not needed). */
 shDeliveryEffectsHTML=function(){return ''};
 {const st=document.createElement('style');st.textContent='.sh-delivery-effect{display:none!important}';document.head.appendChild(st)}
+/* Match centre always opens in the agreed layout. An old saved 'ca' (Virtual Live / CA look) choice no longer swaps every match to the old screen;
+   the 3D Avatar / Virtual Live button opens the 3D view on top instead. */
+try{if(S.settings&&S.settings.mskin==='ca'){S.settings.mskin='cb';try{save()}catch(e){}}}catch(e){}
+{const ms2=A.mskin;A.mskin=function(d,el){if(d&&d.v==='ca'&&UI.view==='wmatch'){if(typeof window.shV3dOpen==='function')window.shV3dOpen();return}return ms2.apply(this,arguments)}}
+{const wo2=A.wOpen;A.wOpen=function(){if(S.settings&&S.settings.mskin==='ca')S.settings.mskin='cb';return wo2.apply(this,arguments)}}
 /* Visual reference shell; scoring, permissions and route handlers remain shared. */
 {
  const home=heroHome;
