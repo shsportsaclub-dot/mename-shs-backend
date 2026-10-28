@@ -8344,6 +8344,20 @@ S.stream.scene=S.stream.scene||'bug';S.stream.card=S.stream.card||{t:'Starting s
  const ap=render;render=function(){ap.apply(this,arguments);try{if(UI.view==='wmatch'&&UI.cmf==='rc'){document.querySelectorAll('.rp .cl').forEach(r=>{if(!r.closest('.rcp')&&!/AI Recap/.test(r.innerText))r.style.display='none'});document.querySelectorAll('.rp .ovh').forEach(h=>h.style.display='none')}}catch(e){}};
 }
 
+/* ---------------- 48 BALL-BY-BALL BADGE on match cards: shows whether the provider sends every delivery for that match ---------------- */
+{
+ const css=document.createElement('style');css.textContent='.bbbg{display:inline-block;font:700 10px var(--f,system-ui);letter-spacing:.4px;padding:2px 7px;border-radius:10px;margin:4px 0 0;border:1px solid #2fbf71;color:#7ff0b0;background:#0b3a2433}.bbbg.off{border-color:#8a96b4;color:#b6c0d8;background:#33405e33}';document.head.appendChild(css);
+ window.shBbbBadges=function(){
+  const j=UI.live;if(!j||!j.ok||!Array.isArray(j.matches))return;
+  const by=new Map(j.matches.map(m=>[m.id,m]));
+  document.querySelectorAll('.cbc[data-id],.hh-lc[data-id],.wcard[data-id],.ig-sq[data-id]').forEach(c=>{
+   if(c.querySelector('.bbbg'))return;const m=by.get(c.getAttribute('data-id'));if(!m||typeof m.bbb!=='boolean')return;
+   const b=document.createElement('div');b.className='bbbg'+(m.bbb?'':' off');b.textContent=m.bbb?'Ball-by-ball: ON':'Ball-by-ball: not sent by provider';
+   b.title=m.bbb?'The provider sends every delivery for this match':'The provider does not send deliveries for this match; the app shows tracked updates instead';c.appendChild(b)});
+ };
+ const r0=render;render=function(){r0.apply(this,arguments);try{window.shBbbBadges()}catch(e){}};
+}
+
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});
