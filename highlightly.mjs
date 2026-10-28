@@ -1,6 +1,6 @@
 // Highlightly multi-sport feed (free plan: about 100 requests a day). Turns each sport's /matches list into one simple shape for the app.
 // Field names follow the published Highlightly docs (homeTeam / awayTeam / state.description / state.score); anything missing is left out, never guessed.
-export const SPORTS = ['football', 'basketball', 'volleyball', 'handball', 'hockey', 'rugby', 'tennis'];
+export const SPORTS = ['football', 'basketball', 'volleyball', 'handball', 'hockey', 'rugby'];
 const BASE = 'https://sports.highlightly.net';
 const num = v => (v == null || v === '' || isNaN(+v)) ? null : +v;
 const sumArr = a => Array.isArray(a) ? a.reduce((s, x) => s + (num(x) || 0), 0) : null;
