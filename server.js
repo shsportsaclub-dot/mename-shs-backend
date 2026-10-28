@@ -441,7 +441,7 @@ async function trackTick() {
       const T = db.track[id] || (db.track[id] = { first: now, t: now, rows: [], notes: [], prev: null });
       const df = diffSnapshots(T.prev, snap);
       if (df.rows.length) { T.rows.push(...df.rows.map(r => ({ ...r, at: now }))); if (T.rows.length > 3000) T.rows.splice(0, T.rows.length - 3000); }
-      if (df.note) { T.notes.push({ at: now, inning: snap.idx + 1, text: df.note.text }); if (T.notes.length > 300) T.notes.splice(0, T.notes.length - 300); }
+      if (df.note) { T.notes.push({ at: now, inning: snap.idx + 1, text: df.note.text, ...(df.note.bowl && df.note.bowl.length ? { bowl: df.note.bowl } : {}) }); if (T.notes.length > 300) T.notes.splice(0, T.notes.length - 300); }
       T.prev = snap; T.t = now;
       if (d && d.matchEnded) { viewed.delete(id); trackDone.add(id); }
       for (const k of Object.keys(db.track).sort((a, b) => db.track[b].t - db.track[a].t).slice(10)) delete db.track[k];   // keep the last 10 matches

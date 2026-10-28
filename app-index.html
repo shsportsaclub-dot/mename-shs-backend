@@ -8292,6 +8292,22 @@ S.stream.scene=S.stream.scene||'bug';S.stream.card=S.stream.card||{t:'Starting s
 {
  const re=/(\d+)\/(\d+)\s*\(([\d.]+)\s*ov\)\s*to\s*(\d+)\/(\d+)\s*\(([\d.]+)\s*ov\)/;
  const bl=o=>{const p=String(o).split('.');return (+p[0]||0)*6+(+p[1]||0)};
+ /* A long jump (several overs at once) is split per bowler: bowlers bowl alternate overs, so when each part of the jump can only belong to one bowler,
+    that bowler's runs and wickets are that part's exact total. Done only when no byes / leg byes / run outs are left unassigned and exactly one assignment fits. */
+ window.shSplitJump=function(bowl,b0,nb,dr,dw){
+  const B=(bowl||[]).filter(x=>x&&x.b>0);if(!B.length||B.reduce((a,x)=>a+x.b,0)!==nb)return null;
+  if(B.reduce((a,x)=>a+(+x.r||0),0)!==dr||B.reduce((a,x)=>a+(+x.w||0),0)!==dw)return null;
+  if((bowl||[]).some(x=>x&&!x.b&&(x.r||x.w)))return null;
+  const segs=[];for(let ix=b0+1;ix<=b0+nb;ix++){const o=Math.floor((ix-1)/6);const l=segs[segs.length-1];if(l&&l.o===o)l.balls.push(ix);else segs.push({o,balls:[ix]})}
+  if(segs.length<2||segs.length>8)return null;
+  const sols=[],cur=[];
+  (function go(i){if(sols.length>1)return;if(i===segs.length){const ok=B.every((b,k)=>{const mine=segs.filter((_,j)=>cur[j]===k);return mine.length&&mine.reduce((a,s)=>a+s.balls.length,0)===b.b});if(ok)sols.push(cur.slice());return}
+   for(let k=0;k<B.length;k++){if(i&&cur[i-1]===k)continue;cur[i]=k;go(i+1)}cur[i]=undefined})(0);
+  if(sols.length!==1)return null;
+  return B.map((b,k)=>({balls:segs.filter((_,j)=>sols[0][j]===k).flatMap(s=>s.balls),runs:+b.r||0,wk:+b.w||0})).sort((a,c)=>a.balls[0]-c.balls[0]);
+ };
+ /* an over's total is shown only when every ball in it is known, or its unknown balls form a group that lies wholly in this over */
+ window.shOverSum=function(bs){let sum=0;for(const x of bs){if(x.miss)return '?';if(x.unk){if(!x.gone)return '?';}sum+=x.runs||0}return sum};
  window.shTrackBalls=function(notes){
   const out=[];
   (notes||[]).forEach(n=>{const m=re.exec(String(n.text||''));if(!m)return;
@@ -8301,12 +8317,18 @@ S.stream.scene=S.stream.scene||'bug';S.stream.card=S.stream.card||{t:'Starting s
    if(nb===0){if(dr>0||dw>0)out.push(Object.assign(pos(0),{ball:(b0%6)||6,over:Math.floor((Math.max(1,b0)-1)/6)+1,t:dw?'W':'wd/nb'+(dr?'+'+dr:''),c:dw?'rw':'r0',runs:dr,extra:1,key:n.inning+'|x'+b0+'|'+dr+'|'+dw+'|'+n.at}));return}
    if(dr===0&&dw===0){for(let i=1;i<=nb;i++)out.push(Object.assign(pos(i),{t:'0',c:'r0',runs:0,key:n.inning+'|'+(b0+i)+'|0'}));return}
    if(nb===1){const t=dw?'W':String(dr);out.push(Object.assign(pos(1),{t,c:dw?'rw':dr===4?'r4':dr>=6?'r6':dr>=1&&dr<=3?'r'+dr:'r0',runs:dr,wk:dw,key:n.inning+'|'+(b0+1)+'|'+dr+'|'+dw}));return}
-   out.push(Object.assign(pos(nb),{t:nb+'b·'+dr+(dw?'·W':''),c:dw?'rw':'r4',grp:nb,runs:dr,wk:dw,key:n.inning+'|g'+b0+'|'+b1+'|'+dr+'|'+dw,title:nb+' balls, '+dr+' runs'+(dw?', '+dw+' wicket':'')+' (the provider does not say which ball)'}))});
+   out.push(Object.assign(pos(nb),{t:nb+'b·'+dr+(dw?'·W':''),c:dw?'rw':'r4',grp:nb,gl:shSplitJump(n.bowl,b0,nb,dr,dw),runs:dr,wk:dw,key:n.inning+'|g'+b0+'|'+b1+'|'+dr+'|'+dw,title:nb+' balls, '+dr+' runs'+(dw?', '+dw+' wicket':'')+' (the provider does not say which ball)'}))});
   /* expand groups into one slot per ball, and fill gaps, so every ball number 1..6 is present */
   const ex=[];
   out.forEach(x=>{
    if(x.grp){const n=x.grp,ix0=(x.over-1)*6+x.ball-n;
-    for(let i=1;i<=n;i++){const ix=ix0+i,last=i===n;ex.push(Object.assign({},x,{over:Math.floor((ix-1)/6)+1,ball:((ix-1)%6)+1,t:'?',c:'rq',runs:last?x.runs:0,wk:last?x.wk:0,unk:1,gfirst:ix0+1,glast:ix0+n,gruns:x.runs,glen:n,last:last,title:n+' balls, '+x.runs+' runs between them'+(x.wk?', '+x.wk+' wicket':'')+' (the provider does not say which ball)',key:x.key+'#'+i}))}
+    /* the jump split into parts whose runs are known (one part per bowler when the bowling figures settle it, else one part) */
+    const parts=x.gl||[{balls:Array.from({length:n},(_,i)=>ix0+i+1),runs:x.runs,wk:x.wk}];
+    parts.forEach((g,gi)=>{const L=g.balls.length,gid=x.key+'/'+gi,ovs=new Set(g.balls.map(ix=>Math.floor((ix-1)/6)+1));
+     g.balls.forEach((ix,i)=>{const last=i===L-1,o=Math.floor((ix-1)/6)+1,bb=((ix-1)%6)+1,k=x.key+'#'+ix;
+      if(!g.runs&&!g.wk){ex.push(Object.assign({},x,{over:o,ball:bb,t:'0',c:'r0',runs:0,wk:0,grp:0,key:k}));return}
+      if(L===1){ex.push(Object.assign({},x,{over:o,ball:bb,t:g.wk?'W':String(g.runs),c:g.wk?'rw':g.runs===4?'r4':g.runs>=6?'r6':'r'+Math.min(3,g.runs),runs:g.runs,wk:g.wk,grp:0,key:k}));return}
+      ex.push(Object.assign({},x,{over:o,ball:bb,t:'?',c:'rq',runs:last?g.runs:0,wk:last?g.wk:0,grp:L,unk:1,gid,gone:ovs.size===1,gruns:g.runs,glen:L,gwk:g.wk,last,title:L+' balls, '+g.runs+' runs between them'+(g.wk?', '+g.wk+' wicket':'')+(ovs.size>1?' across overs '+[...ovs].join(' and '):'')+' (the provider does not say which ball)',key:k}))})})
    }else ex.push(x)});
   const bk=new Map();ex.forEach(x=>{if(!x.extra)bk.set(x.inn+'|'+x.over,Math.max(bk.get(x.inn+'|'+x.over)||0,x.ball))});
   const have=new Set(ex.filter(x=>!x.extra).map(x=>x.inn+'|'+x.over+'|'+x.ball));
@@ -8323,7 +8345,7 @@ S.stream.scene=S.stream.scene||'bug';S.stream.card=S.stream.card||{t:'Starting s
   if(!(cur&&cur.length)&&notes.length){
    const tb=window.shTrackBalls(notes);
    if(tb.length){const li=tb[tb.length-1].inn,L=tb.filter(x=>x.inn===li),ovs=[...new Set(L.map(x=>x.over))].slice(-3);
-    const items=ovs.map(ov=>{const bs=L.filter(x=>x.over===ov),sum=bs.reduce((a,x)=>a+(x.runs||0),0);
+    const items=ovs.map(ov=>{const bs=L.filter(x=>x.over===ov),sum=window.shOverSum(bs);
      return `<span class="rg"><span class="ro">Over ${ov}</span>${bs.map(x=>`<span class="b ${x.c}"${x.title?` title="${esc(x.title)}" style="outline:1.5px dashed #fff9"`:''}>${esc(x.t)}</span>`).join('')}<span class="rt">= ${sum}</span></span>`}).join('');
     return `<div class="ribn" data-rib="1"><div class="rs">${items}</div><button type="button" data-a="cmv" data-v="ovs">Overs ›</button></div>`}}
   return rib0.apply(this,arguments);
@@ -8337,9 +8359,9 @@ S.stream.scene=S.stream.scene||'bug';S.stream.card=S.stream.card||{t:'Starting s
   const base=g0.apply(this,arguments),tb=window.shTrackBalls?window.shTrackBalls(notes.slice().reverse()):[];
   if(!tb.length)return base;
   const li=tb[tb.length-1].inn,L=tb.filter(x=>x.inn===li),ovs=[...new Set(L.map(x=>x.over))].slice(-6).reverse();
-  const html=ovs.map(ov=>{const bs=L.filter(x=>x.over===ov),sum=bs.reduce((a,x)=>a+(x.runs||0),0),end=bs[bs.length-1];
+  const html=ovs.map(ov=>{const bs=L.filter(x=>x.over===ov),sum=window.shOverSum(bs),end=bs[bs.length-1];
    return `<div class="ovh"><span>Over ${ov} (R: ${sum})</span><span>${end?esc(end.tr+'-'+end.tw):''}</span></div>`+bs.slice().reverse().map(x=>{const t=new Date(x.at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-    const txt=x.miss?'This ball was not received from the provider':x.unk?(x.last?`Ball-wise result not sent. ${x.gruns} run${x.gruns===1?'':'s'}${x.wk?' and a wicket':''} came in these ${x.glen} balls together`:'Ball-wise result not sent (counted in the group total)'):x.extra?`Extra: ${x.runs} run${x.runs===1?'':'s'} without a legal ball (wide / no ball)`:x.wk?'WICKET':x.runs?`${x.runs} run${x.runs===1?'':'s'}`:'no run';
+    const txt=x.miss?'This ball was not received from the provider':x.unk?(x.last?`Ball-wise result not sent. ${x.gruns} run${x.gruns===1?'':'s'}${x.gwk?' and '+(x.gwk>1?x.gwk+' wickets':'a wicket'):''} came in ${x.glen} balls together${x.gone?'':' (spread over more than one over)'}`:'Ball-wise result not sent (counted in the group total)'):x.extra?`Extra: ${x.runs} run${x.runs===1?'':'s'} without a legal ball (wide / no ball)`:x.wk?'WICKET':x.runs?`${x.runs} run${x.runs===1?'':'s'}`:'no run';
     return `<div class="cl"><span class="o n">${ov-1}.${x.ball}</span><span class="b ${x.c}" style="min-width:26px;width:auto;padding:0 5px">${esc(x.t)}</span><span>${esc(txt)} <span class="mu sm">· ${esc(t)}</span></span></div>`}).join('')}).join('');
   return html+`<div class="cl" style="grid-template-columns:1fr;opacity:.8"><span>Each ball above comes from the SH live tracker: a tracker update that covered n balls with no runs is shown as n dot balls; one ball shows its runs; several balls with runs are shown as one group because the provider does not send individual deliveries.</span></div><div class="ovh"><span>Score updates as received</span><span></span></div>`+base;
  };

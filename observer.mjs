@@ -75,6 +75,8 @@ export function diffSnapshots(prev, cur) {
   const parts = [`${cur.team} ${prev.r}/${prev.w} (${prev.o} ov) to ${cur.r}/${cur.w} (${cur.o} ov): ${dR} run${dR === 1 ? '' : 's'}${dB > 0 ? ' from ' + dB + ' legal ball' + (dB === 1 ? '' : 's') : ''}${dW ? ', ' + dW + ' wicket' + (dW === 1 ? '' : 's') : ''}.`];
   for (const x of batChg) if (x.dr > 0 || (x.now && !x.was)) parts.push(!x.was ? `${x.k} comes in.` : `${x.k} ${x.was.r} to ${x.now.r} (${x.was.b} to ${x.now.b} balls).`);
   for (const x of dismissed) parts.push(`${x.k} out: ${x.now.t}.`);
-  return { rows: [], note: { text: parts.join(' ') } };
+  // per-bowler figures for the jump: lets the page split a long jump into exact per-over totals when the overs can be told apart
+  const bowl = bowled.map(x => ({ k: x.k, b: x.db, r: x.dr, w: x.dw, wd: x.dwd, nb: x.dnb })).concat(bowlChg.filter(x => !x.db && (x.dr || x.dw)).map(x => ({ k: x.k, b: 0, r: x.dr, w: x.dw, wd: x.dwd, nb: x.dnb })));
+  return { rows: [], note: { text: parts.join(' '), bowl, from: { r: prev.r, w: prev.w, b: prev.balls }, to: { r: cur.r, w: cur.w, b: cur.balls } } };
 }
 
