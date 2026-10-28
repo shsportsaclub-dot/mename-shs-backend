@@ -8110,7 +8110,8 @@ S.stream.scene=S.stream.scene||'bug';S.stream.card=S.stream.card||{t:'Starting s
    FPOS.forEach((f,i)=>{const mv=o.fi===i,pl=flds[i],px=mv?o.fx:f[0],pz=mv?o.fz:f[1];things.push({z:pz,f:()=>person({x:px,z:pz,yaw:mv?(o.fyaw||0):Math.PI,col:cF,pants:pF,cap:cF,name:pl&&pl.name,tag:mv&&pl?short(pl.name):null,run:mv&&o.fph>0,ph:o.fph,crouch:mv?0:.35,lean:mv?(o.fph>0?.15:.5):.12,ra:mv&&o.fthrow>0?Math.PI*(.4+.9*o.fthrow):undefined,la:.3})})});
    things.push({z:23,f:()=>person({x:1.8,z:23,yaw:Math.PI,col:'#d8d8d8',pants:'#222',cap:'#111',la:.15,ra:.15})});
    const bowAct=o.barm!=null&&st.t<TC+.6;
-   things.push({z:o.bz,f:()=>person({x:.3,z:o.bz,yaw:Math.PI,col:cF,pants:pF,cap:cF,name:who.bw,tag:short(who.bw),run:st.t<RU,ph:o.bph,amp:.9,ra:bowAct?o.barm:undefined,la:bowAct?Math.PI*.9:undefined,lean:st.t>RU?.4:.1})});
+   const cel=!!(ev&&ev.k==='W'&&st.t>TC+.6&&st.t<TC+3.4);
+   things.push({z:o.bz,f:()=>person({x:.3,z:o.bz,yaw:Math.PI,col:cF,pants:pF,cap:cF,name:who.bw,tag:short(who.bw),run:st.t<RU,ph:o.bph,amp:.9,ra:bowAct?o.barm:(cel?Math.PI*(.85+.1*Math.sin(st.t*14)):undefined),la:bowAct?Math.PI*.9:(cel?Math.PI*(.85-.1*Math.sin(st.t*14)):undefined),lean:cel?-.1:st.t>RU?.4:.1})});
    /* non-striker */
    things.push({z:o.nz,f:()=>person({x:-1.3,z:o.nz,yaw:o.mv===0?Math.PI:(o.nz>10?0:Math.PI),col:cB,pants:pB,helmet:'#16204a',name:who.n,tag:o.nz<20&&o.nz>0?short(who.n):null,facingCam:o.mv!==0&&o.nz<10?false:true,run:o.mv!==0&&o.nz>0&&o.nz<20,ph:o.runPh,la:.1,ra:.1})});
    /* striker */
