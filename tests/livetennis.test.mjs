@@ -9,3 +9,9 @@ test('tennis list sends the bearer key and reads the data envelope; missing fiel
   const L = await t.list(); assert.equal(L.length, 1); assert.equal(L[0].home.score, null); assert.deepEqual(L[0].periods, []);
   const bad = createLiveTennis({ key: 'k', fetchImpl: async () => ({ ok: false, status: 403, json: async () => ({ error: 'upgrade_required' }) }) }); await assert.rejects(() => bad.list(), /upgrade_required/);
 });
+test('tennis row copes with other score shapes (set-major pairs, objects, sets as objects)', () => {
+  const P = { p1: { name: 'A B' }, p2: { name: 'C D' } };
+  assert.deepEqual(row({ id: 2, players: P, score: { games: [{ p1: 6, p2: 4 }, { p1: 3, p2: 2 }] } }).periods, [[6, 4], [3, 2]]);
+  const r = row({ id: 3, players: P, score: { sets: [{ p1: 6, p2: 4 }, { p1: 3, p2: 6 }, { p1: 2, p2: 1 }] } }); assert.deepEqual(r.periods, [[6, 4], [3, 6], [2, 1]]); assert.equal(r.home.score, 1); assert.equal(r.away.score, 1);
+  assert.equal(row({ id: 4, players: P }).home.score, null);
+});
