@@ -7339,6 +7339,16 @@ render=(o=>function(){try{ar17Norm(UI.wm)}catch(e){}return o.apply(this,argument
   if(ob.length)h=h.replace(/<div class="note2">Over-by-over data is not available[^<]*<\/div>/,'').replace(/(<div class="inf">|<div class="note2">Tap a W marker)/,`<div class="note2">Drawn from real score updates seen live, starting at ${esc(ob[0].obs)} ov. Earlier overs are not shown because the data provider did not publish them.</div>$1`);
   return h};
 }
+/* ---------------- CREATE MATCH: sport choice on step 1 + Schedule for later on the last step */
+{
+ const hz=wzHTML;wzHTML=function(){let h=hz.apply(this,arguments);const w=S.wiz;if(!w)return h;
+  if(w.step===0)h=h.replace('<p class="mu sm">Choose what kind of match','<div class="mu sm" style="margin-bottom:6px">Sport</div><div class="row" style="gap:6px;flex-wrap:wrap;margin-bottom:10px"><button type="button" class="btn sm">\u{1F3CF} Cricket</button><button type="button" class="btn sm ghost" data-a="wzSport" data-v="football">⚽ Football</button><button type="button" class="btn sm ghost" data-a="wzSport" data-v="tennis">\u{1F3BE} Tennis</button></div><div class="mu sm" style="margin-bottom:8px">Other sports appear here as their scorers become ready.</div><p class="mu sm">Choose what kind of match');
+  if(w.step===WSTEPS.length-1)h=h.replace('<button type="button" class="btn ghost sm" data-a="wzDiscard">','<button type="button" class="btn ghost" data-a="wzSchedule">Schedule for later</button><button type="button" class="btn ghost sm" data-a="wzDiscard">');
+  return h};
+ Object.assign(A,{wzSport(d){UI.modal=null;A.sgNew({v:d.v})},
+  wzSchedule(){const w=S.wiz;if(!w)return;const n=S.matches.length,when=w.date;A.wzStart({});
+   if(S.matches.length>n){const m=S.matches[S.matches.length-1];m.status='setup';UI.view='matches';UI.mc.mf="future";UI.mc.tab="matches";commit();toast('Match scheduled for '+when+'. Open it from Upcoming to score.',4000)}}});
+}
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});

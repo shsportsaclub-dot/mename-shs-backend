@@ -1,0 +1,18 @@
+const {chromium}=require('playwright');const fs=require('node:fs'),http=require('node:http'),assert=require('node:assert/strict');
+(async()=>{const html=fs.readFileSync('app-index.html'),sv=http.createServer((q,r)=>{r.setHeader('content-type','text/html');r.end(html)});await new Promise(r=>sv.listen(18994,'127.0.0.1',r));
+const b=await chromium.launch();try{const p=await b.newPage({viewport:{width:412,height:900}}),errs=[];p.on('pageerror',e=>errs.push(e.message));
+await p.route('**/*',r=>r.request().url()==='http://127.0.0.1:18994/'?r.continue():r.fulfill({contentType:'application/json',body:'{"ok":false}'}));
+await p.goto('http://127.0.0.1:18994/');
+await p.evaluate(()=>{UI.stage='app';S.user={name:'QA',role:'scorer',kind:'Scorer',phone:'+910000000000'};S.prefs={...S.prefs,asked:1,welcomed:1};
+S.players=Array.from({length:4},(_,i)=>({id:'p'+i,name:'P'+i,role:'BAT'}));S.teams=[{id:'a',name:'Alpha',short:'ALP',color:'#00f',players:['p0','p1']},{id:'b',name:'Beta',short:'BET',color:'#f00',players:['p2','p3']}];
+S.venues=[{id:'v',name:'Ground',areas:[{id:'ar',name:'Main',pitches:[]}]}];S.wiz=wzFresh();wzShow()});
+const t=await p.locator('#modal, .modal, [role=dialog]').first().innerText().catch(()=>document.body.innerText);
+assert.match(await p.evaluate(()=>document.body.innerText),/Sport[\s\S]*Cricket[\s\S]*Football[\s\S]*Tennis/);
+await p.evaluate(()=>{Object.assign(S.wiz,{step:8,ball:'leather',gender:'men',venueId:'v',areaId:'ar',xi:{a:['p0','p1'],b:['p2','p3']},subs:{},date:'2026-12-01'});wzShow()});
+assert.equal(await p.locator('[data-a="wzSchedule"]').count(),1);
+await p.locator('[data-a="wzSchedule"]').click();await p.waitForTimeout(300);
+const r=await p.evaluate(()=>({n:S.matches.length,st:S.matches[0]&&S.matches[0].status,d:S.matches[0]&&S.matches[0].date,v:UI.view,wiz:S.wiz}));
+assert.equal(r.n,1);assert.equal(r.st,'setup');assert.equal(r.d,'2026-12-01');assert.equal(r.v,'matches');assert.equal(r.wiz,null);
+await p.evaluate(()=>{S.wiz=wzFresh();wzShow()});await p.locator('[data-a="wzSport"][data-v="football"]').click();await p.waitForTimeout(200);
+assert.equal(await p.evaluate(()=>UI.view),'sgnew');assert.deepEqual(errs,[]);
+console.log('PASS create match: sport choice and schedule for later')}finally{await b.close();sv.close()}})().catch(e=>{console.error(e);process.exit(1)});
