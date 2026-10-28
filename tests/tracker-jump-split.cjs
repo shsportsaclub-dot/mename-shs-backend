@@ -54,3 +54,14 @@ const { chromium } = require('playwright');
   ok(new Set(keys).size === keys.length, 'no ball appears twice');
   await b.close();
 })();
+// 6. one legal ball with 5 runs is never shown as a plain "5"
+(async () => {
+  const { chromium } = require('playwright'); const b = await chromium.launch(), p = await b.newPage();
+  await p.goto('file://' + require('path').resolve(__dirname, '../app-index.html')); await p.waitForTimeout(400);
+  const tb = await p.evaluate(() => window.shTrackBalls([{ at: 1, inning: 1, text: 'Zimbabwe Women 60/4 (19.2 ov) to 65/4 (19.3 ov): 5 runs from 1 legal ball.' }, { at: 2, inning: 1, text: 'Zimbabwe Women 65/4 (19.3 ov) to 69/4 (19.4 ov): 4 runs from 1 legal ball.' }]));
+  const ok = (c, m) => { if (!c) { console.error('FAIL', m); process.exitCode = 1; } else console.log('ok', m); };
+  const x = tb.find(q => q.over === 20 && q.ball === 3), y = tb.find(q => q.over === 20 && q.ball === 4);
+  ok(x && x.t === '?' && x.gruns === 5, 'a 5-run single update shows "?" with its total');
+  ok(y && y.t === '4', 'a plain 4 still shows 4');
+  await b.close();
+})();
