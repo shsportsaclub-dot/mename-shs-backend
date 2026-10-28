@@ -8654,6 +8654,17 @@ S.stream.scene=S.stream.scene||'bug';S.stream.card=S.stream.card||{t:'Starting s
  };
  /* Practice match: a clearly labelled rehearsal fixture (no real teams or players) so scorers can learn the pad and the whole flow can be tested any time, even with no live match */
  const pscore=W=>{if(!W||!W.practice)return;const L=sbbOf(W);let r=0,w=0,lg=0;L.forEach(x=>{r+=x.runs;if(x.wicket)w++;if(x.kind==='legal')lg++});W.m.score=[{inning:'Practice XI A Inning 1',r,w,o:Math.floor(lg/6)+(lg%6)/10}]};
+ /* commentary, overs and graphs read the provider list (W.bb); when it is empty, give them the scorer-entered balls so each ball's runs show in Commentary too */
+ const bl0=cbpBbbList;
+ cbpBbbList=function(d){
+  const r=bl0.apply(this,arguments);if(r.length)return r;
+  const W=UI.wm;if(UI.view!=='wmatch'||!W||!sbbOf(W).length)return r;
+  const own=d==null||d===W.bb||(Array.isArray(d)&&!d.length)||(typeof d==='object'&&!Array.isArray(d)&&!(Array.isArray(d.bbb)&&d.bbb.length)&&!(Array.isArray(d.balls)&&d.balls.length));
+  if(!own)return r;
+  const rows=shAvailableBalls(W);if(!rows.length)return r;
+  const say=x=>x.wicket?'OUT! Wicket':x.wide?'Wide'+(x.runs>1?', '+x.runs+' runs':''):x.noball?'No ball'+(x.runs>1?', '+x.runs+' runs':''):+x.runs===4?'FOUR runs':+x.runs===6?'SIX runs':+x.runs===0?'No run':x.runs+' run'+(+x.runs===1?'':'s');
+  return bl0({bbb:rows.map(x=>Object.assign({},x,{derived:1})),tracked:1}).map((x,i,a)=>{const s=a.length===rows.length?rows[rows.length-1-i]:null;if(s&&!x.txt)x.txt=say(s);else if(s&&s.wide&&!/wide/i.test(x.txt))x.txt='Wide · '+x.txt;else if(s&&s.noball&&!/no.?ball/i.test(x.txt))x.txt='No ball · '+x.txt;return x});
+ };
  const lo=load;window.shSbbLoad=async W=>{await lo(W);pscore(W)};
  const ad=A.sbbAdd;A.sbbAdd=async function(){await ad.apply(this,arguments);pscore(UI.wm);render()};
  A.sbbPractice=function(){
