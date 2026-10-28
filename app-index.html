@@ -6758,7 +6758,7 @@ function ar11Model(W){const L=(W.sc&&W.sc.scorecard)||[],raw=typeof shAvailableB
   if(!fow.length&&Array.isArray(inn.fow)){inn.fow.forEach((f,i)=>fow.push({n:i+1,score:f.score??f.runs??f.r??'',over:f.over??f.ov??'',name:nmOf(f.player||f.batsman||f.name),bw:'',how:''}))}
   return {name,bat,bowl,balls,overs,fow,worm,tot}})}
 function ar11Chip(x){const q=ar9Ball({wicket:x.w,wide:x.wd,noball:x.nb,runs:x.runs,batRuns:x.bat});return `<span class="b ${q.c}">${esc(q.t)}</span>`}
-function ar11Worm(M,G){const maxO=Math.max(1,...M.map(i=>+i.tot.o||0),...M.map(i=>i.worm.length-1)),maxR=Math.max(10,...M.map(i=>i.tot.r)),Wd=420,H=200,pl=34,pb=24,x=o=>pl+(Wd-pl-10)*o/Math.max(maxO,1),y=r=>H-pb-(H-pb-14)*r/(maxR*1.08),col=['#1a6dff','#e3122d'];
+function ar11Worm(M,G){const maxO=Math.max(1,...M.map(i=>+i.tot.o||0),...M.map(i=>Math.max(0,...i.worm.map(p=>p.o)))),maxR=Math.max(10,...M.map(i=>i.tot.r)),Wd=420,H=200,pl=34,pb=24,x=o=>pl+(Wd-pl-10)*o/Math.max(maxO,1),y=r=>H-pb-(H-pb-14)*r/(maxR*1.08),col=['#1a6dff','#e3122d'];
  const lines=M.map((inn,k)=>{const pts=inn.worm.length>1?inn.worm:[{o:0,r:0},{o:+inn.tot.o||0,r:inn.tot.r}];return `<polyline fill="none" stroke="${col[k%2]}" stroke-width="2.5" points="${pts.map(p=>x(p.o)+','+y(p.r)).join(' ')}"/>`}).join('');
  const mk=M.map((inn,k)=>inn.fow.map((f,i)=>{const px=x(parseFloat(f.over)||0),py=y(+f.score||0),id=k+':'+i;const bp=(inn.bat.find(q=>q.name===f.name)||{}),real=bp.img&&/^https?:/i.test(bp.img)&&!SH_PH.test(bp.img),cid='gc'+id.replace(':','_');return `<g data-a="grMk" data-v="${id}" style="cursor:pointer"><line x1="${px}" x2="${px}" y1="${py}" y2="${py-22}" stroke="${col[k%2]}" stroke-width="1"/>${real?`<clipPath id="${cid}"><circle cx="${px}" cy="${py-30}" r="10"/></clipPath><circle cx="${px}" cy="${py-30}" r="11" fill="#fff" stroke="${col[k%2]}" stroke-width="2"/><image href="${esc(bp.img)}" x="${px-10}" y="${py-40}" width="20" height="20" clip-path="url(#${cid})" preserveAspectRatio="xMidYMid slice"/>`:`<circle cx="${px}" cy="${py-30}" r="11" fill="#0c1d4a" stroke="${col[k%2]}" stroke-width="2"/><text x="${px}" y="${py-26.5}" font-size="10" text-anchor="middle" fill="#fff" font-weight="700">${esc(String(f.name||'W').trim().slice(0,1).toUpperCase())}</text>`}<circle cx="${px}" cy="${py}" r="4" fill="${col[k%2]}" stroke="#fff" stroke-width="1.5"/></g>`}).join('')).join('');
  const gl=[0,.5,1].map(f=>`<line x1="${pl}" x2="${Wd-6}" y1="${y(maxR*f)}" y2="${y(maxR*f)}" stroke="#ffffff22"/><text x="${pl-4}" y="${y(maxR*f)+3}" font-size="9" fill="#c6cfea" text-anchor="end">${Math.round(maxR*f)}</text>`).join('')+[0,.25,.5,.75,1].map(f=>`<text x="${x(maxO*f)}" y="${H-8}" font-size="9" fill="#c6cfea" text-anchor="middle">${Math.round(maxO*f)}</text>`).join('');
@@ -7315,6 +7315,29 @@ render=(o=>function(){try{ar17Norm(UI.wm)}catch(e){}return o.apply(this,argument
    sync(this,t.content);
    if(window.scrollY!==sy||window.scrollX!==sx)window.scrollTo(sx,sy)}});
  }
+}
+/* ---------------- GRAPH FROM REAL OBSERVATIONS (no straight 0-to-total line) + plain Scorer tab ---------------- */
+{
+ const st=document.createElement('style');st.textContent=`.rp nav button.bx.sc-tab{margin:0;padding:8px 2px 10px;border:0;border-radius:0;background:none;box-shadow:none}.rp nav button.bx.sc-tab[aria-selected="true"]::after{display:block}`;document.head.appendChild(st);
+ const h1=ar9Header;ar9Header=function(){return h1.apply(this,arguments).replace(/class="bx" data-a="wmScore"/,'class="sc-tab" data-a="wmScore"')};
+ const wm0=A.wmScore;A.wmScore=function(){if(UI.wm&&!can()&&!S.matches.some(x=>x.worldId===UI.wm.m.id)){toast('Scoring is for Scorer accounts. Watching live view.',2500);return A.wmTab({v:'live'})}return wm0.apply(this,arguments)};
+ const ovOf=s=>parseFloat(s)||0;
+ const re=/(\d+)\/(\d+)\s*\(([\d.]+)\s*ov\)/g;
+ // real score snapshots the tracker saw (start and end of every observed update) for one innings
+ const observed=(W,k)=>{const notes=(W.bb&&W.bb.notes)||[],pts=new Map();
+  notes.filter(n=>+n.inning===k+1).forEach(n=>{let m;re.lastIndex=0;while((m=re.exec(String(n.text||'')))){const o=ovOf(m[3]);pts.set(o,{o,r:+m[1],w:+m[2],ov:m[3]})}});
+  return [...pts.values()].sort((a,b)=>a.o-b.o)};
+ const m0=ar11Model;ar11Model=function(W){const M=m0.apply(this,arguments);
+  M.forEach((inn,k)=>{if(inn.worm.length>1)return;const pts=observed(W,k);if(pts.length<2)return;
+   inn.worm=pts.map(p=>({o:p.o,r:p.r}));inn.obs=pts[0].ov;
+   if(!inn.fow.length){let pw=pts[0].w;pts.forEach(p=>{if(p.w>pw){for(let q=pw+1;q<=p.w;q++)inn.fow.push({n:q,score:p.r,over:p.ov,name:'',bw:'',how:''});pw=p.w}})}});
+  return M};
+ const w0=ar11Worm;ar11Worm=function(M,G){
+  // make the over axis follow real overs, not the number of points
+  const fix=M.map(i=>({...i,worm:i.worm}));let h=w0.call(this,fix,G);
+  const ob=M.filter(i=>i.obs!=null);
+  if(ob.length)h=h.replace(/<div class="note2">Over-by-over data is not available[^<]*<\/div>/,'').replace(/(<div class="inf">|<div class="note2">Tap a W marker)/,`<div class="note2">Drawn from real score updates seen live, starting at ${esc(ob[0].obs)} ov. Earlier overs are not shown because the data provider did not publish them.</div>$1`);
+  return h};
 }
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
