@@ -12,7 +12,7 @@ const setup=role=>p.evaluate(role=>{window.pullLive=async()=>{};window.__posts=[
  const bt=(id,n,r,bb)=>({batsman:{id,name:n},r,b:bb,'4s':1,'6s':0,sr:100,'dismissal-text':'batting'});
  UI.wm={m:{id:'t1',name:'BAN v WI',started:true,ended:false,type:'test',teams:[{name:'Bangladesh',short:'BAN'},{name:'West Indies',short:'WI'}],score:[{inning:'Bangladesh Inning 1',r:36,w:1,o:13.3}],status:'Live'},mi:{},sc:{scorecard:[{inning:'Bangladesh Inning 1',batting:[bt('p1','Shadman Islam',12,34)],bowling:[{bowler:{id:'p3',name:'Justin Greaves'},o:1,m:0,r:4,w:0}]}]},bb:{},tab:'live'};UI.view='wmatch';render()},role);
 await setup('viewer');await p.waitForTimeout(200);
-ok(await p.evaluate(()=>!document.querySelector('.sbbpad')&&!document.querySelector('#sbbfloat [data-a=sbbToggle]')&&/Role: viewer/.test(document.querySelector('#sbbfloat').innerText)),'viewer sees no pad, only the role chip');
+ok(await p.evaluate(()=>!document.querySelector('.sbbpad')&&!document.querySelector('#sbbfloat [data-a=sbbToggle]')&&!/cannot score/.test((document.querySelector('#sbbfloat')||{innerText:''}).innerText)),'viewer sees no pad and no badge');
 await setup('scorer');await p.waitForTimeout(200);
 ok(await p.evaluate(()=>!!document.querySelector('#sbbfloat [data-a=sbbToggle]')),'scorer sees the floating button');
 await p.click('#sbbfloat [data-a=sbbToggle]');await p.waitForTimeout(200);
