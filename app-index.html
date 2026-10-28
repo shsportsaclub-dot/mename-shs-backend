@@ -7544,7 +7544,8 @@ S.joinReq=S.joinReq||[];S.transfers=S.transfers||[];UI.td=UI.td||{id:'',tab:'squ
     const tg=[t.cap===id?'C':'',t.vc===id?'VC':'',t.wk===id?'WK':''].filter(Boolean).map(x=>`<span class="td-tg">${x}</span>`).join(' ');
     return `<div class="td-p"><div class="nm"><b>${esc(p.name)}</b> ${tg}<div class="mu sm">${esc(p.role||'')}${p.jersey?' | #'+esc(p.jersey):''}</div></div>${m?`<button class="btn sm ghost" data-a="tdRole" data-id="${id}" data-v="cap">C</button><button class="btn sm ghost" data-a="tdRole" data-id="${id}" data-v="vc">VC</button><button class="btn sm ghost" data-a="tdRole" data-id="${id}" data-v="wk">WK</button><button class="btn sm ghost" data-a="tdXfer" data-id="${id}">Transfer</button><button class="btn sm ghost" data-a="tdRelease" data-id="${id}">Release</button>`:''}</div>`}).join(''):'<div class="mu">No players yet. Share the invite link so players can ask to join.</div>')}
   else if(tab==='invite'){const l=link(t),w='https://wa.me/?text='+encodeURIComponent('Join '+t.name+' on Scoring Heroes: '+l);
-   b=`<div class="b">Invite players</div><div class="mu sm" style="margin:6px 0">Anyone who opens this link can ask to join. You approve each request.</div><input readonly value="${esc(l)}" onclick="this.select()" style="width:100%"><div class="row" style="gap:6px;margin-top:8px"><a class="btn sm" href="${w}" target="_blank" rel="noopener">Share on WhatsApp</a><button class="btn sm ghost" data-a="tdCopy">Copy link</button></div>
+   setTimeout(()=>{const h=document.getElementById('tdQr');if(h&&!h.firstChild&&typeof qrCanvas==='function'){const cv=qrCanvas(l,220);if(cv){cv.style.cssText='max-width:100%;border-radius:8px;background:#fff';h.appendChild(cv)}}},30);
+   b=`<div class="b">Invite players</div><div class="mu sm" style="margin:6px 0">Anyone who opens this link can ask to join. You approve each request.</div><input readonly value="${esc(l)}" onclick="this.select()" style="width:100%"><div id="tdQr" style="text-align:center;margin:10px 0"></div><div class="row" style="gap:6px;margin-top:8px"><a class="btn sm" href="${w}" target="_blank" rel="noopener">Share on WhatsApp</a><button class="btn sm ghost" data-a="tdCopy">Copy link</button></div>
    ${m?`<form data-f="tdAdd" style="margin-top:12px"><div class="b">Add a player by name</div><div class="row" style="gap:6px"><input name="name" placeholder="Player name" required style="flex:1"><input name="phone" placeholder="Phone (optional)" inputmode="numeric" style="flex:1"></div><button class="btn sm" style="margin-top:6px">Add to squad</button></form>`:''}`}
   else if(tab==='req'){b=rq.length?rq.map(r=>`<div class="td-p"><div class="nm"><b>${esc(r.name)}</b><div class="mu sm">${esc(r.phone||'')} ${esc(r.msg||'')}</div></div>${m?`<button class="btn sm" data-a="tdAcc" data-id="${r.id}">Accept</button><button class="btn sm ghost" data-a="tdDec" data-id="${r.id}">Decline</button>`:''}</div>`).join(''):'<div class="mu">No join requests.</div>'}
   else{const out=S.transfers.filter(x=>x.from===t.id).slice().reverse();
@@ -7573,7 +7574,7 @@ S.joinReq=S.joinReq||[];S.transfers=S.transfers||[];UI.td=UI.td||{id:'',tab:'squ
   tdXfer(fd){const t=tm(UI.td.id),to=fd.get('to'),pid=fd.get('pid');if(!t||!to||!pid)return;S.transfers.push({id:uid(),pid,from:t.id,to,note:String(fd.get('note')||''),at:Date.now(),status:'pending'});UI.modal=null;commit();toast('Transfer request sent')}});
  /* ?join=<teamId> link: ask the signed-in person to confirm a join request */
  const jp=new URLSearchParams(location.search).get('join');
- if(jp){UI.joinTid=jp;const oi=window.__joinPrompt=()=>{const t=tm(jp);if(!t||!S.user||S.user.guest)return;UI.modal={t:'html',html:`<h3>Join ${esc(t.name)}?</h3><div class="mu sm" style="margin:6px 0">The team manager will see your request and can accept it.</div><button class="btn wide" data-a="joinSend">Send join request</button>`};renderModal()};setTimeout(oi,1200)}
+ if(jp){UI.joinTid=jp;const oi=window.__joinPrompt=()=>{const t=tm(jp);if(!t||!S.user||S.user.guest)return;UI.modal={t:'html',html:`<h3>Join ${esc(t.name)}?</h3><div class="mu sm" style="margin:6px 0">The team manager will see your request and can accept it.</div><button class="btn wide" data-a="joinSend">Send join request</button>`};renderModal()};}
 }
 /* ---------------- Player avatar fallback = SH helmet avatar (never a fake photo) + live match action strip under the score ---------------- */
 {
@@ -7816,6 +7817,37 @@ S.stream.scene=S.stream.scene||'bug';S.stream.card=S.stream.card||{t:'Starting s
  /* optional start time when scheduling a match with the wizard */
  const hz=wzHTML;wzHTML=function(){let h=hz.apply(this,arguments);const w=S.wiz;if(!w)return h;return h.replace(/(<label style="flex:1">Date<input type="date" data-c="wz" name="date" value="[^"]*"><\/label>)/,'$1<label style="flex:1">Start time<input type="time" data-c="wz" name="time" value="'+esc(w.time||'')+'"></label>')};
  const ws=A.wzSchedule;A.wzSchedule=function(){const w=S.wiz,tm=w&&w.time;const n=S.matches.length;ws.apply(this,arguments);if(S.matches.length>n&&tm){S.matches[S.matches.length-1].time=tm;save()}};
+}
+/* ---------------- TEAM INVITES THROUGH THE SERVER: the team card is published, the join link works on any phone, the owner reviews requests ---------------- */
+{
+ const tm=id=>S.teams.find(t=>t.id===id),H=()=>({'Authorization':'Bearer '+shTok(),'Content-Type':'application/json'});
+ const card=t=>({t:{id:t.id,name:t.name,short:t.short,color:t.color,level:t.level||'',state:t.state||'',country:t.country||''}});
+ UI.tq=UI.tq||{hash:{},at:0};
+ async function tdPublish(){if(!shOn())return;try{for(const t of S.teams){if(!(can()||t.mgr===me()))continue;if(!/^[\w-]{3,40}$/.test(String(t.id)))continue;const d=card(t),h=JSON.stringify(d);if(UI.tq.hash[t.id]===h)continue;
+   const r=await fetch(apiBase()+'/api/shared/teams/'+t.id,{method:'PUT',headers:H(),body:JSON.stringify({data:d})});if(r.ok||r.status===403)UI.tq.hash[t.id]=h}}catch(e){}}
+ const me=()=>S.user&&(S.user.id||S.user.uid||S.user.name);
+ async function tdPullReq(tid){if(!shOn())return;try{const r=await fetch(apiBase()+'/api/teamreq/'+tid,{headers:H()}),j=await r.json();if(!j.ok||!j.owner)return;let ch=false;
+   (j.items||[]).forEach(x=>{let q=S.joinReq.find(z=>z.sid===x.id);if(!q){S.joinReq.push({id:uid(),sid:x.id,tid,name:x.name,phone:x.phone||'',msg:x.msg||'',at:x.at,status:x.status});ch=true}else if(q.status!==x.status){q.status=x.status;ch=true}});
+   if(ch){save();if(UI.view==='tdash')render()}}catch(e){}}
+ const mine=t=>can()||(t&&t.mgr===me());
+ const c0=commit;commit=function(){c0.apply(this,arguments);setTimeout(tdPublish,600)};
+ const td=XV.tdash;XV.tdash=function(){const t=tm(UI.td.id);if(t&&mine(t)&&Date.now()-(UI.tq.at||0)>12000){UI.tq.at=Date.now();setTimeout(()=>{tdPublish().then(()=>tdPullReq(t.id))},0)}return td.apply(this,arguments)};
+ setInterval(()=>{if(document.visibilityState==='visible'&&UI.view==='tdash'){const t=tm(UI.td.id);if(t&&mine(t))tdPullReq(t.id)}},15000);
+ setTimeout(tdPublish,3500);
+ /* answering a request also tells the server (the requester is told the answer by the owner on WhatsApp) */
+ const ans=async(r,st)=>{if(!r||!r.sid||!shOn())return;try{await fetch(apiBase()+'/api/teamreq/'+r.tid+'/'+r.sid,{method:'PUT',headers:H(),body:JSON.stringify({status:st})})}catch(e){}};
+ const ta=A.tdAcc;A.tdAcc=function(d){const r=S.joinReq.find(x=>x.id===d.id);ta.apply(this,arguments);if(r&&r.status==='accepted')ans(r,'accepted')};
+ const tc=A.tdDec;A.tdDec=function(d){const r=S.joinReq.find(x=>x.id===d.id);tc.apply(this,arguments);ans(r,'declined')};
+ /* the join link: look the team up on the server, so it works even when the team is not on this phone */
+ A.joinSend=async function(){const tid=UI.joinTid,t=UI.joinTeam||tm(tid);if(!t)return;const u=S.user||{},nmv=u.nick||u.name||'Player';UI.modal=null;renderModal();
+  if(!shOn()){toast('Sign in first to send a request',3500);return}
+  try{const r=await fetch(apiBase()+'/api/teamreq/'+tid,{method:'POST',headers:H(),body:JSON.stringify({name:nmv,phone:u.phone||''})}),j=await r.json();
+   toast(j.ok?'Request sent to '+t.name:(j.error||'Could not send the request'),3500)}catch(e){toast('No internet. Try again.',3000)}};
+ window.__joinPrompt=async()=>{const jp=UI.joinTid;if(!jp||!S.user)return;if(S.user.guest){toast('Register to join a team',3500);return}let t=tm(jp);
+  if(!t&&apiBase()){try{const r=await fetch(apiBase()+'/api/shared/teams/'+jp),j=await r.json();if(j.ok)t=j.item.data.t}catch(e){}}
+  if(!t){toast('This team link is not available. Ask the team manager to open the team once while signed in.',5000);return}UI.joinTeam=t;
+  UI.modal={t:'html',html:`<h3>Join ${esc(t.name)}?</h3><div class="mu sm" style="margin:6px 0">The team manager sees your name and phone and can accept your request.</div><button class="btn wide" data-a="joinSend">Send join request</button>`};renderModal()};
+ if(UI.joinTid){const f0=render;let done=0;render=function(){f0.apply(this,arguments);if(!done&&S.user&&UI.stage==='app'){done=1;setTimeout(()=>window.__joinPrompt(),600)}}}
 }
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());

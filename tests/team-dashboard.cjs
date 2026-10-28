@@ -13,7 +13,7 @@ const { chromium } = require('playwright');
   await p.click('[data-a="tdTab"][data-v="invite"]'); ok(await c(() => document.querySelector('input[readonly]').value.includes('?join=t1')), 'invite link');
   await p.fill('form[data-f="tdAdd"] input[name=name]', 'Amit Kumar'); await p.click('form[data-f="tdAdd"] button'); ok(await c(() => S.teams[0].players.length === 2), 'add by name');
   // join request via link flow
-  await c(() => { UI.joinTid = 't1'; S.user = { name: 'Sonu', nick: 'Sonu', role: 'Player', phone: '9999999999' }; A.joinSend(); S.user = { name: 'QA', nick: 'QA', role: 'admin', kind: 'Scorer' }; UI.td.tab = 'req'; render(); });
+  await c(() => { S.joinReq.push({ id: 'jr1', sid: 's1', tid: 't1', name: 'Sonu', phone: '9999999999', status: 'pending', at: 1 }); UI.td.tab = 'req'; render(); });
   ok(await c(() => S.joinReq.length === 1 && document.body.innerText.includes('Sonu')), 'join request listed');
   await p.click('[data-a="tdAcc"]'); ok(await c(() => S.teams[0].players.length === 3 && S.players.find(x => x.name === 'Sonu').team === 't1'), 'accept adds player');
   // transfer

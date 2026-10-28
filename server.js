@@ -1184,7 +1184,7 @@ http.createServer(async (req, res) => {
     return out(405, { ok: false, error: 'Method not allowed' });
   }
   if (path.startsWith('/api/shared/')) {   // shared public data: matches, tournaments, auctions (anyone reads, the owner writes)
-    const [, , , col, id] = path.split('/'), COLS = ['matches', 'sports', 'tours', 'auc', 'grounds', 'market'];
+    const [, , , col, id] = path.split('/'), COLS = ['matches', 'sports', 'tours', 'auc', 'grounds', 'market', 'teams'];
     if (!COLS.includes(col)) return out(404, { ok: false, error: 'Unknown collection' });
     const bag = db.shared[col] = db.shared[col] || {};
     if (req.method === 'GET' && !id) {
@@ -1222,9 +1222,41 @@ http.createServer(async (req, res) => {
       const was = cur && cur.data && cur.data.x && cur.data.x.verified;
       if (u.role !== 'admin') { if (x.kind && !['used', 'rent', 'rfq'].includes(x.kind)) x.verified = was === true ? true : false; else delete x.verified; }
     }
+    if (col === 'teams') {   // public team card: name, code, colour, level. No squad, no phone numbers.
+      const t = b.data && b.data.t, str = (v, n) => typeof v === 'string' && v.trim() && v.length <= n;
+      if (!t || t.id !== id || !str(t.name, 80) || !str(t.short, 6) || (t.color != null && !/^#[0-9a-f]{6}$/i.test(t.color))) return out(400, { ok: false, error: 'Invalid team' });
+      b.data = { t: { id: t.id, name: t.name.trim(), short: t.short.trim(), color: t.color || '#2563eb', level: String(t.level || '').slice(0, 20), state: String(t.state || '').slice(0, 60), country: String(t.country || '').slice(0, 60) } };
+    }
     if (limited('shw:' + phone, 600, 36e5)) return out(429, { ok: false, error: 'Too many saves, slow down' });
     bag[id] = { id, owner: cur ? cur.owner : phone, ownerName: u.nick || u.name || '', updated: Date.now(), data: b.data };
     saveDb(); sseSend({ col, id, updated: bag[id].updated }); return out(200, { ok: true, updated: bag[id].updated });
+  }
+  if (path.startsWith('/api/teamreq/')) {   // join requests: a signed-in person asks to join a published team; only the team owner (or an admin) reads and answers them
+    const [, , , tid, rid] = path.split('/');
+    const tok = String(req.headers.authorization || '').replace(/^Bearer\s+/i, ''), phone = readSession(tok), u = phone && db.users[phone];
+    if (!u) return out(401, { ok: false, error: 'Please sign in first' });
+    if (!tid || !/^[\w-]{3,40}$/.test(tid)) return out(400, { ok: false, error: 'Bad team' });
+    const tm = db.shared.teams && db.shared.teams[tid];
+    if (!tm) return out(404, { ok: false, error: 'This team is not published yet' });
+    const bag = (db.teamreq = db.teamreq || {}), list = (bag[tid] = bag[tid] || []), isOwn = tm.owner === phone || u.role === 'admin';
+    if (req.method === 'GET') return out(200, isOwn ? { ok: true, owner: true, items: list.map(r => ({ id: r.id, name: r.name, phone: r.phone, msg: r.msg, at: r.at, status: r.status })) } : { ok: true, owner: false, mine: list.filter(r => r.by === phone).map(r => ({ id: r.id, status: r.status, at: r.at })) });
+    let raw = ''; for await (const c of req) { raw += c; if (raw.length > 4000) return out(413, { ok: false, error: 'Too large' }); }
+    let b; try { b = raw ? JSON.parse(raw) : {}; } catch { return out(400, { ok: false, error: 'Bad body' }); }
+    if (limited('treq:' + phone, 30, 36e5)) return out(429, { ok: false, error: 'Too many requests, slow down' });
+    if (req.method === 'POST' && !rid) {
+      if (list.some(r => r.by === phone && r.status === 'pending')) return out(409, { ok: false, error: 'You already sent a request to this team' });
+      const str = (v, n) => String(v == null ? '' : v).trim().slice(0, n), name = str(b.name || u.nick || u.name, 60);
+      if (!name) return out(400, { ok: false, error: 'Name is required' });
+      const r = { id: crypto.randomBytes(6).toString('hex'), by: phone, name, phone: str(b.phone, 20), msg: str(b.msg, 140), at: Date.now(), status: 'pending' };
+      list.push(r); if (list.length > 300) list.shift(); saveDb(); return out(200, { ok: true, id: r.id });
+    }
+    if (req.method === 'PUT' && rid) {
+      if (!isOwn) return out(403, { ok: false, error: 'Only the team owner can answer requests' });
+      const r = list.find(x => x.id === rid); if (!r) return out(404, { ok: false, error: 'Request not found' });
+      if (!['accepted', 'declined'].includes(b.status)) return out(400, { ok: false, error: 'Bad status' });
+      r.status = b.status; r.answered = Date.now(); saveDb(); return out(200, { ok: true });
+    }
+    return out(405, { ok: false, error: 'Method not allowed' });
   }
   if (path.startsWith('/api/aucreg/')) {   // auction player registrations: players submit, organiser reviews (server decides status)
     const [, , , aid, rid] = path.split('/');
