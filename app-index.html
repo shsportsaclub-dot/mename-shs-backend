@@ -8455,6 +8455,23 @@ S.stream.scene=S.stream.scene||'bug';S.stream.card=S.stream.card||{t:'Starting s
  shRefreshWorldDetails=async function(W){const r=await f0.apply(this,arguments);try{if(window.shDeriveScore(W)&&UI.wm===W&&UI.view==='wmatch')render()}catch(e){}return r};
 }
 
+/* ---------------- 52 DATA FRESHNESS LINE: when the provider score last changed and when the app last checked ---------------- */
+{
+ const ago=t=>{const s=Math.max(0,Math.round((Date.now()-t)/1000));return s<90?s+' s':s<5400?Math.round(s/60)+' min':Math.round(s/3600)+' h'};
+ const hm=t=>new Date(t).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+ const x0=XV.wmatch;
+ XV.wmatch=function(){
+  let o=x0.apply(this,arguments);const W=UI.wm;
+  if(typeof o!=='string'||!W||!W.m||!W.m.started||W.m.ended||(W.tab||'live')!=='live')return o;
+  let last=0;try{const a=window.shTlObserve?window.shTlObserve(W):[];last=a.length?a[a.length-1].t:0}catch(e){}
+  const chk=W.scoreAt||W.detailAt||0,bb=W.m.bbb===true?'ball-by-ball ON':W.m.bbb===false?'ball-by-ball not sent by provider':'';
+  const line=`<div class="mu sm" style="margin:6px 4px">${last?'Score last changed '+hm(last)+' ('+ago(last)+' ago)':'Waiting for a score change'} · app checked ${chk?ago(chk)+' ago':'-'}${bb?' · '+bb:''}</div>`;
+  if(o.indexOf('<div class="sv">')>=0)return o.replace('<div class="sv">',line+'<div class="sv">');
+  if(o.indexOf('data-a="shWorldRefresh"')>=0)return o.replace('<button class="btn sm ghost" data-a="shWorldRefresh">',line+'<button class="btn sm ghost" data-a="shWorldRefresh">');
+  return o;
+ };
+}
+
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});
