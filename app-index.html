@@ -7583,22 +7583,21 @@ S.joinReq=S.joinReq||[];S.transfers=S.transfers||[];UI.td=UI.td||{id:'',tab:'squ
  window.shHelmetURI=n=>{const col=PAL[hh(n)%PAL.length];return 'data:image/svg+xml,'+encodeURIComponent(helm(col,hh(n)%997)).replace(/'/g,'%27')};
  const ci=cbpImg;cbpImg=function(u,n){let h=ci.apply(this,arguments);if(h.indexOf(esc(CBP_AVATAR))<0&&h.indexOf('this.src=CBP_AVATAR')<0)return h;const v=window.shHelmetURI(n||'?');
   return h.split(esc(CBP_AVATAR)).join(v).split('this.src=CBP_AVATAR').join("this.src='"+v+"'").replace('Player photo unavailable — SH avatar','Photo not supplied by the data provider — SH avatar')};
- const st=document.createElement('style');st.textContent=`.hero{position:relative}.hero .sc,.hero .tbar{position:relative;z-index:1}
-.sh-act{position:absolute;left:0;right:0;top:0;bottom:0;z-index:2;pointer-events:none;overflow:hidden;border-radius:inherit}
-.sh-act .pt{position:absolute;left:4%;right:4%;top:44%;height:16%;background:#c9b788;border-radius:3px;opacity:.28}
-.sh-act .stp{position:absolute;top:38%;width:5px;height:28%;background:repeating-linear-gradient(90deg,#f2dfa8 0 2px,transparent 2px 4px);opacity:.8}
-.sh-act .stp.a{left:5%}.sh-act .stp.b{right:5%}
-.sh-act .pl{position:absolute;width:30px;height:30px;border-radius:50%;overflow:hidden;border:2px solid #fff;top:40%}.sh-act .pl svg{width:100%;height:100%}
-.sh-act .bw{left:4%;animation:shActRun 3.6s ease-in-out infinite}.sh-act .bt{right:7%;top:42%;transform-origin:50% 100%;animation:shActSwing 3.6s ease-in-out infinite}
-.sh-act .bl{position:absolute;width:12px;height:12px;border-radius:50%;background:#d81f2a;border:1px solid #fff;top:52%;left:20%;opacity:0;animation:shActBall 3.6s linear infinite;box-shadow:0 0 6px #ff4d5a}
-.sh-act .cap{position:absolute;left:10px;bottom:4px;font:600 10px var(--ui);color:#d9efe4;opacity:.8}
-.sh-act .ev{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);padding:4px 16px;border-radius:99px;font:900 20px var(--ui);color:#fff;background:#000a;animation:ovfxpop 4s both}
+ const st=document.createElement('style');st.textContent=`.hero .box{position:relative;overflow:hidden}.hero .box>*{position:relative;z-index:1}
+.hero .box>.sh-act{position:absolute;left:0;right:0;bottom:0;height:34%;z-index:0;pointer-events:none;overflow:hidden}
+.sh-act .pt{position:absolute;left:6%;right:6%;bottom:8px;height:3px;background:#c9b788;border-radius:2px;opacity:.55}
+.sh-act .stp{position:absolute;bottom:4px;width:7px;height:16px;background:repeating-linear-gradient(90deg,#f2dfa8 0 2px,transparent 2px 3px)}.sh-act .stp.a{left:4%}.sh-act .stp.b{right:4%}
+.sh-act .bl{position:absolute;width:11px;height:11px;border-radius:50%;background:#e3202c;border:1px solid #fff;bottom:5px;left:6%;opacity:0;animation:shActBall 3s ease-in infinite;box-shadow:0 0 8px #ff4d5a}
+.sh-act .tr{position:absolute;bottom:9px;left:6%;height:2px;width:0;background:linear-gradient(90deg,transparent,#ff6b75);animation:shActTrail 3s ease-in infinite}
+.sh-act .ev{position:absolute;left:50%;bottom:30px;transform:translateX(-50%);padding:2px 14px;border-radius:99px;font:900 18px var(--ui);color:#fff;background:#000a;animation:ovfxpop 4s both;white-space:nowrap}
 .sh-act .ev.w{color:#ff8b9b}.sh-act .ev.f{color:#75f0bb}.sh-act .ev.s{color:#e0bcff}
-.sh-act.idle *{animation:none!important}.sh-act.idle .bl{opacity:0}
-@keyframes shActRun{0%{left:4%}30%{left:20%}60%,100%{left:20%}}
-@keyframes shActBall{0%,30%{opacity:0;left:24%;top:52%}32%{opacity:1;left:24%;top:48%}55%{left:55%;top:60%}70%{left:78%;top:50%}85%{opacity:1;left:90%;top:20%}100%{opacity:0;left:98%;top:6%}}
-@keyframes shActSwing{0%,58%{transform:rotate(0)}68%{transform:rotate(-38deg)}85%,100%{transform:rotate(0)}}
-@media (prefers-reduced-motion:reduce){.sh-act *{animation:none!important}.sh-act .bl{opacity:1;left:60%}}`;document.head.appendChild(st);
+.sh-act.idle *{animation:none!important}.sh-act.idle .bl,.sh-act.idle .tr{opacity:0}
+.hero .big.pop0{animation:shPopA .9s ease-out}.hero .big.pop1{animation:shPopB .9s ease-out}
+@keyframes shPopA{0%{transform:scale(1.28);color:#ffd24a;text-shadow:0 0 18px #ffd24a}100%{transform:none}}
+@keyframes shPopB{0%{transform:scale(1.28);color:#ffd24a;text-shadow:0 0 18px #ffd24a}100%{transform:none}}
+@keyframes shActBall{0%{opacity:0;left:6%;bottom:5px}8%{opacity:1}55%{left:74%;bottom:5px}68%{left:80%;bottom:24px}100%{opacity:0;left:96%;bottom:46px}}
+@keyframes shActTrail{0%{width:0;opacity:0}8%{opacity:.9}55%{width:68%}100%{width:68%;opacity:0}}
+@media (prefers-reduced-motion:reduce){.sh-act *,.hero .big{animation:none!important}}`;document.head.appendChild(st);
  const ap=ar9Panel;ar9Panel=function(W){const h=ap.apply(this,arguments);if(!h||h.indexOf('</section>')<0)return h;
   const m=W.m||{},L=(W.sc&&W.sc.scorecard)||[],inn=L[L.length-1]||{},sc=(m.score||[]).slice(-1)[0]||(inn.totals?{r:inn.totals.R,w:inn.totals.W,o:inn.totals.O}:null);if(!sc)return h;
   const t=m.teams||[],bat=t[0]&&t[0].name||'A',bowl=t[1]&&t[1].name||'B',bc=PAL[hh(bat)%PAL.length],wc=PAL[hh(bowl)%PAL.length];
@@ -7606,8 +7605,11 @@ S.joinReq=S.joinReq||[];S.transfers=S.transfers||[];UI.td=UI.td||{id:'',tab:'squ
   if(prev&&prev.key!==now){const dr=+sc.r-prev.r,dw=(+sc.w||0)-prev.w;E[k]={key:now,r:+sc.r,w:+sc.w||0,ev:dw>0?{c:'w',t:'WICKET!'}:dr>=6?{c:'s',t:'SIX!'}:dr>=4?{c:'f',t:'FOUR!'}:dr>0?{c:'',t:'+'+dr}:null,at:Date.now()}}
   else if(!prev)E[k]={key:now,r:+sc.r,w:+sc.w||0,ev:null,at:0};
   const e=E[k],show=e.ev&&Date.now()-e.at<4000,idle=!!m.ended||(+sc.w||0)>=10;
-  const strip=`<div class="sh-act${idle?' idle':''}" aria-label="Match action animation"><i class="pt"></i><i class="stp a"></i><i class="stp b"></i><span class="pl bw">${helm(wc,'b1')}</span><span class="bl"></span><span class="pl bt">${helm(bc,'b2')}</span>${show?`<div class="ev ${e.ev.c}" data-at="${e.at}">${esc(e.ev.t)}</div>`:''}<span class="cap">${idle?(m.ended?'Match ended':'Innings complete'):'Live action'}</span></div>`;
-  return h.replace(/(<section class="hero">)/,'$1'+strip)};
+  const E2=UI.shPop=UI.shPop||{},pk=E2[k]=E2[k]||{n:0,key:now};if(pk.key!==now){pk.key=now;pk.n++;pk.at=Date.now()}
+  const strip=`<div class="sh-act${idle?' idle':''}" aria-hidden="true"><i class="pt"></i><i class="stp a"></i><i class="stp b"></i><span class="tr"></span><span class="bl"></span>${show?`<div class="ev ${e.ev.c}" data-at="${e.at}">${esc(e.ev.t)}</div>`:''}</div>`;
+  let out=h.replace('<div class="box">','<div class="box">'+strip);
+  if(pk.n&&Date.now()-(pk.at||0)<2500)out=out.replace('<div class="big n">','<div class="big n pop'+(pk.n%2)+'">');
+  return out};
 }
 /* ---------------- REGISTRY: boards, state and district associations. Structure + search + claim only.
    Nothing is pre-filled with district lists or crests; entries added by people start as Unverified, an admin verifies. */
