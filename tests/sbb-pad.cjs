@@ -12,9 +12,11 @@ const setup=role=>p.evaluate(role=>{window.pullLive=async()=>{};window.__posts=[
  const bt=(id,n,r,bb)=>({batsman:{id,name:n},r,b:bb,'4s':1,'6s':0,sr:100,'dismissal-text':'batting'});
  UI.wm={m:{id:'t1',name:'BAN v WI',started:true,ended:false,type:'test',teams:[{name:'Bangladesh',short:'BAN'},{name:'West Indies',short:'WI'}],score:[{inning:'Bangladesh Inning 1',r:36,w:1,o:13.3}],status:'Live'},mi:{},sc:{scorecard:[{inning:'Bangladesh Inning 1',batting:[bt('p1','Shadman Islam',12,34)],bowling:[{bowler:{id:'p3',name:'Justin Greaves'},o:1,m:0,r:4,w:0}]}]},bb:{},tab:'live'};UI.view='wmatch';render()},role);
 await setup('viewer');await p.waitForTimeout(200);
-ok(await p.evaluate(()=>!document.querySelector('.sbbpad')),'viewer sees no pad');
+ok(await p.evaluate(()=>!document.querySelector('.sbbpad')&&!document.querySelector('#sbbfloat [data-a=sbbToggle]')&&/Role: viewer/.test(document.querySelector('#sbbfloat').innerText)),'viewer sees no pad, only the role chip');
 await setup('scorer');await p.waitForTimeout(200);
-ok(await p.evaluate(()=>{const e=document.querySelector('.sbbpad'),a=document.querySelector('.ar7');return !!e&&(!a||!!(e.compareDocumentPosition(a)&4))}),'scorer sees pad above the live buttons');
+ok(await p.evaluate(()=>!!document.querySelector('#sbbfloat [data-a=sbbToggle]')),'scorer sees the floating button');
+await p.click('#sbbfloat [data-a=sbbToggle]');await p.waitForTimeout(200);
+ok(await p.evaluate(()=>!!document.querySelector('.sbbpad')),'scorer sees pad');
 ok(await p.evaluate(()=>/over 13\.4/.test(document.querySelector('.sbbpad').innerText)),'next ball is 13.4');
 await p.click('.sbbpad [data-v="4"]');await p.waitForTimeout(200);
 await p.click('.sbbpad [data-v="wd"]');await p.waitForTimeout(200);
@@ -36,7 +38,7 @@ await p.evaluate(()=>{window.pullLive=async()=>{};const store=[];window.apiBase=
  UI.stage='app';S.tok='t';S.user={id:'u1',name:'T',phone:'9999999999',role:'scorer'};S.prefs=Object.assign({},S.prefs,{asked:1,welcomed:1});UI.view='matches';render()});
 await p.waitForTimeout(200);
 ok(await p.evaluate(()=>!!document.querySelector('[data-a=sbbPractice]')),'practice button for scorer');
-await p.click('[data-a=sbbPractice]');await p.waitForTimeout(300);
+await p.click('[data-a=sbbPractice]');await p.waitForTimeout(300);await p.click('#sbbfloat [data-a=sbbToggle]');await p.waitForTimeout(200);
 for(const v of ['1','4','W','1','1','1','1'])await p.click('.sbbpad [data-v="'+v+'"]'),await p.waitForTimeout(120);
 const r=await p.evaluate(()=>({sc:UI.wm.m.score[0],n:shAvailableBalls(UI.wm).length,txt:document.body.innerText}));
 ok(r.sc.r===9&&r.sc.w===1&&r.sc.o===1.1,'practice score '+JSON.stringify(r.sc));ok(r.n===7,'7 balls');ok(/PRACTICE MATCH/.test(r.txt),'labelled practice');

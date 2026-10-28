@@ -8614,7 +8614,7 @@ S.stream.scene=S.stream.scene||'bug';S.stream.card=S.stream.card||{t:'Starting s
  XV.wmatch=function(){
   const o=w0.apply(this,arguments),W=UI.wm;
   if(typeof o!=='string'||!W||(W.tab||'live')!=='live')return o;
-  const pad=window.shSbbPad(W);if(!pad)return o;
+  const pad='';if(!pad)return o;
   let i=o.indexOf('<div class="ar7">');if(i<0)i=o.indexOf('<div class="sv">');return i<0?o+pad:o.slice(0,i)+pad+o.slice(i);
  };
  /* Practice match: a clearly labelled rehearsal fixture (no real teams or players) so scorers can learn the pad and the whole flow can be tested any time, even with no live match */
@@ -8632,6 +8632,17 @@ S.stream.scene=S.stream.scene||'bug';S.stream.card=S.stream.card||{t:'Starting s
   const i=o.indexOf('<div class="tabs"');if(i<0)return o;const e=o.indexOf('</div>',i)+6;return o.slice(0,e)+btn+o.slice(e);
  };
  /* keep the signed-in role in step with the server (e.g. after the owner is made Admin/Scorer in Render), without logging out */
+ /* floating scorer button: injected after every render so it shows whatever layout the match page uses */
+ A.sbbToggle=()=>{UI.sbbOpen=!UI.sbbOpen;render()};
+ const fr=render;render=function(){fr.apply(this,arguments);try{
+  let el=document.getElementById('sbbfloat');const W=UI.wm,on=UI.view==='wmatch'&&W&&W.m&&W.m.started&&!W.m.ended&&S.user&&!S.user.guest&&(W.tab||'live')==='live';
+  if(!on){if(el)el.remove();return}
+  const ok=canScore();
+  if(!el){el=document.createElement('div');el.id='sbbfloat';el.style.cssText='position:fixed;left:0;right:0;bottom:78px;z-index:60;display:flex;flex-direction:column;align-items:flex-end;gap:6px;padding:0 10px;pointer-events:none';document.body.appendChild(el)}
+  const pad=ok&&UI.sbbOpen?window.shSbbPad(W).replace('class="card sbbpad" style="margin:8px 4px"','class="card sbbpad" style="margin:0;width:100%;box-shadow:0 6px 24px #000a;pointer-events:auto"'):'';
+  const btn=ok?`<button type="button" data-a="sbbToggle" style="pointer-events:auto;border:0;border-radius:24px;padding:10px 16px;background:#e63950;color:#fff;font:700 13px system-ui;box-shadow:0 4px 14px #0008">${UI.sbbOpen?'Close scorer':'Score ball by ball'}</button>`:`<span style="pointer-events:none;font:600 11px system-ui;color:#9fb3e8;background:#0b1740cc;border-radius:10px;padding:3px 8px">Role: ${esc(S.user.role||'viewer')} (cannot score)</span>`;
+  const h=pad+btn;if(el.__h!==h){el.__h=h;el.innerHTML=h}
+ }catch(e){}};
  window.shSyncRole=async()=>{try{if(!S.tok||!S.user||!apiBase())return;const r=await fetch(apiBase()+'/api/me',{headers:{Authorization:'Bearer '+S.tok}}),j=await r.json();
   if(j&&j.ok&&j.profile&&j.profile.role&&j.profile.role!==S.user.role){S.user.role=j.profile.role;try{save()}catch(e){}render()}}catch(e){}};
  setTimeout(window.shSyncRole,2500);setInterval(window.shSyncRole,120000);
