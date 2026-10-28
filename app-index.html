@@ -7505,6 +7505,27 @@ window.shNoteGroups=function(notes){
    try{UI.epImg[a.id]=ph||window.epIllo(a)}catch(e){try{if(a.card)UI.epImg[a.id]=(await epGraphic(a.card)).toDataURL('image/jpeg',.85)}catch(x){}}}
   if(UI.epImg[a.id]&&el.getAttribute('src')!==UI.epImg[a.id])el.src=UI.epImg[a.id]}};
 }
+/* ---------------- "+" quick-action button: drag it anywhere (position remembered), faint when not in use */
+{
+ const KEY='sh_fab_pos';let pos=null;try{pos=JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){}
+ if(pos&&!(pos.fx>=0&&pos.fx<=1&&pos.fy>=0&&pos.fy<=1))pos=null;
+ UI.fabIdle=true;
+ const SZ=58,place=p=>({x:Math.round(Math.min(Math.max(8,p.fx*innerWidth),innerWidth-SZ-8)),y:Math.round(Math.min(Math.max(56,p.fy*innerHeight),innerHeight-SZ-8))});
+ const styleOf=()=>{if(!pos)return '';const q=place(pos);return `left:${q.x}px!important;top:${q.y}px!important;right:auto!important;bottom:auto!important;transform:none!important`};
+ const b0=bnav;bnav=function(){const h=b0.apply(this,arguments),st=styleOf();return h.replace('<button class="fabfloat"',`<button class="fabfloat${UI.fabIdle?' idle':''}"${st?` style="${st}"`:''}`)};
+ const css=document.createElement('style');css.textContent='.fabfloat{touch-action:none;cursor:grab;transition:opacity .35s ease;user-select:none;-webkit-user-select:none}.fabfloat.idle{opacity:.28}.fabfloat.active{opacity:1;cursor:grabbing}';document.head.appendChild(css);
+ const p0=A.plus;A.plus=function(){if(Date.now()-(UI.fabMoved||0)<400)return;return p0.apply(this,arguments)};
+ let drag=null,idleT=null;
+ const wake=el=>{clearTimeout(idleT);UI.fabIdle=false;el.classList.remove('idle');el.classList.add('active')};
+ const rest=()=>{clearTimeout(idleT);idleT=setTimeout(()=>{UI.fabIdle=true;const el=document.querySelector('.fabfloat');if(el){el.classList.remove('active');el.classList.add('idle')}},1500)};
+ document.addEventListener('pointerdown',e=>{const el=e.target.closest&&e.target.closest('.fabfloat');if(!el)return;const r=el.getBoundingClientRect();drag={el,dx:e.clientX-r.left,dy:e.clientY-r.top,sx:e.clientX,sy:e.clientY,moved:false};wake(el);try{el.setPointerCapture(e.pointerId)}catch(x){}});
+ document.addEventListener('pointermove',e=>{if(!drag)return;if(!drag.moved&&Math.hypot(e.clientX-drag.sx,e.clientY-drag.sy)<7)return;drag.moved=true;
+  const x=Math.min(Math.max(8,e.clientX-drag.dx),innerWidth-SZ-8),y=Math.min(Math.max(56,e.clientY-drag.dy),innerHeight-SZ-8),s=drag.el.style;
+  s.setProperty('left',x+'px','important');s.setProperty('top',y+'px','important');s.setProperty('right','auto','important');s.setProperty('bottom','auto','important');s.setProperty('transform','none','important');e.preventDefault()},{passive:false});
+ const end=()=>{if(!drag)return;const d=drag;drag=null;if(d.moved){const r=d.el.getBoundingClientRect();pos={fx:r.left/innerWidth,fy:r.top/innerHeight};try{localStorage.setItem(KEY,JSON.stringify(pos))}catch(x){}UI.fabMoved=Date.now()}rest()};
+ document.addEventListener('pointerup',end);document.addEventListener('pointercancel',end);
+ window.fabReset=()=>{pos=null;try{localStorage.removeItem(KEY)}catch(e){}render()};
+}
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});
