@@ -8236,7 +8236,7 @@ S.stream.scene=S.stream.scene||'bug';S.stream.card=S.stream.card||{t:'Starting s
  const last=W=>{
   const raw=typeof shAvailableBalls==='function'?shAvailableBalls(W):[];
   if(raw.length){const x=raw[raw.length-1],q=ar9Ball(x);return {key:'b'+raw.length+'|'+q.t,t:q.t,c:q.c,real:1}}
-  const notes0=W&&W.bb&&Array.isArray(W.bb.notes)?W.bb.notes:[],tb0=window.shTrackBalls?window.shTrackBalls(notes0):[];if(tb0.length){const x=tb0[tb0.length-1];return {key:'k'+x.key,t:x.t,c:x.c,real:0}}
+  const notes0=W&&W.bb&&Array.isArray(W.bb.notes)?W.bb.notes:[],tb0=window.shTrackBalls?window.shTrackBalls(notes0):[];if(tb0.length){const x=tb0[tb0.length-1];return {key:'k'+x.key,t:x.t,c:x.c,real:0,unk:!!(x.unk||x.miss)}}
   const a=window.shTlObserve?window.shTlObserve(W):[];if(!a.length)return null;
   const e=a[a.length-1],p=a[a.length-2];if(!p||p.i!==e.i)return null;
   const dr=e.r-p.r,dw=e.w-p.w,t=dw>0?'W':String(Math.max(0,dr));
@@ -8246,7 +8246,7 @@ S.stream.scene=S.stream.scene||'bug';S.stream.card=S.stream.card||{t:'Starting s
   const l=last(W);if(!l)return '';
   const s=UI.lb[m.id]||(UI.lb[m.id]={key:l.key,at:Date.now()});
   if(s.key!==l.key){s.key=l.key;s.at=Date.now();s.fresh=1}
-  const show=Date.now()-s.at<9000;
+  const show=!l.unk&&Date.now()-s.at<9000;   /* a ball whose result the provider never sent is not shown as the last ball */
   const raw2=typeof shAvailableBalls==='function'?shAvailableBalls(W):[],lo=raw2.length?raw2[raw2.length-1].over:null,lg=raw2.filter(x=>x.over===lo&&!x.wide&&!x.noball).length,os=((m.score||[]).slice(-1)[0]||{}).o,ovEnd=raw2.length?lg>=6:(os!=null&&/\.0$|^\d+$/.test(String(os))&&+os>0);
   return `<div class="lbs n" data-mid="${esc(m.id)}">${show?`<span>LAST BALL</span><b class="b ${l.c}${s.fresh?' pop':''}">${esc(l.t)}</b>`:`<span class="wt">${ovEnd?'OVER':'BALL'}</span>`}</div>`};
  const a0=ar9Panel;
@@ -8652,7 +8652,7 @@ S.stream.scene=S.stream.scene||'bug';S.stream.card=S.stream.card||{t:'Starting s
   const ok=canScore();
   if(!el){el=document.createElement('div');el.id='sbbfloat';el.style.cssText='position:fixed;left:0;right:0;bottom:78px;z-index:60;display:flex;flex-direction:column;align-items:flex-end;gap:6px;padding:0 10px;pointer-events:none';document.body.appendChild(el)}
   const pad=ok&&UI.sbbOpen?window.shSbbPad(W).replace('class="card sbbpad" style="margin:8px 4px"','class="card sbbpad" style="margin:0;width:100%;box-shadow:0 6px 24px #000a;pointer-events:auto"'):'';
-  const btn=ok?`<button type="button" data-a="sbbToggle" style="pointer-events:auto;border:0;border-radius:24px;padding:10px 16px;background:#e63950;color:#fff;font:700 13px system-ui;box-shadow:0 4px 14px #0008">${UI.sbbOpen?'Close scorer':'Score ball by ball'}</button>`:`<span style="pointer-events:none;font:600 11px system-ui;color:#9fb3e8;background:#0b1740cc;border-radius:10px;padding:3px 8px">Role: ${esc(S.user.role||'viewer')} (cannot score)</span>`;
+  const btn=ok?`<button type="button" data-a="sbbToggle" style="pointer-events:auto;border:0;border-radius:24px;padding:10px 16px;background:#e63950;color:#fff;font:700 13px system-ui;box-shadow:0 4px 14px #0008">${UI.sbbOpen?'Close scorer':'Score ball by ball'}</button>`:['admin','scorer'].includes(S.user.role)?`<span style="pointer-events:none;font:600 11px system-ui;color:#9fb3e8;background:#0b1740cc;border-radius:10px;padding:3px 8px">Sign in again to score</span>`:'';   /* ordinary viewers see no scorer badge (like Cricbuzz) */
   const h=pad+btn;if(el.__h!==h){el.__h=h;el.innerHTML=h}
  }catch(e){}};
  window.shSyncRole=async()=>{try{if(!S.tok||!S.user||!apiBase())return;const r=await fetch(apiBase()+'/api/me',{headers:{Authorization:'Bearer '+S.tok}}),j=await r.json();
