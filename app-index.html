@@ -8431,6 +8431,30 @@ S.stream.scene=S.stream.scene||'bug';S.stream.card=S.stream.card||{t:'Starting s
  },true);
 }
 
+/* ---------------- 51 FRESH SCORE FROM THE SCORECARD: the provider's headline score can lag its own scorecard rows; the total is re-added from those rows (batters + extras, bowlers' overs, dismissals) and used only when it is ahead ---------------- */
+{
+ const balls=o=>{const p=String(o==null?'':o).split('.');return (+p[0]||0)*6+(+p[1]||0)};
+ const gone=x=>{const t=String(x['dismissal-text']??x.dismissal??'').trim();return !!t&&!/^(batting|not out|did not bat|dnb|yet to bat|-)$/i.test(t)};
+ window.shDeriveScore=function(W){
+  if(!W||!W.m||!W.sc||!Array.isArray(W.sc.scorecard)||!W.sc.scorecard.length)return false;
+  const inn=W.sc.scorecard[W.sc.scorecard.length-1],bat=(inn.batting||[]).filter(x=>x&&x.batsman),bow=(inn.bowling||[]).filter(x=>x&&x.bowler);
+  if(!bat.length||!bow.length)return false;
+  const ex=inn.extras;let e=null;
+  if(ex&&typeof ex==='object'){const v=Object.entries(ex).filter(([k,x])=>isFinite(+x)&&x!=='');e=v.length?v.reduce((a,[k,x])=>a+(+x),0):null;const t=Object.entries(ex).find(([k])=>/^(total|t|r)$/i.test(k));if(t&&isFinite(+t[1]))e=+t[1]}
+  else if(ex!=null&&isFinite(+ex))e=+ex;
+  if(e==null)return false;
+  const r=bat.reduce((a,x)=>a+(+x.r||0),0)+e,w=bat.filter(gone).length,b=bow.reduce((a,x)=>a+balls(x.o),0);
+  if(!b||w>10)return false;
+  const sc=(W.m.score||[]).slice(-1)[0];if(!sc)return false;
+  const nm=s=>String(s||'').replace(/ Inning.*$/i,'').trim().toLowerCase();
+  if(nm(sc.inning)!==nm(inn.inning))return false;
+  if(b>balls(sc.o)&&r>=(+sc.r||0)&&w>=(+sc.w||0)){sc.r=r;sc.w=w;sc.o=Math.floor(b/6)+'.'+(b%6);W.m.derivedScore=Date.now();return true}
+  return false;
+ };
+ const f0=shRefreshWorldDetails;
+ shRefreshWorldDetails=async function(W){const r=await f0.apply(this,arguments);try{if(window.shDeriveScore(W)&&UI.wm===W&&UI.view==='wmatch')render()}catch(e){}return r};
+}
+
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});
