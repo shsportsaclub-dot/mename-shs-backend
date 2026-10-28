@@ -11,8 +11,8 @@ const r=await p.evaluate(()=>{window.pullLive=async()=>{};window.fetch=()=>new P
  UI.wm={m:{id:'tk1',name:'BAN v WI',started:true,ended:false,type:'test',teams:[{name:'Bangladesh',short:'BAN'},{name:'West Indies',short:'WI'}],score:[{inning:'Bangladesh Inning 1',r:18,w:1,o:9.3}],status:'Live'},mi:{},sc:{scorecard:[{inning:'Bangladesh Inning 1',batting:[],bowling:[]}]},bb:{notes,tracked:true},tab:'live'};UI.view='wmatch';render();
  return {tb:tb.map(x=>x.over+'.'+x.ball+':'+x.t).join(' '),rib:(document.querySelector('.ribn')||{innerText:''}).innerText.replace(/\n/g,' '),slot:(document.querySelector('.rp .lbs')||{innerText:''}).innerText.replace(/\n/g,' '),list:document.getElementById('app').innerText}});
 ok(/^9\.1:0 9\.2:0 9\.3:0 9\.4:1 /.test(r.tb),'balls '+r.tb);
-ok(/5b·4/.test(r.tb),'group chip '+r.tb);
+ok(/9\.5:\? 9\.6:\? 10\.1:\? 10\.2:\? 10\.3:\?/.test(r.tb),'group slots '+r.tb);
 ok(/wd\/nb\+1/.test(r.tb),'extra '+r.tb);
 ok(/Over 9/.test(r.rib)&&/\b0\b.*\b0\b.*\b0\b/.test(r.rib),'ribbon '+r.rib);
-ok(/8\.1/.test(r.list)&&/no run/.test(r.list)&&/does not say which ball/.test(r.list),'list '+r.list.slice(r.list.indexOf('Score updates')-50,r.list.indexOf('Score updates')+600));
+ok(/8\.1/.test(r.list)&&/no run/.test(r.list)&&/Ball-wise result not sent/.test(r.list),'list '+r.list.slice(r.list.indexOf('Score updates')-50,r.list.indexOf('Score updates')+600));
 await p.screenshot({path:'/tmp/tracked.png'});ok(!errs.length,errs.join(';'));await b.close();if(!process.exitCode)console.log('PASS: tracked balls');})();

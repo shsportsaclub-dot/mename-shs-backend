@@ -255,7 +255,7 @@ svg text{font-family:var(--ui)}
 .stu-mid{left:4cqw;right:4cqw;top:25cqw;display:flex;justify-content:space-between;gap:3cqw;font-size:2.3cqw}.stu-mid>div{flex:1}.stu-bat,.stu-bow{display:flex;justify-content:space-between;gap:2cqw;padding:.7cqw 1.4cqw;background:#0008;border-radius:.8cqw;margin-bottom:.8cqw}.stu-bat small{opacity:.8}
 .stu-balls{left:4cqw;right:4cqw;top:37cqw;display:flex;gap:1.2cqw;align-items:center}.stu-balls i{font-style:normal;font-weight:800;width:4cqw;height:4cqw;border-radius:50%;background:#fff3;display:grid;place-items:center;font-size:1.9cqw}.stu-balls i.f{background:#3f7bff}.stu-balls i.s{background:#ff8c1a}.stu-balls i.w{background:#e11d2e}.stu-balls em{font-size:2cqw;opacity:.7}
 .stu-comm{left:4cqw;right:4cqw;bottom:2cqw;font-size:1.9cqw;display:grid;gap:.6cqw}.stu-comm div{background:#0009;padding:.6cqw 1.2cqw;border-radius:.6cqw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.stu-comm b{color:#ffc83d;margin-right:.8cqw}.stu-wait{left:0;right:0;top:22cqw;display:grid;gap:1.4cqw;text-align:center;font-size:4.4cqw}.stu-wait span{font-size:2.4cqw;opacity:.8}
-</style>
+.rp .b.rq{background:#33405e;color:#cdd7f0;outline:1px dashed #fff6}</style>
 <style>.cbscore{background:var(--c2,#14213d);border:1px solid var(--bd,#2a3a66);border-radius:12px;padding:12px 14px;margin:8px 0}.cbs2{display:flex;gap:16px;flex-wrap:wrap;margin:6px 0;font-size:13px}.cbst{background:#f5c518;color:#111;font-weight:700;border-radius:8px;padding:8px 10px;margin-top:6px}.cbov{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:6px 0}</style>
 <style>.catabs{display:flex;border-bottom:2px solid var(--bd);margin:8px 0;overflow-x:auto}.catabs button{flex:1;background:none;border:0;color:var(--mu);font-weight:700;padding:12px 8px;white-space:nowrap;border-bottom:3px solid transparent;margin-bottom:-2px}.catabs button.on{color:var(--tx);border-bottom-color:var(--ac)}
 .cah{font-family:inherit;font-weight:900;font-style:italic;letter-spacing:.5px;margin-bottom:8px;font-size:17px}
@@ -8269,7 +8269,19 @@ S.stream.scene=S.stream.scene||'bug';S.stream.card=S.stream.card||{t:'Starting s
    if(dr===0&&dw===0){for(let i=1;i<=nb;i++)out.push(Object.assign(pos(i),{t:'0',c:'r0',runs:0,key:n.inning+'|'+(b0+i)+'|0'}));return}
    if(nb===1){const t=dw?'W':String(dr);out.push(Object.assign(pos(1),{t,c:dw?'rw':dr===4?'r4':dr>=6?'r6':dr>=1&&dr<=3?'r'+dr:'r0',runs:dr,wk:dw,key:n.inning+'|'+(b0+1)+'|'+dr+'|'+dw}));return}
    out.push(Object.assign(pos(nb),{t:nb+'b·'+dr+(dw?'·W':''),c:dw?'rw':'r4',grp:nb,runs:dr,wk:dw,key:n.inning+'|g'+b0+'|'+b1+'|'+dr+'|'+dw,title:nb+' balls, '+dr+' runs'+(dw?', '+dw+' wicket':'')+' (the provider does not say which ball)'}))});
-  return out;
+  /* expand groups into one slot per ball, and fill gaps, so every ball number 1..6 is present */
+  const ex=[];
+  out.forEach(x=>{
+   if(x.grp){const n=x.grp,ix0=(x.over-1)*6+x.ball-n;
+    for(let i=1;i<=n;i++){const ix=ix0+i,last=i===n;ex.push(Object.assign({},x,{over:Math.floor((ix-1)/6)+1,ball:((ix-1)%6)+1,t:'?',c:'rq',runs:last?x.runs:0,wk:last?x.wk:0,unk:1,gfirst:ix0+1,glast:ix0+n,gruns:x.runs,glen:n,last:last,title:n+' balls, '+x.runs+' runs between them'+(x.wk?', '+x.wk+' wicket':'')+' (the provider does not say which ball)',key:x.key+'#'+i}))}
+   }else ex.push(x)});
+  const bk=new Map();ex.forEach(x=>{if(!x.extra)bk.set(x.inn+'|'+x.over,Math.max(bk.get(x.inn+'|'+x.over)||0,x.ball))});
+  const have=new Set(ex.filter(x=>!x.extra).map(x=>x.inn+'|'+x.over+'|'+x.ball));
+  bk.forEach((mx,k)=>{const [inn,ov]=[k.split('|')[0],+k.split('|')[1]];for(let b=1;b<mx;b++)if(!have.has(k+'|'+b)){const nb=ex.find(x=>x.inn==inn);ex.push({inn:nb&&nb.inn,over:ov,ball:b,t:'?',c:'rq',runs:0,unk:1,miss:1,at:(ex.find(x=>x.inn==inn&&x.over===ov)||{}).at,title:'ball not received from the provider',key:inn+'|m'+ov+'|'+b})}});
+  const ord=x=>x.over*100+x.ball*10+(x.extra?5:0);
+  const idx=new Map(ex.map((x,i)=>[x,i]));
+  ex.sort((a,b)=>(a.inn>b.inn?1:a.inn<b.inn?-1:0)||ord(a)-ord(b)||idx.get(a)-idx.get(b));
+  return ex;
  };
  /* ribbon: when the provider sends no deliveries, build it from the tracked balls */
  const rib0=window.shRibbon;
@@ -8294,7 +8306,7 @@ S.stream.scene=S.stream.scene||'bug';S.stream.card=S.stream.card||{t:'Starting s
   const li=tb[tb.length-1].inn,L=tb.filter(x=>x.inn===li),ovs=[...new Set(L.map(x=>x.over))].slice(-6).reverse();
   const html=ovs.map(ov=>{const bs=L.filter(x=>x.over===ov),sum=bs.reduce((a,x)=>a+(x.runs||0),0),end=bs[bs.length-1];
    return `<div class="ovh"><span>Over ${ov} (R: ${sum})</span><span>${end?esc(end.tr+'-'+end.tw):''}</span></div>`+bs.slice().reverse().map(x=>{const t=new Date(x.at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-    const txt=x.grp?`${x.grp} balls, ${x.runs} run${x.runs===1?'':'s'}${x.wk?', wicket':''} - the provider does not say which ball`:x.extra?`Extra: ${x.runs} run${x.runs===1?'':'s'} without a legal ball (wide / no ball)`:x.wk?'WICKET':x.runs?`${x.runs} run${x.runs===1?'':'s'}`:'no run';
+    const txt=x.miss?'This ball was not received from the provider':x.unk?(x.last?`Ball-wise result not sent. ${x.gruns} run${x.gruns===1?'':'s'}${x.wk?' and a wicket':''} came in these ${x.glen} balls together`:'Ball-wise result not sent (counted in the group total)'):x.extra?`Extra: ${x.runs} run${x.runs===1?'':'s'} without a legal ball (wide / no ball)`:x.wk?'WICKET':x.runs?`${x.runs} run${x.runs===1?'':'s'}`:'no run';
     return `<div class="cl"><span class="o n">${ov-1}.${x.ball}</span><span class="b ${x.c}" style="min-width:26px;width:auto;padding:0 5px">${esc(x.t)}</span><span>${esc(txt)} <span class="mu sm">· ${esc(t)}</span></span></div>`}).join('')}).join('');
   return html+`<div class="cl" style="grid-template-columns:1fr;opacity:.8"><span>Each ball above comes from the SH live tracker: a tracker update that covered n balls with no runs is shown as n dot balls; one ball shows its runs; several balls with runs are shown as one group because the provider does not send individual deliveries.</span></div><div class="ovh"><span>Score updates as received</span><span></span></div>`+base;
  };
