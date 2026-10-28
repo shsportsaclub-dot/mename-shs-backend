@@ -8382,6 +8382,33 @@ S.stream.scene=S.stream.scene||'bug';S.stream.card=S.stream.card||{t:'Starting s
  A.wbbb=()=>{UI.wbbb=!UI.wbbb;render()};
 }
 
+/* ---------------- 50 TAP ANY PLAYER: batter cards, bowler card and 3D cards open the player's stats ---------------- */
+{
+ const nn=s=>String(s||'').toLowerCase().replace(/[^a-z ]/g,'').replace(/\s+/g,' ').trim();
+ window.shPid=function(W,name){
+  const k=nn(name);if(!k)return null;const hit=[];
+  try{(shRoster(W)||[]).forEach(p=>{if(p.providerId&&nn(p.name)===k)hit.push([p.providerId,p.name])})}catch(e){}
+  if(hit.length)return hit[0];
+  try{((W.sc&&W.sc.scorecard)||[]).forEach(i=>{(i.batting||[]).forEach(x=>{if(x.batsman&&x.batsman.id&&nn(x.batsman.name)===k)hit.push([x.batsman.id,x.batsman.name])});(i.bowling||[]).forEach(x=>{if(x.bowler&&x.bowler.id&&nn(x.bowler.name)===k)hit.push([x.bowler.id,x.bowler.name])})})}catch(e){}
+  return hit[0]||null;
+ };
+ const tag=(el,W,name)=>{if(!el||el.getAttribute('data-a'))return;const h=window.shPid(W,name);if(!h)return;el.setAttribute('data-a','wPlayer');el.setAttribute('data-id',h[0]);el.setAttribute('data-name',h[1]);el.style.cursor='pointer';el.title='Tap for '+h[1]+' stats'};
+ window.shTapPlayers=function(){
+  const W=UI.wm;if(UI.view!=='wmatch'||!W)return;
+  document.querySelectorAll('.rp .bt').forEach(c=>{const b=c.querySelector('.nm b');if(b)tag(c,W,b.textContent)});
+  const L=(W.sc&&W.sc.scorecard)||[],inn=L[L.length-1]||{},bl=(inn.bowling||[]).filter(x=>x.bowler&&x.bowler.name),bo=bl[bl.length-1];
+  document.querySelectorAll('.rp .bw').forEach(c=>{if(bo)tag(c,W,bo.bowler.name)});
+ };
+ const r0=render;render=function(){r0.apply(this,arguments);try{window.shTapPlayers()}catch(e){}};
+ document.addEventListener('click',e=>{
+  const c=e.target&&e.target.closest&&e.target.closest('#v3dcards>div');if(!c)return;
+  const lines=c.innerText.split('\n').map(x=>x.trim()).filter(Boolean),name=lines.find(x=>/[a-z]{2}/i.test(x)&&!/^(ON STRIKE|BOWLER)$/i.test(x)&&!/^\d|\//.test(x));
+  const h=name&&UI.wm?window.shPid(UI.wm,name):null;if(!h)return;
+  e.stopPropagation();try{const o=document.getElementById('v3d');if(o){if(window.__v3dClose){window.__v3dPushed=0;window.__v3dClose()}else o.remove()}}catch(x){}
+  A.wPlayer({id:h[0],name:h[1]});
+ },true);
+}
+
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});
