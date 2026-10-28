@@ -1,0 +1,20 @@
+// Tapping a World scores card opens a match centre with scoreboard / recap / info, and Back returns to the sport.
+const {chromium}=require('playwright');
+(async()=>{const b=await chromium.launch(),p=await b.newPage({viewport:{width:412,height:880}}),errs=[];p.on('pageerror',e=>errs.push(e.message));
+const ok=(c,m)=>{if(!c){console.log('FAIL',m);process.exitCode=1}};
+await p.addInitScript(()=>{window.fetch=async(u)=>{u=String(u);const J=o=>({ok:true,status:200,json:async()=>o,text:async()=>JSON.stringify(o)});
+ if(u.includes('/api/sx/live'))return J({ok:true,matches:[{id:'hlvolleyball:9',sport:'volleyball',league:'Superliga',country:'Poland',live:true,state:'Set 3',periods:[[25,20],[20,25],[12,10]],startsAt:'2026-10-28T12:00:00Z',home:{name:'Warsaw',short:'WAR',score:1},away:{name:'Krakow',short:'KRA',score:1}}]});return J({ok:true})}});
+await p.goto('file://'+require('path').resolve(__dirname,'../app-index.html'));await p.waitForTimeout(400);
+await p.evaluate(()=>{window.pullLive=async()=>{};window.apiBase=()=>'http://x';UI.stage='app';S.tok='t';S.user={id:'u',name:'T',phone:'1',role:'viewer'};S.prefs=Object.assign({},S.prefs,{asked:1,welcomed:1});UI.live={ok:true,matches:[]};UI.view='home';UI.sport='cricket';render()});await p.click('button[data-a="hsport"][data-v="volleyball"]');
+await p.waitForTimeout(1200);
+await p.click('[data-a="sxOpen"]');await p.waitForTimeout(300);
+let t=await p.evaluate(()=>document.body.innerText);
+ok(/Warsaw/.test(t)&&/Krakow/.test(t)&&/SET1|Set1/i.test(t)&&/25/.test(t)&&/Sets/.test(t),'scoreboard: '+t.slice(0,300));
+await p.screenshot({path:'/tmp/sxm.png'});
+await p.click('[data-a="sxTab"][data-v="rc"]');await p.waitForTimeout(200);
+t=await p.evaluate(()=>document.body.innerText);ok(/Set1: Warsaw 25 - 20 Krakow/.test(t)&&/Scores are level/.test(t),'recap: '+t.slice(0,300));
+await p.click('[data-a="sxTab"][data-v="in"]');await p.waitForTimeout(200);
+t=await p.evaluate(()=>document.body.innerText);ok(/Superliga/.test(t)&&/Poland/.test(t),'info');
+await p.click('[data-a="go"][data-v="home"]');await p.waitForTimeout(300);
+ok(await p.evaluate(()=>UI.view==='home'&&!!document.querySelector('[data-a="sxOpen"]')),'back to list');
+ok(!errs.length,errs.join(';'));await b.close();if(!process.exitCode)console.log('PASS: sx match centre');})();
