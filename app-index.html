@@ -7583,19 +7583,20 @@ S.joinReq=S.joinReq||[];S.transfers=S.transfers||[];UI.td=UI.td||{id:'',tab:'squ
  window.shHelmetURI=n=>{const col=PAL[hh(n)%PAL.length];return 'data:image/svg+xml,'+encodeURIComponent(helm(col,hh(n)%997)).replace(/'/g,'%27')};
  const ci=cbpImg;cbpImg=function(u,n){let h=ci.apply(this,arguments);if(h.indexOf(esc(CBP_AVATAR))<0&&h.indexOf('this.src=CBP_AVATAR')<0)return h;const v=window.shHelmetURI(n||'?');
   return h.split(esc(CBP_AVATAR)).join(v).split('this.src=CBP_AVATAR').join("this.src='"+v+"'").replace('Player photo unavailable — SH avatar','Photo not supplied by the data provider — SH avatar')};
- const st=document.createElement('style');st.textContent=`.sh-act{position:relative;height:104px;margin:0 12px 10px;border-radius:12px;overflow:hidden;background:linear-gradient(#143e34,#1f6b49);border:1px solid #2a5d4a}
-.sh-act .pt{position:absolute;left:6%;right:6%;top:36px;height:34px;background:#c9b788;border-radius:3px;opacity:.9}
-.sh-act .stp{position:absolute;top:30px;width:6px;height:46px;background:repeating-linear-gradient(90deg,#f2dfa8 0 2px,transparent 2px 4px)}
-.sh-act .stp.a{left:7%}.sh-act .stp.b{right:7%}
-.sh-act .pl{position:absolute;width:34px;height:34px;border-radius:50%;overflow:hidden;border:2px solid #fff;top:16px}.sh-act .pl svg{width:100%;height:100%}
-.sh-act .bw{left:6%;animation:shActRun 3.6s ease-in-out infinite}.sh-act .bt{right:10%;top:36px;transform-origin:50% 100%;animation:shActSwing 3.6s ease-in-out infinite}
-.sh-act .bl{position:absolute;width:12px;height:12px;border-radius:50%;background:#d81f2a;border:1px solid #7a0b12;top:48px;left:24%;opacity:0;animation:shActBall 3.6s linear infinite}
-.sh-act .cap{position:absolute;left:10px;bottom:5px;font:600 10px var(--ui);color:#d9efe4;opacity:.85}
-.sh-act .ev{position:absolute;left:50%;top:6px;transform:translateX(-50%);padding:4px 16px;border-radius:99px;font:900 20px var(--ui);color:#fff;background:#0009;animation:ovfxpop 4s both}
+ const st=document.createElement('style');st.textContent=`.hero{position:relative}.hero .sc,.hero .tbar{position:relative;z-index:1}
+.sh-act{position:absolute;left:0;right:0;top:0;bottom:0;z-index:2;pointer-events:none;overflow:hidden;border-radius:inherit}
+.sh-act .pt{position:absolute;left:4%;right:4%;top:44%;height:16%;background:#c9b788;border-radius:3px;opacity:.28}
+.sh-act .stp{position:absolute;top:38%;width:5px;height:28%;background:repeating-linear-gradient(90deg,#f2dfa8 0 2px,transparent 2px 4px);opacity:.8}
+.sh-act .stp.a{left:5%}.sh-act .stp.b{right:5%}
+.sh-act .pl{position:absolute;width:30px;height:30px;border-radius:50%;overflow:hidden;border:2px solid #fff;top:40%}.sh-act .pl svg{width:100%;height:100%}
+.sh-act .bw{left:4%;animation:shActRun 3.6s ease-in-out infinite}.sh-act .bt{right:7%;top:42%;transform-origin:50% 100%;animation:shActSwing 3.6s ease-in-out infinite}
+.sh-act .bl{position:absolute;width:12px;height:12px;border-radius:50%;background:#d81f2a;border:1px solid #fff;top:52%;left:20%;opacity:0;animation:shActBall 3.6s linear infinite;box-shadow:0 0 6px #ff4d5a}
+.sh-act .cap{position:absolute;left:10px;bottom:4px;font:600 10px var(--ui);color:#d9efe4;opacity:.8}
+.sh-act .ev{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);padding:4px 16px;border-radius:99px;font:900 20px var(--ui);color:#fff;background:#000a;animation:ovfxpop 4s both}
 .sh-act .ev.w{color:#ff8b9b}.sh-act .ev.f{color:#75f0bb}.sh-act .ev.s{color:#e0bcff}
 .sh-act.idle *{animation:none!important}.sh-act.idle .bl{opacity:0}
-@keyframes shActRun{0%{left:6%}30%{left:24%}60%,100%{left:24%}}
-@keyframes shActBall{0%,30%{opacity:0;left:26%;top:48px}32%{opacity:1;left:26%;top:44px}55%{left:62%;top:60px}70%{left:80%;top:46px}85%{opacity:1;left:92%;top:20px}100%{opacity:0;left:98%;top:6px}}
+@keyframes shActRun{0%{left:4%}30%{left:20%}60%,100%{left:20%}}
+@keyframes shActBall{0%,30%{opacity:0;left:24%;top:52%}32%{opacity:1;left:24%;top:48%}55%{left:55%;top:60%}70%{left:78%;top:50%}85%{opacity:1;left:90%;top:20%}100%{opacity:0;left:98%;top:6%}}
 @keyframes shActSwing{0%,58%{transform:rotate(0)}68%{transform:rotate(-38deg)}85%,100%{transform:rotate(0)}}
 @media (prefers-reduced-motion:reduce){.sh-act *{animation:none!important}.sh-act .bl{opacity:1;left:60%}}`;document.head.appendChild(st);
  const ap=ar9Panel;ar9Panel=function(W){const h=ap.apply(this,arguments);if(!h||h.indexOf('</section>')<0)return h;
@@ -7604,9 +7605,9 @@ S.joinReq=S.joinReq||[];S.transfers=S.transfers||[];UI.td=UI.td||{id:'',tab:'squ
   const E=UI.shEv=UI.shEv||{},k=m.id||'x',now=+sc.r*100+(+sc.w||0)+'/'+sc.o,prev=E[k];
   if(prev&&prev.key!==now){const dr=+sc.r-prev.r,dw=(+sc.w||0)-prev.w;E[k]={key:now,r:+sc.r,w:+sc.w||0,ev:dw>0?{c:'w',t:'WICKET!'}:dr>=6?{c:'s',t:'SIX!'}:dr>=4?{c:'f',t:'FOUR!'}:dr>0?{c:'',t:'+'+dr}:null,at:Date.now()}}
   else if(!prev)E[k]={key:now,r:+sc.r,w:+sc.w||0,ev:null,at:0};
-  const e=E[k],show=e.ev&&Date.now()-e.at<4000,idle=m.ended;
-  const strip=`<div class="sh-act${idle?' idle':''}" aria-label="Match action animation"><i class="pt"></i><i class="stp a"></i><i class="stp b"></i><span class="pl bw">${helm(wc,'b1')}</span><span class="bl"></span><span class="pl bt">${helm(bc,'b2')}</span>${show?`<div class="ev ${e.ev.c}" data-at="${e.at}">${esc(e.ev.t)}</div>`:''}<span class="cap">${idle?'Match ended':'Live action · animation'}</span></div>`;
-  return h.replace('</section>','</section>'+strip)};
+  const e=E[k],show=e.ev&&Date.now()-e.at<4000,idle=!!m.ended||(+sc.w||0)>=10;
+  const strip=`<div class="sh-act${idle?' idle':''}" aria-label="Match action animation"><i class="pt"></i><i class="stp a"></i><i class="stp b"></i><span class="pl bw">${helm(wc,'b1')}</span><span class="bl"></span><span class="pl bt">${helm(bc,'b2')}</span>${show?`<div class="ev ${e.ev.c}" data-at="${e.at}">${esc(e.ev.t)}</div>`:''}<span class="cap">${idle?(m.ended?'Match ended':'Innings complete'):'Live action'}</span></div>`;
+  return h.replace(/(<section class="hero">)/,'$1'+strip)};
 }
 /* ---------------- REGISTRY: boards, state and district associations. Structure + search + claim only.
    Nothing is pre-filled with district lists or crests; entries added by people start as Unverified, an admin verifies. */

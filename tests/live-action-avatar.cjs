@@ -9,7 +9,7 @@ const { chromium } = require('playwright');
       sc: { scorecard: [{ inning: 'South Africa Inning 1', batting: [{ batsman: { id: 'b1', name: 'Simon Harmer' }, r: 5, b: 7, '4s': 0, '6s': 0, 'dismissal-text': 'batting' }, { batsman: { id: 'b2', name: 'A Two' }, r: 5, b: 7, '4s': 0, '6s': 0, 'dismissal-text': 'batting' }], bowling: [], totals: { R: 100, W: 3, O: 20.1 } }] } };
     UI.view = 'wmatch'; UI.wm.tab = 'live'; render(); });
   await set(100); await p.waitForTimeout(300);
-  ok(await p.evaluate(() => !!document.querySelector('.sh-act .bw svg') && !document.querySelector('.sh-act .ev')), 'strip visible, no event yet');
+  ok(await p.evaluate(() => !!document.querySelector('.hero .sh-act .bw svg') && !document.querySelector('.sh-act .ev')), 'strip visible, no event yet');
   await set(104); await p.waitForTimeout(300);
   ok(await p.evaluate(() => /FOUR/.test((document.querySelector('.sh-act .ev') || {}).textContent || '')), 'four detected from score change');
   await set(110); ok(await p.evaluate(() => /SIX/.test((document.querySelector('.sh-act .ev') || {}).textContent || '')), 'six detected');
