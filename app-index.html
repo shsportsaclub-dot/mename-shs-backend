@@ -7349,6 +7349,15 @@ render=(o=>function(){try{ar17Norm(UI.wm)}catch(e){}return o.apply(this,argument
   wzSchedule(){const w=S.wiz;if(!w)return;const n=S.matches.length,when=w.date;A.wzStart({});
    if(S.matches.length>n){const m=S.matches[S.matches.length-1];m.status='setup';UI.view='matches';UI.mc.mf="future";UI.mc.tab="matches";commit();toast('Match scheduled for '+when+'. Open it from Upcoming to score.',4000)}}});
 }
+/* ---------------- AT THE CREASE: all-out innings and missing second batter shown honestly */
+{
+ const p0=ar9Panel;ar9Panel=function(W){const h=p0.apply(this,arguments);if(!h||h.indexOf('class="bats"')<0)return h;
+  const L=(W&&W.sc&&W.sc.scorecard)||[],inn=L[L.length-1]||{},sc=((W.m&&W.m.score)||[]).slice(-1)[0]||{},w=+(inn.totals&&inn.totals.W!=null?inn.totals.W:sc.w);
+  const d=document.createElement('div');d.innerHTML=h;const bats=d.querySelector('.bats');if(!bats)return h;const n=bats.querySelectorAll('.bt').length;if(n!==1)return h;
+  const x=document.createElement('div');x.className='bt ns';
+  x.innerHTML=w>=10?'<div class="top"><div><div class="nm">Innings complete</div><div class="mu sm" style="color:#c6cfea;font-size:12px">All out. The batter shown is not out.</div></div></div>':'<div class="top"><div><div class="nm">Second batter</div><div class="mu sm" style="color:#c6cfea;font-size:12px">Not published by the data provider yet.</div></div></div>';
+  bats.appendChild(x);return d.innerHTML};
+}
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});
