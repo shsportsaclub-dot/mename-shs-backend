@@ -12,6 +12,7 @@ export function row(m) {
   const pts = sc.points != null && sc.points !== '' ? String(sc.points) : '';
   return { id: 'hltennis:' + m.id, sport: 'tennis', league: String(m.tournament || ''), country: '', startsAt: String(m.start_time || m.scheduled_at || m.starts_at || ''), live: true, ended: false,
     state: 'Live' + (pts ? ' ' + pts : '') + (sc.is_tiebreak ? ' (tie-break)' : ''), period: periods.length || null, clock: null, periods,
+    extra: { server: sc.server === 1 || sc.server === 2 ? sc.server : null, points: pts, tiebreak: !!sc.is_tiebreak, doubles: !!(m.is_doubles || m.draw === 'doubles') },
     home: { id: String(p1.id || ''), name: nm(p1), short: short(nm(p1)), img: '', score: n(sets[0]) }, away: { id: String(p2.id || ''), name: nm(p2), short: short(nm(p2)), img: '', score: n(sets[1]) } };
 }
 export function createLiveTennis({ key, base = BASE, fetchImpl = fetch }) {

@@ -1,0 +1,19 @@
+// Tennis match centre shows a court with the server marked; football match page shows a pitch with goal markers.
+const {chromium}=require('playwright');
+(async()=>{const b=await chromium.launch(),p=await b.newPage({viewport:{width:412,height:900}}),errs=[];p.on('pageerror',e=>errs.push(e.message));
+const ok=(c,m)=>{if(!c){console.log('FAIL',m);process.exitCode=1}};
+await p.addInitScript(()=>{window.fetch=async(u)=>{u=String(u);const J=o=>({ok:true,status:200,json:async()=>o,text:async()=>JSON.stringify(o)});
+ if(u.includes('/api/sx/live'))return J({ok:true,matches:[{id:'hltennis:1',sport:'tennis',league:'ATP Paris',live:true,state:'Live 40-30',periods:[[6,4],[3,6]],extra:{server:2,points:'40-30',tiebreak:false},home:{name:'Carlos Alcaraz',short:'Alcaraz',score:1},away:{name:'Jannik Sinner',short:'Sinner',score:1}}]});
+ if(/\/api\/fb\/live/.test(u))return J({ok:true,matches:[]});
+ if(/\/api\/fb\/match/.test(u))return J({ok:true,match:{id:'fb5',league:'Premier League',country:'England',state:'2H',live:true,ended:false,started:true,minute:67,home:{id:1,name:'Home FC',short:'HOM',goals:2},away:{id:2,name:'Away FC',short:'AWY',goals:1},events:[{id:1,minute:12,kind:'goal',teamId:1,player:'A Forward'},{id:2,minute:40,kind:'pengoal',teamId:2,player:'B Striker'},{id:3,minute:61,kind:'goal',teamId:1,player:'C Winger'}],lineups:{},stats:[]}});
+ return J({ok:true})}});
+await p.goto('file://'+require('path').resolve(__dirname,'../app-index.html'));await p.waitForTimeout(400);
+await p.evaluate(()=>{window.pullLive=async()=>{};window.apiBase=()=>'http://x';UI.stage='app';S.tok='t';S.user={id:'u',name:'T',phone:'1',role:'viewer'};S.prefs=Object.assign({},S.prefs,{asked:1,welcomed:1});UI.live={ok:true,matches:[]};UI.view='home';UI.sport='cricket';render()});
+await p.click('button[data-a="hsport"][data-v="tennis"]');await p.waitForTimeout(1200);
+await p.click('[data-a="sxOpen"]');await p.waitForTimeout(300);
+ok(await p.evaluate(()=>!!document.querySelector('svg[aria-label="Tennis court"]')&&/Sinner/.test(document.body.innerText)&&/serving/.test(document.body.innerText)),'tennis court');
+await p.screenshot({path:'/tmp/court.png'});
+await p.evaluate(()=>{UI.fb=UI.fb||{};UI.fb.m=null;A.fbOpen({id:'fb5'})});await p.waitForTimeout(900);
+ok(await p.evaluate(()=>{const s=document.querySelector('svg[aria-label="Football pitch with goals"]');return !!s&&s.querySelectorAll('g text').length>=3&&/Forward/.test(s.innerHTML)&&/pen/.test(s.innerHTML)}),'pitch goals');
+await p.screenshot({path:'/tmp/pitch.png'});
+ok(!errs.length,errs.join(';'));await b.close();if(!process.exitCode)console.log('PASS: court and pitch');})();
