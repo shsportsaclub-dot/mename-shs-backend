@@ -363,6 +363,7 @@ const routes = {
   'GET /api/me': async (req) => {
     const phone = readSession((req.headers.authorization || '').replace(/^Bearer /, ''));
     const u = phone && db.users[phone];
+    if (u) promote(u, phone);
     return u ? [200, { ok: true, profile: pub(u) }] : [401, { ok: false, error: 'Not signed in' }];
   },
   'GET /api/live': async () => {

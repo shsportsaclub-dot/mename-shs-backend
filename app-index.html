@@ -8600,6 +8600,10 @@ S.stream.scene=S.stream.scene||'bug';S.stream.card=S.stream.card||{t:'Starting s
   const btn='<div style="margin:0 0 8px"><button type="button" class="btn sm ghost" data-a="sbbPractice">Practice match (rehearse the scorer pad)</button></div>';
   const i=o.indexOf('<div class="tabs"');if(i<0)return o;const e=o.indexOf('</div>',i)+6;return o.slice(0,e)+btn+o.slice(e);
  };
+ /* keep the signed-in role in step with the server (e.g. after the owner is made Admin/Scorer in Render), without logging out */
+ window.shSyncRole=async()=>{try{if(!S.tok||!S.user||!apiBase())return;const r=await fetch(apiBase()+'/api/me',{headers:{Authorization:'Bearer '+S.tok}}),j=await r.json();
+  if(j&&j.ok&&j.profile&&j.profile.role&&j.profile.role!==S.user.role){S.user.role=j.profile.role;try{save()}catch(e){}render()}}catch(e){}};
+ setTimeout(window.shSyncRole,2500);setInterval(window.shSyncRole,120000);
  setInterval(()=>{try{if(!document.hidden&&UI.view==='wmatch'&&UI.wm)load(UI.wm)}catch(e){}},8000);
 }
 

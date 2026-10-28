@@ -41,3 +41,8 @@ for(const v of ['1','4','W','1','1','1','1'])await p.click('.sbbpad [data-v="'+v
 const r=await p.evaluate(()=>({sc:UI.wm.m.score[0],n:shAvailableBalls(UI.wm).length,txt:document.body.innerText}));
 ok(r.sc.r===9&&r.sc.w===1&&r.sc.o===1.1,'practice score '+JSON.stringify(r.sc));ok(r.n===7,'7 balls');ok(/PRACTICE MATCH/.test(r.txt),'labelled practice');
 ok(!errs.length,errs.join(';'));await b.close();if(!process.exitCode)console.log('PASS: practice match');})();
+// role sync
+(async()=>{const b=await chromium.launch(),p=await b.newPage(),errs=[];p.on('pageerror',e=>errs.push(e.message));
+await p.goto('file://'+require('path').resolve(__dirname,'../app-index.html'));await p.waitForTimeout(400);
+const r=await p.evaluate(async()=>{window.pullLive=async()=>{};window.apiBase=()=>'http://x';window.fetch=()=>Promise.resolve({json:async()=>({ok:true,profile:{role:'admin'}})});UI.stage='app';S.tok='t';S.user={id:'u',name:'T',phone:'1',role:'viewer'};await shSyncRole();return S.user.role});
+if(r!=='admin'||errs.length){console.log('FAIL role sync',r,errs.join(';'));process.exitCode=1}else console.log('PASS: role sync');await b.close()})();
