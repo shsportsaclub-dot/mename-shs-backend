@@ -7466,6 +7466,8 @@ window.shNoteGroups=function(notes){
 {const ci=cbpInfo;cbpInfo=function(W){const h=ci.apply(this,arguments);if(!can()||UI.view!=='wmatch'||!W||!W.m||!W.m.started)return h;
   const ex=S.matches.find(x=>x.worldId===W.m.id);
   return h+`<div class="cbp-cd" style="padding:12px 14px;margin:8px 4px"><div style="font:600 14px var(--ui);margin-bottom:4px">${ex?'Your scorer for this match':'Score this match yourself'}</div><div class="mu sm" style="margin-bottom8px">${ex?'Continue scoring ball by ball.':'Start from the current score and enter every ball. Gives real over-by-over data.'}</div><button class="btn sm" data-a="wmScore">${ex?'Open scorer':'Score this match'}</button></div>`.replace('margin-bottom8px','margin-bottom:8px')}}
+/* ---------------- "+" quick-action button sits in the centre at the bottom */
+{const st=document.createElement('style');st.textContent=`.fabfloat{left:50%!important;right:auto!important;transform:translateX(-50%)}`;document.head.appendChild(st)}
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});
