@@ -7281,9 +7281,12 @@ render=(o=>function(){try{ar17Norm(UI.wm)}catch(e){}return o.apply(this,argument
  if(R&&!R.__morph){
   const d=Object.getOwnPropertyDescriptor(Element.prototype,'innerHTML');
   const FORM={INPUT:1,TEXTAREA:1,SELECT:1};
-  const attrs=(a,b)=>{
-   for(const x of [...a.attributes])if(!b.hasAttribute(x.name))a.removeAttribute(x.name);
-   for(const x of [...b.attributes])if(a.getAttribute(x.name)!==x.value)a.setAttribute(x.name,x.value)};
+  // attributes that scripts set after drawing (broken-image fallback, page zoom): never reset them, that is what makes a screen flash
+  const keepHidden=a=>a.hasAttribute('onerror')||!!(a.previousElementSibling&&a.previousElementSibling.hasAttribute('onerror'))||!!(a.nextElementSibling&&a.nextElementSibling.hasAttribute('onerror'));
+  const attrs=(a,b)=>{const z=a.style&&a.style.zoom,kh=keepHidden(a);
+   for(const x of [...a.attributes]){if(x.name==='hidden'&&kh)continue;if(!b.hasAttribute(x.name))a.removeAttribute(x.name)}
+   for(const x of [...b.attributes]){if(x.name==='hidden'&&kh)continue;if(x.name==='style'&&z){const t=document.createElement('i');t.setAttribute('style',x.value);if(t.style.zoom===''){if(a.getAttribute('style')!==x.value){a.setAttribute('style',x.value);a.style.zoom=z}continue}}if(a.getAttribute(x.name)!==x.value)a.setAttribute(x.name,x.value)}
+   if(z&&!a.style.zoom)a.style.zoom=z};
   const same=(a,b)=>a.nodeType===b.nodeType&&(a.nodeType!==1||(a.tagName===b.tagName&&(a.tagName!=='INPUT'||a.type===b.type)));
   const sync=(a,b)=>{
    const bk=[...b.childNodes];let i=0;
