@@ -8301,6 +8301,37 @@ S.stream.scene=S.stream.scene||'bug';S.stream.card=S.stream.card||{t:'Starting s
 }
 
 {const st=document.createElement('style');st.textContent='.rp .cl{grid-template-columns:44px minmax(30px,auto) 1fr!important;column-gap:8px}.rp .cl[style*="1fr"]{grid-template-columns:1fr!important}.rp .cl[style*="48px 1fr"]{grid-template-columns:48px 1fr!important}';document.head.appendChild(st)}
+/* ---------------- 47 AI RECAP chip: a short summary written only from recorded facts (score, batters, bowler, balls seen) ---------------- */
+{
+ window.shRecap=function(W){
+  const m=W.m||{},sc=(m.score||[]).slice(-1)[0];if(!sc)return '';
+  const L=((W.sc&&W.sc.scorecard)||[]),inn=L[L.length-1]||{},nm=String(sc.inning||'').replace(/ Inning.*$/i,'');
+  const raw=typeof shAvailableBalls==='function'?shAvailableBalls(W):[],tb=!raw.length&&window.shTrackBalls&&W.bb&&Array.isArray(W.bb.notes)?window.shTrackBalls(W.bb.notes):[];
+  const bs=raw.length?raw.map(x=>({r:+(x.batRuns??x.bruns??x.runs??0)||0,w:!!x.wicket,wd:!!x.wide})):tb.filter(x=>!x.grp&&!x.extra).map(x=>({r:x.runs||0,w:!!x.wk}));
+  const f4=bs.filter(x=>x.r===4).length,f6=bs.filter(x=>x.r===6).length,dots=bs.filter(x=>x.r===0&&!x.w&&!x.wd).length,wk=bs.filter(x=>x.w).length;
+  const at=(inn.batting||[]).filter(x=>x.batsman&&/^(batting|not out)$/i.test(String(x['dismissal-text']??x.dismissal??'').trim())).slice(0,2);
+  const bl=(inn.bowling||[]).filter(x=>x.bowler&&x.bowler.name),b=bl[bl.length-1];
+  const crr=(()=>{const p=String(sc.o).split('.'),bb=(+p[0]||0)*6+(+p[1]||0);return bb?(sc.r*6/bb).toFixed(2):''})();
+  const L2=[];
+  L2.push(`${nm} are ${sc.r}/${sc.w} after ${sc.o} overs${crr?' (run rate '+crr+')':''}.`);
+  if(at.length)L2.push(at.map(x=>`${x.batsman.name} ${x.r} (${x.b})`).join(' and ')+' at the crease.');
+  if(b)L2.push(`${b.bowler.name} has ${b.w??0}/${b.r??0} from ${b.o} overs.`);
+  if(bs.length)L2.push(`In the balls seen by this app: ${dots} dot ball${dots===1?'':'s'}, ${f4} four${f4===1?'':'s'}, ${f6} six${f6===1?'':'es'}${wk?', '+wk+' wicket'+(wk>1?'s':''):''}.`);
+  if(inn.part&&inn.part.r!=null)L2.push(`Current partnership: ${inn.part.r} (${inn.part.b??'-'}).`);
+  if(m.status)L2.push(String(m.status));
+  return `<div class="cl" style="grid-template-columns:1fr;background:#0c1d4a;border-radius:8px;margin:6px 4px;padding:10px"><span><b>AI Recap</b><br>${L2.map(esc).join('<br>')}<br><span class="mu sm">Written automatically from recorded data only; nothing is added that was not sent or scored.</span></span></div>`;
+ };
+ const w0=XV.wmatch;
+ XV.wmatch=function(){
+  let o=w0.apply(this,arguments);
+  if(typeof o!=='string'||!UI.wm)return o;
+  o=o.replace(/(<button type="button" data-a="cmf" data-v="all"[^>]*>All<\/button>)/,'$1<button type="button" data-a="cmf" data-v="rc" style="flex:none;border:1px solid #1a6dff;background:'+(UI.cmf==='rc'?'#1a6dff33':'#0c1d4a')+';color:#fff;border-radius:18px;padding:6px 14px;font:700 12px var(--f,system-ui)">✨ AI Recap</button>');
+  if(UI.cmf==='rc'){const i=o.indexOf('<div class="cmf"');if(i>=0){const e=o.indexOf('</div>',i)+6;o=o.slice(0,e)+window.shRecap(UI.wm)+o.slice(e)}}
+  return o;
+ };
+ const ap=render;render=function(){ap.apply(this,arguments);try{if(UI.view==='wmatch'&&UI.cmf==='rc'){document.querySelectorAll('.rp .cl').forEach(r=>{if(!r.closest('.rcp')&&!/AI Recap/.test(r.innerText))r.style.display='none'});document.querySelectorAll('.rp .ovh').forEach(h=>h.style.display='none')}}catch(e){}};
+}
+
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});

@@ -9,10 +9,12 @@ await p.evaluate(()=>{window.pullLive=async()=>{};window.fetch=()=>new Promise((
  UI.wm={m:{id:'cf1',name:'BAN v WI',started:true,ended:false,type:'test',teams:[{name:'Bangladesh',short:'BAN'},{name:'West Indies',short:'WI'}],score:[{inning:'Bangladesh Inning 1',r:12,w:1,o:8}],status:'Live'},mi:{},sc:{scorecard:[{inning:'Bangladesh Inning 1',batting:[],bowling:[]}]},bb:{bbb},tab:'live'};UI.view='wmatch';render()});
 const rows=()=>p.evaluate(()=>[...document.querySelectorAll('.rp .cl')].filter(r=>r.style.display!=='none'&&r.querySelector('.b')).length);
 const all=await rows();ok(all>=6,'all rows '+all);
-ok(await p.evaluate(()=>[...document.querySelectorAll('.cmf button')].map(x=>x.innerText).join()==='All,Highlights,Overs,Wickets'),'chips');
+ok(await p.evaluate(()=>[...document.querySelectorAll('.cmf button')].map(x=>x.innerText).join()==='All,\u2728 AI Recap,Highlights,Overs,Wickets'),'chips');
 await p.click('[data-a="cmf"][data-v="hl"]');ok(await rows()===3,'highlights 4,6,W: '+await rows());
 await p.click('[data-a="cmf"][data-v="wk"]');ok(await rows()===1,'wickets only');
 await p.click('[data-a="cmf"][data-v="all"]');ok(await rows()===all,'back to all');
+await p.click('[data-a="cmf"][data-v="rc"]');ok(await p.evaluate(()=>/AI Recap/.test(document.getElementById('app').innerText)&&/Bangladesh are 12\/1 after 8 overs/.test(document.getElementById('app').innerText)),'recap text');
+await p.click('[data-a="cmf"][data-v="all"]');
 await p.evaluate(()=>{UI.lb.cf1.at=Date.now()-10000;render()});
 ok(await p.evaluate(()=>(document.querySelector('.rp .lbs')||{}).innerText==='OVER'),'over state: '+await p.evaluate(()=>(document.querySelector('.rp .lbs')||{}).innerText));
 ok(!errs.length,errs.join(';'));await b.close();if(!process.exitCode)console.log('PASS: commentary filters');})();
