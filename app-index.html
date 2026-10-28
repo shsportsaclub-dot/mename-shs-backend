@@ -8382,14 +8382,20 @@ S.stream.scene=S.stream.scene||'bug';S.stream.card=S.stream.card||{t:'Starting s
   if(!tb.length)return base;
   const li=tb[tb.length-1].inn,L=tb.filter(x=>x.inn===li),ovs=[...new Set(L.map(x=>x.over))].slice(-6).reverse();
   const html=ovs.map(ov=>{const bs=L.filter(x=>x.over===ov),sum=window.shOverSum(bs),end=bs[bs.length-1];
-   return `<div class="ovh"><span>Over ${ov} (R: ${sum})</span><span>${end?esc(end.tr+'-'+end.tw):''}</span></div>`+bs.slice().reverse().map(x=>{const t=new Date(x.at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+   return `<div class="ovh"><span>Over ${ov} (R: ${sum})</span><span>${end?esc(end.tr+'-'+end.tw):''}</span></div>`+(()=>{/* one row per unknown stretch (like a single "x balls" line), not one "?" row per ball */
+    const rows=[];bs.forEach(x=>{const p=rows[rows.length-1];if(p&&((x.unk&&!x.miss&&p.gid&&p.gid===x.gid)||(x.miss&&p.miss))){p.n++;p.to=x.ball;if(x.last)Object.assign(p,{last:1,at:x.at,gruns:x.gruns,gwk:x.gwk});return}
+     rows.push(Object.assign({},x,{n:1,from:x.ball,to:x.ball}))});
+    return rows;})().slice().reverse().map(x=>{const t=new Date(x.at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+    if(x.n>1||(x.unk&&!x.miss&&!x.last&&x.glen>1)){const lab=x.n>1?`${ov-1}.${x.from}–${ov-1}.${x.to}`:`${ov-1}.${x.ball}`,end=L.filter(q=>q.gid&&q.gid===x.gid).pop(),endLab=end?`${end.over-1}.${end.ball}`:'';
+     const tx=x.miss?`${x.n} ball${x.n===1?'':'s'} not received from the provider`:x.last?`Ball-wise result not sent. ${x.gruns} run${x.gruns===1?'':'s'}${x.gwk?' and '+(x.gwk>1?x.gwk+' wickets':'a wicket'):''} came in ${x.glen} balls together${x.gone?'':' (spread over more than one over)'}`:`${x.n} ball${x.n===1?'':'s'} of a ${x.glen}-ball update (up to ${endLab}): ${x.gruns} run${x.gruns===1?'':'s'}${x.gwk?' and '+(x.gwk>1?x.gwk+' wickets':'a wicket'):''} in total`;
+     return `<div class="cl"><span class="o n" style="white-space:nowrap">${lab}</span><span class="b rq" style="min-width:26px;width:auto;padding:0 5px">${x.n>1?x.n+'b':'?'}</span><span>${esc(tx)} <span class="mu sm">· ${esc(t)}</span></span></div>`}
     const txt=x.miss?'This ball was not received from the provider':x.unk?(x.glen===1?`${x.gruns} runs came with this ball, including extras (wide / no ball / overthrows); the provider does not split them`:x.last?`Ball-wise result not sent. ${x.gruns} run${x.gruns===1?'':'s'}${x.gwk?' and '+(x.gwk>1?x.gwk+' wickets':'a wicket'):''} came in ${x.glen} balls together${x.gone?'':' (spread over more than one over)'}`:'Ball-wise result not sent (counted in the group total)'):x.extra?`Extra: ${x.runs} run${x.runs===1?'':'s'} without a legal ball (wide / no ball)`:x.wk?'WICKET':x.runs?`${x.runs} run${x.runs===1?'':'s'}`:'no run';
     return `<div class="cl"><span class="o n">${ov-1}.${x.ball}</span><span class="b ${x.c}" style="min-width:26px;width:auto;padding:0 5px">${esc(x.t)}</span><span>${esc(txt)} <span class="mu sm">· ${esc(t)}</span></span></div>`}).join('')}).join('');
   return html+`<div class="cl" style="grid-template-columns:1fr;opacity:.8"><span>Each ball above comes from the SH live tracker: a tracker update that covered n balls with no runs is shown as n dot balls; one ball shows its runs; several balls with runs are shown as one group because the provider does not send individual deliveries.</span></div><div class="ovh"><span>Score updates as received</span><span></span></div>`+base;
  };
 }
 
-{const st=document.createElement('style');st.textContent='.rp .cl{grid-template-columns:44px minmax(30px,auto) 1fr!important;column-gap:8px}.rp .cl[style*="1fr"]{grid-template-columns:1fr!important}.rp .cl[style*="48px 1fr"]{grid-template-columns:48px 1fr!important}';document.head.appendChild(st)}
+{const st=document.createElement('style');st.textContent='.rp .cl{grid-template-columns:minmax(44px,max-content) minmax(30px,auto) 1fr!important;column-gap:8px}.rp .cl[style*="1fr"]{grid-template-columns:1fr!important}.rp .cl[style*="48px 1fr"]{grid-template-columns:48px 1fr!important}';document.head.appendChild(st)}
 /* ---------------- 47 AI RECAP chip: a short summary written only from recorded facts (score, batters, bowler, balls seen) ---------------- */
 {
  window.shRecap=function(W){
