@@ -9,6 +9,9 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
+import android.view.Gravity;
+import android.widget.Button;
+import android.widget.FrameLayout;
 import android.view.WindowInsets;
 import android.os.Build;
 import android.webkit.PermissionRequest;
@@ -30,6 +33,7 @@ public class MainActivity extends Activity {
     private static final int REQ_CAMERA = 12;
 
     private WebView web;
+    private Button broadcastButton;
     private ValueCallback<Uri[]> filePicker;
     private PermissionRequest pendingCamera;
 
@@ -38,7 +42,21 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         web = new WebView(this);
-        setContentView(web);
+        FrameLayout root = new FrameLayout(this);
+        root.addView(web, new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+        broadcastButton = new Button(this);
+        broadcastButton.setText("LIVE TV DEMO");
+        broadcastButton.setAllCaps(false);
+        broadcastButton.setContentDescription("Open Scoring Heroes global broadcast demo");
+        FrameLayout.LayoutParams broadcastLayout = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT,
+                Gravity.END | Gravity.BOTTOM);
+        int margin = (int) (16 * getResources().getDisplayMetrics().density);
+        broadcastLayout.setMargins(margin, margin, margin, margin);
+        root.addView(broadcastButton, broadcastLayout);
+        broadcastButton.setOnClickListener(v -> web.loadUrl(HOME + "broadcast-demo"));
+        setContentView(root);
         // Keep the app inside the visible screen: leave room for the status bar, the navigation / gesture bar and any camera cut-out,
         // whether or not the system draws edge-to-edge (forced on Android 15+).
         web.setOnApplyWindowInsetsListener((v, ins) -> {
@@ -69,6 +87,12 @@ public class MainActivity extends Activity {
         s.setUserAgentString(s.getUserAgentString() + " ScoringHeroesApp/1.0");
 
         web.setWebViewClient(new WebViewClient() {
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                broadcastButton.setVisibility(url != null && url.contains("/broadcast-demo")
+                        ? View.GONE : View.VISIBLE);
+            }
+
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 Uri u = request.getUrl();
@@ -182,6 +206,10 @@ public class MainActivity extends Activity {
                 + "if(UI.view==='article'){A.artBack();return 1}"
                 + "if(UI.view&&UI.view!=='home'){UI.view='home';render();return 1}"
                 + "}catch(e){}return 0})()";
+        if (web.getUrl() != null && web.getUrl().contains("/broadcast-demo")) {
+            if (web.canGoBack()) web.goBack(); else web.loadUrl(HOME);
+            return;
+        }
         web.evaluateJavascript(js, new ValueCallback<String>() {
             @Override
             public void onReceiveValue(String value) {
