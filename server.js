@@ -1290,7 +1290,7 @@ http.createServer(async (req, res) => {
   }
   // Only explicitly configured, licensed HTTPS streams can be exposed to the player.
   // BROADCAST_FEEDS_JSON is a JSON array: [{matchId, name, url, territories:["IN"], priority:1}].
-  // Territory is supplied by a trusted deployment header only; no user-selected country unlocks playback.
+  // Territory must be enforced by the authorized video CDN; the server-side deployment territory is only an additional coarse filter. No user-selected country unlocks playback.
   if (req.method === 'GET' && path === '/api/broadcast-feeds') {
     let configured = [];
     try { configured = JSON.parse(E.BROADCAST_FEEDS_JSON || '[]'); } catch { return out(503, { ok: false, error: 'Broadcast configuration invalid' }); }
@@ -1298,7 +1298,7 @@ http.createServer(async (req, res) => {
     const query = new URL(req.url, 'http://x').searchParams;
     const matchId = query.get('matchId') || '';
     if (!matchId || matchId.length > 128) return out(400, { ok: false, error: 'Valid matchId required' });
-    const territory = String(req.headers['cf-ipcountry'] || E.BROADCAST_VIEWER_TERRITORY || '').toUpperCase();
+    const territory = String(E.BROADCAST_VIEWER_TERRITORY || '').toUpperCase();
     if (!/^[A-Z]{2}$/.test(territory)) return out(200, { ok: true, matchId, territory: null, feeds: [], reason: 'Viewer territory not verified' });
     const feeds = configured.filter(f => f && String(f.matchId) === matchId &&
       Array.isArray(f.territories) && f.territories.includes(territory) &&
