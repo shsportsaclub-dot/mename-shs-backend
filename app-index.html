@@ -8584,7 +8584,7 @@ S.stream.scene=S.stream.scene||'bug';S.stream.card=S.stream.card||{t:'Starting s
   const o=w0.apply(this,arguments),W=UI.wm;
   if(typeof o!=='string'||!W||(W.tab||'live')!=='live')return o;
   const pad=window.shSbbPad(W);if(!pad)return o;
-  const i=o.indexOf('<div class="sv">');return i<0?o+pad:o.slice(0,i)+pad+o.slice(i);
+  let i=o.indexOf('<div class="ar7">');if(i<0)i=o.indexOf('<div class="sv">');return i<0?o+pad:o.slice(0,i)+pad+o.slice(i);
  };
  /* Practice match: a clearly labelled rehearsal fixture (no real teams or players) so scorers can learn the pad and the whole flow can be tested any time, even with no live match */
  const pscore=W=>{if(!W||!W.practice)return;const L=sbbOf(W);let r=0,w=0,lg=0;L.forEach(x=>{r+=x.runs;if(x.wicket)w++;if(x.kind==='legal')lg++});W.m.score=[{inning:'Practice XI A Inning 1',r,w,o:Math.floor(lg/6)+(lg%6)/10}]};

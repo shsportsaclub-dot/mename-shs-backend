@@ -14,7 +14,7 @@ const setup=role=>p.evaluate(role=>{window.pullLive=async()=>{};window.__posts=[
 await setup('viewer');await p.waitForTimeout(200);
 ok(await p.evaluate(()=>!document.querySelector('.sbbpad')),'viewer sees no pad');
 await setup('scorer');await p.waitForTimeout(200);
-ok(await p.evaluate(()=>!!document.querySelector('.sbbpad')),'scorer sees pad');
+ok(await p.evaluate(()=>{const e=document.querySelector('.sbbpad'),a=document.querySelector('.ar7');return !!e&&(!a||!!(e.compareDocumentPosition(a)&4))}),'scorer sees pad above the live buttons');
 ok(await p.evaluate(()=>/over 13\.4/.test(document.querySelector('.sbbpad').innerText)),'next ball is 13.4');
 await p.click('.sbbpad [data-v="4"]');await p.waitForTimeout(200);
 await p.click('.sbbpad [data-v="wd"]');await p.waitForTimeout(200);
