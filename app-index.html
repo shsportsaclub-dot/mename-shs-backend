@@ -8583,7 +8583,7 @@ S.stream.scene=S.stream.scene||'bug';S.stream.card=S.stream.card||{t:'Starting s
   const L=sbbOf(W),last=L[L.length-1];
   if(last){const adv=last.kind==='legal';let o=last.over,b=last.ball;if(adv){b++;if(b>6){o++;b=1}}return {over:o,ball:b}}
   const sc=((W&&W.m&&W.m.score)||[]).slice(-1)[0]||{},ov=String(sc.o==null?'0':sc.o).split('.'),o=(+ov[0]||0),b=(+ov[1]||0);
-  const done=o*6+b;return {over:Math.floor(done/6)+1,ball:done%6+1};
+  const done=o*6+b;return {over:Math.floor(done/6),ball:done%6+1};   /* over is 0-based like the provider: over 9 = the 10th over */
  };
  const f0=shAvailableBalls;
  shAvailableBalls=function(W){
@@ -8608,7 +8608,7 @@ S.stream.scene=S.stream.scene||'bug';S.stream.card=S.stream.card||{t:'Starting s
   if(!W||!W.m||!W.m.started||W.m.ended)return '';
   if(!canScore()){if(!S.user||S.user.guest)return '';const r=S.user.role||'viewer';/* ordinary viewers never see scorer notes (like Cricbuzz); only a scorer/admin whose sign-in expired is told why the pad is missing */if(!['admin','scorer'].includes(r)||S.tok)return '';return `<div class="mu sm sbbhint" style="margin:6px 8px">Sign in again to score this match ball by ball (your ${esc(r)} sign-in has expired).</div>`}
   const n=window.shSbbNext(W),c=cur(W),btn=(v,l,cl)=>`<button type="button" class="btn sm ${cl||''}" data-a="sbbAdd" data-v="${v}" style="min-width:44px">${l}</button>`;
-  return `<div class="card sbbpad" style="margin:8px 4px"><b>Score this match ball by ball</b><div class="mu sm">Next: over ${n.over-1}.${n.ball} · ${esc(c.batsman||'batter')} v ${esc(c.bowler||'bowler')} · visible to everyone as "scored by SH scorer"</div><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">${[0,1,2,3,4,6].map(v=>btn(v,v)).join('')}${btn('W','W','danger')}${btn('wd','Wd')}${btn('nb','Nb')}${btn('undo','Undo','ghost')}</div></div>`;
+  return `<div class="card sbbpad" style="margin:8px 4px"><b>Score this match ball by ball</b><div class="mu sm">Next: over ${n.over}.${n.ball} · ${esc(c.batsman||'batter')} v ${esc(c.bowler||'bowler')} · visible to everyone as "scored by SH scorer"</div><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">${[0,1,2,3,4,6].map(v=>btn(v,v)).join('')}${btn('W','W','danger')}${btn('wd','Wd')}${btn('nb','Nb')}${btn('undo','Undo','ghost')}</div></div>`;
  };
  A.sbbAdd=async function(dd){
   const d=dd&&dd.v,W=UI.wm;if(!W||!canScore())return;
