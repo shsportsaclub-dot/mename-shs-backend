@@ -8475,6 +8475,21 @@ S.stream.scene=S.stream.scene||'bug';S.stream.card=S.stream.card||{t:'Starting s
   const L=(W.sc&&W.sc.scorecard)||[],inn=L[L.length-1]||{},bl=(inn.bowling||[]).filter(x=>x.bowler&&x.bowler.name),bo=bl[bl.length-1];
   document.querySelectorAll('.rp .bw').forEach(c=>{if(bo)tag(c,W,bo.bowler.name)});
  };
+ /* any player name in squads, Heroes 11, overs and commentary text opens that player's stats (only names that match a known player id) */
+ window.shTapNames=function(){
+  const W=UI.wm;if(UI.view!=='wmatch'||!W)return;const root=document.getElementById('app');if(!root)return;
+  const map=new Map();
+  try{(shRoster(W)||[]).forEach(p=>{if(p.providerId&&p.name)map.set(nn(p.name),[p.providerId,p.name])})}catch(e){}
+  try{((W.sc&&W.sc.scorecard)||[]).forEach(i=>{(i.batting||[]).forEach(x=>{if(x.batsman&&x.batsman.id&&x.batsman.name)map.set(nn(x.batsman.name),[x.batsman.id,x.batsman.name])});(i.bowling||[]).forEach(x=>{if(x.bowler&&x.bowler.id&&x.bowler.name)map.set(nn(x.bowler.name),[x.bowler.id,x.bowler.name])})})}catch(e){}
+  const names=[...map.values()].map(v=>v[1]).filter(n=>n.length>=5).sort((a,b)=>b.length-a.length);if(!names.length)return;
+  const esc2=x=>x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),re=new RegExp('(?<![A-Za-z])('+names.map(esc2).join('|')+')(?![A-Za-z])','gi');
+  const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode(t){const pe=t.parentElement;if(!pe||!t.nodeValue||t.nodeValue.length<5)return NodeFilter.FILTER_REJECT;if(pe.closest('[data-a],button,a,input,textarea,select,script,style,.shpn,#v3d,.tabs,.mskbar,.ar7,.sbbpad'))return NodeFilter.FILTER_REJECT;return NodeFilter.FILTER_ACCEPT}}),hit=[];
+  let n;while((n=w.nextNode())){re.lastIndex=0;if(re.test(n.nodeValue))hit.push(n)}
+  hit.slice(0,400).forEach(t=>{const frag=document.createDocumentFragment();let last=0;const s2=t.nodeValue;re.lastIndex=0;let m;
+   while((m=re.exec(s2))){const h=map.get(nn(m[1]));if(!h)continue;if(m.index>last)frag.appendChild(document.createTextNode(s2.slice(last,m.index)));const sp=document.createElement('span');sp.className='shpn';sp.setAttribute('data-a','wPlayer');sp.setAttribute('data-id',h[0]);sp.setAttribute('data-name',h[1]);sp.style.cssText='cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px';sp.textContent=m[1];frag.appendChild(sp);last=m.index+m[1].length}
+   if(last){if(last<s2.length)frag.appendChild(document.createTextNode(s2.slice(last)));t.parentNode.replaceChild(frag,t)}});
+ };
+ const r1=render;render=function(){r1.apply(this,arguments);try{window.shTapNames()}catch(e){}};
  const r0=render;render=function(){r0.apply(this,arguments);try{window.shTapPlayers()}catch(e){}};
  document.addEventListener('click',e=>{
   const c=e.target&&e.target.closest&&e.target.closest('#v3dcards>div');if(!c)return;
