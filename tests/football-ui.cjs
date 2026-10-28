@@ -13,6 +13,7 @@ ok(await p.evaluate(()=>/World football/.test(document.getElementById('app').inn
 await p.click('.fbc');await p.waitForTimeout(500);
 let t=await p.evaluate(()=>document.getElementById('app').innerText);
 ok(/Home FC/.test(t)&&/A Forward/.test(t)&&/Yellow card/.test(t)&&/for Old/.test(t)&&/1-0/.test(t),'timeline '+t.slice(0,300));
+await p.click('[data-a=fbTab][data-v=rc]');await p.waitForTimeout(200);t=await p.evaluate(()=>document.getElementById('app').innerText);ok(/Home FC 2 - 1 Away FC/.test(t)&&/Goals: A Forward 12' for Home FC/.test(t)&&/1 yellow card/.test(t)&&/1 substitution/.test(t),'recap '+t.slice(200,500));
 await p.click('[data-a=fbTab][data-v=lu]');await p.waitForTimeout(200);t=await p.evaluate(()=>document.getElementById('app').innerText);ok(/Sub One/.test(t)&&/Line-up not published/.test(t),'line-ups');
 await p.click('[data-a=fbTab][data-v=st]');await p.waitForTimeout(200);t=await p.evaluate(()=>document.getElementById('app').innerText);ok(/Corners/.test(t),'stats');
 await p.screenshot({path:'/tmp/fb.png'});
