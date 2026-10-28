@@ -1288,6 +1288,27 @@ http.createServer(async (req, res) => {
   if (req.method === 'GET' && STATIC[path]) {   // installable-app files (PWA)
     try { const f = fs.readFileSync(new URL('./public' + path, import.meta.url)); res.writeHead(200, { 'content-type': STATIC[path], 'cache-control': path === '/sw.js' ? 'no-cache' : 'public, max-age=86400' }); return res.end(f); } catch { /* fall through */ }
   }
+  // Only explicitly configured, licensed HTTPS streams can be exposed to the player.
+  // BROADCAST_FEEDS_JSON is a JSON array: [{matchId, name, url, territories:["IN"], priority:1}].
+  // Territory is supplied by a trusted deployment header only; no user-selected country unlocks playback.
+  if (req.method === 'GET' && path === '/api/broadcast-feeds') {
+    let configured = [];
+    try { configured = JSON.parse(E.BROADCAST_FEEDS_JSON || '[]'); } catch { return out(503, { ok: false, error: 'Broadcast configuration invalid' }); }
+    if (!Array.isArray(configured)) return out(503, { ok: false, error: 'Broadcast configuration invalid' });
+    const query = new URL(req.url, 'http://x').searchParams;
+    const matchId = query.get('matchId') || '';
+    if (!matchId || matchId.length > 128) return out(400, { ok: false, error: 'Valid matchId required' });
+    const territory = String(req.headers['cf-ipcountry'] || E.BROADCAST_VIEWER_TERRITORY || '').toUpperCase();
+    if (!/^[A-Z]{2}$/.test(territory)) return out(200, { ok: true, matchId, territory: null, feeds: [], reason: 'Viewer territory not verified' });
+    const feeds = configured.filter(f => f && String(f.matchId) === matchId &&
+      Array.isArray(f.territories) && f.territories.includes(territory) &&
+      typeof f.url === 'string' && /^https:\/\/[^\s]+$/i.test(f.url) &&
+      !/[?#].*(token|key|secret)=/i.test(f.url))
+      .sort((a,b) => (Number(a.priority)||100)-(Number(b.priority)||100))
+      .map(f => ({ id: String(f.id||f.name||'feed'), name: String(f.name||'Authorized feed'),
+        url: f.url, type: f.type === 'mp4' ? 'video/mp4' : 'application/vnd.apple.mpegurl' }));
+    return out(200, { ok: true, matchId, territory, feeds, reason: feeds.length ? null : 'No authorized stream configured for this match and territory' });
+  }
   if (req.method === 'GET' && path === '/broadcast-demo') {
     try {
       const html = fs.readFileSync(new URL('./public/broadcast-router-demo.html', import.meta.url));
