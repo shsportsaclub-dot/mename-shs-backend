@@ -7361,6 +7361,8 @@ render=(o=>function(){try{ar17Norm(UI.wm)}catch(e){}return o.apply(this,argument
   x.innerHTML=w>=10?'<div class="top"><div><div class="nm">Innings complete</div><div class="mu sm" style="color:#c6cfea;font-size:12px">All out. The batter shown is not out.</div></div></div>':'<div class="top"><div><div class="nm">Second batter</div><div class="mu sm" style="color:#c6cfea;font-size:12px">Not published by the data provider yet.</div></div></div>';
   bats.appendChild(x);return d.innerHTML};
 }
+/* ---------------- SQUADS: photo on the left, name beside it (row layout like the reference) */
+{const st=document.createElement('style');st.textContent=`.sh-squad-player{display:grid!important;grid-template-columns:44px minmax(0,1fr);grid-template-rows:auto auto;column-gap:10px;align-items:center;text-align:left!important;justify-items:start!important;padding:8px 10px!important}.sh-squad-player>:first-child{grid-row:1/3;width:44px;height:44px;border-radius:50%;overflow:hidden}.sh-squad-player>:first-child img{width:44px;height:44px;object-fit:cover}.sh-squad-player b{align-self:end;min-width:0;overflow-wrap:anywhere;font-size:14px}.sh-squad-player small{align-self:start;min-width:0;font-size:11px}`;document.head.appendChild(st)}
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});
