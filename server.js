@@ -132,6 +132,7 @@ function promote(u, key) {   // ADMIN_PHONES / SCORER_PHONES (numbers or emails)
 function roleFor(phone, kind) {
   if (ADMINS.includes(phone) || Object.keys(db.users).length === 0) return 'admin';   // the very first user becomes admin
   if (kind === 'Scorer' && SCORERS.includes(phone)) return 'scorer';
+  if (db.invites && db.invites[phone] === 'scorer') return 'scorer';   // invited by an admin from the app before the account existed
   return 'viewer';                                                                    // everyone else; promote via ADMIN_PHONES / SCORER_PHONES
 }
 function cleanProfile(p) {
@@ -831,6 +832,34 @@ routes['GET /api/fb/match'] = async (req, body, ip) => {
   const id = String(body.id || '').replace(/^fb/, ''); if (!/^\d{1,12}$/.test(id)) return [400, { ok: false, error: 'Bad match id' }];
   try { const m = await fbCached('m' + id, 12e3, () => FB.match(id)); return [200, { ok: true, match: m }]; }
   catch (e) { const stale = fbCache.get('m' + id); if (stale) return [200, { ok: true, match: stale.d, stale: true }]; return [502, { ok: false, error: String(e.message || 'Football feed error').slice(0, 160) }]; }
+};
+routes['GET /api/admin/scorers'] = async (req) => {   // who can score matches: admins see and manage the Scorer list from the app
+  const phone = readSession((req.headers.authorization || '').replace(/^Bearer /, '')), u = phone && db.users[phone];
+  if (!u) return [401, { ok: false, error: 'Please sign in again' }];
+  promote(u, phone);
+  if (u.role !== 'admin') return [403, { ok: false, error: 'Only an admin can see this' }];
+  const list = Object.entries(db.users).filter(([k, x]) => ['admin', 'scorer'].includes(promote(x, k).role)).map(([k, x]) => ({ id: k.startsWith('e:') ? k.slice(2) : k, nick: x.nick || x.name || '', role: x.role, fixed: ADMINS.includes(k) || SCORERS.includes(k) }));
+  return [200, { ok: true, scorers: list, invited: Object.entries(db.invites || {}).filter(([, v]) => v === 'scorer').map(([k]) => k.startsWith('e:') ? k.slice(2) : k) }];
+};
+routes['POST /api/admin/scorers'] = async (req, body) => {
+  const phone = readSession((req.headers.authorization || '').replace(/^Bearer /, '')), u = phone && db.users[phone];
+  if (!u) return [401, { ok: false, error: 'Please sign in again' }];
+  promote(u, phone);
+  if (u.role !== 'admin') return [403, { ok: false, error: 'Only an admin can change scorers' }];
+  const raw = String(body.id || '').trim(); if (!raw) return [400, { ok: false, error: 'Enter an email or mobile number' }];
+  const P = pk({ phone: raw, cc: body.cc }), key = P.key;
+  if (!validIntl(P)) return [400, { ok: false, error: BADNUM }];
+  const want = body.role === 'viewer' ? 'viewer' : 'scorer', t = db.users[key];
+  db.invites = db.invites || {};
+  if (t) {
+    if (t.role === 'admin' || ADMINS.includes(key)) return [400, { ok: false, error: 'That account is an Admin already' }];
+    if (want === 'viewer' && SCORERS.includes(key)) return [400, { ok: false, error: 'This scorer is fixed in the server settings (SCORER_PHONES)' }];
+    t.role = want; delete db.invites[key]; saveDb();
+    return [200, { ok: true, applied: true }];
+  }
+  if (want === 'scorer') db.invites[key] = 'scorer'; else delete db.invites[key];
+  saveDb();
+  return [200, { ok: true, applied: false, note: 'This person has no account yet. They become a Scorer when they register with this ' + (P.isEmail ? 'email.' : 'number.') }];
 };
 routes['GET /api/admin/provider-key'] = async (req) => {
   const phone = readSession((req.headers.authorization || '').replace(/^Bearer /, '')), u = phone && db.users[phone];
