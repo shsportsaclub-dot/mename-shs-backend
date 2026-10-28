@@ -39,3 +39,18 @@ const { chromium } = require('playwright');
   ok(!errs.length, 'no page errors ' + errs.join(' | '));
   await b.close();
 })();
+// 5. a provider correction (score goes back) must not make the next update count balls twice
+(async () => {
+  const { chromium } = require('playwright'); const b = await chromium.launch(), p = await b.newPage();
+  await p.goto('file://' + require('path').resolve(__dirname, '../app-index.html')); await p.waitForTimeout(400);
+  const tb = await p.evaluate(() => window.shTrackBalls([
+    { at: 1, inning: 1, text: 'Zimbabwe Women 24/2 (7.4 ov) to 32/3 (10.4 ov): 8 runs from 18 legal balls, 1 wicket.' },
+    { at: 2, inning: 1, text: 'Zimbabwe Women 32/3 (10.4 ov) to 33/3 (11.3 ov): 1 run from 5 legal balls.' },
+    { at: 3, inning: 1, text: 'Score correction: Zimbabwe Women 33/3 (11.3 ov) to 33/2 (9.3 ov).' },
+    { at: 4, inning: 1, text: 'Zimbabwe Women 33/2 (9.3 ov) to 43/3 (12.5 ov): 10 runs from 20 legal balls, 1 wicket.' }]));
+  const last = tb.filter(x => x.last).pop(), keys = tb.filter(x => !x.extra).map(x => x.over + '.' + x.ball);
+  const ok = (c, m) => { if (!c) { console.error('FAIL', m); process.exitCode = 1; } else console.log('ok', m); };
+  ok(last && last.glen === 8 && last.gruns === 10 && !last.gwk, 'after a correction the next update is 8 balls, 10 runs, no wicket (was 20 balls, 10 runs, a wicket)');
+  ok(new Set(keys).size === keys.length, 'no ball appears twice');
+  await b.close();
+})();

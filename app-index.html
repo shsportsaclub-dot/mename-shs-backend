@@ -8310,9 +8310,17 @@ S.stream.scene=S.stream.scene||'bug';S.stream.card=S.stream.card||{t:'Starting s
  window.shOverSum=function(bs){let sum=0;for(const x of bs){if(x.miss)return '?';if(x.unk){if(!x.gone)return '?';}sum+=x.runs||0}return sum};
  window.shTrackBalls=function(notes){
   const out=[];
-  (notes||[]).forEach(n=>{const m=re.exec(String(n.text||''));if(!m)return;
-   const r0=+m[1],w0=+m[2],r1=+m[4],w1=+m[5],b0=bl(m[3]),b1=bl(m[6]),nb=b1-b0,dr=r1-r0,dw=w1-w0;
-   if(nb<0||dr<0||dw<0)return;
+  /* chain the updates in time order: each step starts where the last accepted score ended. A provider correction (score going back)
+     or an update that starts before an already covered ball is never counted twice; it is measured from the last accepted score instead. */
+  const steps=[];(notes||[]).forEach((n,i)=>{const m=re.exec(String(n.text||''));if(m)steps.push({n,i,r0:+m[1],w0:+m[2],b0:bl(m[3]),r1:+m[4],w1:+m[5],b1:bl(m[6])})});
+  steps.sort((a,b)=>String(a.n.inning).localeCompare(String(b.n.inning))||(+a.n.at||0)-(+b.n.at||0)||a.b0-b.b0||a.b1-b.b1);
+  const lastAt={};
+  steps.forEach(st=>{const L=lastAt[st.n.inning];if(st.b1<st.b0||st.r1<st.r0||st.w1<st.w0)return;
+   if(L&&(st.b1<L.b||st.r1<L.r||st.w1<L.w))return;
+   let n=st.n;const base=L||{b:st.b0,r:st.r0,w:st.w0};if(L&&(L.b!==st.b0||L.r!==st.r0||L.w!==st.w0))n=Object.assign({},n,{bowl:null});
+   lastAt[n.inning]={b:st.b1,r:st.r1,w:st.w1};
+   const r0=base.r,w0=base.w,r1=st.r1,w1=st.w1,b0=base.b,b1=st.b1,nb=b1-b0,dr=r1-r0,dw=w1-w0;
+   if(!nb&&!dr&&!dw)return;
    const pos=i=>{const ix=b0+i;return {inn:n.inning,over:Math.floor((ix-1)/6)+1,ball:((ix-1)%6)+1,at:n.at,tr:r1,tw:w1}};
    if(nb===0){if(dr>0||dw>0)out.push(Object.assign(pos(0),{ball:(b0%6)||6,over:Math.floor((Math.max(1,b0)-1)/6)+1,t:dw?'W':'wd/nb'+(dr?'+'+dr:''),c:dw?'rw':'r0',runs:dr,extra:1,key:n.inning+'|x'+b0+'|'+dr+'|'+dw+'|'+n.at}));return}
    if(dr===0&&dw===0){for(let i=1;i<=nb;i++)out.push(Object.assign(pos(i),{t:'0',c:'r0',runs:0,key:n.inning+'|'+(b0+i)+'|0'}));return}

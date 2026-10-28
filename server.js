@@ -439,7 +439,10 @@ async function trackTick() {
       const d = res.data, snap = snapshotOf(d);
       if (!snap) { v.next = now + 5 * 60e3; continue; }
       const T = db.track[id] || (db.track[id] = { first: now, t: now, rows: [], notes: [], prev: null });
-      const df = diffSnapshots(T.prev, snap);
+      let df = diffSnapshots(T.prev, snap);
+      // a score that goes backwards is often one stale provider reply: keep the higher score until the lower one is seen twice in a row
+      if (df.correction) { const sig = snap.r + '/' + snap.w + '@' + snap.balls; if (T.backSig !== sig) { T.backSig = sig; T.t = now; continue; } }
+      T.backSig = null;
       if (df.rows.length) { T.rows.push(...df.rows.map(r => ({ ...r, at: now }))); if (T.rows.length > 3000) T.rows.splice(0, T.rows.length - 3000); }
       if (df.note) { T.notes.push({ at: now, inning: snap.idx + 1, text: df.note.text, ...(df.note.bowl && df.note.bowl.length ? { bowl: df.note.bowl } : {}) }); if (T.notes.length > 300) T.notes.splice(0, T.notes.length - 300); }
       T.prev = snap; T.t = now;
