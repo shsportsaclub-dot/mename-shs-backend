@@ -7608,6 +7608,47 @@ S.joinReq=S.joinReq||[];S.transfers=S.transfers||[];UI.td=UI.td||{id:'',tab:'squ
   const strip=`<div class="sh-act${idle?' idle':''}" aria-label="Match action animation"><i class="pt"></i><i class="stp a"></i><i class="stp b"></i><span class="pl bw">${helm(wc,'b1')}</span><span class="bl"></span><span class="pl bt">${helm(bc,'b2')}</span>${show?`<div class="ev ${e.ev.c}" data-at="${e.at}">${esc(e.ev.t)}</div>`:''}<span class="cap">${idle?'Match ended':'Live action · animation'}</span></div>`;
   return h.replace('</section>','</section>'+strip)};
 }
+/* ---------------- REGISTRY: boards, state and district associations. Structure + search + claim only.
+   Nothing is pre-filled with district lists or crests; entries added by people start as Unverified, an admin verifies. */
+S.assocs=S.assocs||[];S.assocClaims=S.assocClaims||[];UI.rgy=UI.rgy||{q:'',lv:'',country:''};
+{
+ const LV=[['board','Board / national body'],['state','State / region association'],['district','District association']];
+ const lvn=k=>(LV.find(x=>x[0]===k)||[0,k])[1];
+ const key=(lv,n,c,s)=>[lv,n,c||'',s||''].join('|').toLowerCase();
+ const all=()=>{const o=[];BOARDS.forEach(b=>o.push({key:'b:'+b[0],name:b[0]+' - '+b[1],level:'board',country:b[2]||'',state:'',district:'',src:'listed'}));
+  Object.keys(STATES).forEach(c=>STATES[c].forEach(s=>o.push({key:'s:'+c+':'+s,name:s,level:'state',country:c,state:s,district:'',src:'listed'})));
+  S.assocs.forEach(a=>o.push({key:'a:'+a.id,id:a.id,name:a.name,level:a.level,country:a.country,state:a.state||'',district:a.district||'',src:'added',by:a.by,verified:a.verified}));return o};
+ const claims=k=>S.assocClaims.filter(c=>c.key===k),ver=e=>e.verified||claims(e.key).some(c=>c.status==='approved');
+ const st=document.createElement('style');st.textContent='.rg-i{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px 0;border-bottom:1px solid var(--bd,#ffffff22)}.rg-i .nm{flex:1;min-width:150px}.rg-v{background:#168466;color:#fff}';document.head.appendChild(st);
+ XV.registry=function(){const U=UI.rgy,q=(U.q||'').toLowerCase();let L=all();
+  if(U.lv)L=L.filter(e=>e.level===U.lv);if(U.country)L=L.filter(e=>e.country===U.country);
+  if(q)L=L.filter(e=>(e.name+' '+e.country+' '+e.state+' '+e.district).toLowerCase().includes(q));
+  const tot=L.length;L=L.slice(0,80);const cs=[...new Set(all().map(e=>e.country).filter(Boolean))].sort();
+  const row=e=>{const cl=claims(e.key),mine=S.user&&cl.find(c=>c.uid===(S.user.id||S.user.name)),v=ver(e),pend=cl.some(c=>c.status==='pending');
+   return `<div class="rg-i"><div class="nm"><b>${esc(e.name)}</b><div class="mu sm">${esc(lvn(e.level))}${e.country?' | '+esc(e.country):''}${e.state&&e.level!=='state'?' | '+esc(e.state):''}${e.district?' | '+esc(e.district):''}</div></div>
+   <span class="pill ${v?'rg-v':''}">${v?'Verified':pend?'Claim pending':'Unclaimed'}</span>
+   ${!v&&!mine&&S.user&&!S.user.guest?`<button class="btn sm ghost" data-a="rgClaim" data-id="${esc(e.key)}">Claim</button>`:''}${mine?`<span class="mu sm">Your claim: ${esc(mine.status)}</span>`:''}
+   ${isAdmin()&&e.src==='added'&&!e.verified?`<button class="btn sm" data-a="rgVerify" data-id="${esc(e.id)}">Verify</button><button class="btn sm ghost" data-a="rgDel" data-id="${esc(e.id)}">Remove</button>`:''}</div>`};
+  const pend=isAdmin()?S.assocClaims.filter(c=>c.status==='pending'):[];
+  return `<div class="bar"><button class="btn sm ghost" data-a="go" data-v="directory">Back</button><h2 style="margin-left:8px">Associations registry</h2></div>
+  <div class="card"><div class="row" style="gap:6px;flex-wrap:wrap"><input data-c="rgQ" placeholder="Search board, state, district" value="${esc(U.q||'')}" style="flex:2;min-width:160px"><select data-c="rgLv" style="flex:1"><option value="">All levels</option>${LV.map(([k,l])=>`<option value="${k}" ${U.lv===k?'selected':''}>${l}</option>`).join('')}</select><select data-c="rgCo" style="flex:1"><option value="">All countries</option>${cs.map(c=>`<option ${U.country===c?'selected':''}>${esc(c)}</option>`).join('')}</select></div>
+  <div class="mu sm" style="margin-top:6px">${tot} found${tot>80?' (showing 80, refine your search)':''}. Names only. A body becomes Verified after an admin approves its claim.</div></div>
+  ${pend.length?`<div class="card"><h3>Claims waiting for review</h3>${pend.map(c=>`<div class="rg-i"><div class="nm"><b>${esc(c.name)}</b> for ${esc(c.label)}<div class="mu sm">${esc(c.role||'')} | ${esc(c.phone||'')} ${esc(c.proof||'')}</div></div><button class="btn sm" data-a="rgOk" data-id="${c.id}">Approve</button><button class="btn sm ghost" data-a="rgNo" data-id="${c.id}">Reject</button></div>`).join('')}</div>`:''}
+  <div class="card">${L.map(row).join('')||'<div class="mu">Nothing matches. Add it below.</div>'}</div>
+  ${S.user&&!S.user.guest?`<div class="card"><h3>Add a missing association</h3><form data-f="rgAdd"><label>Level<select name="level">${LV.map(([k,l])=>`<option value="${k}">${l}</option>`).join('')}</select></label><label>Name<input name="name" required></label><div class="row" style="gap:6px"><label style="flex:1">Country<input name="country" required></label><label style="flex:1">State<input name="state"></label></div><label>District (for district bodies)<input name="district"></label><button class="btn wide">Add as Unverified</button></form></div>`:'<div class="mu sm" style="margin:8px 12px">Register to add or claim an association.</div>'}`};
+ Object.assign(C,{rgQ(v){UI.rgy.q=v;render()},rgLv(v){UI.rgy.lv=v;render()},rgCo(v){UI.rgy.country=v;render()}});
+ Object.assign(A,{rgClaim(d){const e=all().find(x=>x.key===d.id);if(!e)return;UI.modal={t:'html',html:`<h3>Claim ${esc(e.name)}</h3><form data-f="rgClaimSend"><input type="hidden" name="key" value="${esc(e.key)}"><label>Your name<input name="name" value="${esc((S.user&&(S.user.nick||S.user.name))||'')}" required></label><label>Your role in this body<input name="role" placeholder="Secretary, President..." required></label><label>Phone<input name="phone" inputmode="numeric" required></label><label>Proof (optional, e.g. registration number or website)<input name="proof"></label><div class="mu sm" style="margin:6px 0">An admin checks this before the body is marked Verified.</div><button class="btn wide">Send claim</button></form>`};renderModal()},
+  rgVerify(d){const a=S.assocs.find(x=>x.id===d.id);if(!a||!isAdmin())return;a.verified=true;commit()},
+  rgDel(d){if(!isAdmin())return;S.assocs=S.assocs.filter(x=>x.id!==d.id);commit()},
+  rgOk(d){const c=S.assocClaims.find(x=>x.id===d.id);if(!c||!isAdmin())return;c.status='approved';c.at=Date.now();commit();toast('Claim approved')},
+  rgNo(d){const c=S.assocClaims.find(x=>x.id===d.id);if(!c||!isAdmin())return;c.status='rejected';commit()}});
+ Object.assign(F,{rgAdd(fd){const n=String(fd.get('name')||'').trim(),lv=fd.get('level'),co=String(fd.get('country')||'').trim(),s=String(fd.get('state')||'').trim(),di=String(fd.get('district')||'').trim();if(!n||!co)return;
+   const k=key(lv,n,co,s);if(all().some(e=>key(e.level,e.name,e.country,e.state)===k)){return toast('This association is already listed. Search and claim it.',4000)}
+   S.assocs.push({id:uid(),name:n,level:lv,country:co,state:s,district:di,by:(S.user&&(S.user.nick||S.user.name))||'',at:Date.now(),verified:false});commit();toast('Added as Unverified')},
+  rgClaimSend(fd){const e=all().find(x=>x.key===fd.get('key'));if(!e||!S.user)return;const uid0=S.user.id||S.user.name;if(claims(e.key).some(c=>c.uid===uid0&&c.status==='pending')){UI.modal=null;renderModal();return toast('You already sent a claim')}
+   S.assocClaims.push({id:uid(),key:e.key,label:e.name,uid:uid0,name:String(fd.get('name')||''),role:String(fd.get('role')||''),phone:String(fd.get('phone')||''),proof:String(fd.get('proof')||''),at:Date.now(),status:'pending'});UI.modal=null;commit();toast('Claim sent for admin review',3500)}});
+ const dr=XV.directory;XV.directory=function(){return `<div class="card"><button class="btn wide" data-a="go" data-v="registry">Associations registry: search, add, claim</button></div>`+dr.apply(this,arguments)};
+}
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});
