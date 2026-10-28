@@ -9052,6 +9052,9 @@ html[data-visual-stage=auth] #app,html[data-visual-stage=welcome] #app{margin-le
 @media(prefers-reduced-motion:reduce){.splash *{animation:none!important}}
 </style>
 <script>
+/* Ball Flow animation card removed from every live match screen (owner asked: not needed). */
+shDeliveryEffectsHTML=function(){return ''};
+{const st=document.createElement('style');st.textContent='.sh-delivery-effect{display:none!important}';document.head.appendChild(st)}
 /* Visual reference shell; scoring, permissions and route handlers remain shared. */
 {
  const home=heroHome;
