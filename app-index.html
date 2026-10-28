@@ -8576,6 +8576,7 @@ S.stream.scene=S.stream.scene||'bug';S.stream.card=S.stream.card||{t:'Starting s
   return `<div class="hh-box"><div class="b">World football <span class="mu sm">${live?live+' live':'today'}${f.stale?' · older data':''}</span></div>${L.length?[...by.entries()].map(([k,a])=>`<div class="mu sm" style="margin:8px 2px 0">${esc(k)}</div>`+a.map(card).join('')).join(''):'<div class="mu sm">No football matches in the feed right now.</div>'}</div>`;
  };
  const sb0=shBody;shBody=function(sp){const o=sb0.apply(this,arguments);return sp==='football'?window.fbWorld()+o:o};
+ window.fbLoadMatch=fbLoadMatch;
  A.fbOpen=d=>{UI.fb.m=null;UI.fb.mErr='';UI.fb.id=d.id;UI.fb.tab='tl';UI.view='fbmatch';render();fbLoadMatch(d.id,true);window.scrollTo&&window.scrollTo(0,0)};
  A.fbTab=d=>{UI.fb.tab=d.v;render()};
  const ico={goal:'⚽',pengoal:'⚽',owngoal:'⚽',penmiss:'❌',yellow:'\u{1F7E8}',red:'\u{1F7E5}',yellowred:'\u{1F7E5}',sub:'\u{1F501}',var:'\u{1F4FA}'};
@@ -8817,6 +8818,36 @@ S.stream.scene=S.stream.scene||'bug';S.stream.card=S.stream.card||{t:'Starting s
  Object.assign(A,{hcYt(){go2({act:'yt',yt:val('hc-yt')})},hcLinks(){const b={act:'links'};['youtube','instagram','facebook','whatsapp','x','telegram'].forEach(k=>b[k]=val('hc-l-'+k));go2(b)},
   hcPin(){go2({act:'addPin',title:val('hc-pt'),link:val('hc-pl'),note:val('hc-pn')})},hcRmPin(d){go2({act:'rmPin',id:d.v})},hcRmAd(d){go2({act:'rmAd',id:d.v})},
   hcAd(){const f=document.getElementById('hc-af'),file=f&&f.files&&f.files[0];if(!file)return toast('Choose a banner image first');const t=val('hc-at'),l=val('hc-al');shrink(file,u=>{if(!u)return toast('Could not read that image');go2({act:'addAd',img:u,title:t,link:l})})}});
+}
+
+/* ---------------- 57 PULL TO REFRESH: drag the screen down at the top to reload live data (no page reload). Not active on scoring, login or while a pop-up is open. ---------------- */
+{
+ const st=document.createElement('style');st.textContent='html,body{overscroll-behavior-y:contain}#ptr{position:fixed;left:50%;top:0;z-index:9999;transform:translate(-50%,-60px);width:44px;height:44px;border-radius:50%;background:var(--card,#122);border:1px solid var(--bd,#345);box-shadow:0 4px 14px #0006;display:flex;align-items:center;justify-content:center;font:700 20px var(--ui);color:var(--ac,#ffb020);pointer-events:none;opacity:0;padding-top:env(safe-area-inset-top,0px)}#ptr.sp i{animation:ptrs .8s linear infinite}@keyframes ptrs{to{transform:rotate(360deg)}}#ptr i{font-style:normal;display:block}';document.head.appendChild(st);
+ const mk=()=>{let e=document.getElementById('ptr');if(!e){e=document.createElement('div');e.id='ptr';e.innerHTML='<i>↓</i>';document.body.appendChild(e)}return e};
+ const BLOCK='input,textarea,select,[contenteditable],.hscroll,.shsel,.hh-sports,.ig-sl,.tabs,.cbp-tabs,#v3d,canvas,.msk,.modal,[data-noptr]';
+ const top=()=>(document.scrollingElement||document.documentElement).scrollTop<=0;
+ window.shPullRefresh=async function(){
+  const jobs=[];
+  try{jobs.push(pullLive())}catch(e){}
+  try{if(UI.sx)Object.values(UI.sx).forEach(x=>{if(x)x.at=0});if(UI.hc){UI.hc.at=0;UI.hc.fat=0}}catch(e){}
+  try{jobs.push(ownNewsRefresh())}catch(e){}
+  try{if(UI.view==='wmatch'&&UI.wm&&typeof shRefreshWorldDetails==='function')jobs.push(shRefreshWorldDetails(UI.wm,true))}catch(e){}
+  try{if(UI.view==='fbmatch'&&UI.fb&&UI.fb.id&&window.fbLoadMatch)jobs.push(window.fbLoadMatch(UI.fb.id,true))}catch(e){}
+  await Promise.allSettled(jobs);
+  try{render()}catch(e){}
+ };
+ let y0=null,x0=0,dy=0,on=false,busy=false;
+ const reset=()=>{const e=mk();e.style.transition='transform .2s,opacity .2s';e.style.transform='translate(-50%,-60px)';e.style.opacity='0';e.classList.remove('sp');y0=null;dy=0;on=false};
+ addEventListener('touchstart',ev=>{if(busy||ev.touches.length!==1||UI.modal||UI.stage!=='app'||['score','login','stream'].includes(UI.view)||!top()||(ev.target.closest&&ev.target.closest(BLOCK)))return;y0=ev.touches[0].clientY;x0=ev.touches[0].clientX;dy=0;on=false},{passive:true});
+ addEventListener('touchmove',ev=>{if(y0==null||busy)return;const t=ev.touches[0],d=t.clientY-y0;
+  if(!on){if(Math.abs(t.clientX-x0)>Math.abs(d)||d<0){y0=null;return}if(d>12){on=true}else return}
+  if(!top()){reset();return}
+  dy=Math.min(110,d*.5);const e=mk();e.style.transition='none';e.style.opacity=String(Math.min(1,dy/40));e.style.transform=`translate(-50%,${dy-20}px)`;const i=e.firstChild;i.textContent=dy>=45?'↑':'↓'},{passive:true});
+ addEventListener('touchend',async()=>{if(y0==null)return;const go=on&&dy>=45;if(!go){reset();return}
+  busy=true;const e=mk();e.style.transition='transform .15s';e.style.transform='translate(-50%,24px)';e.classList.add('sp');e.firstChild.textContent='⟳';
+  try{await window.shPullRefresh();toast('Refreshed',1500)}catch(x){}
+  busy=false;reset()},{passive:true});
+ addEventListener('touchcancel',()=>{if(!busy)reset()},{passive:true});
 }
 
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
