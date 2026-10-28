@@ -4186,7 +4186,7 @@ const wCard=m=>{const tm=(m.teams||[]).slice(0,2),live=m.started&&!m.ended,done=
  const row=t=>`<div class="tr">${t.img?`<img src="${esc(t.img)}" alt="" style="width:28px;height:28px;border-radius:50%;object-fit:cover">`:`<span class="dcrest">${esc(String(t.short||t.name).slice(0,3))}</span>`}<span>${esc(t.name)}</span><span class="sc">${esc(sc(t))}</span></div>`;
  const stx=m.status||(when?when.toLocaleString([],{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'');
  const body=`<div class="bd"><div class="sr">${esc(m.name||'')} | ${esc(m.venue||'')}</div>${tm.map(row).join('')}<div class="stt ${live?'lv':done?'dn':''}">${esc(stx)}</div></div>`;
- return sk()==='ca'?`<div class="card cacard"><div class="row"><span class="mu sm" style="text-transform:uppercase">${esc(m.type||'')} | ${esc(m.venue||'')}</span><div class="grow"></div><span class="pill ${live?'live':done?'ok':''}">${live?'LIVE':done?'RESULT':'UPCOMING'}</span></div>${tm.map(t=>`<div class="row" style="justify-content:space-between;margin-top:8px"><span class="tm">${esc(t.short||t.name)}</span><span class="big" style="font-size:22px">${esc(sc(t))}</span></div>`).join('')}<div class="st">${esc(stx)}</div></div>`:`<div class="card cbm">${body}</div>`};
+ return sk()==='ca'?`<div class="card cacard" data-mid="${esc(m.id||'')}"><div class="row"><span class="mu sm" style="text-transform:uppercase">${esc(m.type||'')} | ${esc(m.venue||'')}</span><div class="grow"></div><span class="pill ${live?'live':done?'ok':''}">${live?'LIVE':done?'RESULT':'UPCOMING'}</span></div>${tm.map(t=>`<div class="row" style="justify-content:space-between;margin-top:8px"><span class="tm">${esc(t.short||t.name)}</span><span class="big" style="font-size:22px">${esc(sc(t))}</span></div>`).join('')}<div class="st">${esc(stx)}</div></div>`:`<div class="card cbm" data-mid="${esc(m.id||'')}">${body}</div>`};
 const fM=XV.matches||vMatches,fM1=XV.match||vMatch;
 XV.matches=function(){
  const tab=UI.mtab||'all',ms=S.matches.slice().reverse(),F2=wFilter(),j=UI.live;
@@ -8350,12 +8350,29 @@ S.stream.scene=S.stream.scene||'bug';S.stream.card=S.stream.card||{t:'Starting s
  window.shBbbBadges=function(){
   const j=UI.live;if(!j||!j.ok||!Array.isArray(j.matches))return;
   const by=new Map(j.matches.map(m=>[m.id,m]));
-  document.querySelectorAll('.cbc[data-id],.hh-lc[data-id],.wcard[data-id],.ig-sq[data-id]').forEach(c=>{
-   if(c.querySelector('.bbbg'))return;const m=by.get(c.getAttribute('data-id'));if(!m||typeof m.bbb!=='boolean')return;
+  document.querySelectorAll('.cbc[data-id],.hh-lc[data-id],.wcard[data-id],.ig-sq[data-id],[data-mid]').forEach(c=>{
+   if(c.querySelector('.bbbg'))return;const m=by.get(c.getAttribute('data-id')||c.getAttribute('data-mid'));if(!m||typeof m.bbb!=='boolean')return;
    const b=document.createElement('div');b.className='bbbg'+(m.bbb?'':' off');b.textContent=m.bbb?'Ball-by-ball: ON':'Ball-by-ball: not sent by provider';
    b.title=m.bbb?'The provider sends every delivery for this match':'The provider does not send deliveries for this match; the app shows tracked updates instead';c.appendChild(b)});
  };
+ const bd=m=>typeof m.bbb!=='boolean'?'':`<div class="bbbg${m.bbb?'':' off'}" title="${m.bbb?'The provider sends every delivery for this match':'The provider does not send deliveries for this match; the app shows tracked updates instead'}" style="margin:0 14px 10px">${m.bbb?'Ball-by-ball: ON':'Ball-by-ball: not sent by provider'}</div>`;
+ const wc=wCard;wCard=function(m){const h=wc.apply(this,arguments);if(typeof h!=='string'||h.indexOf('class="bbbg')>=0)return h;const b=bd(m||{});if(!b)return h;const i=h.lastIndexOf('</div>');return i<0?h:h.slice(0,i)+b+h.slice(i)};
  const r0=render;render=function(){r0.apply(this,arguments);try{window.shBbbBadges()}catch(e){}};
+}
+
+/* ---------------- 49 "BALL-BY-BALL ONLY" filter for the world matches list ---------------- */
+{
+ const f0=wFilter;
+ wFilter=function(){const F=f0.apply(this,arguments);if(!UI.wbbb)return F;const k=a=>a.filter(m=>m.bbb===true);return{live:k(F.live),up:k(F.up),rec:k(F.rec)}};
+ const mx0=XV.matches;
+ XV.matches=function(){
+  let o=mx0.apply(this,arguments);
+  if(typeof o!=='string')return o;
+  const on=!!UI.wbbb,btn=`<div style="margin:0 0 8px"><button type="button" class="btn sm ${on?'':'ghost'}" data-a="wbbb" title="Only world matches where the provider sends every delivery">Ball-by-ball only${on?' \u2713':''}</button></div>`;
+  const i=o.indexOf('<div class="tabs"');if(i<0)return o;const e=o.indexOf('</div>',i)+6;
+  return o.slice(0,e)+btn+o.slice(e);
+ };
+ A.wbbb=()=>{UI.wbbb=!UI.wbbb;render()};
 }
 
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
