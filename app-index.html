@@ -7649,6 +7649,36 @@ S.assocs=S.assocs||[];S.assocClaims=S.assocClaims||[];UI.rgy=UI.rgy||{q:'',lv:''
    S.assocClaims.push({id:uid(),key:e.key,label:e.name,uid:uid0,name:String(fd.get('name')||''),role:String(fd.get('role')||''),phone:String(fd.get('phone')||''),proof:String(fd.get('proof')||''),at:Date.now(),status:'pending'});UI.modal=null;commit();toast('Claim sent for admin review',3500)}});
  const dr=XV.directory;XV.directory=function(){return `<div class="card"><button class="btn wide" data-a="go" data-v="registry">Associations registry: search, add, claim</button></div>`+dr.apply(this,arguments)};
 }
+/* ---------------- BROADCAST STUDIO: separate OBS scenes (score bug, scoreboard, lower third, ticker, break card).
+   Each scene has its own URL (?scene=name#overlay) so OBS can use several Browser Sources at once. */
+S.stream.scene=S.stream.scene||'bug';S.stream.card=S.stream.card||{t:'Starting soon',s:''};
+{
+ const SC=[['bug','Score bug','Score, batters and bowler in one strip'],['board','Scoreboard','Full batting and bowling card'],['lower','Lower third','Current batter with avatar and stats'],['ticker','Ticker','Scrolling messages and sponsors'],['break','Break card','Starting soon, innings break, drinks']];
+ const st0=document.createElement('style');st0.textContent=`.ovs{position:absolute;font-family:var(--dsp,system-ui);color:#fff;text-shadow:0 1px 2px #000b}.ovs-board{left:5cqw;top:6cqh;width:44cqw;background:#0b1020e6;border-radius:1.4cqw;padding:2cqw;border-left:.7cqw solid var(--oc,#c4f000)}.ovs-board h4{margin:0 0 1cqw;font-size:2.4cqw}.ovs-board .l{display:flex;justify-content:space-between;font-size:2cqw;padding:.5cqw 0;border-bottom:1px solid #ffffff22}.ovs-board .tot{font-size:3cqw;font-weight:800;margin-bottom:1cqw}
+.ovs-low{left:4cqw;bottom:5cqw;display:flex;gap:1.6cqw;align-items:center;background:#0b1020ec;border-radius:99px 2cqw 2cqw 99px;padding:1cqw 3cqw 1cqw 1cqw;border:.2cqw solid #ffffff44}.ovs-low .av{width:8cqw;height:8cqw;border-radius:50%;overflow:hidden;border:.3cqw solid #fff}.ovs-low .av svg{width:100%;height:100%}.ovs-low b{font-size:3cqw;display:block}.ovs-low span{font-size:2.2cqw;opacity:.9}.ovs-low .big{font-size:4.4cqw;font-weight:900;margin-left:2cqw}
+.ovs-tk{left:0;right:0;bottom:0;height:6cqh;background:#0b1020f2;overflow:hidden;display:flex;align-items:center;border-top:.3cqw solid var(--oc,#c4f000)}.ovs-tk .lb{background:var(--oc,#c4f000);color:#07182d;font-weight:900;padding:0 2cqw;height:100%;display:flex;align-items:center;font-size:2.4cqw;text-shadow:none}.ovs-tk .mv{white-space:nowrap;font-size:2.6cqw;padding-left:100%;animation:ovsTk 28s linear infinite}@keyframes ovsTk{to{transform:translateX(-100%)}}
+.ovs-bk{inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,#07182dee,#1a2a6aee);text-align:center}.ovs-bk h2{font-size:7cqw;margin:0}.ovs-bk p{font-size:3cqw;margin:1.2cqw 0 0;opacity:.9}.ovs-bk img{width:14cqw;margin-bottom:2cqw}`;document.head.appendChild(st0);
+ const root=inner=>`<div class="ovroot ov" data-t="sh">${inner}</div>`;
+ const scene=()=>{try{const q=new URLSearchParams(location.search).get('scene');if(location.hash==='#overlay'&&q&&SC.some(x=>x[0]===q))return q}catch(e){}return UI.ovScene&&UI.view==='stream'?UI.ovScene:''};
+ const o0=overlayHTML;overlayHTML=function(prev){const sc=scene();if(!sc||sc==='bug')return o0.apply(this,arguments);
+  const z=S.stream,m=ovMatch();
+  if(sc==='break'){const c=z.card||{},A=m&&T(m.a),B=m&&T(m.b);return root(`<div class="ovs ovs-bk"><img src="${logoSrc()}" alt=""><h2>${esc(c.t||'Starting soon')}</h2>${m&&A&&B?`<p>${esc(A.name)} v ${esc(B.name)}</p>`:''}${c.s?`<p>${esc(c.s)}</p>`:''}</div>`)}
+  if(sc==='ticker'){const msgs=S.messages.filter(x=>!x.off).slice(-6).map(x=>x.text),sp=(S.settings.sponsors||[]).map(x=>x.name||x.n||'').filter(Boolean),txt=msgs.concat(sp.length?['Sponsors: '+sp.join(' | ')]:[]).join('   |   ')||'Scoring Heroes live';
+   return root(`<div class="ovs ovs-tk"><span class="lb">LIVE</span><span class="mv">${esc(txt)}</span></div>`)}
+  const s=m&&st(m);if(!s)return root('<div class="ovmsg">No live scoring</div>');const k=s.k,c=s.inn.cur;
+  if(sc==='board'){const bats=s.inn.used.map(id=>{const b=k.bat[id];return `<div class="l"><span>${esc(nm(id))}${b.out?'':' *'}</span><b>${b.r} (${b.b})</b></div>`}).join(''),bowls=Object.entries(k.bowl).map(([id,w])=>`<div class="l"><span>${esc(nm(id))}</span><b>${fmtOv(w.b)}-${w.m}-${w.r}-${w.w}</b></div>`).join('');
+   return root(`<div class="ovs ovs-board" style="--oc:${esc(s.bat.color||'#c4f000')}"><h4>${esc(s.bat.name)} batting</h4><div class="tot">${k.runs}-${k.wk} (${fmtOv(k.lg)})</div>${bats}<h4 style="margin-top:1.4cqw">${esc(s.bowl.name)} bowling</h4>${bowls}</div>`)}
+  if(sc==='lower'){const id=c.s;if(id==null)return root('');const b=k.bat[id]||{r:0,b:0},p=P(id)||{id,name:nm(id)};
+   return root(`<div class="ovs ovs-low"><span class="av">${av(p)}</span><div><b>${esc(nm(id))}</b><span>${b.r} off ${b.b} | SR ${b.b?(b.r*100/b.b).toFixed(1):'0.0'}</span></div><span class="big">${k.runs}-${k.wk}</span></div>`)}
+  return o0.apply(this,arguments)};
+ const base=()=>location.href.split('#')[0].split('?')[0];
+ const vs=vStream;vStream=function(){let h=vs.apply(this,arguments);const cur=UI.ovScene||'bug';
+  const bx=`<div class="card"><h3>Studio scenes</h3><div class="mu sm" style="margin-bottom6px">Add each scene as its own OBS Browser Source (1920x1080). Pick one to preview it above.</div>${SC.map(([k,l,d])=>`<div class="item" style="flex-wrap:wrap;gap:6px"><div style="flex:1;min-width:150px"><b>${l}</b>${cur===k?' <span class="pill">Previewing</span>':''}<div class="mu sm">${d}</div></div><button class="btn sm ghost" data-a="ovPrev" data-v="${k}">Preview</button><button class="btn sm" data-a="ovCopy" data-v="${k}">Copy URL</button></div>`).join('').replace('margin-bottom6px','margin-bottom:6px')}
+  <form data-f="ovCard" style="margin-top:10px"><div class="b">Break card text</div><div class="row" style="gap:6px"><input name="t" value="${esc((S.stream.card||{}).t||'')}" placeholder="Starting soon" style="flex:1"><input name="s" value="${esc((S.stream.card||{}).s||'')}" placeholder="Second line (optional)" style="flex:1"></div><button class="btn sm" style="margin-top:6px">Save</button></form></div>`;
+  const i=h.indexOf('<div class="g2"><div class="card"><h3>Overlay settings</h3>');return i<0?h+bx:h.slice(0,i)+bx+h.slice(i)};
+ Object.assign(A,{ovPrev(d){UI.ovScene=d.v;render()},ovCopy(d){const u=base()+(d.v==='bug'?'':'?scene='+d.v)+'#overlay';try{navigator.clipboard.writeText(u);toast('URL copied')}catch(e){toast(u,6000)}}});
+ Object.assign(F,{ovCard(fd){S.stream.card={t:String(fd.get('t')||'').slice(0,60),s:String(fd.get('s')||'').slice(0,100)};commit();toast('Saved')}});
+}
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});
