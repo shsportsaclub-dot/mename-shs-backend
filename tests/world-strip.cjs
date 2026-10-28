@@ -7,7 +7,7 @@ await p.addInitScript(()=>{window.fetch=async(u)=>{u=String(u);const J=o=>({ok:t
 await p.goto('file://'+require('path').resolve(__dirname,'../app-index.html'));await p.waitForTimeout(400);
 await p.evaluate(()=>{window.pullLive=async()=>{};window.apiBase=()=>'http://x';UI.stage='app';S.tok='t';S.user={id:'u',name:'T',phone:'1',role:'viewer'};S.prefs=Object.assign({},S.prefs,{asked:1,welcomed:1});UI.live={ok:true,matches:[]};UI.view='home';UI.sport='cricket';render()});
 await p.waitForTimeout(300);
-ok(await p.evaluate(()=>/World scores/.test(document.body.innerText)),'strip visible');
+ok(await p.evaluate(()=>/Select game/.test(document.body.innerText)&&!!document.querySelector('#shsel')),'strip visible');
 await p.click('button[data-a="hsport"][data-v="tennis"]');await p.waitForTimeout(1200);
 const t=await p.evaluate(()=>document.body.innerText);
 ok(/World tennis/.test(t)&&/Alcaraz/.test(t)&&/Sinner/.test(t)&&/Set1\s+6-4|S?et?1\s+6-4/.test(t)||/6-4/.test(t),'tennis card: '+t.slice(0,300));
