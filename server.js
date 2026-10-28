@@ -4,6 +4,7 @@ import './env.mjs';
 import { createNeonQuery } from './neon-postgres.mjs';
 import { createMatchJournal } from './match-journal.mjs';
 import { createSportmonks } from './sportmonks.mjs';
+import { createFootball } from './sportmonks-football.mjs';
 import http from 'node:http';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
@@ -32,6 +33,8 @@ const CRIC_KEY = E.CRIC_API_KEY || '';
 const CRIC_BASE = E.CRIC_BASE || 'https://api.cricapi.com/v1';
 const SM_TOKEN = E.SPORTMONKS_TOKEN || '';
 let SM = SM_TOKEN ? createSportmonks({ token: SM_TOKEN, base: E.SPORTMONKS_BASE || undefined }) : null;
+const FB_TOKEN = E.FOOTBALL_TOKEN || '';
+let FB = FB_TOKEN ? createFootball({ token: FB_TOKEN, base: E.FOOTBALL_BASE || undefined }) : null;
 const LIVE_TTL = (+E.LIVE_CACHE_SECONDS || 60) * 1000;
 const envKey = s => { const d = String(s).replace(/\D/g, ''); return d.length === 10 ? d : (d.startsWith('91') && d.length === 12 ? d.slice(2) : d); };
 const ADMINS = (E.ADMIN_PHONES || '').split(',').map(envKey).filter(Boolean);
@@ -67,6 +70,7 @@ if (DATABASE_URL) {
 db.users = db.users || {}; db.shared = db.shared || {};
 db.providerKeys = db.providerKeys || {};
 if (!SM && db.providerKeys.sportmonks) SM = createSportmonks({ token: db.providerKeys.sportmonks, base: E.SPORTMONKS_BASE || undefined });
+if (!FB && db.providerKeys.football) FB = createFootball({ token: db.providerKeys.football, base: E.FOOTBALL_BASE || undefined });
 // Server journal: a shared replay log; observations never become invented deliveries.
 const JOURNAL_FILE=E.MATCH_JOURNAL_FILE||path.join(path.dirname(DATA_FILE),'match-journal.json');
 let journalState={},journalTimer=null,journalRemote=Promise.resolve();
@@ -799,17 +803,44 @@ routes['GET /api/viewers'] = async () => {
   return [200, { ok: true, windowSeconds: 180, v }];
 };
 routes['GET /api/status'] = async () => { const x = svcStatus(); return [200, { ok: true, emailReady: x.email.ready, smsReady: x.sms.ready, liveReady: x.live.ready }]; };
+const fbCache = new Map();
+async function fbCached(key, ttl, fn) {
+  const h = fbCache.get(key); if (h && Date.now() - h.t < ttl) return h.d;
+  const d = await fn(); fbCache.set(key, { t: Date.now(), d }); if (fbCache.size > 300) fbCache.clear(); return d;
+}
+routes['GET /api/fb/live'] = async (req, body, ip) => {
+  if (!FB) return [200, { ok: false, error: 'Football feed is not connected yet (admin: add the Sportmonks football token)' }];
+  if (limited('fbl:' + ip, 120, 6e4)) return [429, { ok: false, error: 'Too many requests, wait a moment' }];
+  const date = /^\d{4}-\d{2}-\d{2}$/.test(String(body.date || '')) ? body.date : new Date().toISOString().slice(0, 10);
+  try { const matches = await fbCached('l' + date, 15e3, () => FB.list(date)); return [200, { ok: true, matches, updated: new Date().toISOString(), date }]; }
+  catch (e) { const stale = fbCache.get('l' + date); if (stale) return [200, { ok: true, matches: stale.d, stale: true, updated: new Date(stale.t).toISOString(), date }]; return [502, { ok: false, error: String(e.message || 'Football feed error').slice(0, 160) }]; }
+};
+routes['GET /api/fb/match'] = async (req, body, ip) => {
+  if (!FB) return [200, { ok: false, error: 'Football feed is not connected yet' }];
+  if (limited('fbm:' + ip, 120, 6e4)) return [429, { ok: false, error: 'Too many requests, wait a moment' }];
+  const id = String(body.id || '').replace(/^fb/, ''); if (!/^\d{1,12}$/.test(id)) return [400, { ok: false, error: 'Bad match id' }];
+  try { const m = await fbCached('m' + id, 12e3, () => FB.match(id)); return [200, { ok: true, match: m }]; }
+  catch (e) { const stale = fbCache.get('m' + id); if (stale) return [200, { ok: true, match: stale.d, stale: true }]; return [502, { ok: false, error: String(e.message || 'Football feed error').slice(0, 160) }]; }
+};
 routes['GET /api/admin/provider-key'] = async (req) => {
   const phone = readSession((req.headers.authorization || '').replace(/^Bearer /, '')), u = phone && db.users[phone];
   if (!u) return [401, { ok: false, error: 'Please sign in again' }];
   if (u.role !== 'admin') return [403, { ok: false, error: 'Only an admin can see this' }];
-  return [200, { ok: true, sportmonks: !!SM, source: SM_TOKEN ? 'server environment' : db.providerKeys.sportmonks ? 'saved in app' : 'none', cricketdata: !!CRIC_KEY }];
+  return [200, { ok: true, sportmonks: !!SM, source: SM_TOKEN ? 'server environment' : db.providerKeys.sportmonks ? 'saved in app' : 'none', cricketdata: !!CRIC_KEY, football: !!FB, footballSource: FB_TOKEN ? 'server environment' : db.providerKeys.football ? 'saved in app' : 'none' }];
 };
 routes['POST /api/admin/provider-key'] = async (req, body) => {
   const phone = readSession((req.headers.authorization || '').replace(/^Bearer /, '')), u = phone && db.users[phone];
   if (!u) return [401, { ok: false, error: 'Please sign in again' }];
   if (u.role !== 'admin') return [403, { ok: false, error: 'Only an admin can change data provider keys' }];
   if (limited('pk:' + phone, 10, 36e5)) return [429, { ok: false, error: 'Too many attempts' }];
+  if (body.football !== undefined || body.clearFootball) {
+    if (body.clearFootball === true) { delete db.providerKeys.football; if (!FB_TOKEN) FB = null; saveDb(); return [200, { ok: true, football: !!FB }]; }
+    const ft = String(body.football || '').trim();
+    if (!/^[A-Za-z0-9_\-]{16,200}$/.test(ft)) return [400, { ok: false, error: 'That does not look like a Sportmonks football token (letters and numbers, 16+ characters)' }];
+    if (FB_TOKEN) return [409, { ok: false, error: 'A football token is already set in the server environment, which takes priority' }];
+    db.providerKeys.football = ft; FB = createFootball({ token: ft, base: E.FOOTBALL_BASE || undefined }); saveDb();
+    return [200, { ok: true, football: true }];
+  }
   if (body.clear === true || body.clear === 1) { delete db.providerKeys.sportmonks; if (!SM_TOKEN) SM = null; saveDb(); return [200, { ok: true, sportmonks: !!SM }]; }
   const t = String(body.sportmonks || '').trim();
   if (!/^[A-Za-z0-9_\-]{16,200}$/.test(t)) return [400, { ok: false, error: 'That does not look like a Sportmonks token (letters and numbers, 16+ characters)' }];

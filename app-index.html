@@ -3791,7 +3791,7 @@ function shBody(sp){const c=shGet(sp);if(!c)return '<div class="hh-box"><div cla
   return `<div class="hh-box"><h3>${c.icon} ${esc(c.name)} <span class="n">${esc(shStTxt(c.st))}</span></h3>
   <div class="mu sm">${c.k==='Game'?'Game':'Sport'}${c.fm.length?' | Formats: '+esc(c.fm.join(', ')):''}</div>${c.vr&&c.vr.length?`<div class="mu sm">Variants: ${esc(c.vr.join(', '))}</div>`:''}${c.pc&&c.pc.length?`<div class="mu sm">Categories: ${esc(c.pc.join(', '))}</div>`:''}
   ${ks.length?`<div class="row" style="gap:8px;flex-wrap:wrap;margin-top:10px">${ks.map(k=>`<button class="btn sm" data-a="sgNew" data-v="${k}">Start scoring${ks.length>1?': '+esc(S2N[k]||k):''}</button>`).join('')}<button class="btn sm ghost" data-a="go" data-v="sgames">My ${esc(c.name)} matches</button></div>`:`<div class="need" style="margin-top:10px">${c.st==='DISABLED'?'This sport is switched off by the admin.':'The '+esc(c.name)+' scorer is not built yet. Status: '+esc(shStTxt(c.st))+'. It will get its own rules-based scorer, not a renamed one.'}</div>`}</div>
-  ${ks.length?`<div class="hh-box"><h3>Live</h3><div class="mu">Scoring Heroes live scores: locally scored and server-shared ${esc(c.name)} matches. External competition feeds are not connected here.</div></div>
+  ${ks.length?`<div class="hh-box"><h3>Live</h3><div class="mu">Scoring Heroes live scores: locally scored and server-shared ${esc(c.name)} matches. World football scores (when the football feed is connected) appear above.</div></div>
   <div class="hh-box"><h3>In progress <span class="n">${go.length}</span></h3>${go.length?go.map(m=>`<div class="mcm" data-a="sgOpen" data-id="${m.id}"><div class="b">${esc(m.tn[0])} vs ${esc(m.tn[1])}</div><div class="mu sm">${esc(s2Sum(m))} | ${esc(m.date)}</div></div>`).join(''):'<div class="mu">None. Start scoring above, or open Results.</div>'}</div>
   <div class="hh-box"><h3>Upcoming <span class="n">${up.length}</span></h3>${up.length?up.map(m=>`<div class="mcm" data-a="sgOpen" data-id="${m.id}"><div class="b">${esc(m.tn[0])} vs ${esc(m.tn[1])}</div><div class="mu sm">Not started | ${esc(m.date)}</div></div>`).join(''):'<div class="mu">No upcoming matches.</div>'}</div>
   <div class="hh-box"><h3>Results <span class="n">${done.length}</span></h3>${done.length?done.slice(0,10).map(m=>`<div class="mcm" data-a="sgOpen" data-id="${m.id}"><div class="b">${esc(m.tn[0])} vs ${esc(m.tn[1])}</div><div class="mu sm">${esc(m.result)} | ${esc(m.date)}</div></div>`).join(''):'<div class="mu">No finished matches yet.</div>'}</div>`:''}
@@ -7126,10 +7126,14 @@ render=(o=>function(){try{ar17Norm(UI.wm)}catch(e){}return o.apply(this,argument
  XV.svc=function(){let o=x1.apply(this,arguments);if(!o||o.indexOf('Cricket data provider')<0)return o;
   if(UI.pk===undefined){UI.pk=null;call('GET').then(j=>{UI.pk=j;if(UI.view==='svc')render()}).catch(()=>{UI.pk={ok:false,error:'Cannot reach the server'};if(UI.view==='svc')render()})}
   const k=UI.pk,st=k&&k.ok?(k.sportmonks?`Sportmonks is ON (${esc(k.source)})`:'Sportmonks is not set'):(k&&k.error?esc(k.error):'Checking...');
-  const card=`<div class="cbp-cd" style="padding:12px 14px"><div style="font:600 14px var(--ui);margin-bottom:6px">Sportmonks key (ball-by-ball commentary)</div><div class="mu sm" style="margin-bottom:8px">${st}. Paste your Sportmonks API token here once. It is saved on the server and never shown again.</div>${k&&k.ok&&k.source==='saved in app'?'<button class="btn sm ghost" data-a="pkClear">Remove saved key</button>':`<input id="pk-in" type="password" autocomplete="off" placeholder="Sportmonks API token" style="width:100%"><button class="btn sm" style="margin-top:8px" data-a="pkSave">Save key</button>`}</div>`;
-  return o.replace('<div class="cbp-cd" style="padding:12px 14px"><div style="font:600 14px var(--ui);margin-bottom:6px">Cricket data provider',card+'<div class="cbp-cd" style="padding:12px 14px"><div style="font:600 14px var(--ui);margin-bottom:6px">Cricket data provider')};
+  const card=`<div class="cbp-cd" style="padding:12px 14px"><div style="font:600 14px var(--ui);margin-bottom:6px">Sportmonks CRICKET key (ball-by-ball commentary)</div><div class="mu sm" style="margin-bottom:8px">${st}. For a cricket plan only; a football token does not belong here. Paste your Sportmonks cricket API token here once. It is saved on the server and never shown again.</div>${k&&k.ok&&k.source==='saved in app'?'<button class="btn sm ghost" data-a="pkClear">Remove saved key</button>':`<input id="pk-in" type="password" autocomplete="off" placeholder="Sportmonks API token" style="width:100%"><button class="btn sm" style="margin-top:8px" data-a="pkSave">Save key</button>`}</div>`;
+  const fst=k&&k.ok?(k.football?`Football feed is ON (${esc(k.footballSource)})`:'Football feed is not set'):(k&&k.error?esc(k.error):'Checking...');
+  const fcard=`<div class="cbp-cd" style="padding:12px 14px"><div style="font:600 14px var(--ui);margin-bottom:6px">Sportmonks FOOTBALL token (world football)</div><div class="mu sm" style="margin-bottom:8px">${fst}. Paste the Sportmonks token that has a football plan. It is separate from the cricket key above, so cricket is not affected. Saved on the server and never shown again.</div>${k&&k.ok&&k.footballSource==='saved in app'?'<button class="btn sm ghost" data-a="fbKeyClear">Remove saved football token</button>':`<input id="fbk-in" type="password" autocomplete="off" placeholder="Sportmonks football token" style="width:100%"><button class="btn sm" style="margin-top:8px" data-a="fbKeySave">Save football token</button>`}</div>`;
+  return o.replace('<div class="cbp-cd" style="padding:12px 14px"><div style="font:600 14px var(--ui);margin-bottom:6px">Cricket data provider',fcard+card+'<div class="cbp-cd" style="padding:12px 14px"><div style="font:600 14px var(--ui);margin-bottom:6px">Cricket data provider')};
  Object.assign(A,{
   async pkSave(){const el=document.getElementById('pk-in'),t=el&&el.value.trim();if(!t)return toast('Paste the token first');try{const j=await call('POST',{sportmonks:t});if(el)el.value='';UI.pk=undefined;toast(j.ok?'Key saved. Sportmonks is now on.':(j.error||'Not saved'),3500);if(UI.view==='svc')render()}catch(e){toast('Cannot reach the server')}},
+  async fbKeySave(){const el=document.getElementById('fbk-in'),t=el&&el.value.trim();if(!t)return toast('Paste the token first');try{const j=await call('POST',{football:t});if(el)el.value='';UI.pk=undefined;toast(j.ok?'Football token saved. World football is on.':(j.error||'Not saved'),3500);if(UI.view==='svc')render()}catch(e){toast('Cannot reach the server')}},
+  async fbKeyClear(){try{const j=await call('POST',{clearFootball:true});UI.pk=undefined;toast(j.ok?'Football token removed':(j.error||'Failed'));if(UI.view==='svc')render()}catch(e){toast('Cannot reach the server')}},
   async pkClear(){try{const j=await call('POST',{clear:true});UI.pk=undefined;toast(j.ok?'Saved key removed':(j.error||'Failed'));if(UI.view==='svc')render()}catch(e){toast('Cannot reach the server')}}
  });
 }
@@ -8470,6 +8474,55 @@ S.stream.scene=S.stream.scene||'bug';S.stream.card=S.stream.card||{t:'Starting s
   if(o.indexOf('data-a="shWorldRefresh"')>=0)return o.replace('<button class="btn sm ghost" data-a="shWorldRefresh">',line+'<button class="btn sm ghost" data-a="shWorldRefresh">');
   return o;
  };
+}
+
+/* ---------------- 53 WORLD FOOTBALL (Sportmonks feed through the server): live scores, goals/cards/subs timeline, line-ups with provider photos, statistics. Only what the provider sends. ---------------- */
+{
+ UI.fb=UI.fb||{list:null,err:'',at:0,busy:0,m:null,mErr:'',mAt:0,mBusy:0,tab:'tl'};
+ const stTxt=m=>m.live?(m.state==='HT'?'HT':m.minute!=null?m.minute+"'":m.state):m.ended?(m.state==='AET'?'AET':m.state==='FT_PEN'||m.state==='PEN'?'Pens':'FT'):m.startsAt?new Date(m.startsAt).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'-';
+ const gl=g=>g==null?'-':g;
+ const fbLoadList=async force=>{
+  const f=UI.fb;if(f.busy||!apiBase()||(!force&&Date.now()-f.at<15000))return;f.busy=1;
+  try{const r=await fetch(apiBase()+'/api/fb/live',{signal:AbortSignal.timeout(15000),cache:'no-store'}),j=await r.json();if(j.ok){f.list=j.matches||[];f.err='';f.stale=!!j.stale}else f.err=j.error||'Football feed unavailable'}catch(e){f.err='Football feed unreachable'}
+  f.at=Date.now();f.busy=0;if(UI.sport==='football'&&UI.view==='home')render();
+ }
+ const fbLoadMatch=async(id,force)=>{
+  const f=UI.fb;if(f.mBusy||!apiBase()||(!force&&f.m&&f.m.id===id&&Date.now()-f.mAt<12000))return;f.mBusy=1;
+  try{const r=await fetch(apiBase()+'/api/fb/match?id='+encodeURIComponent(id),{signal:AbortSignal.timeout(15000),cache:'no-store'}),j=await r.json();if(j.ok){f.m=j.match;f.mErr=''}else f.mErr=j.error||'Match unavailable'}catch(e){f.mErr='Football feed unreachable'}
+  f.mAt=Date.now();f.mBusy=0;if(UI.view==='fbmatch')render();
+ }
+ const card=m=>`<div class="fbc" data-a="fbOpen" data-id="${esc(m.id)}" style="display:grid;grid-template-columns:1fr auto 1fr;gap:6px;align-items:center;background:#0c1d4a;border:1px solid #2a4cb0;border-radius:10px;padding:10px;margin:6px 0;cursor:pointer">
+  <div style="display:flex;gap:8px;align-items:center;min-width:0">${m.home.img?`<img src="${esc(m.home.img)}" alt="" style="width:26px;height:26px;object-fit:contain">`:''}<b style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(m.home.short||m.home.name)}</b></div>
+  <div style="text-align:center"><b style="font-size:18px">${gl(m.home.goals)} - ${gl(m.away.goals)}</b><div style="font-size:11px;color:${m.live?'#ff5a6a':'#9fb3c8'};font-weight:800">${m.live?'● ':''}${esc(stTxt(m))}</div></div>
+  <div style="display:flex;gap:8px;align-items:center;justify-content:flex-end;min-width:0"><b style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(m.away.short||m.away.name)}</b>${m.away.img?`<img src="${esc(m.away.img)}" alt="" style="width:26px;height:26px;object-fit:contain">`:''}</div></div>`;
+ window.fbWorld=function(){
+  const f=UI.fb;fbLoadList(false);
+  if(!apiBase())return '';
+  if(!f.list&&!f.err)return '<div class="hh-box"><div class="b">World football</div><div class="mu sm">Loading live football...</div></div>';
+  if(f.err&&!f.list)return `<div class="hh-box"><div class="b">World football</div><div class="mu sm">${esc(f.err)}</div></div>`;
+  const L=f.list||[],by=new Map();L.forEach(m=>{const k=(m.country?m.country+' · ':'')+(m.league||'Football');(by.get(k)||by.set(k,[]).get(k)).push(m)});
+  const live=L.filter(m=>m.live).length;
+  return `<div class="hh-box"><div class="b">World football <span class="mu sm">${live?live+' live':'today'}${f.stale?' · older data':''}</span></div>${L.length?[...by.entries()].map(([k,a])=>`<div class="mu sm" style="margin:8px 2px 0">${esc(k)}</div>`+a.map(card).join('')).join(''):'<div class="mu sm">No football matches in the feed right now.</div>'}</div>`;
+ };
+ const sb0=shBody;shBody=function(sp){const o=sb0.apply(this,arguments);return sp==='football'?window.fbWorld()+o:o};
+ A.fbOpen=d=>{UI.fb.m=null;UI.fb.mErr='';UI.fb.id=d.id;UI.fb.tab='tl';UI.view='fbmatch';render();fbLoadMatch(d.id,true);window.scrollTo&&window.scrollTo(0,0)};
+ A.fbTab=d=>{UI.fb.tab=d.v;render()};
+ const ico={goal:'⚽',pengoal:'⚽',owngoal:'⚽',penmiss:'❌',yellow:'\u{1F7E8}',red:'\u{1F7E5}',yellowred:'\u{1F7E5}',sub:'\u{1F501}',var:'\u{1F4FA}'};
+ const lab={goal:'Goal',pengoal:'Penalty goal',owngoal:'Own goal',penmiss:'Penalty missed',yellow:'Yellow card',red:'Red card',yellowred:'Second yellow',sub:'Substitution',var:'VAR'};
+ XV.fbmatch=function(){
+  const f=UI.fb,m=f.m,back=`<div class="bar"><button class="btn sm ghost" data-a="go" data-v="home">← Back</button><h2>Football</h2></div>`;
+  if(!m)return back+(f.mErr?`<div class="card mu">${esc(f.mErr)}</div>`:'<div class="card mu">Loading match...</div>');
+  const head=`<div class="card" style="text-align:center"><div class="mu sm">${esc((m.country?m.country+' · ':'')+(m.league||''))}${m.round?' · Round '+esc(m.round):''}</div>
+   <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;margin-top:8px"><div>${m.home.img?`<img src="${esc(m.home.img)}" alt="" style="width:44px;height:44px;object-fit:contain">`:''}<div><b>${esc(m.home.name)}</b></div></div><div><b style="font-size:30px">${gl(m.home.goals)} - ${gl(m.away.goals)}</b><div style="color:${m.live?'#ff5a6a':'#9fb3c8'};font-weight:800">${m.live?'● ':''}${esc(stTxt(m))}</div></div><div>${m.away.img?`<img src="${esc(m.away.img)}" alt="" style="width:44px;height:44px;object-fit:contain">`:''}<div><b>${esc(m.away.name)}</b></div></div></div>${m.venue?`<div class="mu sm" style="margin-top:6px">${esc(m.venue)}</div>`:''}</div>`;
+  const tabs=`<div class="tabs" style="margin:8px 0">${[['tl','Timeline'],['lu','Line-ups'],['st','Stats']].map(([k,l])=>`<button class="${f.tab===k?'on':''}" data-a="fbTab" data-v="${k}">${l}</button>`).join('')}</div>`;
+  const tn=id=>+id===+m.home.id?m.home.short||m.home.name:+id===+m.away.id?m.away.short||m.away.name:'';
+  let body='';
+  if(f.tab==='tl'){const E=(m.events||[]).slice().reverse();body=E.length?E.map(e=>`<div class="cl" style="grid-template-columns:48px 28px 1fr"><span class="o n">${e.minute!=null?e.minute+(e.extra?'+'+e.extra:''):''}'</span><span>${ico[e.kind]||''}</span><span><b>${esc(lab[e.kind]||'')}</b>${e.player?' · '+esc(e.player):''}${e.kind==='sub'&&e.related?' <span class="mu">for '+esc(e.related)+'</span>':''} <span class="mu sm">${esc(tn(e.teamId))}${e.result&&/goal/.test(e.kind)?' · '+esc(e.result):''}${e.info?' · '+esc(e.info):''}</span></span></div>`).join(''):`<div class="card mu sm">${m.started?'No goals, cards or substitutions have been sent yet.':'Match has not started. Events appear here as the provider sends them.'}</div>`}
+  else if(f.tab==='lu'){const col=t=>{const L=(m.lineups||{})[t.id];if(!L)return '<div class="mu sm">Line-up not published</div>';const p=x=>`<div class="cbp-sp" style="display:flex;gap:8px;align-items:center;padding:4px 0"><i style="width:34px;height:34px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:#16286a;flex:none">${cbpImg(x.img,x.name)}</i><span>${x.number!=null?'<b>'+esc(x.number)+'</b> ':''}${esc(x.name)}</span></div>`;return `<div><div class="b" style="margin-bottom:4px">${esc(t.name)}</div>${L.starters.map(p).join('')}${L.bench.length?`<div class="mu sm" style="margin-top:6px">Bench</div>`+L.bench.map(p).join(''):''}</div>`};body=`<div class="card" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">${col(m.home)}${col(m.away)}</div>`}
+  else{const S2=m.stats||[];body=S2.length?`<div class="card">${S2.map(s=>`<div style="display:grid;grid-template-columns:60px 1fr 60px;gap:6px;padding:5px 0;text-align:center"><b>${esc(s.home??'-')}</b><span class="mu sm">${esc(s.name)}</span><b>${esc(s.away??'-')}</b></div>`).join('')}</div>`:'<div class="card mu sm">Statistics are not available for this match yet.</div>'}
+  return back+head+tabs+body+`<div class="mu sm" style="margin:8px 4px">Data from the football provider; nothing here is added by the app.</div>`;
+ };
+ setInterval(()=>{if(document.hidden)return;if(UI.view==='fbmatch'&&UI.fb.id)fbLoadMatch(UI.fb.id,false);else if(UI.view==='home'&&UI.sport==='football')fbLoadList(false)},5000);
 }
 
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */

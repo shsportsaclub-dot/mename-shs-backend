@@ -8,7 +8,7 @@ let UI_;const r=await p.evaluate(()=>{window.pullLive=async()=>{};window.fetch=(
  UI.live={ok:true,matches:[mk('m1',true),mk('m2',false)]};UI.view='home';UI.hx='live';render();
  return [...document.querySelectorAll('.bbbg')].map(x=>x.innerText)});
 ok(r.some(t=>/ON/.test(t))&&r.some(t=>/not sent/.test(t)),'badges '+JSON.stringify(r));
-UI_=await p.evaluate(()=>{UI.view='matches';render();return {a:document.querySelectorAll('.bbbg').length,none:!document.querySelector('[data-a=wbbb]')}});
-await p.click('[data-a=wbbb]');await p.waitForTimeout(200);UI_.b=await p.evaluate(()=>document.querySelectorAll('.bbbg').length);
+UI_=await p.evaluate(()=>{const mk=(id,bbb)=>({id,name:'A v B, 1st Test, X tour',type:'test',teams:[{name:'A',short:'A'},{name:'B',short:'B'}],score:[],started:true,ended:false,status:'Live',bbb,date:'2026-10-28',time:new Date().toISOString()});UI.live={ok:true,matches:[mk('m1',true),mk('m2',false)]};UI.wbbb=0;UI.view='matches';render();return {a:document.querySelectorAll('.bbbg').length,none:!document.querySelector('[data-a=wbbb]')}});
+UI_.b=await p.evaluate(()=>{const mk=(id,bbb)=>({id,name:'A v B, 1st Test, X tour',type:'test',teams:[{name:'A',short:'A'},{name:'B',short:'B'}],score:[],started:true,ended:false,status:'Live',bbb,date:'2026-10-28',time:new Date().toISOString()});UI.live={ok:true,matches:[mk('m1',true),mk('m2',false)]};A.wbbb();return document.querySelectorAll('.bbbg').length});
 ok(!UI_.none&&UI_.a===2&&UI_.b===1,'filter '+JSON.stringify(UI_));
 ok(!errs.length,errs.join(';'));await b.close();if(!process.exitCode)console.log('PASS: bbb badge');})();
