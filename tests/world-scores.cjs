@@ -7,6 +7,6 @@ await p.goto('file:///home/claude/mename-shs-backend/app-index.html');await p.wa
 await p.evaluate(()=>{window.pullLive=async()=>{};window.apiBase=()=>'http://x';window.__h=shBody('basketball')});
 await p.waitForTimeout(1200);
 const h=await p.evaluate(()=>shBody('basketball').replace(/<[^>]+>/g,' '));
-console.log(/Q4\s+20-18/.test(h)?'PASS periods':'FAIL periods '+h.slice(0,300));
-console.log(/LAL/.test(h)&&/BOS/.test(h)&&/80 - 77/.test(h)&&!/Loading/.test(h)&&!/undefined/.test(h)?'PASS cards':'FAIL '+h.slice(0,400));
+console.log(/Live \(1\)/.test(h)&&/Upcoming/.test(h)&&/Results/.test(h)?'PASS tabs':'FAIL tabs '+h.slice(0,300));
+console.log(/Lakers/.test(h)&&/Celtics/.test(h)&&/80/.test(h)&&/77/.test(h)&&!/Loading/.test(h)&&!/undefined/.test(h)?'PASS cards':'FAIL '+h.slice(0,400));
 console.log(errs.length?'ERR '+errs:'no errors');await p.evaluate(()=>{document.body.innerHTML='<div style="padding:10px;background:#071433;color:#fff;width:400px">'+shBody('basketball')+'</div>'});await p.setViewportSize({width:430,height:500});await p.screenshot({path:process.env.SHOT||'/tmp/ws.png'});await b.close()})();

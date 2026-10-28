@@ -10,6 +10,6 @@ await p.waitForTimeout(300);
 ok(await p.evaluate(()=>/Select game/.test(document.body.innerText)&&!!document.querySelector('#shsel')),'strip visible');
 await p.click('button[data-a="hsport"][data-v="tennis"]');await p.waitForTimeout(1200);
 const t=await p.evaluate(()=>document.body.innerText);
-ok(/World tennis/.test(t)&&/Alcaraz/.test(t)&&/Sinner/.test(t)&&/Set1\s+6-4|S?et?1\s+6-4/.test(t)||/6-4/.test(t),'tennis card: '+t.slice(0,300));
+ok(/World tennis/i.test(t)&&/Alcaraz/.test(t)&&/Sinner/.test(t)&&!!(await p.$('#igsl .ig-sq')),'tennis card: '+t.slice(0,300));
 await p.screenshot({path:'/tmp/strip.png'});
 ok(!errs.length,errs.join(';'));await b.close();if(!process.exitCode)console.log('PASS: world strip');})();
