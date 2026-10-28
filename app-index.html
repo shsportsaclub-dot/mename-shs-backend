@@ -8146,7 +8146,8 @@ S.stream.scene=S.stream.scene||'bug';S.stream.card=S.stream.card||{t:'Starting s
   const s=UI.lb[m.id]||(UI.lb[m.id]={key:l.key,at:Date.now()});
   if(s.key!==l.key){s.key=l.key;s.at=Date.now();s.fresh=1}
   const show=Date.now()-s.at<9000;
-  return `<div class="lbs n" data-mid="${esc(m.id)}">${show?`<span>LAST BALL</span><b class="b ${l.c}${s.fresh?' pop':''}">${esc(l.t)}</b>`:`<span class="wt">BALL</span>`}</div>`};
+  const raw2=typeof shAvailableBalls==='function'?shAvailableBalls(W):[],lo=raw2.length?raw2[raw2.length-1].over:null,lg=raw2.filter(x=>x.over===lo&&!x.wide&&!x.noball).length,os=((m.score||[]).slice(-1)[0]||{}).o,ovEnd=raw2.length?lg>=6:(os!=null&&/\.0$|^\d+$/.test(String(os))&&+os>0);
+  return `<div class="lbs n" data-mid="${esc(m.id)}">${show?`<span>LAST BALL</span><b class="b ${l.c}${s.fresh?' pop':''}">${esc(l.t)}</b>`:`<span class="wt">${ovEnd?'OVER':'BALL'}</span>`}</div>`};
  const a0=ar9Panel;
  ar9Panel=function(W){
   const o=a0.apply(this,arguments);
@@ -8157,6 +8158,28 @@ S.stream.scene=S.stream.scene||'bug';S.stream.card=S.stream.card||{t:'Starting s
  st.textContent='.rp .lbs{display:flex;align-items:center;justify-content:center;gap:8px;margin:3px 0 2px;min-height:30px}.rp .lbs span{font:700 10px var(--f,system-ui);letter-spacing:1.2px;color:#c6cfea}.rp .lbs .wt{font:800 15px var(--f,system-ui);color:#ffc61a;letter-spacing:2px;animation:lbw 1.1s ease-in-out infinite}.rp .lbs b.b{min-width:30px;height:30px;font:800 15px var(--f,system-ui)}.rp .lbs b.pop{animation:lbp .5s ease-out}@keyframes lbp{0%{transform:scale(2.2);opacity:0}60%{transform:scale(.9)}100%{transform:scale(1);opacity:1}}@keyframes lbw{50%{opacity:.35}}';
  document.head.appendChild(st);
  setInterval(()=>{if(UI.view!=='wmatch'||!UI.wm)return;const el=document.querySelector('.rp .lbs');if(!el)return;const s=UI.lb[UI.wm.m.id];if(s&&Date.now()-s.at>=9000&&!el.querySelector('.wt')){s.fresh=0;render()}},1000);
+}
+
+/* ---------------- 43 COMMENTARY FILTERS: All / Highlights / Overs / Wickets above the commentary list ---------------- */
+{
+ UI.cmf=UI.cmf||'all';
+ const chips=()=>`<div class="cmf" style="display:flex;gap:8px;overflow-x:auto;margin:8px 4px 2px">${[['all','All'],['hl','Highlights'],['ov','Overs'],['wk','Wickets']].map(([k,l])=>`<button type="button" data-a="cmf" data-v="${k}" style="flex:none;border:1px solid ${UI.cmf===k?'#1a6dff':'#2a4cb0'};background:${UI.cmf===k?'#1a6dff33':'#0c1d4a'};color:#fff;border-radius:18px;padding:6px 14px;font:700 12px var(--f,system-ui)">${l}</button>`).join('')}</div>`;
+ const w0=XV.wmatch;
+ XV.wmatch=function(){
+  const o=w0.apply(this,arguments);
+  if(typeof o!=='string')return o;
+  const i=o.indexOf('<div class="subs">');if(i<0)return o;
+  const e=o.indexOf('</div>',i)+6;
+  return o.slice(0,e)+chips()+o.slice(e);
+ };
+ A.cmf=function(d){UI.cmf=d.v;render()};
+ const apply=()=>{
+  if(UI.view!=='wmatch'||UI.cmf==='all')return;
+  const keep=b=>UI.cmf==='hl'?/\br(4|6|w)\b/.test(b.className):UI.cmf==='wk'?/\brw\b/.test(b.className):false;
+  document.querySelectorAll('.rp .cl').forEach(r=>{const b=r.querySelector('.b');if(!b)return;if(!keep(b))r.style.display='none'});
+  document.querySelectorAll('.rp .ovh').forEach(h=>{let n=h.nextElementSibling,any=false;while(n&&n.classList.contains('cl')){if(n.style.display!=='none')any=true;n=n.nextElementSibling}if(!any&&UI.cmf!=='ov'&&n!==h.nextElementSibling)h.style.display='none'});
+ };
+ const r0=render;render=function(){r0.apply(this,arguments);try{apply()}catch(e){}};
 }
 
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */

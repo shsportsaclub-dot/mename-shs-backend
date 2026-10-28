@@ -1,0 +1,18 @@
+// Commentary filter chips (All / Highlights / Overs / Wickets) and the "Over" state in the last-ball slot.
+const { chromium } = require('playwright');
+(async()=>{const b=await chromium.launch(),errs=[],p=await b.newPage({viewport:{width:430,height:900}});
+p.on('pageerror',e=>errs.push(e.message));
+await p.goto('file://'+require('path').resolve(__dirname,'../app-index.html'));await p.waitForTimeout(400);
+const ok=(c,m)=>{if(!c){console.error('FAIL',m);process.exitCode=1}};
+await p.evaluate(()=>{window.pullLive=async()=>{};window.fetch=()=>new Promise(()=>{});UI.stage='app';S.user={name:'QA',role:'viewer',kind:'Fan'};S.prefs={...S.prefs,asked:1,welcomed:1};
+ const rs=[[0,0],[4,0],[1,0],[0,'W'],[6,0],[2,0]];const bbb=rs.map(([r,t],i)=>({inning:1,over:7,ball:i+1,runs:r,bruns:r,wicket:t==='W',batsman:'Mominul Haque',bowler:'Shamar Joseph'}));
+ UI.wm={m:{id:'cf1',name:'BAN v WI',started:true,ended:false,type:'test',teams:[{name:'Bangladesh',short:'BAN'},{name:'West Indies',short:'WI'}],score:[{inning:'Bangladesh Inning 1',r:12,w:1,o:8}],status:'Live'},mi:{},sc:{scorecard:[{inning:'Bangladesh Inning 1',batting:[],bowling:[]}]},bb:{bbb},tab:'live'};UI.view='wmatch';render()});
+const rows=()=>p.evaluate(()=>[...document.querySelectorAll('.rp .cl')].filter(r=>r.style.display!=='none'&&r.querySelector('.b')).length);
+const all=await rows();ok(all>=6,'all rows '+all);
+ok(await p.evaluate(()=>[...document.querySelectorAll('.cmf button')].map(x=>x.innerText).join()==='All,Highlights,Overs,Wickets'),'chips');
+await p.click('[data-a="cmf"][data-v="hl"]');ok(await rows()===3,'highlights 4,6,W: '+await rows());
+await p.click('[data-a="cmf"][data-v="wk"]');ok(await rows()===1,'wickets only');
+await p.click('[data-a="cmf"][data-v="all"]');ok(await rows()===all,'back to all');
+await p.evaluate(()=>{UI.lb.cf1.at=Date.now()-10000;render()});
+ok(await p.evaluate(()=>(document.querySelector('.rp .lbs')||{}).innerText==='OVER'),'over state: '+await p.evaluate(()=>(document.querySelector('.rp .lbs')||{}).innerText));
+ok(!errs.length,errs.join(';'));await b.close();if(!process.exitCode)console.log('PASS: commentary filters');})();
