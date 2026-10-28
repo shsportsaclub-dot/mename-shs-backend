@@ -1,5 +1,5 @@
 // Scoring Heroes service worker: keeps the app shell available offline. Live data is never cached here.
-const V='sh-shell-v2';
+const V='sh-shell-v3';
 self.addEventListener('install',e=>{e.waitUntil(caches.open(V).then(c=>c.addAll(['/','/manifest.webmanifest','/icon-192.png'])).then(()=>self.skipWaiting()))});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==V).map(x=>caches.delete(x)))).then(()=>self.clients.claim()).then(()=>self.clients.matchAll({type:'window'})).then(cs=>cs.forEach(c=>{try{c.navigate(c.url)}catch(e){}})))});
 self.addEventListener('fetch',e=>{const u=new URL(e.request.url);
