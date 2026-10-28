@@ -8,6 +8,7 @@ import http from 'node:http';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
+const path_ = path;
 import net from 'node:net';
 import { answersFrom, board as pollBoard, POLL_POINTS } from './poll-score.mjs';
 import tls from 'node:tls';
@@ -1257,6 +1258,24 @@ http.createServer(async (req, res) => {
       r.status = b.status; r.answered = Date.now(); saveDb(); return out(200, { ok: true });
     }
     return out(405, { ok: false, error: 'Method not allowed' });
+  }
+  if (path === '/api/face' && req.method === 'GET') {   // player photos supplied by the data provider: downloaded once, kept on disk, served from here (provider hosts only)
+    const ip0 = String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
+    if (limited('face:' + ip0, 240, 6e4)) return out(429, { ok: false, error: 'Too many requests' });
+    let u; try { u = new URL(new URL(req.url, 'http://x').searchParams.get('u') || ''); } catch { return out(400, { ok: false, error: 'Bad address' }); }
+    const hostOk = new RegExp(E.FACE_HOSTS || '(^|\\.)(cricapi\\.com|cricketdata\\.org|sportmonks\\.com)$', 'i');
+    if (!/^https?:$/.test(u.protocol) || !hostOk.test(u.hostname) || (u.protocol !== 'https:' && !E.FACE_HOSTS) || /placeholder|default|icon-?player|no.?[-_]?image|icon512|icon192|silhouette|blank/i.test(u.href)) return out(404, { ok: false, error: 'Not a provider photo' });
+    const dir = path_.join(path_.dirname(DATA_FILE), 'faces'), key = crypto.createHash('sha1').update(u.href).digest('hex'), fp = path_.join(dir, key);
+    const send = (buf, ct) => { res.writeHead(200, { 'content-type': ct, 'cache-control': 'public, max-age=2592000', 'access-control-allow-origin': '*' }); res.end(buf); };
+    try { const ct = fs.readFileSync(fp + '.ct', 'utf8'); return send(fs.readFileSync(fp), ct); } catch { /* not cached yet */ }
+    try {
+      const r = await fetch(u.href, { signal: AbortSignal.timeout(8000), redirect: 'error' });
+      const ct = String(r.headers.get('content-type') || '').split(';')[0].trim();
+      if (!r.ok || !/^image\/(jpeg|png|webp|gif)$/.test(ct)) return out(404, { ok: false, error: 'No photo' });
+      const buf = Buffer.from(await r.arrayBuffer()); if (buf.length < 500 || buf.length > 2e6) return out(404, { ok: false, error: 'No photo' });
+      try { fs.mkdirSync(dir, { recursive: true }); fs.writeFileSync(fp, buf); fs.writeFileSync(fp + '.ct', ct); } catch { /* serve anyway */ }
+      return send(buf, ct);
+    } catch { return out(404, { ok: false, error: 'No photo' }); }
   }
   if (path.startsWith('/api/offers/')) {   // marketplace offers: a signed-in buyer offers on a published listing; only the seller (or an admin) reads all and answers
     const [, , , lid, oid] = path.split('/');
