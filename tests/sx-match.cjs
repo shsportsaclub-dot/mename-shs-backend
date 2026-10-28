@@ -10,7 +10,7 @@ await p.waitForTimeout(1200);
 await p.click('[data-a="sxOpen"]');await p.waitForTimeout(300);
 let t=await p.evaluate(()=>document.body.innerText);
 ok(/WAR/.test(t)&&/KRA/.test(t)&&/SET1|Set1/i.test(t)&&/25/.test(t)&&/Sets/.test(t),'scoreboard: '+t.slice(0,300));
-await p.screenshot({path:'/tmp/sxm.png'});
+ok(await p.evaluate(()=>!!document.querySelector('svg[aria-label="Volleyball court"]')),'volleyball court');await p.screenshot({path:'/tmp/sxm.png'});
 await p.click('[data-a="sxTab"][data-v="gr"]');await p.waitForTimeout(200);t=await p.evaluate(()=>document.body.innerText);ok(/Who won each set/.test(t)&&!!(await p.$('svg polyline')),'graph: '+t.slice(0,200));await p.screenshot({path:'/tmp/sxg.png'});
 await p.click('[data-a="sxTab"][data-v="rc"]');await p.waitForTimeout(200);
 t=await p.evaluate(()=>document.body.innerText);ok(/Set1: Warsaw 25 - 20 Krakow/.test(t)&&/Scores are level/.test(t),'recap: '+t.slice(0,300));

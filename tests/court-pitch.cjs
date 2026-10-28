@@ -11,9 +11,11 @@ await p.goto('file://'+require('path').resolve(__dirname,'../app-index.html'));a
 await p.evaluate(()=>{window.pullLive=async()=>{};window.apiBase=()=>'http://x';UI.stage='app';S.tok='t';S.user={id:'u',name:'T',phone:'1',role:'viewer'};S.prefs=Object.assign({},S.prefs,{asked:1,welcomed:1});UI.live={ok:true,matches:[]};UI.view='home';UI.sport='cricket';render()});
 await p.click('button[data-a="hsport"][data-v="tennis"]');await p.waitForTimeout(1200);
 await p.click('[data-a="sxOpen"]');await p.waitForTimeout(300);
-ok(await p.evaluate(()=>!!document.querySelector('svg[aria-label="Tennis court"]')&&/Sinner/.test(document.body.innerText)&&/serving/.test(document.body.innerText)),'tennis court');
+ok(await p.evaluate(()=>!!document.querySelector('svg[aria-label="Tennis court"]')&&/Sinner/.test(document.body.innerText)&&/serving/.test(document.getElementById('arcap').textContent)),'tennis court');
+await p.click('[data-a="ar3d"]');await p.waitForTimeout(900);ok(await p.evaluate(()=>!!document.querySelector('.arena.on')),'3D on');await p.screenshot({path:'/tmp/court3d.png'});
+await p.click('[data-a="arReplay"]');await p.waitForTimeout(600);ok(await p.evaluate(()=>/Set1/.test(document.getElementById('arcap').textContent)),'replay caption');
 await p.screenshot({path:'/tmp/court.png'});
 await p.evaluate(()=>{UI.fb=UI.fb||{};UI.fb.m=null;A.fbOpen({id:'fb5'})});await p.waitForTimeout(900);
-ok(await p.evaluate(()=>{const s=document.querySelector('svg[aria-label="Football pitch with goals"]');return !!s&&s.querySelectorAll('g text').length>=3&&/Forward/.test(s.innerHTML)&&/pen/.test(s.innerHTML)}),'pitch goals');
+ok(await p.evaluate(()=>{const s=document.querySelector('svg[aria-label="Football pitch"]');return !!s&&s.querySelectorAll('g text').length>=3&&JSON.parse(s.getAttribute('data-ev')).length===3&&/Forward/.test(s.innerHTML)&&/pen/.test(s.innerHTML)}),'pitch goals');
 await p.screenshot({path:'/tmp/pitch.png'});
 ok(!errs.length,errs.join(';'));await b.close();if(!process.exitCode)console.log('PASS: court and pitch');})();

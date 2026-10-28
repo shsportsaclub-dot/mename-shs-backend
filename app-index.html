@@ -3477,7 +3477,7 @@ function tnPt(st,i){const c=st.cur;if(!c)return'';if(c.tb)return String(c.p[i]);
   if(p[i]>=3&&o>=3)return p[i]===o?'40':(p[i]>o?'Ad':'40');return['0','15','30','40'][Math.min(p[i],3)]}
 function tnStats(m){const s=[{pt:0,ace:0,df:0,win:0,ue:0},{pt:0,ace:0,df:0,win:0,ue:0}];m.pts.forEach(x=>{s[x.w].pt++;if(x.k==='ace')s[x.w].ace++;if(x.k==='win')s[x.w].win++;if(x.k==='df')s[1-x.w].df++;if(x.k==='ue')s[1-x.w].ue++});return s}
 Object.assign(F,{tnNew(fd){const n0=(fd.get('n0')||'').trim()||'Player 1',n1=(fd.get('n1')||'').trim()||'Player 2';
-  const m={id:uid(),sport:'tennis',tn:[n0,n1],cfg:{best:+fd.get('best')||3,final:fd.get('final')||'adv',noad:!!fd.get('noad')},first:+fd.get('first')||0,pts:[],date:new Date().toISOString().slice(0,10),by:S.user?S.user.name:''};
+  const m={id:uid(),sport:'tennis',tn:[n0,n1],cfg:{best:+fd.get('best')||3,final:fd.get('final')||'adv',noad:!!fd.get('noad'),surf:fd.get('surf')||'hard',ind:fd.get('ind')==='1'},first:+fd.get('first')||0,pts:[],date:new Date().toISOString().slice(0,10),by:S.user?S.user.name:''};
   S.sg.push(m);UI.sgid=m.id;UI.view='sgame';commit()}});
 Object.assign(A,{tnPt(d){const m=sgCur();if(!m||!can())return;const st=tnState(m);if(st.done)return;m.pts.push({w:+d.w,k:UI.sg.k||'pt',t:Date.now()});UI.sg.k='pt';const s2=tnState(m);if(s2.done)m.result=tnResult(m,s2);commit();if(s2.chg&&!s2.done)toast('Change ends',1800)},
  tnK(d){UI.sg.k=UI.sg.k===d.v?'pt':d.v;render()},tnUndo(){const m=sgCur();if(!m||!can())return;m.pts.pop();m.result='';const s=tnState(m);if(s.done)m.result=tnResult(m,s);commit()}});
@@ -3500,6 +3500,7 @@ XV.sgames=function(){const L=S.sg.slice().reverse();
 XV.sgnew=function(){const sp=UI.sgnew||'football',tm=S.teams.map(t=>[t.id,t.name]);
   if(sp==='tennis')return `<div class="bar"><h2>New tennis match</h2></div><form class="card" data-f="tnNew"><label>Player or pair 1<input name="n0" placeholder="e.g. A. Rao / K. Reddy"></label><label>Player or pair 2<input name="n1"></label>
    <div class="row"><label style="flex:1">Match<select name="best"><option value="3">Best of 3 sets</option><option value="5">Best of 5 sets</option></select></label><label style="flex:1">First server<select name="first"><option value="0">Player 1</option><option value="1">Player 2</option></select></label></div>
+   <div class="row"><label style="flex:1">Court surface<select name="surf"><option value="hard">Hard (blue)</option><option value="hardg">Hard (green)</option><option value="clay">Clay (red soil)</option><option value="grass">Grass (turf)</option><option value="carpet">Carpet / mat</option></select></label><label style="flex:1">Venue<select name="ind"><option value="0">Outdoor</option><option value="1">Indoor</option></select></label></div>
    <label>Deciding set<select name="final"><option value="adv">Advantage set (no tiebreak)</option><option value="tb7">7-point tiebreak at 6-6</option><option value="tb10">10-point tiebreak at 6-6 (Grand Slam final set)</option><option value="mtb10">10-point match tiebreak instead of the deciding set</option></select></label>
    <label class="ck"><input type="checkbox" name="noad"> No-ad scoring (first to four points wins the game)</label><button class="btn wide" style="margin-top:8px">Start match</button></form>`;
   return `<div class="bar"><h2>New football match</h2></div><form class="card" data-f="fbNew"><div class="row"><label style="flex:1">Home team<select name="t0"><option value="">Type a name</option>${tm.map(([v,l])=>`<option value="${v}">${esc(l)}</option>`).join('')}</select></label><label style="flex:1">Away team<select name="t1"><option value="">Type a name</option>${tm.map(([v,l])=>`<option value="${v}">${esc(l)}</option>`).join('')}</select></label></div>
@@ -8600,17 +8601,10 @@ S.stream.scene=S.stream.scene||'bug';S.stream.card=S.stream.card||{t:'Starting s
   else if(f.tab==='lu'){const col=t=>{const L=(m.lineups||{})[t.id];if(!L)return '<div class="mu sm">Line-up not published</div>';const p=x=>`<div class="cbp-sp" style="display:flex;gap:8px;align-items:center;padding:4px 0"><i style="width:34px;height:34px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:#16286a;flex:none">${cbpImg(x.img,x.name)}</i><span>${x.number!=null?'<b>'+esc(x.number)+'</b> ':''}${esc(x.name)}</span></div>`;return `<div><div class="b" style="margin-bottom:4px">${esc(t.name)}</div>${L.starters.map(p).join('')}${L.bench.length?`<div class="mu sm" style="margin-top:6px">Bench</div>`+L.bench.map(p).join(''):''}</div>`};body=`<div class="card" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">${col(m.home)}${col(m.away)}</div>`}
   else{const S2=m.stats||[];body=S2.length?`<div class="card">${S2.map(s=>`<div style="display:grid;grid-template-columns:60px 1fr 60px;gap:6px;padding:5px 0;text-align:center"><b>${esc(s.home??'-')}</b><span class="mu sm">${esc(s.name)}</span><b>${esc(s.away??'-')}</b></div>`).join('')}</div>`:'<div class="card mu sm">Statistics are not available for this match yet.</div>'}
   const pitch=(()=>{const E=(m.events||[]).filter(e=>/goal/.test(e.kind)),own=e=>e.kind==='owngoal',
-    side=e=>{const h=+e.teamId===+m.home.id,a=+e.teamId===+m.away.id;return (own(e)?a:h)?'r':'l'};
-   const key=E.length+'|'+(m.home.goals||0)+'-'+(m.away.goals||0);UI.fbp=UI.fbp||{};const prev=UI.fbp[m.id];UI.fbp[m.id]=key;const fly=prev&&prev!==key&&m.live;
-   const last=E[E.length-1],ls=last?side(last):'';
+    side=e=>{const h=+e.teamId===+m.home.id,a=+e.teamId===+m.away.id;return (own(e)?a:h)?'r':'l'},lbl=e=>(e.player||'Goal')+' '+(e.minute!=null?e.minute+(e.extra?'+'+e.extra:'')+"'":'')+(e.kind==='pengoal'?' (pen)':own(e)?' (og)':'');
    const mk=e=>{const s2=side(e),n=E.filter(x=>side(x)===s2),k=n.indexOf(e),x=s2==='r'?300:20,y=40+k*26;return `<g><circle cx="${x}" cy="${y}" r="9" fill="#fff"/><text x="${x}" y="${y+4}" text-anchor="middle" font-size="11">⚽</text><text x="${s2==='r'?x-14:x+14}" y="${y+4}" text-anchor="${s2==='r'?'end':'start'}" font-size="9" fill="#fff" font-weight="700">${esc((e.player||'Goal').split(' ').slice(-1)[0])} ${e.minute!=null?e.minute+(e.extra?'+'+e.extra:'')+"'":''}${e.kind==='pengoal'?' (pen)':own(e)?' (og)':''}</text></g>`};
-   return `<div class="card" style="padding:8px 10px"><style>@keyframes fbgoal{0%{transform:translate(0,0)}100%{transform:translate(${ls==='r'?130:-130}px,-8px)}}</style><svg viewBox="0 0 320 200" width="100%" style="max-height:190px" role="img" aria-label="Football pitch with goals">
-    <rect x="2" y="2" width="316" height="196" rx="6" fill="#1f7a3d"/><rect x="14" y="12" width="292" height="176" fill="none" stroke="#fff" stroke-width="1.5"/><line x1="160" y1="12" x2="160" y2="188" stroke="#fff" stroke-width="1.5"/><circle cx="160" cy="100" r="24" fill="none" stroke="#fff" stroke-width="1.5"/>
-    <rect x="14" y="60" width="40" height="80" fill="none" stroke="#fff" stroke-width="1.5"/><rect x="266" y="60" width="40" height="80" fill="none" stroke="#fff" stroke-width="1.5"/><rect x="6" y="84" width="8" height="32" fill="#fff" opacity=".9"/><rect x="306" y="84" width="8" height="32" fill="#fff" opacity=".9"/>
-    <text x="24" y="26" font-size="10" fill="#fff" font-weight="700">${esc(m.home.short||m.home.name)}</text><text x="296" y="26" text-anchor="end" font-size="10" fill="#fff" font-weight="700">${esc(m.away.short||m.away.name)}</text>
-    ${E.map(mk).join('')}
-    <g style="${fly?'animation:fbgoal 1.4s ease-out 1 forwards':''}"><circle cx="160" cy="100" r="6" fill="#fff" stroke="#111" stroke-width="1.5"/></g></svg>
-    <div class="mu sm" style="text-align:center;font-size:11px">Goal markers sit in the net they went into, from the provider's events. The ball is not tracked live.</div></div>`})();
+   const ev=E.slice().sort((a,b)=>(a.minute||0)-(b.minute||0)).map(e=>({side:side(e),text:'⚽ '+lbl(e)+' · '+(side(e)==='r'?m.home.short||m.home.name:m.away.short||m.away.name)}));
+   return window.shArena('football',{home:m.home.short||m.home.name,away:m.away.short||m.away.name,events:ev,extra:E.map(mk).join(''),cap:m.live?'Live '+(m.minute!=null?m.minute+"'":''):'',note:'Goal markers sit in the net they went into, from the provider\'s events. Replay shows each goal in order; the ball is not tracked live.'})})();
   return back+head+pitch+tabs+body+`<div class="mu sm" style="margin:8px 4px">Data from the football provider; nothing here is added by the app.</div>`;
  };
  setInterval(()=>{if(document.hidden)return;if(UI.view==='fbmatch'&&UI.fb.id)fbLoadMatch(UI.fb.id,false);else if(UI.view==='home'&&UI.sport==='football')fbLoadList(false)},5000);
@@ -8765,15 +8759,12 @@ S.stream.scene=S.stream.scene||'bug';S.stream.card=S.stream.card||{t:'Starting s
   if(!m)return back+'<div class="card mu">This match is no longer in the list. Go back and open it again.</div>';
   const logo=tm=>`<span style="display:inline-block;margin:2px 0">${wBadge(tm)}</span>`;
   const head=`<div class="card" style="text-align:center;border-top:3px solid ${t.c};padding:8px 10px"><div class="mu sm" style="color:${t.c}">${esc((m.country?m.country+' · ':'')+(m.league||HLS[sp]))}</div><div style="display:grid;grid-template-columns:1fr auto 1fr;gap:6px;align-items:center;margin-top:4px"><div>${logo(m.home)}<div style="font-size:13px"><b>${esc(m.home.short||m.home.name)}</b></div></div><div><b style="font-size:24px">${sc(m.home.score)} - ${sc(m.away.score)}</b><div style="color:${m.live?'#ff5a6a':'#9fb3c8'};font-weight:800">${m.live?'● ':''}${esc(st(m))}</div></div><div>${logo(m.away)}<div style="font-size:13px"><b>${esc(m.away.short||m.away.name)}</b></div></div></div>${t.sets?'<div class="mu sm" style="margin-top:2px;font-size:11px">Main score is sets won</div>':''}</div>`;
-  const court=(sp==='tennis'&&m.live)?(()=>{const e=m.extra||{},sv=e.server,P=[m.home,m.away],nm=i=>esc(P[i].short||P[i].name),key=(m.home.score||0)+'-'+(m.away.score||0)+'|'+JSON.stringify(m.periods||[])+'|'+(e.points||'');
-   UI.sxp=UI.sxp||{};const prev=UI.sxp[m.id];UI.sxp[m.id]=key;const fly=prev&&prev!==key;
-   const bx=sv===1?24:sv===2?296:160,by=100;
-   return `<div class="card" style="padding:8px 10px"><style>@keyframes sxfly{0%{transform:translate(0,0)}50%{transform:translate(${sv===2?-250:250}px,0)}100%{transform:translate(0,0)}}@keyframes sxpulse{50%{transform:scale(1.35)}}</style><svg viewBox="0 0 320 200" width="100%" style="max-height:200px" role="img" aria-label="Tennis court">
-    <rect x="2" y="2" width="316" height="196" rx="6" fill="#1b6b4a"/><rect x="20" y="24" width="280" height="152" fill="none" stroke="#fff" stroke-width="2"/><line x1="20" y1="48" x2="300" y2="48" stroke="#fff" stroke-width="1.5"/><line x1="20" y1="152" x2="300" y2="152" stroke="#fff" stroke-width="1.5"/>
-    <line x1="80" y1="48" x2="80" y2="152" stroke="#fff" stroke-width="1.5"/><line x1="240" y1="48" x2="240" y2="152" stroke="#fff" stroke-width="1.5"/><line x1="80" y1="100" x2="240" y2="100" stroke="#fff" stroke-width="1.5"/><line x1="160" y1="14" x2="160" y2="186" stroke="#e8e8e8" stroke-width="3" stroke-dasharray="3 3"/>
-    <text x="22" y="16" font-size="10" fill="#fff" font-weight="700">${nm(0)}</text><text x="298" y="16" text-anchor="end" font-size="10" fill="#fff" font-weight="700">${nm(1)}</text>
-    ${sv?`<g style="${fly?'animation:sxfly 1.6s ease-in-out 1':''}"><circle cx="${bx}" cy="${by}" r="7" fill="#d7f33d" stroke="#fff" stroke-width="1.5" style="transform-origin:${bx}px ${by}px;animation:sxpulse 1.4s infinite"/></g>`:''}</svg>
-    <div class="mu sm" style="text-align:center">${sv?'<b>'+nm(sv-1)+'</b> serving':'Server not sent'}${e.points?' · game score <b>'+esc(e.points)+'</b>':''}${e.tiebreak?' · tie-break':''}</div><div class="mu sm" style="text-align:center;font-size:11px">Court shows who is serving, from the provider. The ball is not tracked live.</div></div>`})():'';
+  const court=(window.shArena&&(sp==='tennis'?m.live:true))?(()=>{const e=m.extra||{},sv=e.server,H=m.home.short||m.home.name,Aw=m.away.short||m.away.name,pr=(m.periods||[]).filter(q=>q[0]!=null&&q[1]!=null),T2=TH[sp]||{p:'P'};
+   const evs=pr.map((q,i)=>{const d=q[0]-q[1],w=d>0?H:d<0?Aw:'';return {side:d>0?'r':d<0?'l':'c',text:sp==='tennis'||T2.sets?`${T2.p}${i+1}: ${w?w+' won ':'level '}${q[0]}-${q[1]}`:`${T2.p}${i+1}: ${H} ${q[0]} - ${q[1]} ${Aw}${w?' ('+w+' +'+Math.abs(d)+')':''}`}});
+   const pos=sp==='tennis'&&sv?[sv===1?30:290,100]:[160,100];
+   const cap=sp==='tennis'?(sv?(sv===1?H:Aw)+' serving'+(e.points?' · '+e.points:'')+(e.tiebreak?' · tie-break':''):''):(m.live?st(m):'');
+   const sfm=v=>/clay/i.test(v)?'clay':/grass/i.test(v)?'grass':/carpet|mat/i.test(v)?'carpet':/hard/i.test(v)?'hard':undefined;
+   return window.shArena(sp,{surf:sp==='tennis'?sfm(e.surface||''):undefined,indoor:!!e.indoor,home:H,away:Aw,events:evs,pos,cap,note:sp==='tennis'?'Ball sits at the serving end (from the provider). Replay shows each set as recorded; the ball is not tracked live.':null})})():'';
   const tabs=`<div class="tabs" style="margin:8px 0">${[['sc','Scoreboard'],['gr','Graph'],['rc','✨ Recap'],['in','Info']].map(([k,l])=>`<button class="${(X.tab||'sc')===k?'on':''}" data-a="sxTab" data-v="${k}">${l}</button>`).join('')}</div>`;
   let body='';const tb=X.tab||'sc';
   if(tb==='sc'){const P=m.periods||[];body=P.length?`<div class="card" style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;text-align:center"><tr><th style="text-align:left"></th>${P.map((_,i)=>`<th class="mu sm">${t.p}${i+1}</th>`).join('')}<th>${t.sets?'Sets':'Total'}</th></tr>${[[m.home,0],[m.away,1]].map(([tm,k])=>`<tr><td style="text-align:left;padding:6px 0"><b>${esc(tm.short||tm.name)}</b></td>${P.map(p=>`<td>${sc(p[k])}</td>`).join('')}<td><b>${sc(tm.score)}</b></td></tr>`).join('')}</table><div class="mu sm" style="margin-top:6px">${esc(t.u||'')} as sent by the provider.</div></div>`:'<div class="card mu sm">The provider has not sent a score breakdown for this match yet.</div>'}
@@ -8876,6 +8867,60 @@ S.stream.scene=S.stream.scene||'bug';S.stream.card=S.stream.card||{t:'Starting s
   try{await window.shPullRefresh();toast('Refreshed',1500)}catch(x){}
   busy=false;reset()},{passive:true});
  addEventListener('touchcancel',()=>{if(!busy)reset()},{passive:true});
+}
+
+/* ---------------- 58 VIRTUAL LIVE ARENA (every sport): the real playing area drawn to scale, 2D or tilted 3D, with a replay built ONLY from the provider's real events / period scores. The ball is never tracked live. ---------------- */
+{
+ const st=document.createElement('style');st.textContent='.arena{perspective:760px;padding:0 0 4px}.arena .arin{transform-origin:50% 85%;transition:transform .7s ease,filter .7s;filter:drop-shadow(0 6px 10px #0006)}.arena.on{margin:-34px 0 -10px}.arena.on .arin{transform:rotateX(46deg) scale(.96) translateY(-4%)}.arena svg{display:block;width:100%;height:auto;max-height:210px}.arena .ball{transition:transform 1.1s cubic-bezier(.3,.7,.3,1)}.arbar{display:flex;gap:8px;align-items:center;justify-content:space-between;margin:2px 0 6px}.arcap{min-height:18px;text-align:center;font:700 12px var(--ui);color:var(--ac)}';document.head.appendChild(st);
+ const W='#fff',L=(x1,y1,x2,y2,w=1.5)=>`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${W}" stroke-width="${w}"/>`,R=(x,y,w,h,f='none',sw=1.5,rx=0)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${rx}" fill="${f}" stroke="${W}" stroke-width="${sw}"/>`,C=(x,y,r,f='none',sw=1.5)=>`<circle cx="${x}" cy="${y}" r="${r}" fill="${f}" stroke="${W}" stroke-width="${sw}"/>`;
+ const AREAS={
+  football:(sf)=>({bg:sf==='art'?'#2c8d4d':sf==='indoor'?'#2d5fa8':'#1f7a3d',g:(sf==='indoor'?'<rect x="14" y="12" width="292" height="176" fill="#3a7bd5"/>':'')+R(14,12,292,176)+L(160,12,160,188)+C(160,100,24)+R(14,60,40,80)+R(266,60,40,80)+R(14,80,16,40)+R(290,80,16,40)+R(6,86,8,28,W,1)+R(306,86,8,28,W,1),n:'Football pitch'}),
+  tennis:(sf)=>{const P={hard:['#2f6fb0','#3f8a5b'],hardg:['#4b6b57','#7a3238'],clay:['#c4623a','#a44a28'],grass:['#4f9a3d','#3b7d2f'],carpet:['#2a5d8c','#1c3b59']}[sf]||['#2f6fb0','#3f8a5b'];
+   const x0=29.3,x1=290.7,y0=39.7,y1=160.3,ys0=54.7,ys1=145.3,sx0=89.6,sx1=230.4;
+   const g=`<rect x="${x0}" y="${y0}" width="${x1-x0}" height="${y1-y0}" fill="${P[0]}"/>`+(sf==='grass'?[0,1,2,3,4,5,6,7].map(i=>`<rect x="${x0+i*32.7}" y="${y0}" width="16.3" height="${y1-y0}" fill="#ffffff12"/>`).join(''):'')
+    +R(x0,y0,x1-x0,y1-y0,'none',1.8)+L(x0,ys0,x1,ys0)+L(x0,ys1,x1,ys1)+L(sx0,ys0,sx0,ys1)+L(sx1,ys0,sx1,ys1)+L(sx0,100,sx1,100)+L(x0,98,x0+4,98)+L(x1,98,x1-4,98)
+    +`<line x1="160" y1="30" x2="160" y2="170" stroke="#0004" stroke-width="5" transform="translate(2 2)"/><line x1="160" y1="30" x2="160" y2="170" stroke="#fff" stroke-width="2.4"/>`;
+   return {bg:P[1],g,n:'Tennis court'}},
+  
+  basketball:{bg:'#b8793e',g:R(14,20,292,160)+L(160,20,160,180)+C(160,100,22)+R(14,70,58,60)+R(248,70,58,60)+`<path d="M14 40 H46 A66 66 0 0 1 46 160 H14" fill="none" stroke="${W}" stroke-width="1.5"/><path d="M306 40 H274 A66 66 0 0 0 274 160 H306" fill="none" stroke="${W}" stroke-width="1.5"/>`+C(30,100,4,'#e4572e',1)+C(290,100,4,'#e4572e',1),n:'Basketball court'},
+  volleyball:(sf)=>({bg:sf==='beach'?'#2d9cdf':'#2d6cdf',g:R(40,34,240,132,sf==='beach'?'#e8cf94':'#d9822b',2)+L(160,34,160,166,3)+(sf==='beach'?'':L(100,34,100,166)+L(220,34,220,166)),n:sf==='beach'?'Beach volleyball court':'Volleyball court'}),
+  handball:{bg:'#2a7fa0',g:R(14,20,292,160,'#d6a55a',1.5)+L(160,20,160,180)+`<path d="M14 60 A50 50 0 0 1 14 140" fill="none" stroke="${W}" stroke-width="1.5"/><path d="M306 60 A50 50 0 0 0 306 140" fill="none" stroke="${W}" stroke-width="1.5"/>`+C(160,100,18),n:'Handball court'},
+  hockey:{bg:'#9cc7e6',g:R(14,20,292,160,'#eef6fc',2,34)+L(160,20,160,180,3).replace(W,'#d33')+L(106,20,106,180,3).replace(W,'#2a62c9')+L(214,20,214,180,3).replace(W,'#2a62c9')+C(160,100,20,'none',1.5).replace(W,'#d33')+C(60,60,14).replace(W,'#d33')+C(60,140,14).replace(W,'#d33')+C(260,60,14).replace(W,'#d33')+C(260,140,14).replace(W,'#d33')+R(8,88,8,24,'#d33',1)+R(304,88,8,24,'#d33',1),n:'Ice hockey rink'},
+  rugby:{bg:'#2a7d3a',g:R(14,12,292,176)+L(50,12,50,188)+L(270,12,270,188)+L(160,12,160,188)+L(100,12,100,188,1).replace(W,'#ffffff99')+L(220,12,220,188,1).replace(W,'#ffffff99')+L(8,80,8,120,3)+L(312,80,312,120,3),n:'Rugby pitch'}
+ };
+ const BALL={tennis:'#d7f33d',basketball:'#e4572e',volleyball:'#fff',handball:'#fff',hockey:'#111',rugby:'#8a4b24',football:'#fff'};
+ const SURFS={tennis:[['hard','Hard'],['hardg','Hard (green)'],['clay','Clay'],['grass','Grass'],['carpet','Carpet / mat']],football:[['grass','Grass'],['art','Artificial turf'],['indoor','Indoor / futsal']],volleyball:[['indoor','Indoor'],['beach','Beach sand']]};
+ UI.ar=UI.ar||{d3:false,prev:{},tok:0};
+ // opts: {id, home, away, events:[{side:'l'|'r', text}], pos:[x,y], extra:svgString, note}
+ window.shArena=function(sp,o){
+  const A0=AREAS[sp];if(!A0)return '';UI.ar.surf=UI.ar.surf||{};UI.ar.ind=UI.ar.ind||{};
+  const OPT=SURFS[sp],sf=UI.ar.surf[sp]||o.surf||(OPT&&OPT[0][0]),indoor=UI.ar.ind[sp]!=null?UI.ar.ind[sp]:!!o.indoor,a=typeof A0==='function'?A0(sf):A0;const pos=o.pos||[160,100],ev=(o.events||[]).slice(0,40);
+  const chooser=OPT?`<div style="display:flex;gap:6px;flex-wrap:wrap;margin:0 0 6px;align-items:center"><span class="mu sm">${sp==='tennis'?'Surface':'Ground'}</span>${OPT.map(([k,l])=>`<button class="btn sm ${sf===k?'':'ghost'}" data-a="arSurf" data-v="${sp}|${k}">${l}</button>`).join('')}<span style="flex:1"></span>${['Outdoor','Indoor'].map(l=>`<button class="btn sm ${(l==='Indoor')===indoor?'':'ghost'}" data-a="arIn" data-v="${sp}|${l==='Indoor'?1:0}">${l}</button>`).join('')}</div>`:'';
+  const light=indoor?`<defs><radialGradient id="arlt" cx="50%" cy="50%" r="70%"><stop offset="55%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity=".45"/></radialGradient></defs><rect x="2" y="2" width="316" height="196" rx="8" fill="url(#arlt)" pointer-events="none"/><text x="160" y="193" text-anchor="middle" font-size="8" fill="#fff" opacity=".8">INDOOR · roof and floodlights</text>`:`<defs><linearGradient id="arlt" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".12"/><stop offset="60%" stop-color="#fff" stop-opacity="0"/></linearGradient></defs><rect x="2" y="2" width="316" height="196" rx="8" fill="url(#arlt)" pointer-events="none"/><text x="160" y="193" text-anchor="middle" font-size="8" fill="#fff" opacity=".8">OUTDOOR · open air</text>`;
+  return `<div class="card" style="padding:8px 10px"><div class="arbar"><b style="font-size:13px">Virtual live</b><span style="display:flex;gap:6px"><button class="btn sm ghost" data-a="arReplay" ${ev.length?'':'disabled'}>▶ Replay</button><button class="btn sm ghost" data-a="ar3d">${UI.ar.d3?'2D':'3D'}</button></span></div>
+   ${chooser}<div class="arena ${UI.ar.d3?'on':''}"><div class="arin"><svg id="arsvg" viewBox="0 0 320 200" role="img" aria-label="${esc(a.n)}" data-ev="${esc(JSON.stringify(ev))}"><rect x="2" y="2" width="316" height="196" rx="8" fill="${a.bg}"/>${a.g}
+    <text x="22" y="15" font-size="10" fill="#fff" font-weight="700">${esc(o.home||'')}</text><text x="298" y="15" text-anchor="end" font-size="10" fill="#fff" font-weight="700">${esc(o.away||'')}</text>${light}${o.extra||''}
+    <g id="arball" class="ball" style="transform:translate(${pos[0]}px,${pos[1]}px)"><circle r="${sp==='hockey'?5:6.5}" fill="${BALL[sp]||'#fff'}" stroke="#111" stroke-width="1.5"/>${sp==='football'||sp==='volleyball'?'<circle r="2" fill="#111"/>':''}</g></svg></div></div>
+   <div class="arcap" id="arcap">${esc(o.cap||'')}</div><div class="mu sm" style="text-align:center;font-size:11px">${esc(o.note||'Drawn from the provider\'s real events and scores. The ball is not tracked live; replay shows what was recorded.')}</div></div>`};
+ A.ar3d=()=>{UI.ar.d3=!UI.ar.d3;render()};
+ A.arSurf=d=>{const [sp,k]=String(d.v).split('|');UI.ar.surf=UI.ar.surf||{};UI.ar.surf[sp]=k;render()};
+ A.arIn=d=>{const [sp,k]=String(d.v).split('|');UI.ar.ind=UI.ar.ind||{};UI.ar.ind[sp]=k==='1';render()};
+ A.arReplay=()=>{const sv=document.getElementById('arsvg');if(!sv)return;let ev=[];try{ev=JSON.parse(sv.getAttribute('data-ev')||'[]')}catch(e){}if(!ev.length)return;
+  const ball=document.getElementById('arball'),cap=document.getElementById('arcap'),tok=++UI.ar.tok;let i=0;
+  const step=()=>{if(tok!==UI.ar.tok||!document.getElementById('arball'))return;if(i>=ev.length){ball.style.transform='translate(160px,100px)';cap.textContent='Replay finished';return}
+   const e=ev[i++],x=e.side==='r'?288:e.side==='l'?32:160,y=100+((i*37)%50)-25;ball.style.transform=`translate(${x}px,${y}px)`;cap.textContent=e.text||'';setTimeout(()=>{if(tok===UI.ar.tok&&ball)ball.style.transform='translate(160px,100px)'},1500);setTimeout(step,2300)};
+  step()};
+}
+
+/* ---------------- 59 LOCAL TENNIS SCORER: court with the chosen surface, server and set replay above the scorer ---------------- */
+{
+ const tv0=tnView;
+ tnView=function(m){const o=tv0.apply(this,arguments);if(!window.shArena)return o;
+  let arena='';try{const st=tnState(m),c=st.cur,sets=st.sets.filter(x=>!x.mt);
+   const ev=st.sets.map((x,i)=>{const d=x.g[0]-x.g[1];return {side:d>0?'r':d<0?'l':'c',text:x.mt?`Match tiebreak: ${m.tn[x.g[0]>x.g[1]?0:1]} won ${x.g[0]}-${x.g[1]}`:`Set ${i+1}: ${m.tn[d>0?0:1]} won ${x.g[0]}-${x.g[1]}`}});
+   const sv=c?c.srv:null;
+   arena=window.shArena('tennis',{surf:(m.cfg&&m.cfg.surf)||'hard',indoor:!!(m.cfg&&m.cfg.ind),home:m.tn[0],away:m.tn[1],events:ev,pos:sv==null?[160,100]:[sv===0?30:290,100],cap:c?(m.tn[sv]+' serving'):(st.done?'Match complete':''),note:'Court shows the surface you chose and who is serving. Surface does not change scoring under the ITF Rules of Tennis; it is recorded with the match.'})}catch(e){arena=''}
+  return arena+o};
 }
 
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
