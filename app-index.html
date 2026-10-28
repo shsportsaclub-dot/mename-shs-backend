@@ -7322,7 +7322,7 @@ render=(o=>function(){try{ar17Norm(UI.wm)}catch(e){}return o.apply(this,argument
 /* ---------------- GRAPH FROM REAL OBSERVATIONS (no straight 0-to-total line) + plain Scorer tab ---------------- */
 {
  const st=document.createElement('style');st.textContent=`.rp nav button.bx.sc-tab{margin:0;padding:8px 2px 10px;border:0;border-radius:0;background:none;box-shadow:none}.rp nav button.bx.sc-tab[aria-selected="true"]::after{display:block}`;document.head.appendChild(st);
- const h1=ar9Header;ar9Header=function(){let h=h1.apply(this,arguments).replace(/class="bx" data-a="wmScore"/,'class="sc-tab" data-a="wmScore"').replace(/class="bx" data-a="wmTab" data-v="sh11"/,'class="sc-tab" data-a="wmTab" data-v="sh11"');if(!can())h=h.replace(/<button role="tab" class="sc-tab" data-a="wmScore"[^>]*>[^<]*<\/button>/,'');return h};
+ const h1=ar9Header;ar9Header=function(){let h=h1.apply(this,arguments).replace(/class="bx" data-a="wmScore"/,'class="sc-tab" data-a="wmScore"').replace(/class="bx" data-a="wmTab" data-v="sh11"/,'class="sc-tab" data-a="wmTab" data-v="sh11"');h=h.replace(/<button role="tab" class="sc-tab" data-a="wmScore"[^>]*>[^<]*<\/button>/,'');return h};
  const wm0=A.wmScore;A.wmScore=function(){if(UI.wm&&!can()&&!S.matches.some(x=>x.worldId===UI.wm.m.id)){toast('Scoring is for Scorer accounts. Watching live view.',2500);return A.wmTab({v:'live'})}return wm0.apply(this,arguments)};
  const ovOf=s=>parseFloat(s)||0;
  const re=/(\d+)\/(\d+)\s*\(([\d.]+)\s*ov\)/g;
@@ -7462,6 +7462,10 @@ window.shNoteGroups=function(notes){
   const made=mk.length?`<div class="card" style="margin-top:10px"><h3>Offers I made</h3>${mk.map(o=>{const x=S.market.find(z=>z.id===o.lid);return `<div class="item"><div class="b">Rs ${esc(o.amt)} for ${esc(x?x.title:'')}</div></div>`}).join('')}<div class="mu sm">The seller replies on WhatsApp.</div></div>`:'';
   return h.slice(0,a)+'<h3>Offers I received</h3>'+rows+'</div>'+made+h.slice(b)};
 }
+/* Scorer entry now lives on the Info tab (not in the tab bar), only for Scorer/Admin accounts */
+{const ci=cbpInfo;cbpInfo=function(W){const h=ci.apply(this,arguments);if(!can()||UI.view!=='wmatch'||!W||!W.m||!W.m.started)return h;
+  const ex=S.matches.find(x=>x.worldId===W.m.id);
+  return h+`<div class="cbp-cd" style="padding:12px 14px;margin:8px 4px"><div style="font:600 14px var(--ui);margin-bottom:4px">${ex?'Your scorer for this match':'Score this match yourself'}</div><div class="mu sm" style="margin-bottom8px">${ex?'Continue scoring ball by ball.':'Start from the current score and enter every ball. Gives real over-by-over data.'}</div><button class="btn sm" data-a="wmScore">${ex?'Open scorer':'Score this match'}</button></div>`.replace('margin-bottom8px','margin-bottom:8px')}}
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});

@@ -14,6 +14,6 @@ const { chromium } = require('playwright');
   ok(r.pl.some(n => n >= 4), 'graph has real points ' + r.pl); ok(/real score updates seen live, starting at 67 ov/.test(r.txt), 'honest note'); ok(!/only joins 0 to the final/.test(r.txt), 'no straight line note'); ok(await p.evaluate(() => document.querySelector('nav button[data-v="sh11"]').className) === 'sc-tab', 'Heroes 11 tab has no box, helmet icon only'); ok(!!(await p.evaluate(() => document.querySelector('nav button[data-v="sh11"] img'))), 'helmet icon kept');
   ok(r.sc === undefined, 'viewer has no Scorer tab ' + r.sc);
   await p.evaluate(() => { S.user.role = 'scorer'; render(); }); await p.waitForTimeout(300);
-  ok(await p.evaluate(() => document.querySelector('nav button[data-a="wmScore"]')?.className) === 'sc-tab', 'scorer account sees plain Scorer tab');
+  ok(!(await p.evaluate(() => document.querySelector('nav button[data-a="wmScore"]'))), 'no Scorer tab even for scorer account');
   ok(!errs.length, errs.join(';')); await b.close(); if (!process.exitCode) console.log('PASS: observed graph');
 })();

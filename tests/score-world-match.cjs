@@ -8,6 +8,8 @@ const { chromium } = require('playwright');
     UI.wm = { m: { id: 'afgzim1', name: 'Afghanistan v Zimbabwe', started: true, ended: false, type: 't20', teams: [{ name: 'Afghanistan', short: 'AFG' }, { name: 'Zimbabwe', short: 'ZIM' }], score: [{ inning: 'Zimbabwe Inning 1', r: 159, w: 8, o: 20 }, { inning: 'Afghanistan Inning 1', r: 145, w: 6, o: 17.3 }] }, mi: {}, sc: null, bb: null };
     UI.view = 'wmatch'; render(); });
   await p.waitForTimeout(1200);
+  await p.evaluate(() => { A.wmTab({ v: 'info' }) }); await p.waitForTimeout(600);
+  ok(await p.locator('nav button[data-a="wmScore"]').count() === 0, 'no Scorer tab in the bar');
   await p.click('[data-a="wmScore"]'); await p.waitForTimeout(300);
   ok(await p.locator('form[data-f="wsMake"]').count() === 1, 'form opens');
   await p.evaluate(() => { const f = document.querySelector('form[data-f="wsMake"]'); const set = (n, v) => { f.querySelector('[name="' + n + '"]').value = v };
@@ -26,7 +28,7 @@ const { chromium } = require('playwright');
   const s2 = await p.evaluate(() => { const m = S.matches.find(x => x.worldId === 'afgzim1'), c = calc(m, m.cur); return { r: c.runs, lg: c.lg } });
   ok(s2.r === 149 && s2.lg === 106, 'ball scored on top of opening ' + JSON.stringify(s2));
   // reopen reuses
-  await p.evaluate(() => { UI.view = 'wmatch'; render(); }); await p.waitForTimeout(800);
+  await p.evaluate(() => { UI.view = 'wmatch'; UI.wm.tab = 'info'; render(); }); await p.waitForTimeout(800);
   await p.click('[data-a="wmScore"]'); await p.waitForTimeout(300);
   ok(await p.evaluate(() => UI.view === 'score' && S.matches.filter(x => x.worldId === 'afgzim1').length === 1), 'reopen reuses local match');
   ok(!errs.length, errs.join(';')); await b.close(); if (!process.exitCode) console.log('PASS: score world match');
