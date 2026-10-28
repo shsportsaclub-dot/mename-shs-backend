@@ -7917,6 +7917,44 @@ S.stream.scene=S.stream.scene||'bug';S.stream.card=S.stream.card||{t:'Starting s
  };
 }
 
+/* ---------------- 38 MARKETPLACE OFFERS THROUGH THE SERVER: buyer's offer reaches the seller on any phone; seller's answer comes back ---------------- */
+{
+ const H=()=>({'Authorization':'Bearer '+shTok(),'Content-Type':'application/json'});
+ const api=(m,p,b)=>fetch(apiBase()+p,{method:m,headers:H(),body:b?JSON.stringify(b):undefined}).then(r=>r.json().catch(()=>({})).then(j=>[r.status,j]));
+ const fmk=F.mkOfferSend;
+ F.mkOfferSend=function(fd){
+  const before=S.offers.length,lid=fd.get('lid'),x=S.market.find(z=>z.id===lid);
+  fmk.apply(this,arguments);
+  const o=S.offers.length>before?S.offers[S.offers.length-1]:null;
+  if(!o)return;o.mine=1;save();
+  if(!shOn()||!x||x.uid===me2()||!/^[\w-]{3,60}$/.test(String(lid)))return;
+  api('POST','/api/offers/'+lid,{amt:o.amt,msg:o.msg,phone:o.phone,name:o.by}).then(([st,j])=>{if(j&&j.ok){o.sid=j.id;save()}else if(st===404)toast('Listing is not published yet, so the seller will see this offer only on this phone. Use WhatsApp too.',4500)}).catch(()=>{});
+ };
+ let busy=0;
+ async function offSync(){
+  if(busy||!shOn()||!S.user||!S.offers)return;busy=1;
+  try{
+   /* seller answers go up */
+   for(const o of S.offers){if(!o.sid||!o.status||o.status==='pending'||o.srvSt===o.status+'|'+(o.counter||''))continue;
+    const x=S.market.find(z=>z.id===o.lid);if(!x||!(x.uid===me2()||isAdm()))continue;
+    const [st]=await api('PUT','/api/offers/'+o.lid+'/'+o.sid,{status:o.status,counter:o.counter});if(st===200||st===403||st===404){o.srvSt=o.status+'|'+(o.counter||'');save()}}
+   const lids=new Set();S.market.filter(x=>x.uid===me2()&&x.kind!=='rfq'&&x.status!=='removed').forEach(x=>lids.add(x.id));S.offers.filter(o=>o.mine&&o.sid).forEach(o=>lids.add(o.lid));
+   let ch=false;
+   for(const lid of [...lids].filter(l=>/^[\w-]{3,60}$/.test(String(l))).slice(0,20)){
+    const [st,j]=await api('GET','/api/offers/'+lid);if(st!==200||!j.ok)continue;
+    if(j.owner)(j.items||[]).forEach(x=>{let q=S.offers.find(z=>z.sid===x.id);const s2=x.status==='pending'?undefined:x.status;
+     if(!q){S.offers.push({id:uid(),sid:x.id,lid,by:x.by||'',phone:String(x.phone||'').replace(/\D/g,''),amt:x.amt,msg:x.msg||'',t:x.at,status:s2,counter:x.counter,srvSt:s2?s2+'|'+(x.counter||''):undefined});ch=true}
+     else if(!q.mine&&q.status!==s2&&s2){q.status=s2;q.counter=x.counter;ch=true}});
+    else(j.mine||[]).forEach(x=>{const q=S.offers.find(z=>z.sid===x.id&&z.mine);if(q&&x.status!=='pending'&&(q.status!==x.status||q.counter!==x.counter)){q.status=x.status;q.counter=x.counter;q.at=x.answered;ch=true}});
+   }
+   if(ch){save();if(['market','orders'].includes(UI.view))render()}
+  }catch(e){}finally{busy=0}
+ }
+ window.offSync=offSync;
+ setInterval(()=>{if(document.visibilityState==='visible')offSync()},15000);
+ setTimeout(offSync,5000);
+}
+
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});

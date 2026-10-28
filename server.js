@@ -1258,6 +1258,36 @@ http.createServer(async (req, res) => {
     }
     return out(405, { ok: false, error: 'Method not allowed' });
   }
+  if (path.startsWith('/api/offers/')) {   // marketplace offers: a signed-in buyer offers on a published listing; only the seller (or an admin) reads all and answers
+    const [, , , lid, oid] = path.split('/');
+    const tok = String(req.headers.authorization || '').replace(/^Bearer\s+/i, ''), phone = readSession(tok), u = phone && db.users[phone];
+    if (!u) return out(401, { ok: false, error: 'Please sign in first' });
+    if (!lid || !/^[\w-]{3,60}$/.test(lid)) return out(400, { ok: false, error: 'Bad listing' });
+    const li = db.shared.market && db.shared.market[lid];
+    if (!li) return out(404, { ok: false, error: 'This listing is not published yet' });
+    const bag = (db.offers = db.offers || {}), list = (bag[lid] = bag[lid] || []), isOwn = li.owner === phone || u.role === 'admin';
+    const view = (r, full) => ({ id: r.id, amt: r.amt, msg: r.msg, at: r.at, status: r.status, counter: r.counter, answered: r.answered, ...(full ? { by: r.name, phone: r.phone } : {}) });
+    if (req.method === 'GET') return out(200, isOwn ? { ok: true, owner: true, items: list.map(r => view(r, true)) } : { ok: true, owner: false, mine: list.filter(r => r.by === phone).map(r => view(r, false)) });
+    let raw = ''; for await (const c of req) { raw += c; if (raw.length > 4000) return out(413, { ok: false, error: 'Too large' }); }
+    let b; try { b = raw ? JSON.parse(raw) : {}; } catch { return out(400, { ok: false, error: 'Bad body' }); }
+    if (limited('offer:' + phone, 40, 36e5)) return out(429, { ok: false, error: 'Too many requests, slow down' });
+    const str = (v, n) => String(v == null ? '' : v).trim().slice(0, n), num = v => String(v == null ? '' : v).replace(/[^\d.]/g, '').slice(0, 10);
+    if (req.method === 'POST' && !oid) {
+      if (li.owner === phone) return out(400, { ok: false, error: 'You cannot offer on your own listing' });
+      if (list.filter(r => r.by === phone && r.status === 'pending').length >= 3) return out(409, { ok: false, error: 'You already have pending offers on this item' });
+      const amt = num(b.amt); if (!amt || !(+amt > 0)) return out(400, { ok: false, error: 'Enter an amount' });
+      const r = { id: crypto.randomBytes(6).toString('hex'), by: phone, name: str(b.name || u.nick || u.name, 60), phone: str(b.phone, 20), amt, msg: str(b.msg, 200), at: Date.now(), status: 'pending' };
+      list.push(r); if (list.length > 200) list.shift(); saveDb(); return out(200, { ok: true, id: r.id });
+    }
+    if (req.method === 'PUT' && oid) {
+      if (!isOwn) return out(403, { ok: false, error: 'Only the seller can answer offers' });
+      const r = list.find(x => x.id === oid); if (!r) return out(404, { ok: false, error: 'Offer not found' });
+      if (!['accepted', 'declined', 'countered'].includes(b.status)) return out(400, { ok: false, error: 'Bad status' });
+      if (b.status === 'countered') { const c = num(b.counter); if (!c) return out(400, { ok: false, error: 'Enter your price' }); r.counter = c; }
+      r.status = b.status; r.answered = Date.now(); saveDb(); return out(200, { ok: true });
+    }
+    return out(405, { ok: false, error: 'Method not allowed' });
+  }
   if (path.startsWith('/api/aucreg/')) {   // auction player registrations: players submit, organiser reviews (server decides status)
     const [, , , aid, rid] = path.split('/');
     const tok = String(req.headers.authorization || '').replace(/^Bearer\s+/i, ''), phone = readSession(tok), u = phone && db.users[phone];
