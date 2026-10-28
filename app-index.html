@@ -8118,7 +8118,13 @@ S.stream.scene=S.stream.scene||'bug';S.stream.card=S.stream.card||{t:'Starting s
    things.push({z:o.sz,f:()=>person({x:-.45,z:o.sz,yaw:o.mv>0?0:(o.sz>0&&o.sz<20?Math.PI:1.25),col:cB,pants:pB,helmet:'#16204a',name:who.s,tag:short(who.s),facingCam:false,hair:'#16204a',run:o.sz>0&&o.sz<20,ph:o.runPh,lean:.12+sw*.2*(sw<.7?1:0),crouch:o.sz===0||o.sz===20?.18:0,bat:o.sz>0&&o.sz<20?null:bat,ra:.2,la:.3,rout:.08})});
    if(o.ball&&o.show)things.push({z:o.ball.z+.1,f:()=>{const b=o.ball,p=P(b.x,b.y,b.z),sh=P(b.x,0,b.z);if(!p)return;if(sh){g.fillStyle='rgba(0,0,0,.35)';g.beginPath();g.ellipse(sh.x,sh.y,Math.max(2,.2*sh.s),Math.max(1,.07*sh.s),0,0,TAU);g.fill()}g.fillStyle='#d11f2c';g.beginPath();g.arc(p.x,p.y,Math.max(2.4,.14*p.s),0,TAU);g.fill();g.fillStyle='#fff8';g.fillRect(p.x-1,p.y-1,1.5,1.5)}});
    things.sort((a,b)=>b.z-a.z);stumps(20.12,0);
+   /* ball trail (path of the delivery / shot) */
+   if(st.trk!==ev){st.trk=ev;st.trail=[]}
+   if(o.ball&&o.show&&ev){const L=st.trail,l=L[L.length-1];if(!l||Math.abs(l.x-o.ball.x)+Math.abs(l.y-o.ball.y)+Math.abs(l.z-o.ball.z)>.25)L.push({x:o.ball.x,y:o.ball.y,z:o.ball.z});if(L.length>70)L.shift()}
+   if(st.trail&&st.trail.length>1){const pts=st.trail.map(q=>P(q.x,q.y,q.z));g.save();g.lineCap='round';for(let i=1;i<pts.length;i++){const p0=pts[i-1],p1=pts[i];if(!p0||!p1)continue;g.strokeStyle='rgba(255,236,150,'+(.15+.6*i/pts.length)+')';g.lineWidth=Math.max(1,3*p1.s/30);g.beginPath();g.moveTo(p0.x,p0.y);g.lineTo(p1.x,p1.y);g.stroke()}g.restore()}
    things.forEach(t=>t.f());stumps(0,o.hit);
+   /* broadcast score bar */
+   {const sc2=((UI.wm&&UI.wm.m&&UI.wm.m.score)||[]).slice(-1)[0];if(sc2){const tx=(batT.short||batT.name||'').toString().slice(0,3).toUpperCase()+'  '+sc2.r+'-'+sc2.w+'  ('+sc2.o+' ov)',w2=Math.min(bw-16,Math.max(170,tx.length*13+24)),x2=(bw-w2)/2,y2=bh-34;g.fillStyle='#0b1b44ee';g.fillRect(x2,y2,w2,26);g.fillStyle='#1a6dff';g.fillRect(x2,y2,5,26);g.fillStyle='#fff';g.font='800 14px system-ui,sans-serif';g.textAlign='center';g.fillText(tx,bw/2,y2+18)}}
    if(o.ban){g.save();g.globalAlpha=o.ban.a;g.textAlign='center';g.font=`900 ${Math.round(bw*(o.ban.big?.17:.1))}px system-ui,sans-serif`;g.lineWidth=6;g.strokeStyle='#000a';g.fillStyle=/OUT/.test(o.ban.t)?'#ff3b4f':/SIX/.test(o.ban.t)?'#1de9a0':/FOUR/.test(o.ban.t)?'#ffc61a':'#fff';const yy=bh*.5+(1-o.ban.a)*20;g.strokeText(o.ban.t,bw/2,yy);g.fillText(o.ban.t,bw/2,yy);g.restore()}
    if(!ev&&!st.q.length){g.fillStyle='#000a';g.fillRect(bw/2-110,bh-44,220,28);g.fillStyle='#fff';g.font='700 13px system-ui';g.textAlign='center';g.fillText('Waiting for the next ball…',bw/2,bh-25)}
   }
