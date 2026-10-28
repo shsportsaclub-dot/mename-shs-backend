@@ -1308,6 +1308,26 @@ http.createServer(async (req, res) => {
       return send(buf, ct);
     } catch { return out(404, { ok: false, error: 'No photo' }); }
   }
+  if (path.startsWith('/api/wbb/')) {   // ball by ball for a world match, entered live by SH scorers (admin or scorer accounts); anyone can read
+    const mid = decodeURIComponent(path.split('/')[3] || '');
+    if (!/^[\w-]{3,60}$/.test(mid)) return out(400, { ok: false, error: 'Bad match' });
+    const bag = (db.wbb = db.wbb || {}), list = (bag[mid] = bag[mid] || []);
+    if (req.method === 'GET') { if (!list.length) delete bag[mid]; return out(200, { ok: true, balls: list, n: list.length }); }
+    const tok = String(req.headers.authorization || '').replace(/^Bearer\s+/i, ''), phone = readSession(tok), u = phone && db.users[phone];
+    if (!u) return out(401, { ok: false, error: 'Please sign in first' });
+    if (!['admin', 'scorer'].includes(u.role)) return out(403, { ok: false, error: 'Only an Admin or Scorer account can score a world match' });
+    if (limited('wbb:' + phone, 600, 36e5)) return out(429, { ok: false, error: 'Too many balls, slow down' });
+    let raw = ''; for await (const c of req) { raw += c; if (raw.length > 4000) return out(413, { ok: false, error: 'Too large' }); }
+    let b; try { b = raw ? JSON.parse(raw) : {}; } catch { return out(400, { ok: false, error: 'Bad body' }); }
+    if (req.method === 'DELETE' || b.undo) { const last = list[list.length - 1]; if (!last) return out(404, { ok: false, error: 'No ball to undo' }); list.pop(); saveDb(); return out(200, { ok: true, balls: list, n: list.length }); }
+    const x = (b.ball && typeof b.ball === 'object') ? b.ball : b, str = (v, n) => String(v == null ? '' : v).replace(/[<>]/g, '').trim().slice(0, n);
+    const runs = Math.round(+x.runs), bat = Math.round(+(x.bat ?? x.runs)), over = Math.round(+x.over), ball = Math.round(+x.ball), kind = ['legal', 'wd', 'nb'].includes(x.kind) ? x.kind : 'legal';
+    if (!isFinite(runs) || runs < 0 || runs > 12 || !isFinite(bat) || bat < 0 || bat > 7 || !isFinite(over) || over < 0 || over > 999 || !isFinite(ball) || ball < 1 || ball > 6) return out(400, { ok: false, error: 'Bad ball' });
+    if (list.length >= 4000) return out(409, { ok: false, error: 'Too many balls for one match' });
+    const rec = { n: list.length + 1, inning: str(x.inning, 80), over, ball, runs, bat, kind, wicket: !!x.wicket, out: str(x.out, 60), batsman: str(x.batsman, 60), bowler: str(x.bowler, 60), at: Date.now(), by: u.name || phone.slice(-4) };
+    list.push(rec); saveDb();
+    return out(200, { ok: true, balls: list, n: list.length });
+  }
   if (path.startsWith('/api/offers/')) {   // marketplace offers: a signed-in buyer offers on a published listing; only the seller (or an admin) reads all and answers
     const [, , , lid, oid] = path.split('/');
     const tok = String(req.headers.authorization || '').replace(/^Bearer\s+/i, ''), phone = readSession(tok), u = phone && db.users[phone];

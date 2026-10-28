@@ -8532,6 +8532,63 @@ S.stream.scene=S.stream.scene||'bug';S.stream.card=S.stream.card||{t:'Starting s
  setInterval(()=>{if(document.hidden)return;if(UI.view==='fbmatch'&&UI.fb.id)fbLoadMatch(UI.fb.id,false);else if(UI.view==='home'&&UI.sport==='football')fbLoadList(false)},5000);
 }
 
+/* ---------------- 54 SCORER-ENTERED BALL BY BALL for world matches: when the provider sends no deliveries, SH scorers (Admin/Scorer accounts) enter each ball and everyone sees them, labelled as scored by SH ---------------- */
+{
+ const sbbOf=W=>Array.isArray(W&&W.sbb)?W.sbb:[];
+ window.shSbbNext=W=>{
+  const L=sbbOf(W),last=L[L.length-1];
+  if(last){const adv=last.kind==='legal';let o=last.over,b=last.ball;if(adv){b++;if(b>6){o++;b=1}}return {over:o,ball:b}}
+  const sc=((W&&W.m&&W.m.score)||[]).slice(-1)[0]||{},ov=String(sc.o==null?'0':sc.o).split('.'),o=(+ov[0]||0),b=(+ov[1]||0);
+  const done=o*6+b;return {over:Math.floor(done/6)+1,ball:done%6+1};
+ };
+ const f0=shAvailableBalls;
+ shAvailableBalls=function(W){
+  const r=f0(W);if(r.length)return r;
+  const L=sbbOf(W);if(!L.length)return r;
+  return L.map(x=>({inning:x.inning,over:x.over,ball:x.ball,runs:x.runs,bruns:x.bat,batRuns:x.bat,wicket:!!x.wicket,wide:x.kind==='wd',noball:x.kind==='nb',batsman:x.batsman,bowler:x.bowler,out:x.out,ts:x.at,sh:1}));
+ };
+ const canScore=()=>!!(S.user&&['admin','scorer'].includes(S.user.role)&&S.tok);
+ const load=async W=>{
+  if(!W||!W.m||!apiBase())return;
+  try{const r=await fetch(apiBase()+'/api/wbb/'+encodeURIComponent(W.m.id)),j=await r.json();
+   if(j&&j.ok&&Array.isArray(j.balls)){const ch=(W.sbb||[]).length!==j.balls.length;W.sbb=j.balls;if(ch&&UI.wm===W&&UI.view==='wmatch')render()}}catch(e){}
+ };
+ window.shSbbLoad=load;
+ const rf=shRefreshWorldDetails;
+ shRefreshWorldDetails=async function(W){const r=await rf.apply(this,arguments);load(W);return r};
+ const cur=W=>{
+  const L=(W.sc&&W.sc.scorecard)||[],inn=L[L.length-1]||{},bat=(inn.batting||[]).filter(x=>x.batsman&&/^(batting|not out)$/i.test(String(x['dismissal-text']??x.dismissal??'').trim())),bw=(inn.bowling||[]).filter(x=>x.bowler&&x.bowler.name);
+  return {inning:String(L.length||1),batsman:bat[0]?bat[0].batsman.name:'',bowler:bw.length?bw[bw.length-1].bowler.name:''};
+ };
+ window.shSbbPad=W=>{
+  if(!canScore()||!W||!W.m||!W.m.started||W.m.ended)return '';
+  const n=window.shSbbNext(W),c=cur(W),btn=(v,l,cl)=>`<button type="button" class="btn sm ${cl||''}" data-a="sbbAdd" data-v="${v}" style="min-width:44px">${l}</button>`;
+  return `<div class="card sbbpad" style="margin:8px 4px"><b>Score this match ball by ball</b><div class="mu sm">Next: over ${n.over-1}.${n.ball} · ${esc(c.batsman||'batter')} v ${esc(c.bowler||'bowler')} · visible to everyone as "scored by SH scorer"</div><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">${[0,1,2,3,4,6].map(v=>btn(v,v)).join('')}${btn('W','W','danger')}${btn('wd','Wd')}${btn('nb','Nb')}${btn('undo','Undo','ghost')}</div></div>`;
+ };
+ A.sbbAdd=async function(dd){
+  const d=dd&&dd.v,W=UI.wm;if(!W||!canScore())return;
+  if(UI.sbbBusy)return;UI.sbbBusy=1;
+  try{
+   if(d==='undo'){const r=await fetch(apiBase()+'/api/wbb/'+encodeURIComponent(W.m.id),{method:'POST',headers:{'Authorization':'Bearer '+S.tok,'Content-Type':'application/json'},body:JSON.stringify({undo:true})}),j=await r.json();if(!j.ok)toast(j.error||'Could not undo');else W.sbb=j.balls}
+   else{
+    const n=window.shSbbNext(W),c=cur(W);let runs=0,bat=0,kind='legal',wk=false;
+    if(d==='W')wk=true;else if(d==='wd'){kind='wd';runs=1}else if(d==='nb'){kind='nb';runs=1}else{runs=bat=+d}
+    const r=await fetch(apiBase()+'/api/wbb/'+encodeURIComponent(W.m.id),{method:'POST',headers:{'Authorization':'Bearer '+S.tok,'Content-Type':'application/json'},body:JSON.stringify({inning:c.inning,over:n.over,ball:n.ball,runs,bat,kind,wicket:wk,out:wk?c.batsman:'',batsman:c.batsman,bowler:c.bowler})}),j=await r.json();
+    if(!j.ok)toast(j.error||'Could not save the ball');else W.sbb=j.balls;
+   }
+  }catch(e){toast('No connection')}
+  UI.sbbBusy=0;render();
+ };
+ const w0=XV.wmatch;
+ XV.wmatch=function(){
+  const o=w0.apply(this,arguments),W=UI.wm;
+  if(typeof o!=='string'||!W||(W.tab||'live')!=='live')return o;
+  const pad=window.shSbbPad(W);if(!pad)return o;
+  const i=o.indexOf('<div class="sv">');return i<0?o+pad:o.slice(0,i)+pad+o.slice(i);
+ };
+ setInterval(()=>{try{if(!document.hidden&&UI.view==='wmatch'&&UI.wm)load(UI.wm)}catch(e){}},8000);
+}
+
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});
