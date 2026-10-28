@@ -8551,7 +8551,7 @@ S.stream.scene=S.stream.scene||'bug';S.stream.card=S.stream.card||{t:'Starting s
  const load=async W=>{
   if(!W||!W.m||!apiBase())return;
   try{const r=await fetch(apiBase()+'/api/wbb/'+encodeURIComponent(W.m.id)),j=await r.json();
-   if(j&&j.ok&&Array.isArray(j.balls)){const ch=(W.sbb||[]).length!==j.balls.length;W.sbb=j.balls;if(ch&&UI.wm===W&&UI.view==='wmatch')render()}}catch(e){}
+   if(j&&j.ok&&Array.isArray(j.balls)){const ch=(W.sbb||[]).length!==j.balls.length;W.sbb=j.balls;if(W.practice)pscore(W);if(ch&&UI.wm===W&&UI.view==='wmatch')render()}}catch(e){}
  };
  window.shSbbLoad=load;
  const rf=shRefreshWorldDetails;
@@ -8585,6 +8585,20 @@ S.stream.scene=S.stream.scene||'bug';S.stream.card=S.stream.card||{t:'Starting s
   if(typeof o!=='string'||!W||(W.tab||'live')!=='live')return o;
   const pad=window.shSbbPad(W);if(!pad)return o;
   const i=o.indexOf('<div class="sv">');return i<0?o+pad:o.slice(0,i)+pad+o.slice(i);
+ };
+ /* Practice match: a clearly labelled rehearsal fixture (no real teams or players) so scorers can learn the pad and the whole flow can be tested any time, even with no live match */
+ const pscore=W=>{if(!W||!W.practice)return;const L=sbbOf(W);let r=0,w=0,lg=0;L.forEach(x=>{r+=x.runs;if(x.wicket)w++;if(x.kind==='legal')lg++});W.m.score=[{inning:'Practice XI A Inning 1',r,w,o:Math.floor(lg/6)+(lg%6)/10}]};
+ const lo=load;window.shSbbLoad=async W=>{await lo(W);pscore(W)};
+ const ad=A.sbbAdd;A.sbbAdd=async function(){await ad.apply(this,arguments);pscore(UI.wm);render()};
+ A.sbbPractice=function(){
+  const W={practice:1,m:{id:'sh-practice-1',name:'Practice XI A v Practice XI B',started:true,ended:false,type:'t20',teams:[{name:'Practice XI A',short:'PA'},{name:'Practice XI B',short:'PB'}],score:[],status:'PRACTICE MATCH · rehearsal only, not a real fixture'},mi:{},sc:{scorecard:[]},bb:{},tab:'live',sbb:[]};
+  UI.wm=W;UI.view='wmatch';pscore(W);render();lo(W).then(()=>{pscore(W);if(UI.wm===W)render()});
+ };
+ const mx=XV.matches;
+ XV.matches=function(){
+  const o=mx.apply(this,arguments);if(typeof o!=='string'||!canScore())return o;
+  const btn='<div style="margin:0 0 8px"><button type="button" class="btn sm ghost" data-a="sbbPractice">Practice match (rehearse the scorer pad)</button></div>';
+  const i=o.indexOf('<div class="tabs"');if(i<0)return o;const e=o.indexOf('</div>',i)+6;return o.slice(0,e)+btn+o.slice(e);
  };
  setInterval(()=>{try{if(!document.hidden&&UI.view==='wmatch'&&UI.wm)load(UI.wm)}catch(e){}},8000);
 }

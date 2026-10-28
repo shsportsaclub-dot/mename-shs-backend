@@ -27,3 +27,17 @@ ok(r.n===3,'3 balls available '+r.n);ok(r.next.over===14&&r.next.ball===6,'next 
 await p.click('.sbbpad [data-v="undo"]');await p.waitForTimeout(200);
 ok(await p.evaluate(()=>shAvailableBalls(UI.wm).length)===2,'undo removes one');
 ok(!errs.length,errs.join(';'));await b.close();if(!process.exitCode)console.log('PASS: scorer pad');})();
+// practice match
+(async()=>{const b=await chromium.launch(),p=await b.newPage({viewport:{width:412,height:880}}),errs=[];p.on('pageerror',e=>errs.push(e.message));
+const ok=(c,m)=>{if(!c){console.log('FAIL',m);process.exitCode=1}};
+await p.goto('file://'+require('path').resolve(__dirname,'../app-index.html'));await p.waitForTimeout(400);
+await p.evaluate(()=>{window.pullLive=async()=>{};const store=[];window.apiBase=()=>'http://x';
+ window.fetch=(u,o)=>{if(!/\/api\/wbb\//.test(u))return new Promise(()=>{});if(o&&o.method==='POST'){const b=JSON.parse(o.body);if(b.undo)store.pop();else store.push({n:store.length+1,...b,at:Date.now()})}return Promise.resolve({json:async()=>({ok:true,balls:store.slice()})})};
+ UI.stage='app';S.tok='t';S.user={id:'u1',name:'T',phone:'9999999999',role:'scorer'};S.prefs=Object.assign({},S.prefs,{asked:1,welcomed:1});UI.view='matches';render()});
+await p.waitForTimeout(200);
+ok(await p.evaluate(()=>!!document.querySelector('[data-a=sbbPractice]')),'practice button for scorer');
+await p.click('[data-a=sbbPractice]');await p.waitForTimeout(300);
+for(const v of ['1','4','W','1','1','1','1'])await p.click('.sbbpad [data-v="'+v+'"]'),await p.waitForTimeout(120);
+const r=await p.evaluate(()=>({sc:UI.wm.m.score[0],n:shAvailableBalls(UI.wm).length,txt:document.body.innerText}));
+ok(r.sc.r===9&&r.sc.w===1&&r.sc.o===1.1,'practice score '+JSON.stringify(r.sc));ok(r.n===7,'7 balls');ok(/PRACTICE MATCH/.test(r.txt),'labelled practice');
+ok(!errs.length,errs.join(';'));await b.close();if(!process.exitCode)console.log('PASS: practice match');})();
