@@ -7275,6 +7275,47 @@ render=(o=>function(){try{ar17Norm(UI.wm)}catch(e){}return o.apply(this,argument
  // the Scorer tab on a provider match now opens (or creates) the scorer for that match
  const h0=ar9Header;ar9Header=function(){return h0.apply(this,arguments).replace(/data-a="go" data-v="score"/,'data-a="wmScore"')};
 }
+/* ---------------- SMOOTH REFRESH: patch only the parts of the screen that changed (no full redraw, no flicker/jump) */
+{
+ const R=document.getElementById('app');
+ if(R&&!R.__morph){
+  const d=Object.getOwnPropertyDescriptor(Element.prototype,'innerHTML');
+  const FORM={INPUT:1,TEXTAREA:1,SELECT:1};
+  const attrs=(a,b)=>{
+   for(const x of [...a.attributes])if(!b.hasAttribute(x.name))a.removeAttribute(x.name);
+   for(const x of [...b.attributes])if(a.getAttribute(x.name)!==x.value)a.setAttribute(x.name,x.value)};
+  const same=(a,b)=>a.nodeType===b.nodeType&&(a.nodeType!==1||(a.tagName===b.tagName&&(a.tagName!=='INPUT'||a.type===b.type)));
+  const sync=(a,b)=>{
+   const bk=[...b.childNodes];let i=0;
+   for(;i<bk.length;i++){
+    const n=bk[i],o=a.childNodes[i];
+    if(!o){a.appendChild(document.importNode(n,true));continue}
+    if(!same(o,n)){a.replaceChild(document.importNode(n,true),o);continue}
+    if(n.nodeType!==1){if(o.nodeValue!==n.nodeValue)o.nodeValue=n.nodeValue;continue}
+    if(o.isEqualNode(n))continue;
+    const live=o===document.activeElement;
+    if(o.tagName==='IFRAME'||o.tagName==='VIDEO'||o.tagName==='AUDIO'){attrs(o,n);continue}
+    attrs(o,n);
+    if(o.tagName==='TEXTAREA'){if(!live&&o.value!==n.textContent)o.value=n.textContent;continue}
+    if(o.tagName==='INPUT'){if(!live){if(/^(checkbox|radio)$/.test(o.type))o.checked=n.hasAttribute('checked');else if(o.type!=='file'&&o.value!==(n.getAttribute('value')||''))o.value=n.getAttribute('value')||''}continue}
+    sync(o,n);
+    if(o.tagName==='SELECT'&&!live){const s=[...n.options].findIndex(x=>x.hasAttribute('selected'));if(s>=0)o.selectedIndex=s}
+   }
+   while(a.childNodes.length>bk.length)a.removeChild(a.lastChild)};
+  let last=null;
+  Object.defineProperty(R,'__morph',{value:1});
+  Object.defineProperty(R,'innerHTML',{configurable:true,get(){return d.get.call(this)},set(v){
+   v=String(v);
+   // different screen/overlay => plain replace (keeps old behaviour for page switches)
+   const k=UI.view+'|'+UI.stage+'|'+(S.user?1:0);
+   if(last===null||last.k!==k){last={k,h:v};d.set.call(this,v);return}
+   last.h=v;
+   const t=document.createElement('template');t.innerHTML=v;
+   const sx=window.scrollX,sy=window.scrollY;
+   sync(this,t.content);
+   if(window.scrollY!==sy||window.scrollX!==sx)window.scrollTo(sx,sy)}});
+ }
+}
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});
