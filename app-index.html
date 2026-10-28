@@ -7405,6 +7405,27 @@ window.shNoteGroups=function(notes){
  Object.assign(C,{ptSpeed(v){UI.ptSpeed=v},faWho(v){UI.fa=UI.fa||{k:'',id:''};UI.fa.id=v;if(!UI.fa.k){UI.fa.k='Catch'}render()}});
  window.shPitchLen=lenOf;window.shPitchLine=lineOf;
 }
+/* ---------------- INTERRUPTIONS: stop and resume play with a reason (SH-063); DLS overs-lost stays in the Rain form */
+{
+ const REASONS=['Rain','Bad light','Injury','Other delay'],hm=t=>new Date(t).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+ const b0=ball;
+ ball=function(m,s){if(m&&m.paused){toast('Play is stopped ('+m.paused.reason+'). Resume play first.',3000);return}return b0.apply(this,arguments)};
+ const base=scoreConsole;
+ scoreConsole=function(m){let h=base.apply(this,arguments);if(!h.includes('data-a="rainOpen"'))return h;
+  const id=esc(m.id),p=m.paused;
+  const btn=p?`<button class="btn" data-a="intResume" data-id="${id}">▶ Resume play</button>`:`<button class="btn ghost" data-a="intOpen" data-id="${id}">⏸ Stop play</button>`;
+  h=h.replace(/(<button class="btn ghost" data-a="rainOpen"[^>]*>[^<]*<\/button>)/,'$1'+btn);
+  if(p)h=h.replace('<div class="card">',`<div class="card" style="border-color:var(--red2)"><b>Play stopped: ${esc(p.reason)}</b><div class="mu sm">Since ${esc(hm(p.at))}${p.note?' · '+esc(p.note):''}. Scoring is paused until you resume.</div></div><div class="card">`);
+  return h};
+ Object.assign(A,{intOpen(d){const m=S.matches.find(x=>x.id===d.id);if(!m||m.status!=='live'||!can())return;
+   UI.modal={t:'html',html:`<h3>Stop play</h3><form data-f="intStop" data-id="${esc(m.id)}"><div class="sc2-wt" style="grid-template-columns:repeat(2,1fr)">${REASONS.map((r,i)=>`<label class="ck"><input type="radio" name="reason" value="${esc(r)}" ${i?'':'checked'}> ${esc(r)}</label>`).join('')}</div><label>Note (optional)<input name="note" placeholder="e.g. covers on"></label><button class="btn wide">Stop play now</button></form>`};renderModal()},
+  intResume(d){const m=S.matches.find(x=>x.id===d.id);if(!m||!m.paused||!can())return;const p=m.paused,now=Date.now();
+   (m.stops=m.stops||[]).push({reason:p.reason,note:p.note||'',from:p.at,to:now,inn:m.cur,lg:(m.innings[m.cur]||{}).lg||0,by:S.user?S.user.nick||S.user.name:''});
+   m.paused=null;commit();toast('Play resumed after '+Math.max(1,Math.round((now-p.at)/60000))+' min.',3000);
+   if(/rain|light/i.test(p.reason))setTimeout(()=>A.rainOpen({id:m.id}),200)}});
+ Object.assign(F,{intStop(fd,el){const m=S.matches.find(x=>x.id===(el&&el.dataset?el.dataset.id:UI.sid));if(!m||!can())return;
+   m.paused={reason:String(fd.get('reason')||'Other delay'),note:String(fd.get('note')||'').trim(),at:Date.now()};UI.modal=null;commit();toast('Play stopped.',2500)}});
+}
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});
