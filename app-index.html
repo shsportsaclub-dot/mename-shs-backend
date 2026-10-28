@@ -8561,7 +8561,8 @@ S.stream.scene=S.stream.scene||'bug';S.stream.card=S.stream.card||{t:'Starting s
   return {inning:String(L.length||1),batsman:bat[0]?bat[0].batsman.name:'',bowler:bw.length?bw[bw.length-1].bowler.name:''};
  };
  window.shSbbPad=W=>{
-  if(!canScore()||!W||!W.m||!W.m.started||W.m.ended)return '';
+  if(!W||!W.m||!W.m.started||W.m.ended)return '';
+  if(!canScore()){if(!S.user||S.user.guest)return '';const r=S.user.role||'viewer',pr=['admin','scorer'].includes(r);return `<div class="mu sm sbbhint" style="margin:6px 8px">Ball-by-ball scoring needs a Scorer or Admin account. Your role: ${esc(r)}${pr&&!S.tok?' (sign in again to score)':''}.</div>`}
   const n=window.shSbbNext(W),c=cur(W),btn=(v,l,cl)=>`<button type="button" class="btn sm ${cl||''}" data-a="sbbAdd" data-v="${v}" style="min-width:44px">${l}</button>`;
   return `<div class="card sbbpad" style="margin:8px 4px"><b>Score this match ball by ball</b><div class="mu sm">Next: over ${n.over-1}.${n.ball} · ${esc(c.batsman||'batter')} v ${esc(c.bowler||'bowler')} · visible to everyone as "scored by SH scorer"</div><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">${[0,1,2,3,4,6].map(v=>btn(v,v)).join('')}${btn('W','W','danger')}${btn('wd','Wd')}${btn('nb','Nb')}${btn('undo','Undo','ghost')}</div></div>`;
  };
