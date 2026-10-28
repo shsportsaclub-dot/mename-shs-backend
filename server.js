@@ -229,7 +229,38 @@ function liveTtl(info) {
 // Share in-flight refreshes between the background engine and HTTP viewers.
 let liveRefreshPromise = null;
 async function liveMatches() {
-  if (SM) return smLive();
+  if (SM && !CRIC_KEY) return smLive();
+  const base = await cdLive();
+  return SM ? hybridLive(base) : base;
+}
+// Both providers together: CricketData gives every match and score; Sportmonks is used for the ball by ball of a match whenever it has deliveries for it.
+const smBy = new Map(), smBbbC = new Map();   // CricketData match id -> Sportmonks fixture number; Sportmonks fixture number -> {t,n,b}
+let hy = { t: 0, src: null, data: null };
+const normT = s => String(s || '').toLowerCase().replace(/\b(womens?|w)\b/g, 'women').replace(/[^a-z]/g, '');
+const pairKey = m => [m && m.teams && m.teams[0] && m.teams[0].name, m && m.teams && m.teams[1] && m.teams[1].name].map(normT).sort().join('|');
+const dayOf = d => Date.parse(String(d || '').slice(0, 10) + 'T00:00:00Z');
+async function smBalls(num) {
+  const c = smBbbC.get(num);
+  if (c && Date.now() - c.t < 15e3) return c.b || [];
+  try { const b = await SM.bbb(num); smBbbC.set(num, { t: Date.now(), n: b.length, b }); if (smBbbC.size > 300) smBbbC.clear(); return b; }
+  catch { smBbbC.set(num, { t: Date.now(), n: 0, b: [] }); return []; }
+}
+async function hybridLive(base) {
+  if (!base || !Array.isArray(base.matches)) return base;
+  if (hy.data && hy.src === base && Date.now() - hy.t < 15e3) return hy.data;
+  let sm = []; try { sm = ((await smLive()).matches) || []; } catch {}
+  const idx = new Map(); sm.forEach(m => { const k = pairKey(m); if (!idx.has(k)) idx.set(k, []); idx.get(k).push(m); });
+  const out = base.matches.map(m => {
+    const c = (idx.get(pairKey(m)) || []).find(x => Math.abs(dayOf(x.date) - dayOf(m.date)) <= 864e5);
+    if (!c) return m;
+    smBy.set(m.id, String(c.id).replace(/^sm/, ''));
+    return { ...m, smId: c.id };
+  });
+  await Promise.all(out.filter(m => m.smId && m.started && !m.ended).slice(0, 6).map(async m => { const b = await smBalls(m.smId.slice(2)); if (b.length) { m.bbb = true; m.bbbSrc = 'sportmonks'; } }));
+  hy = { t: Date.now(), src: base, data: { ...base, matches: out } };
+  return hy.data;
+}
+async function cdLive() {
   if (liveRefreshPromise) return liveRefreshPromise;
   liveRefreshPromise = fetchLiveMatches();
   try { return await liveRefreshPromise; }
@@ -499,6 +530,10 @@ routes['GET /api/cric'] = async (req, body, ip) => {
       const data = ep === 'match_scorecard' ? await SM.scorecard(num) : ep === 'match_info' ? await SM.matchInfo(num) : ep === 'match_squad' ? await SM.squad(num) : ep === 'match_bbb' ? await SM.bbb(num) : await SM.player(num);
       matchJournal.record(id,ep,data,{source:'Sportmonks'});const d = { ok: true, data }; cricCache.set(k0, { t: Date.now(), d }); if (cricCache.size > 500) cricCache.clear(); return [200, d];
     } catch (e) { return [502, { ok: false, error: String(e.message || 'Sportmonks error').slice(0, 160) }]; }
+  }
+  if (SM && CRIC_KEY && ep === 'match_bbb' && smBy.has(id)) {   // Sportmonks has this match too: use its deliveries when it has any
+    const b = await smBalls(smBy.get(id));
+    if (b.length) { const d = { ok: true, data: { bbb: b, source: 'Sportmonks' } }; matchJournal.record(id, ep, d.data, { source: 'Sportmonks' }); return [200, d]; }
   }
   if (!CRIC_KEY) return [503, { ok: false, error: 'CRIC_API_KEY is not set on the server' }];
   const k = ep + id, hit = cricCache.get(k), ttl = ep === 'players_info' ? 864e5 : 15e3;
@@ -780,7 +815,7 @@ function svcStatus() {
   return {
     email: { provider: EMAIL_PROVIDER, ready: emailKey, from: EMAIL_PROVIDER === 'console' ? '' : EMAIL_FROM, problem: need(EMAIL_PROVIDER, emailKey, ['EMAIL_PROVIDER=brevo + BREVO_API_KEY + EMAIL_FROM (works on Render free)', 'EMAIL_PROVIDER=resend + RESEND_API_KEY (needs your own domain)', 'EMAIL_PROVIDER=smtp + SMTP_USER + SMTP_PASS (Render free blocks SMTP)']), last: svcLast.email },
     sms: { provider: SMS_PROVIDER, ready: smsKey, sent: db.smsSent || 0, cap: SMS_TOTAL_BUDGET || 0, problem: need(SMS_PROVIDER, smsKey, ['SMS_PROVIDER=textbee + TEXTBEE_API_KEY + TEXTBEE_DEVICE_ID', 'SMS_PROVIDER=msg91 + MSG91_AUTHKEY + MSG91_TEMPLATE_ID']), last: svcLast.sms },
-    live: { ready: !!(CRIC_KEY || SM), provider: SM ? 'sportmonks' : 'cricketdata', problem: (CRIC_KEY || SM) ? '' : 'Set CRIC_API_KEY (CricketData) or SPORTMONKS_TOKEN (Sportmonks)' },
+    live: { ready: !!(CRIC_KEY || SM), provider: SM && CRIC_KEY ? 'cricketdata + sportmonks' : SM ? 'sportmonks' : 'cricketdata', problem: (CRIC_KEY || SM) ? '' : 'Set CRIC_API_KEY (CricketData) or SPORTMONKS_TOKEN (Sportmonks)' },
     ai: { ready: !!NEWS_AI_KEY, model: NEWS_AI_KEY ? NEWS_AI_MODEL : '', problem: NEWS_AI_KEY ? '' : 'Optional: set ANTHROPIC_API_KEY for AI-polished articles (articles are still written without it)' },
     history: { autoimport: E.HISTORY_AUTOIMPORT === '1' },
     recent: { enabled: E.RECENT_OPEN_DATA !== '0', ...recent.status() },
