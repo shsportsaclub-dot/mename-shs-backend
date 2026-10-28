@@ -1706,7 +1706,7 @@ async function detectCountry(){
   if(code&&CCS.some(c=>c[2]===code)&&!UI.ccManual){UI.cc=code;ccStore.set(code);document.querySelectorAll('select[name=cc]').forEach(s=>{s.value=code})}}
 setTimeout(detectCountry,300);
 /* Default cricket data key (direct mode). Remove this line and use the backend /api/live once the server is live. */
-if(!S.settings.cricKey){S.settings.cricKey='15f91453-6943-464f-b35b-f2d04fb954f9';try{save()}catch(e){}try{pullLive()}catch(e){}}
+if(String(S.settings.cricKey||'').startsWith('15f91453-')){S.settings.cricKey='';try{save()}catch(e){}}
 
 {const hv=vHome;vHome=function(){let o=hv();const m=/<!--wf-->[\s\S]*?<!--\/wf-->/.exec(o);if(!m)return o;
   const noLocal=o.indexOf('<h2>No match yet</h2>')>=0;
