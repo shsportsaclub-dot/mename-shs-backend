@@ -39,7 +39,7 @@ test('dismissal parser preserves distinct wicket kinds',()=>{
 
 test('wide is not counted as a legal delivery',()=>{
  const before=snap(25,40);
- const after=snap(25,41);
+ const after=snap(25,41,0,40);   // a wide adds to the team and bowler only, the batter's runs do not change
  after.bowl.Bowler.wd=1;
  after.bowl.Bowler.r=41;
  const d=diffSnapshots(before,after);
