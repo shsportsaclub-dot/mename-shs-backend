@@ -6,6 +6,7 @@ import { createMatchJournal } from './match-journal.mjs';
 import { createSportmonks } from './sportmonks.mjs';
 import { createFootball } from './sportmonks-football.mjs';
 import { createHighlightly, SPORTS as HL_SPORTS } from './highlightly.mjs';
+import { createLiveTennis } from './livetennis.mjs';
 import http from 'node:http';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
@@ -35,6 +36,7 @@ const CRIC_BASE = E.CRIC_BASE || 'https://api.cricapi.com/v1';
 const SM_TOKEN = E.SPORTMONKS_TOKEN || '';
 let SM = SM_TOKEN ? createSportmonks({ token: SM_TOKEN, base: E.SPORTMONKS_BASE || undefined }) : null;
 const HL_KEY = E.HIGHLIGHTLY_KEY || '';
+const TN = E.LIVETENNIS_KEY ? createLiveTennis({ key: E.LIVETENNIS_KEY, base: E.LIVETENNIS_BASE || undefined }) : null;
 let HL = HL_KEY ? createHighlightly({ key: HL_KEY, base: E.HIGHLIGHTLY_BASE || undefined }) : null;
 const FB_TOKEN = E.FOOTBALL_TOKEN || '';
 let FB = FB_TOKEN ? createFootball({ token: FB_TOKEN, base: E.FOOTBALL_BASE || undefined }) : null;
@@ -864,24 +866,27 @@ async function fbCached(key, ttl, fn) {
   const d = await fn(); fbCache.set(key, { t: Date.now(), d }); if (fbCache.size > 300) fbCache.clear(); return d;
 }
 // Other sports (basketball, volleyball, handball, hockey, rugby, football) from Highlightly. The free plan is ~100 requests a day, so lists are cached and a daily budget is enforced.
-const hlCache = new Map(); let hlDay = { d: '', n: 0 };
+const hlCache = new Map(); let hlDay = { d: '', n: 0 }, tnDay = { d: '', n: 0 };
 const HL_DAILY = +E.HIGHLIGHTLY_DAILY_BUDGET || 85, HL_TTL = (+E.HIGHLIGHTLY_CACHE_SECONDS || 600) * 1000;
 routes['GET /api/sx/live'] = async (req, body, ip) => {
-  if (!HL) return [200, { ok: false, error: 'This sport feed is not connected yet' }];
-  const sport = String(body.sport || ''); if (!HL_SPORTS.includes(sport)) return [400, { ok: false, error: 'Unknown sport' }];
+  const sport = String(body.sport || '');
+  if (!(sport === 'tennis' ? TN : HL)) return [200, { ok: false, error: 'This sport feed is not connected yet' }];
+  if (sport !== 'tennis' && !HL_SPORTS.includes(sport)) return [400, { ok: false, error: 'Unknown sport' }];
   if (limited('sxl:' + ip, 120, 6e4)) return [429, { ok: false, error: 'Too many requests, wait a moment' }];
   const date = /^\d{4}-\d{2}-\d{2}$/.test(String(body.date || '')) ? body.date : new Date().toISOString().slice(0, 10), k = sport + date, hit = hlCache.get(k);
   if (hit && Date.now() - hit.t < HL_TTL) return [200, { ok: true, matches: hit.d, updated: new Date(hit.t).toISOString(), date }];
-  const today = new Date().toISOString().slice(0, 10); if (hlDay.d !== today) hlDay = { d: today, n: 0 };
-  if (hlDay.n >= HL_DAILY) return hit ? [200, { ok: true, matches: hit.d, stale: true, note: 'Free plan daily limit reached; refreshes tomorrow', updated: new Date(hit.t).toISOString(), date }] : [200, { ok: false, error: 'Free plan daily limit reached; try again tomorrow' }];
-  hlDay.n++;
-  try { const d = await HL.list(sport, date); hlCache.set(k, { t: Date.now(), d }); if (hlCache.size > 60) hlCache.clear(); return [200, { ok: true, matches: d, updated: new Date().toISOString(), date }]; }
+  const today = new Date().toISOString().slice(0, 10); if (hlDay.d !== today) hlDay = { d: today, n: 0 }; if (tnDay.d !== today) tnDay = { d: today, n: 0 };
+  const dd = sport === 'tennis' ? tnDay : hlDay;
+  if (dd.n >= HL_DAILY) return hit ? [200, { ok: true, matches: hit.d, stale: true, note: 'Free plan daily limit reached; refreshes tomorrow', updated: new Date(hit.t).toISOString(), date }] : [200, { ok: false, error: 'Free plan daily limit reached; try again tomorrow' }];
+  dd.n++;
+  try { const d = sport === 'tennis' ? await TN.list() : await HL.list(sport, date); hlCache.set(k, { t: Date.now(), d }); if (hlCache.size > 60) hlCache.clear(); return [200, { ok: true, matches: d, updated: new Date().toISOString(), date }]; }
   catch (e) { return hit ? [200, { ok: true, matches: hit.d, stale: true, updated: new Date(hit.t).toISOString(), date }] : [502, { ok: false, error: String(e.message || 'Sport feed error').slice(0, 160) }]; }
 };
 routes['GET /api/admin/sx-probe'] = async (req, body) => {   // admin only: shows the real shape the provider sends, so the app can be matched to it (no key is printed)
   const phone = readSession((req.headers.authorization || '').replace(/^Bearer /, '')), u = phone && db.users[phone];
   if (!u) return [401, { ok: false, error: 'Please sign in again' }];
   promote(u, phone); if (u.role !== 'admin') return [403, { ok: false, error: 'Only an admin can see this' }];
+  if (String(body.sport) === 'tennis') { if (!TN) return [200, { ok: false, error: 'Live Tennis key is not set' }]; try { return [200, { ok: true, sport: 'tennis', ...(await TN.raw()), usedToday: hlDay.n }]; } catch (e) { return [200, { ok: false, error: String(e.message || 'error').slice(0, 200) }]; } }
   if (!HL) return [200, { ok: false, error: 'Highlightly key is not set' }];
   const sport = HL_SPORTS.includes(String(body.sport)) ? String(body.sport) : 'basketball';
   try { return [200, { ok: true, sport, ...(await HL.raw(sport, new Date().toISOString().slice(0, 10))), usedToday: hlDay.n }]; } catch (e) { return [200, { ok: false, error: String(e.message || 'error').slice(0, 200) }]; }
