@@ -4524,7 +4524,7 @@ const shAvBg=n=>{const P=[['#0a1f5c','#e11d2e'],['#12266a','#6a1b54'],['#0b3d6e'
 window.shAv=n=>cbpIni(n);
 const cbpBad=new Set();
 const CBP_AVATAR='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><defs><linearGradient id="a" x2="1" y2="1"><stop stop-color="#142653"/><stop offset="1" stop-color="#cf153c"/></linearGradient></defs><rect width="120" height="120" rx="60" fill="url(#a)"/><circle cx="60" cy="42" r="22" fill="#dce6fa"/><path d="M17 117v-9c0-25 19-39 43-39s43 14 43 39v9" fill="#829bd2"/><path d="M45 72l15 15 15-15" fill="#dce6fa"/><text x="60" y="108" text-anchor="middle" font-family="sans-serif" font-weight="bold" font-size="17" fill="#fff">SH</text></svg>');
-const cbpImg=(u,n)=>{let photo=false;try{const x=new URL(u,location.href);photo=!!u&&!SH_PH.test(u)&&!cbpBad.has(u)&&/^https?:$/.test(x.protocol)&&!/(?:placeholder|default|generic|dummy|icon-?player|no.?image|logo|cricket.?data|cricapi.*(?:\.png|\.jpg)$)/i.test(x.pathname+x.hostname)}catch{}return `<img src="${esc(photo?u:CBP_AVATAR)}" alt="${esc(photo?n:'Scoring Heroes player avatar')}" title="${esc(photo?n:'Player photo unavailable — SH avatar')}" onerror="this.onerror=null;this.src=CBP_AVATAR">`};
+let cbpImg=(u,n)=>{let photo=false;try{const x=new URL(u,location.href);photo=!!u&&!SH_PH.test(u)&&!cbpBad.has(u)&&/^https?:$/.test(x.protocol)&&!/(?:placeholder|default|generic|dummy|icon-?player|no.?image|logo|cricket.?data|cricapi.*(?:\.png|\.jpg)$)/i.test(x.pathname+x.hostname)}catch{}return `<img src="${esc(photo?u:CBP_AVATAR)}" alt="${esc(photo?n:'Scoring Heroes player avatar')}" title="${esc(photo?n:'Player photo unavailable — SH avatar')}" onerror="this.onerror=null;this.src=CBP_AVATAR">`};
 
 function cbpSquads(W){const q=W.sq;if(!q&&!W.sqErr)return '<div class="mu" style="padding:14px">Loading squads...</div>';
  if(W.sqErr||!Array.isArray(q)||!q.length)return `<div class="cbp-cd cbp-note">${esc(W.sqErr||'Squads are not published for this match yet.')}</div>`;
@@ -7574,6 +7574,39 @@ S.joinReq=S.joinReq||[];S.transfers=S.transfers||[];UI.td=UI.td||{id:'',tab:'squ
  /* ?join=<teamId> link: ask the signed-in person to confirm a join request */
  const jp=new URLSearchParams(location.search).get('join');
  if(jp){UI.joinTid=jp;const oi=window.__joinPrompt=()=>{const t=tm(jp);if(!t||!S.user||S.user.guest)return;UI.modal={t:'html',html:`<h3>Join ${esc(t.name)}?</h3><div class="mu sm" style="margin:6px 0">The team manager will see your request and can accept it.</div><button class="btn wide" data-a="joinSend">Send join request</button>`};renderModal()};setTimeout(oi,1200)}
+}
+/* ---------------- Player avatar fallback = SH helmet avatar (never a fake photo) + live match action strip under the score ---------------- */
+{
+ const PAL=['#2563eb','#c0392b','#16a34a','#d97706','#7c3aed','#0891b2','#db2777','#65a30d'];
+ const hh=s=>{let h=7;for(const ch of String(s||''))h=(h*31+ch.charCodeAt(0))>>>0;return h};
+ const helm=(col,id)=>`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><linearGradient id="g${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${col}"/><stop offset="1" stop-color="#0a1f5c"/></linearGradient></defs><rect width="100" height="100" fill="#0d1a45"/><path d="M0 70h100v30H0z" fill="${col}" opacity=".35"/><path d="M22 62c0-24 12-38 30-38 20 0 30 14 30 34v10H22z" fill="url(#g${id})" stroke="#fff" stroke-opacity=".55" stroke-width="2"/><path d="M52 24c8 0 14 6 16 16" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="2"/><path d="M30 64h46v10c0 4-3 7-7 7H40c-5 0-10-3-10-8z" fill="#111a3a" stroke="#fff" stroke-opacity=".5" stroke-width="2"/><path d="M36 66v12M46 66v14M56 66v14M66 66v10" stroke="#fff" stroke-opacity=".6" stroke-width="2"/></svg>`;
+ window.shHelmetURI=n=>{const col=PAL[hh(n)%PAL.length];return 'data:image/svg+xml,'+encodeURIComponent(helm(col,hh(n)%997)).replace(/'/g,'%27')};
+ const ci=cbpImg;cbpImg=function(u,n){let h=ci.apply(this,arguments);if(h.indexOf(esc(CBP_AVATAR))<0&&h.indexOf('this.src=CBP_AVATAR')<0)return h;const v=window.shHelmetURI(n||'?');
+  return h.split(esc(CBP_AVATAR)).join(v).split('this.src=CBP_AVATAR').join("this.src='"+v+"'").replace('Player photo unavailable — SH avatar','Photo not supplied by the data provider — SH avatar')};
+ const st=document.createElement('style');st.textContent=`.sh-act{position:relative;height:104px;margin:0 12px 10px;border-radius:12px;overflow:hidden;background:linear-gradient(#143e34,#1f6b49);border:1px solid #2a5d4a}
+.sh-act .pt{position:absolute;left:6%;right:6%;top:36px;height:34px;background:#c9b788;border-radius:3px;opacity:.9}
+.sh-act .stp{position:absolute;top:30px;width:6px;height:46px;background:repeating-linear-gradient(90deg,#f2dfa8 0 2px,transparent 2px 4px)}
+.sh-act .stp.a{left:7%}.sh-act .stp.b{right:7%}
+.sh-act .pl{position:absolute;width:34px;height:34px;border-radius:50%;overflow:hidden;border:2px solid #fff;top:16px}.sh-act .pl svg{width:100%;height:100%}
+.sh-act .bw{left:6%;animation:shActRun 3.6s ease-in-out infinite}.sh-act .bt{right:10%;top:36px;transform-origin:50% 100%;animation:shActSwing 3.6s ease-in-out infinite}
+.sh-act .bl{position:absolute;width:12px;height:12px;border-radius:50%;background:#d81f2a;border:1px solid #7a0b12;top:48px;left:24%;opacity:0;animation:shActBall 3.6s linear infinite}
+.sh-act .cap{position:absolute;left:10px;bottom:5px;font:600 10px var(--ui);color:#d9efe4;opacity:.85}
+.sh-act .ev{position:absolute;left:50%;top:6px;transform:translateX(-50%);padding:4px 16px;border-radius:99px;font:900 20px var(--ui);color:#fff;background:#0009;animation:ovfxpop 4s both}
+.sh-act .ev.w{color:#ff8b9b}.sh-act .ev.f{color:#75f0bb}.sh-act .ev.s{color:#e0bcff}
+.sh-act.idle *{animation:none!important}.sh-act.idle .bl{opacity:0}
+@keyframes shActRun{0%{left:6%}30%{left:24%}60%,100%{left:24%}}
+@keyframes shActBall{0%,30%{opacity:0;left:26%;top:48px}32%{opacity:1;left:26%;top:44px}55%{left:62%;top:60px}70%{left:80%;top:46px}85%{opacity:1;left:92%;top:20px}100%{opacity:0;left:98%;top:6px}}
+@keyframes shActSwing{0%,58%{transform:rotate(0)}68%{transform:rotate(-38deg)}85%,100%{transform:rotate(0)}}
+@media (prefers-reduced-motion:reduce){.sh-act *{animation:none!important}.sh-act .bl{opacity:1;left:60%}}`;document.head.appendChild(st);
+ const ap=ar9Panel;ar9Panel=function(W){const h=ap.apply(this,arguments);if(!h||h.indexOf('</section>')<0)return h;
+  const m=W.m||{},L=(W.sc&&W.sc.scorecard)||[],inn=L[L.length-1]||{},sc=(m.score||[]).slice(-1)[0]||(inn.totals?{r:inn.totals.R,w:inn.totals.W,o:inn.totals.O}:null);if(!sc)return h;
+  const t=m.teams||[],bat=t[0]&&t[0].name||'A',bowl=t[1]&&t[1].name||'B',bc=PAL[hh(bat)%PAL.length],wc=PAL[hh(bowl)%PAL.length];
+  const E=UI.shEv=UI.shEv||{},k=m.id||'x',now=+sc.r*100+(+sc.w||0)+'/'+sc.o,prev=E[k];
+  if(prev&&prev.key!==now){const dr=+sc.r-prev.r,dw=(+sc.w||0)-prev.w;E[k]={key:now,r:+sc.r,w:+sc.w||0,ev:dw>0?{c:'w',t:'WICKET!'}:dr>=6?{c:'s',t:'SIX!'}:dr>=4?{c:'f',t:'FOUR!'}:dr>0?{c:'',t:'+'+dr}:null,at:Date.now()}}
+  else if(!prev)E[k]={key:now,r:+sc.r,w:+sc.w||0,ev:null,at:0};
+  const e=E[k],show=e.ev&&Date.now()-e.at<4000,idle=m.ended;
+  const strip=`<div class="sh-act${idle?' idle':''}" aria-label="Match action animation"><i class="pt"></i><i class="stp a"></i><i class="stp b"></i><span class="pl bw">${helm(wc,'b1')}</span><span class="bl"></span><span class="pl bt">${helm(bc,'b2')}</span>${show?`<div class="ev ${e.ev.c}" data-at="${e.at}">${esc(e.ev.t)}</div>`:''}<span class="cap">${idle?'Match ended':'Live action · animation'}</span></div>`;
+  return h.replace('</section>','</section>'+strip)};
 }
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
