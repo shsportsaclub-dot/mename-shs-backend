@@ -396,7 +396,7 @@ function enrichSquad(sq, info) {
 // ---- Live tracker: while people are looking at a running match, the server checks its scorecard every TRACK_SECONDS and keeps what the figures prove (see observer.mjs). Everyone sees the same saved record, not only the people who had the page open. ----
 db.track = db.track || {};
 const viewed = new Map();   // match id -> { t: last viewed, next: do not check before }
-const TRACK_SECONDS = Math.max(+E.TRACK_MIN_SECONDS || 15, +E.TRACK_SECONDS || 30), TRACK_MAX = Math.max(1, +E.TRACK_MAX_MATCHES || 3), TRACK_DAILY = Math.max(0, E.TRACK_DAILY_CALLS == null || E.TRACK_DAILY_CALLS === '' ? 1000000 : +E.TRACK_DAILY_CALLS);
+const TRACK_SECONDS = Math.max(+E.TRACK_MIN_SECONDS || 15, +E.TRACK_SECONDS || 15), TRACK_MAX = Math.max(1, +E.TRACK_MAX_MATCHES || 6), TRACK_DAILY = Math.max(0, E.TRACK_DAILY_CALLS == null || E.TRACK_DAILY_CALLS === '' ? 1000000 : +E.TRACK_DAILY_CALLS);
 const trackStat = { per: {}, last: 0, day: '', calls: 0, paused: 0, note: 'waiting for a viewer on a live match' };
 async function cricFresh(ep, id, maxAge) {   // same cache the match page uses; returns [result, realProviderCall]
   const k = ep + id, h = cricCache.get(k); if (h && Date.now() - h.t < maxAge) return [h.d, false];
