@@ -7849,6 +7849,74 @@ S.stream.scene=S.stream.scene||'bug';S.stream.card=S.stream.card||{t:'Starting s
   UI.modal={t:'html',html:`<h3>Join ${esc(t.name)}?</h3><div class="mu sm" style="margin:6px 0">The team manager sees your name and phone and can accept your request.</div><button class="btn wide" data-a="joinSend">Send join request</button>`};renderModal()};
  if(UI.joinTid){const f0=render;let done=0;render=function(){f0.apply(this,arguments);if(!done&&S.user&&UI.stage==='app'){done=1;setTimeout(()=>window.__joinPrompt(),600)}}}
 }
+/* ---------------- 36 MATCH TIMELINE: when the provider sends no ball-by-ball, show a timeline built from the score changes this app actually saw ---------------- */
+{
+ const KEY='sh_tl_';
+ const load=id=>{try{return JSON.parse(localStorage.getItem(KEY+id)||'[]')}catch(e){return []}};
+ const store=(id,a)=>{try{localStorage.setItem(KEY+id,JSON.stringify(a.slice(-80)))}catch(e){}};
+ const snap=m=>(m&&Array.isArray(m.score)?m.score:[]).map(s=>({i:String(s.inning||'').replace(/ Inning.*$/i,''),r:+s.r||0,w:+s.w||0,o:s.o}));
+ window.shTlObserve=function(W){
+  if(!W||!W.m||!W.m.id||!W.m.started)return [];
+  let m=W.m;const lv=UI.live&&UI.live.ok&&UI.live.matches?UI.live.matches.find(x=>x.id===m.id):null;if(lv&&lv.score)m=lv;
+  const id=W.m.id,a=load(id),cur=snap(m);if(!cur.length)return a;
+  const last=a.length?a[a.length-1]:null,tail=cur[cur.length-1];
+  const key=c=>c.i+'|'+c.r+'|'+c.w;
+  if(!last||last.k!==key(tail)){
+   let d='';
+   if(last&&last.i===tail.i){const dr=tail.r-last.r,dw=tail.w-last.w;
+    d=(dw>0?dw+' wicket'+(dw>1?'s':'')+(dr?' and ':''):'')+(dr>0?dr+' run'+(dr>1?'s':''):'');}
+   else if(last)d='New innings';
+   a.push({t:Date.now(),k:key(tail),i:tail.i,r:tail.r,w:tail.w,o:tail.o,d,ev:last&&last.i===tail.i?((tail.w>last.w)?'W':(tail.r-last.r)>=6?'6':(tail.r-last.r)===4?'4':''):''});
+   store(id,a);
+  }
+  return a;
+ };
+ const tlHTML=a=>{
+  const rows=a.slice().reverse().slice(0,40);
+  return `<div class="ovh"><span>Match timeline</span><span>from score updates</span></div>`+
+  rows.map(x=>{const t=new Date(x.t).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+   const c=x.ev==='W'?'rw':x.ev==='6'?'r6':x.ev==='4'?'r4':'r0';
+   return `<div class="cl"><span class="o n">${esc(t)}</span><span class="b ${c}">${x.ev||'•'}</span><span><b>${esc(x.i)} ${x.r}-${x.w}</b>${x.o!=null&&x.o!==''?' ('+esc(x.o)+' ov)':''}${x.d?' · '+esc(x.d):''}</span></div>`}).join('')+
+  `<div class="cl" style="grid-template-columns:1fr"><span class="mu sm">Ball-by-ball is not sent by the data provider for this match. This timeline is built only from score changes seen by the app, so each line may cover more than one ball.</span></div>`;
+ };
+ const w0=XV.wmatch;
+ XV.wmatch=function(){
+  const W=UI.wm,o=w0.apply(this,arguments);
+  if(!W||!W.m||typeof o!=='string')return o;
+  const a=window.shTlObserve(W);
+  const re=/<div class="ovh"><span>Score updates<\/span><span>[^<]*<\/span><\/div><div class="cl" style="grid-template-columns:1fr"><span>Ball-by-ball is not sent[\s\S]*?<\/span><\/div>/;
+  return a.length&&re.test(o)?o.replace(re,tlHTML(a)):o;
+ };
+ if(!window.__tlPoll){window.__tlPoll=setInterval(()=>{if(UI.view==='wmatch'&&UI.wm&&UI.wm.m&&UI.wm.m.started&&!UI.wm.m.ended){const n=(load(UI.wm.m.id)||[]).length;window.shTlObserve(UI.wm);if(load(UI.wm.m.id).length!==n)render()}},20000)}
+}
+
+/* ---------------- 37 SCORING HEROES TAB on the home: start a match, continue scoring, schedule, share, leaderboard ---------------- */
+{
+ const live=()=>S.matches.filter(m=>!isDemo(m)&&!m.result&&m.innings&&m.innings.length);
+ window.shPanel=function(){
+  const lv=live(),n=S.matches.filter(m=>!isDemo(m)).length;
+  let lb='';try{const C=career(),top=(f2,k)=>Object.entries(C).filter(([id,c])=>f2(c)>0&&P(id)).sort((x,y)=>f2(y[1])-f2(x[1])).slice(0,k);const bt=top(c=>c.r,3),bw=top(c=>c.w,3);if(bt.length||bw.length)lb=`<div class="mu sm" style="margin-top:10px">Leaderboard (your matches)</div><div class="row" style="gap:12px;align-items:flex-start"><div style="flex:1;min-width:130px">${bt.map(([id,c],i)=>`<div class="it"><span>${i+1}</span><span>${esc(nm(id))}</span><b class="v">${c.r} runs</b></div>`).join('')}</div><div style="flex:1;min-width:130px">${bw.map(([id,c],i)=>`<div class="it"><span>${i+1}</span><span>${esc(nm(id))}</span><b class="v">${c.w} wkts</b></div>`).join('')}</div></div>`}catch(e){}
+  const tools=can()?`<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn" data-a="newMatch">➕ Start a match</button><button class="btn ghost" data-a="shpSched">\u{1F4C5} Schedule a match</button>${lv[0]?`<button class="btn ghost" data-a="shpScore" data-id="${esc(lv[0].id)}">\u{1F3AF} Continue scoring</button>`:''}<button class="btn ghost" data-a="go" data-v="score">Open scorer</button>${lv[0]?`<button class="btn ghost" data-a="shpShare" data-id="${esc(lv[0].id)}">Share live</button>`:''}</div>`:`<div class="mu sm">${S.user?'Scoring needs an Admin or Scorer account.':'Register to start and score your own matches.'}</div>${S.user?'':'<button class="btn" data-a="go" data-v="login">Register now</button>'}`;
+  return `<div id="shp" class="hh-box" style="margin:8px 0"><h3>Scoring Heroes <span class="n">${n} match${n===1?'':'es'}</span></h3><div class="mu sm" style="margin:2px 0 8px">Start a match, score ball by ball and share it live. International / domestic, schedule and results are in the tabs above.</div>${tools}${lb}</div>`;
+ };
+ Object.assign(A,{
+  shpScore(d){UI.mid=d.id;UI.view='score';render()},
+  shpShare(d){const m=S.matches.find(x=>x.id===d.id);if(!m)return;const t=shareText(m);if(navigator.share){navigator.share({text:t}).catch(()=>{})}else window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank')},
+  shpSched(){A.newMatch&&A.newMatch()}
+ });
+ const h0=heroHome;
+ heroHome=function(){
+  const o=h0.apply(this,arguments);
+  if((UI.sport||'cricket')!=='cricket')return o;
+  const hx=UI.hx||(S.matches.length?'sh':'all');
+  if(hx!=='sh')return o;
+  const k='</div>\n <div class="ig-sl"',i=o.indexOf('<div class="hh-tabs">');
+  if(i<0)return o;
+  const e=o.indexOf('</div>',i)+6;
+  return o.slice(0,e)+window.shPanel()+o.slice(e);
+ };
+}
+
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});

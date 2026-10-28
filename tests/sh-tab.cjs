@@ -1,0 +1,20 @@
+// Home "Scoring Heroes" tab: start match, continue scoring, schedule, share.
+const { chromium } = require('playwright');
+(async()=>{const b=await chromium.launch(),errs=[],p=await b.newPage({viewport:{width:430,height:900}});
+p.on('pageerror',e=>errs.push(e.message));
+await p.goto('file://'+require('path').resolve(__dirname,'../app-index.html'));await p.waitForTimeout(400);
+const ok=(c,m)=>{if(!c){console.error('FAIL',m);process.exitCode=1}};
+const txt=()=>p.evaluate(()=>document.getElementById('app').innerText);
+await p.evaluate(()=>{window.pullLive=async()=>{};window.fetch=()=>new Promise(()=>{});UI.stage='app';S.user={name:'QA',role:'admin',kind:'Scorer'};S.prefs={...S.prefs,asked:1,welcomed:1};
+ const a=S.teams[0],c=S.teams[1];
+ const m=newMatch({a:a.id,b:c.id,overs:20,venue:'Test Ground',toss:a.id,dec:'bat',xiA:a.players.slice(0,11),xiB:c.players.slice(0,11),umpires:'U'});S.matches.push(m);window.__m=m.id;
+ UI.view='home';UI.hx='sh';render()});
+let t=await txt();
+ok(/Start a match/i.test(t)&&/Schedule a match/i.test(t)&&/Open scorer/i.test(t),'tools');
+await p.screenshot({path:'/tmp/shtab.png'});
+await p.evaluate(()=>{UI.hx='int';render()});t=await txt();ok(!/Start a match/i.test(t),'only on SH tab');
+await p.evaluate(()=>{UI.hx='sh';render()});
+await p.click('[data-a="shpSched"]');ok(await p.evaluate(()=>!!(UI.modal||(S.wiz&&UI.view))),'wizard opens');
+await p.evaluate(()=>{UI.modal=null;UI.view='home';UI.hx='sh';S.user.role='viewer';render()});
+t=await p.evaluate(()=>document.getElementById('shp')&&(document.getElementById('shp').querySelector('[data-a=newMatch]')?'BTN ':'')+document.getElementById('shp').innerText);ok(t&&!/^BTN/.test(t)&&/Admin or Scorer/i.test(t),'viewer gated '+t);
+ok(!errs.length,errs.join(';'));await b.close();if(!process.exitCode)console.log('PASS: SH tab');})();
