@@ -7725,6 +7725,24 @@ S.stream.scene=S.stream.scene||'bug';S.stream.card=S.stream.card||{t:'Starting s
    return `<div class="rp">${ar9Header(W,'live')}<div class="tvl"><div>${hm[0]}</div><div><div class="tvb"><h3>At the crease</h3>${bt}</div><div class="tvb"><h3>Bowling</h3>${bw}</div></div></div></div>`}
   catch(e){return w0.apply(this,arguments)}};
 }
+/* ---------------- Multi-day matches: after "Stumps" show STUMPS and a countdown to the next day's start, not LIVE.
+   The provider does not publish the next day's start time, so it is estimated as Day 1's start clock time plus whole days, and labelled as expected. */
+{
+ const dayOf=m=>{const x=/day\s*(\d)/i.exec(String(m.status||''));return x?+x[1]:0};
+ window.shStumps=m=>{try{if(!m||!m.started||m.ended)return null;const st=String(m.status||'');if(!/\b(stumps|close of play)\b/i.test(st))return null;
+  const d=dayOf(m)||1,raw=m.time||'',t0=Date.parse(raw+(/Z|[+-]\d\d:?\d\d$/.test(raw)?'':'Z'));return{day:d,next:t0?t0+d*86400000:0}}catch(e){return null}};
+ const fmt=ms=>{if(ms<=0)return 'any moment';const s=Math.floor(ms/1000),d=Math.floor(s/86400),h=Math.floor(s%86400/3600),mi=Math.floor(s%3600/60),sc=s%60,p=n=>String(n).padStart(2,'0');return (d?d+'d ':'')+p(h)+':'+p(mi)+':'+p(sc)};
+ const cd=(S0)=>S0.next?`<span data-cd="${S0.next}">${fmt(S0.next-Date.now())}</span>`:'';
+ const lab=S0=>`Day ${S0.day+1} starts in `+(S0.next?cd(S0):'time not announced');
+ const swap=(h,S0,short)=>h.replace(/<span class="lv">LIVE<\/span>/g,`<span class="lv u">STUMPS</span>`).replace(/<span class="pill live pulse">LIVE<\/span>/g,'<span class="pill">STUMPS</span>'+(short?`<small class="sh-cd" style="margin-left:6px;opacity:.85">${lab(S0)}</small>`:'')).replace(/(<span class="lv u">STUMPS<\/span>)(?!<small)/,'$1'+(short?`<small class="sh-cd" style="margin-left:6px;opacity:.85">${lab(S0)}</small>`:''));
+ const hc=hhCard;hhCard=function(m){const h=hc.apply(this,arguments),S0=shStumps(m);return S0?swap(h,S0,true):h};
+ const wc=wCard;wCard=function(m){const h=wc.apply(this,arguments),S0=shStumps(m);return S0?swap(h,S0,true):h};
+ const ap=ar9Panel;ar9Panel=function(W){let h=ap.apply(this,arguments);const S0=shStumps(W&&W.m);if(!h||!S0)return h;
+  h=swap(h,S0,false).replace('class="sh-act"','class="sh-act idle"').replace(/(<div class="sh-act)( idle)?/,'$1 idle');
+  const when=S0.next?new Date(S0.next).toLocaleString('en-IN',{timeZone:'Asia/Kolkata',weekday:'short',hour:'2-digit',minute:'2-digit'})+' IST':'';
+  return `<div class="card sh-stumps" style="margin:10px 12px;padding:14px;text-align:center;border:1px solid #f5b335;border-radius:14px;background:#2a1d05"><div style="font:800 13px var(--ui);letter-spacing:.12em;color:#f5b335">STUMPS · DAY ${S0.day} COMPLETE</div><div style="font:700 15px var(--ui);margin-top:6px">${lab(S0)}</div>${when?`<div class="mu sm" style="margin-top:4px">Expected ${esc(when)}, same time as Day 1. The provider does not publish the exact start.</div>`:''}</div>`+h};
+ setInterval(()=>{try{document.querySelectorAll('[data-cd]').forEach(e=>{const n=+e.getAttribute('data-cd');e.textContent=fmt(n-Date.now())})}catch(x){}},1000);
+}
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});

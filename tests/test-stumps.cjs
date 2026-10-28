@@ -1,0 +1,20 @@
+const { chromium } = require('playwright');
+(async () => {
+  const b = await chromium.launch(), errs = [], p = await b.newPage({ viewport: { width: 390, height: 900 } }); p.on('pageerror', e => errs.push(e.message));
+  await p.goto('file://' + require('path').resolve(__dirname, '../app-index.html')); await p.waitForTimeout(400);
+  const ok = (c, m) => { if (!c) { console.error('FAIL', m); process.exitCode = 1; } };
+  const start = new Date(Date.now() - 6 * 3600e3).toISOString().slice(0, 19);
+  await p.evaluate(start => { window.pullLive = async () => {}; UI.stage = 'app'; S.user = { name: 'QA', role: 'viewer', kind: 'Fan' }; S.prefs = { ...S.prefs, asked: 1, welcomed: 1 };
+    UI.wm = { m: { id: 't1', name: 'AUS v RSA, 3rd Test', started: true, ended: false, type: 'test', status: 'Day 1: Stumps - Australia opt to bowl', time: start, teams: [{ name: 'South Africa', short: 'RSA' }, { name: 'Australia', short: 'AUS' }], score: [{ inning: 'South Africa Inning 1', r: 200, w: 4, o: 82 }] }, mi: {}, bb: null, sc: { scorecard: [{ inning: 'South Africa Inning 1', batting: [{ batsman: { id: 'b1', name: 'A' }, r: 5, b: 7, 'dismissal-text': 'batting' }], bowling: [], totals: { R: 200, W: 4, O: 82 } }] } };
+    UI.view = 'wmatch'; UI.wm.tab = 'live'; render(); }, start);
+  await p.waitForTimeout(500);
+  const t = await p.evaluate(() => document.getElementById('app').innerText);
+  ok(/STUMPS . DAY 1 COMPLETE/.test(t) && /Day 2 starts in/.test(t), 'stumps card with countdown: ' + t.slice(0, 200));
+  ok(await p.evaluate(() => !!document.querySelector('.sh-act.idle')), 'animation stopped at stumps');
+  const a = await p.evaluate(() => document.querySelector('[data-cd]').textContent); await p.waitForTimeout(2100); const b2 = await p.evaluate(() => document.querySelector('[data-cd]').textContent);
+  ok(a !== b2 && /^\d\d:\d\d:\d\d$/.test(b2), 'countdown ticks ' + a + ' -> ' + b2);
+  ok(await p.evaluate(() => !/>LIVE</.test(document.querySelector('.ar7') ? document.querySelector('.ar7').innerHTML : '')), 'no LIVE badge on direct tile');
+  const c = await p.evaluate(() => { const m = UI.wm.m; return { s: !!shStumps(m), lunch: !!shStumps({ ...m, status: 'Day 2: Lunch' }), t20: !!shStumps({ ...m, status: 'Live' }) } });
+  ok(c.s && !c.lunch && !c.t20, 'only stumps triggers: ' + JSON.stringify(c));
+  ok(!errs.length, errs.join(';')); await b.close(); if (!process.exitCode) console.log('PASS: stumps countdown');
+})();
