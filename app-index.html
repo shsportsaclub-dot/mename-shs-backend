@@ -7426,6 +7426,42 @@ window.shNoteGroups=function(notes){
  Object.assign(F,{intStop(fd,el){const m=S.matches.find(x=>x.id===(el&&el.dataset?el.dataset.id:UI.sid));if(!m||!can())return;
    m.paused={reason:String(fd.get('reason')||'Other delay'),note:String(fd.get('note')||'').trim(),at:Date.now()};UI.modal=null;commit();toast('Play stopped.',2500)}});
 }
+/* ---------------- MARKETPLACE: sport filter, listing detail page, seller replies to offers (accept / counter / decline) */
+{
+ const spName=k=>(SPORTS.find(s=>s[0]===k)||[0,'Cricket'])[1],spOf=x=>x.sport||'cricket';
+ const ml=mkList;mkList=function(kind){const L=ml.apply(this,arguments),s=UI.mk.sport;return s?L.filter(x=>spOf(x)===s):L};
+ const mf=mkFilters;mkFilters=function(kind){let h=mf.apply(this,arguments);const s=UI.mk.sport||'';
+  const row=`<div class="hscroll" style="gap:6px;margin-bottom:8px"><button class="btn sm ${s?'ghost':''}" data-a="mkSport" data-v="">All sports</button>${SPORTS.map(z=>`<button class="btn sm ${s===z[0]?'':'ghost'}" data-a="mkSport" data-v="${z[0]}">${z[2]} ${esc(z[1])}</button>`).join('')}</div>`;
+  return h.replace('<div class="hscroll" style="gap:6px;margin-bottom:8px"><button class="btn sm',row+'<div class="hscroll" style="gap:6px;margin-bottom:8px"><button class="btn sm')};
+ const pf=postForm;postForm=function(kind){let h=pf.apply(this,arguments);return h.replace('<div class="row"><label style="flex:1">Category<select name="cat">',`<label>Sport<select name="sport">${SPORTS.map(z=>`<option value="${z[0]}">${esc(z[1])}</option>`).join('')}</select></label><div class="row"><label style="flex:1">Category<select name="cat">`)};
+ const ma=F.mkAdd;F.mkAdd=function(fd){const n=S.market.length;ma.apply(this,arguments);if(S.market.length>n){S.market[S.market.length-1].sport=fd.get('sport')||'cricket';save()}};
+ const mc=mkCard;mkCard=function(x){let h=mc.apply(this,arguments);
+  h=h.replace('<div class="it"><img ',`<div class="it"><img data-a="mkView" data-id="${x.id}" style="cursor:pointer" `).replace(`<div class="b">${esc(x.title)}</div>`,`<div class="b" data-a="mkView" data-id="${x.id}" style="cursor:pointer">${esc(x.title)}</div>`);
+  if(spOf(x)!=='cricket')h=h.replace('<span class="pill">'+esc(x.cat||'')+'</span>','<span class="pill">'+esc(spName(spOf(x)))+'</span><span class="pill">'+esc(x.cat||'')+'</span>');return h};
+ Object.assign(A,{mkSport(d){UI.mk.sport=d.v||'';render()},
+  mkView(d){const x=S.market.find(z=>z.id===d.id);if(!x)return;const w=waLink(x.phone,'Hi, I saw your listing on Scoring Heroes: '+x.title),fav=(S.favs[me2()]||[]).includes(x.id),sl=S.sellers.find(s=>s.uid===x.uid);
+   UI.modal={t:'html',html:`<h3>${esc(x.title)}</h3>${x.img?`<img alt="" src="${x.img}" style="width:100%;max-height:260px;object-fit:contain;border-radius:10px;background:#0c1d4a;margin:6px 0">`:''}
+   <div class="pr" style="font-size:20px;font-weight:800">${x.price?'Rs '+esc(x.price):'Ask price'}${x.nego?' <span class="mu sm">negotiable</span>':''}${x.status==='sold'?' <span class="pill">Sold</span>':''}</div>
+   <div class="row" style="gap:4px;margin:6px 0"><span class="pill">${esc(spName(spOf(x)))}</span><span class="pill">${esc(x.cat||'')}</span>${x.cond?`<span class="pill">${esc(x.cond)}</span>`:''}${(x.kind&&x.kind!=='used')?badgeV(x):''}</div>
+   ${x.desc?`<p style="margin:8px 0;line-height:1.5">${esc(x.desc)}</p>`:''}
+   <div class="mu sm">Location: ${esc(x.loc||'-')}<br>Seller: ${esc(x.by||'-')}${sl&&sl.verified?' · verified seller':''}<br>Posted: ${x.t?esc(new Date(x.t).toLocaleDateString()):'-'}${x.web?`<br>Website: <a href="${esc(x.web)}" target="_blank" rel="noopener">${esc(x.web)}</a>`:''}</div>
+   <div class="row" style="margin-top:10px;gap:6px;flex-wrap:wrap">${w?`<a class="btn sm" href="${w}" target="_blank" rel="noopener">WhatsApp</a><a class="btn sm ghost" href="tel:${esc(String(x.phone).replace(/\D/g,''))}">Call</a>`:''}${(x.kind||'used')==='used'&&x.status!=='sold'?`<button class="btn sm ghost" data-a="mkOffer" data-id="${x.id}">Make offer</button>`:''}<button class="btn sm ghost" data-a="mkFav" data-id="${x.id}">${fav?'♥ Saved':'♡ Save'}</button><button class="btn sm ghost" data-a="mkReport" data-id="${x.id}">Report</button></div>
+   <div class="mu sm" style="margin-top:8px">Meet in a public place and check the item before paying. Online payment is not switched on yet.</div>`};renderModal()},
+  mkAcc(d){mkReply(d.id,'accepted')},mkDec(d){mkReply(d.id,'declined')},
+  mkCounter(d){const o=S.offers.find(z=>z.id===d.id);if(!o)return;UI.modal={t:'html',html:`<h3>Counter offer</h3><div class="mu sm" style="margin:4px 0 8px">Their offer: Rs ${esc(o.amt)}</div><form data-f="mkCounterSend"><input type="hidden" name="oid" value="${esc(o.id)}"><label>Your price (Rs)<input name="amt" inputmode="numeric" required></label><button class="btn wide">Send counter on WhatsApp</button></form>`};renderModal()}});
+ const mkReply=(oid,st,amt)=>{const o=S.offers.find(z=>z.id===oid),x=o&&S.market.find(z=>z.id===o.lid);if(!o||!x||!(x.uid===me2()||isAdm()))return;
+  o.status=st;if(amt)o.counter=amt;o.at=Date.now();save();
+  const txt=st==='accepted'?`Hi ${o.by||''}, I accept your offer of Rs ${o.amt} for ${x.title}. When can you collect it?`:st==='countered'?`Hi ${o.by||''}, thanks for your offer of Rs ${o.amt} for ${x.title}. My price is Rs ${amt}.`:`Hi ${o.by||''}, thank you for your offer for ${x.title}, but I cannot accept Rs ${o.amt}.`;
+  const l=waLink(o.phone,txt);UI.modal=null;renderModal();render();toast(st==='accepted'?'Marked accepted. Send the WhatsApp message to the buyer.':st==='countered'?'Counter saved. Send the WhatsApp message to the buyer.':'Offer declined. Send the WhatsApp message if you wish.',4000);if(l)window.open(l,'_blank','noopener')};
+ Object.assign(F,{mkCounterSend(fd){const amt=String(fd.get('amt')||'').replace(/[^\d.]/g,'');if(!amt)return toast('Enter your price');mkReply(fd.get('oid'),'countered',amt)}});
+ const mm=XV.market;XV.market=function(){let h=mm.apply(this,arguments);const U=UI.mk;if(U.tab!=='mine')return h;
+  const a=h.indexOf('<h3>Offers I received</h3>'),b=h.indexOf('<div class="card" style="margin-top:10px"><h3>Saved items</h3>');if(a<0||b<0)return h;
+  const mine=S.market.filter(x=>x.uid===me2()&&x.status!=='removed'),offs=S.offers.filter(o=>mine.some(x=>x.id===o.lid)).slice().reverse(),mk=S.offers.filter(o=>o.by&&S.user&&o.by===(S.user.nick||S.user.name)&&!mine.some(x=>x.id===o.lid)).slice().reverse();
+  const pill=o=>o.status?`<span class="pill">${esc(o.status==='countered'?'Counter Rs '+o.counter:o.status)}</span>`:'<span class="pill">New</span>';
+  const rows=offs.length?offs.map(o=>{const x=S.market.find(z=>z.id===o.lid);return `<div class="item" style="flex-wrap:wrap"><div style="flex:1;min-width:160px"><div class="b">Rs ${esc(o.amt)} for ${esc(x?x.title:'')} ${pill(o)}</div><div class="mu sm">${esc(o.by)} | ${esc(o.phone)} ${esc(o.msg||'')}</div></div><div class="row" style="gap:6px"><button class="btn sm" data-a="mkAcc" data-id="${o.id}">Accept</button><button class="btn sm ghost" data-a="mkCounter" data-id="${o.id}">Counter</button><button class="btn sm ghost" data-a="mkDec" data-id="${o.id}">Decline</button></div></div>`}).join(''):'<div class="mu">No offers yet.</div>';
+  const made=mk.length?`<div class="card" style="margin-top:10px"><h3>Offers I made</h3>${mk.map(o=>{const x=S.market.find(z=>z.id===o.lid);return `<div class="item"><div class="b">Rs ${esc(o.amt)} for ${esc(x?x.title:'')}</div></div>`}).join('')}<div class="mu sm">The seller replies on WhatsApp.</div></div>`:'';
+  return h.slice(0,a)+'<h3>Offers I received</h3>'+rows+'</div>'+made+h.slice(b)};
+}
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});

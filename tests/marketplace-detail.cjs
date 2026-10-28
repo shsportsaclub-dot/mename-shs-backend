@@ -1,0 +1,24 @@
+const {chromium}=require('playwright');const fs=require('node:fs'),http=require('node:http'),assert=require('node:assert/strict');
+(async()=>{const html=fs.readFileSync('app-index.html'),sv=http.createServer((q,r)=>{r.setHeader('content-type','text/html');r.end(html)});await new Promise(r=>sv.listen(18998,'127.0.0.1',r));
+const b=await chromium.launch();try{const p=await b.newPage({viewport:{width:412,height:900}}),errs=[];p.on('pageerror',e=>errs.push(e.message));
+await p.route('**/*',r=>r.request().url()==='http://127.0.0.1:18998/'?r.continue():r.fulfill({contentType:'application/json',body:'{"ok":false}'}));
+await p.goto('http://127.0.0.1:18998/');
+await p.evaluate(()=>{window.__wo=[];window.open=u=>{window.__wo.push(u)};UI.stage='app';S.user={name:'Seller',id:'u1',role:'scorer',kind:'Scorer',phone:'+919000000001'};S.prefs={...S.prefs,asked:1,welcomed:1};
+S.market=[{id:'m1',kind:'used',title:'Kookaburra bat',cat:'Bats',cond:'Good',price:'3000',nego:true,loc:'Hapur',phone:'9000000001',desc:'Two seasons old, no cracks',by:'Seller',uid:'u1',status:'open',t:Date.now()},{id:'m2',kind:'used',title:'Leather football',cat:'Balls',cond:'New',price:'900',loc:'Hapur',phone:'9000000001',by:'Seller',uid:'u1',status:'open',sport:'football',t:Date.now()}];
+S.offers=[{id:'o1',lid:'m1',by:'Buyer',phone:'9111111111',amt:'2500',msg:'today',t:Date.now()}];UI.view='market';UI.mk.tab='used';render()});
+assert.equal(await p.locator('.mk .it').count(),2);
+await p.locator('[data-a="mkSport"][data-v="football"]').click();assert.equal(await p.locator('.mk .it').count(),1);assert.match(await p.locator('.mk').innerText(),/football/i);
+await p.locator('[data-a="mkSport"][data-v=""]').click();assert.equal(await p.locator('.mk .it').count(),2);
+await p.locator('.mk .it [data-a="mkView"]').first().click();
+const mt=await p.locator('#modal, .modal, [role=dialog]').first().innerText().catch(()=>p.evaluate(()=>document.body.innerText));
+assert.match(await p.evaluate(()=>document.body.innerText),/Two seasons old[\s\S]*Location: Hapur[\s\S]*Seller: Seller/,'detail shows full info');
+await p.evaluate(()=>{UI.modal=null;renderModal();UI.mk.tab='mine';render()});
+assert.match(await p.locator('#app').innerText(),/Rs 2500 for Kookaburra bat/);
+await p.locator('[data-a="mkCounter"][data-id="o1"]').click();await p.locator('form[data-f="mkCounterSend"] input[name="amt"]').fill('2800');await p.locator('form[data-f="mkCounterSend"] button').click();
+let o=await p.evaluate(()=>({o:S.offers[0],wo:window.__wo}));assert.equal(o.o.status,'countered');assert.equal(o.o.counter,'2800');assert.match(decodeURIComponent(o.wo[0]||''),/My price is Rs 2800/);
+await p.locator('[data-a="mkAcc"][data-id="o1"]').click();o=await p.evaluate(()=>S.offers[0].status);assert.equal(o,'accepted');
+await p.locator('[data-a="mkDec"][data-id="o1"]').click();assert.equal(await p.evaluate(()=>S.offers[0].status),'declined');
+// a different user cannot answer someone else's offer
+await p.evaluate(()=>{S.user={name:'Other',id:'u9',role:'viewer',kind:'Fan',phone:'+919000000009'};S.offers[0].status='';A.mkAcc({id:'o1'})});assert.equal(await p.evaluate(()=>S.offers[0].status),'');
+assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true);assert.deepEqual(errs,[]);
+console.log('PASS marketplace: sport filter, listing detail, accept/counter/decline offers')}finally{await b.close();sv.close()}})().catch(e=>{console.error(e);process.exit(1)});
