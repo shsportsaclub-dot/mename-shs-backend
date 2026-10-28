@@ -7743,6 +7743,35 @@ S.stream.scene=S.stream.scene||'bug';S.stream.card=S.stream.card||{t:'Starting s
   return `<div class="card sh-stumps" style="margin:10px 12px;padding:14px;text-align:center;border:1px solid #f5b335;border-radius:14px;background:#2a1d05"><div style="font:800 13px var(--ui);letter-spacing:.12em;color:#f5b335">STUMPS · DAY ${S0.day} COMPLETE</div><div style="font:700 15px var(--ui);margin-top:6px">${lab(S0)}</div>${when?`<div class="mu sm" style="margin-top:4px">Expected ${esc(when)}, same time as Day 1. The provider does not publish the exact start.</div>`:''}</div>`+h};
  setInterval(()=>{try{document.querySelectorAll('[data-cd]').forEach(e=>{const n=+e.getAttribute('data-cd');e.textContent=fmt(n-Date.now())})}catch(x){}},1000);
 }
+/* ---------------- MARKETPLACE: listings are shared through the server, so a seller's post shows on every buyer's phone.
+   Offers still go to the seller on WhatsApp. Guests can browse; posting needs sign-in. Admin verification is set only on the server. ---------------- */
+{
+ UI.mkSync=UI.mkSync||{hash:{},busy:false,state:'idle',at:0};
+ const pack=x=>{const o=JSON.parse(JSON.stringify(x));delete o.rm;delete o._sh;delete o._pv;return {x:o}};
+ const mine=x=>!x.rm;
+ async function mkPush(){if(!shOn()||UI.mkSync.busy)return;UI.mkSync.busy=true;
+  try{for(const x of S.market){const own=mine(x)&&(x.uid===me2()||!x.uid),adminVer=isAdm()&&x.rm&&x.verified!==x._pv;if(!own&&!adminVer)continue;
+    const d=pack(x),h=JSON.stringify(d);if(UI.mkSync.hash[x.id]===h)continue;
+    const r=await fetch(apiBase()+'/api/shared/market/'+x.id,{method:'PUT',headers:{'Authorization':'Bearer '+shTok(),'Content-Type':'application/json'},body:JSON.stringify({data:d})});
+    const j=await r.json();if(j.ok){UI.mkSync.hash[x.id]=h;if(adminVer)x._pv=x.verified}else if(r.status===401){UI.mkSync.state='login';break}else if(r.status===403){UI.mkSync.hash[x.id]=h}}
+   if(UI.mkSync.state!=='login')UI.mkSync.state='ok'}catch(e){UI.mkSync.state='offline'}
+  UI.mkSync.busy=false}
+ async function mkPull(){if(!apiBase())return;let changed=false;
+  try{const r=await fetch(apiBase()+'/api/shared/market'),j=await r.json();if(!j.ok)return;const me=shMe();
+   for(const it of j.items||[]){const x=it.data&&it.data.x;if(!x||x.id!==it.id)continue;const i=S.market.findIndex(z=>z.id===it.id),own=it.owner===me;
+    if(i>=0&&mine(S.market[i])&&S.market[i].uid===me2())continue;
+    if(x.status==='removed'){if(i>=0){S.market.splice(i,1);changed=true}continue}
+    if(i>=0&&S.market[i]._sh===it.updated)continue;
+    const n=Object.assign({},x,own?{uid:me2(),rm:0}:{rm:1},{_sh:it.updated,_pv:x.verified,by:x.by||it.ownerName});
+    if(i>=0)S.market[i]=n;else S.market.push(n);changed=true}
+   UI.mkSync.at=Date.now();if(changed){save();if(UI.view==='market')render()}}catch(e){}}
+ window.mkPush=mkPush;window.mkPull=mkPull;
+ const c0=commit;commit=function(){c0.apply(this,arguments);setTimeout(mkPush,400)};
+ const mv=XV.market;XV.market=function(){if(Date.now()-UI.mkSync.at>15000){UI.mkSync.at=Date.now();setTimeout(mkPull,0)}
+  let h=mv.apply(this,arguments);const note=UI.mkSync.state==='login'?'Sign in again to publish your listings.':'';return note?h+`<div class="mu sm" style="margin:8px 12px">${note}</div>`:h};
+ setInterval(()=>{if(document.visibilityState==='visible'&&UI.view==='market'){mkPull();mkPush()}},20000);
+ setTimeout(()=>{if(S.user){mkPull();mkPush()}},3000);
+}
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});

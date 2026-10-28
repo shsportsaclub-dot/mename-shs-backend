@@ -1184,7 +1184,7 @@ http.createServer(async (req, res) => {
     return out(405, { ok: false, error: 'Method not allowed' });
   }
   if (path.startsWith('/api/shared/')) {   // shared public data: matches, tournaments, auctions (anyone reads, the owner writes)
-    const [, , , col, id] = path.split('/'), COLS = ['matches', 'sports', 'tours', 'auc', 'grounds'];
+    const [, , , col, id] = path.split('/'), COLS = ['matches', 'sports', 'tours', 'auc', 'grounds', 'market'];
     if (!COLS.includes(col)) return out(404, { ok: false, error: 'Unknown collection' });
     const bag = db.shared[col] = db.shared[col] || {};
     if (req.method === 'GET' && !id) {
@@ -1211,6 +1211,16 @@ http.createServer(async (req, res) => {
         return out(400, { ok: false, error: 'Invalid sport match' });
       }
       delete m.rm; delete m._sh;
+    }
+    if (col === 'market') {   // marketplace listing: owner publishes, anyone reads; only an admin can mark a shop/brand listing verified
+      const x = b.data && b.data.x, str = (v, n) => typeof v === 'string' && v.trim() && v.length <= n;
+      if (!x || x.id !== id || !str(x.title, 120) || (x.desc != null && String(x.desc).length > 600) || (x.price != null && String(x.price).length > 14) ||
+          (x.img != null && (typeof x.img !== 'string' || x.img.length > 300000)) || (x.phone != null && String(x.phone).length > 20) || (x.status != null && !['open', 'active', 'sold', 'removed'].includes(x.status))) {
+        return out(400, { ok: false, error: 'Invalid listing' });
+      }
+      delete x.rm; delete x._sh; delete x._pv;
+      const was = cur && cur.data && cur.data.x && cur.data.x.verified;
+      if (u.role !== 'admin') { if (x.kind && !['used', 'rent'].includes(x.kind)) x.verified = was === true ? true : false; else delete x.verified; }
     }
     if (limited('shw:' + phone, 600, 36e5)) return out(429, { ok: false, error: 'Too many saves, slow down' });
     bag[id] = { id, owner: cur ? cur.owner : phone, ownerName: u.nick || u.name || '', updated: Date.now(), data: b.data };
