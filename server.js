@@ -1210,6 +1210,13 @@ http.createServer(async (req, res) => {
   if (req.method === 'GET' && STATIC[path]) {   // installable-app files (PWA)
     try { const f = fs.readFileSync(new URL('./public' + path, import.meta.url)); res.writeHead(200, { 'content-type': STATIC[path], 'cache-control': path === '/sw.js' ? 'no-cache' : 'public, max-age=86400' }); return res.end(f); } catch { /* fall through */ }
   }
+  if (req.method === 'GET' && path === '/broadcast-demo') {
+    try {
+      const html = fs.readFileSync(new URL('./public/broadcast-router-demo.html', import.meta.url));
+      res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' });
+      return res.end(html);
+    } catch { return out(404, { ok: false, error: 'Broadcast demo unavailable' }); }
+  }
   if (req.method === 'GET' && path === '/live-studio') {
     try { const html = fs.readFileSync(new URL('./public/live-studio.html', import.meta.url)); res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' }); return res.end(html); }
     catch { return out(404, { ok: false, error: 'Live studio not installed' }); }
