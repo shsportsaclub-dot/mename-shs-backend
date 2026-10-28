@@ -7371,6 +7371,8 @@ window.shNoteGroups=function(notes){
  return G.slice().reverse().map(g=>{const e=g.end,pe=g.prevEnd,full=e&&pe&&Math.abs(pe.o-(g.ov-1))<1e-6;const R=full?e.r-pe.r:null;
   const hd=g.ov==null?'Score updates':`Over ${g.ov}${R!=null&&R>=0?` (R: ${R})`:''}${e&&e.o%1>1e-6?' · in progress':''}`;
   return `<div class="ovh"><span>${esc(hd)}</span><span>${e?esc(e.r+'-'+e.w+' ('+e.o+')'):''}</span></div>`+g.items.slice().reverse().map(x=>`<div class="cl" style="grid-template-columns:48px 1fr"><span class="o n">${esc(new Date(x.at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}))}</span><span>${esc(x.text)}</span></div>`).join('')}).join('')+`<div class="cl" style="grid-template-columns:1fr;opacity:.75"><span>Ball-by-ball is not sent by the data provider for this match. These are score changes seen by the SH live tracker, grouped by over, not individual deliveries.</span></div>`};
+/* ---------------- MATCH SCREEN: title bar + tabs stay on top while scrolling (bottom bar is already fixed) */
+{const st=document.createElement('style');st.textContent=`.rp.rph{position:sticky;top:env(safe-area-inset-top,0px);z-index:60}.rp.rph header{position:relative;top:auto}`;document.head.appendChild(st)}
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});
