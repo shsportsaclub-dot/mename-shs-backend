@@ -7137,7 +7137,13 @@ render=(o=>function(){try{ar17Norm(UI.wm)}catch(e){}return o.apply(this,argument
   if(UI.scl===undefined){UI.scl=null;sc('GET').then(j=>{UI.scl=j;if(UI.view==='svc')render()}).catch(()=>{UI.scl={ok:false,error:'Cannot reach the server'};if(UI.view==='svc')render()})}
   const k=UI.scl,rows=k&&k.ok?k.scorers.map(x=>`<div style="display:flex;gap:8px;align-items:center;justify-content:space-between;margin:4px 0"><span style="min-width:0;overflow:hidden;text-overflow:ellipsis">${esc(x.nick||'')} <span class="mu sm">${esc(x.id)} · ${esc(x.role)}</span></span>${x.role==='scorer'&&!x.fixed?`<button type="button" class="btn sm ghost" data-a="scRemove" data-v="${esc(x.id)}">Remove</button>`:''}</div>`).join('')+(k.invited&&k.invited.length?`<div class="mu sm" style="margin-top:6px">Invited, not registered yet: ${k.invited.map(esc).join(', ')}</div>`:''):`<div class="mu sm">${k&&k.error?esc(k.error):'Checking...'}</div>`;
   const card=`<div class="cbp-cd" style="padding:12px 14px"><div style="font:600 14px var(--ui);margin-bottom:6px">Scorers (who can score world matches ball by ball)</div>${rows}<div class="mu sm" style="margin:8px 0 6px">Add a scorer by email or mobile number. They need an account (or they become a Scorer when they register).</div><input id="sc-in" type="text" inputmode="email" placeholder="email or mobile number" style="width:100%;box-sizing:border-box;margin-bottom:8px"><button type="button" class="btn sm" data-a="scAdd">Add scorer</button></div>`;
-  return o.slice(0,i)+card+o.slice(i)};
+  const hk=UI.pk,hst=hk&&hk.ok?(hk.highlightly?'Other-sports feed is ON':'Other-sports feed is not set'):'Checking...';
+  const hcard=`<div class="cbp-cd" style="padding:12px 14px"><div style="font:600 14px var(--ui);margin-bottom:6px">Highlightly key (basketball, volleyball, handball, rugby scores)</div><div class="mu sm" style="margin-bottom:8px">${hst}. Free plan is about 100 requests a day, so scores refresh every 10 minutes. Paste the key here once; it is saved on the server and never shown again.</div>${hk&&hk.ok&&hk.highlightly?'<button class="btn sm ghost" data-a="hlKeyClear">Remove saved key</button>':`<input id="hlk-in" type="password" autocomplete="off" placeholder="Highlightly key" style="width:100%"><button class="btn sm" style="margin-top:8px" data-a="hlKeySave">Save key</button>`}</div>`;
+  return o.slice(0,i)+card+hcard+o.slice(i)};
+ Object.assign(A,{
+  async hlKeySave(){const el=document.getElementById('hlk-in'),t=el&&el.value.trim();if(!t)return toast('Paste the key first');try{const j=await call('POST',{highlightly:t});if(el)el.value='';UI.pk=undefined;toast(j.ok?'Key saved':(j.error||'Failed'));if(UI.view==='svc')render()}catch(e){toast('Cannot reach the server')}},
+  async hlKeyClear(){try{const j=await call('POST',{clearHighlightly:true});UI.pk=undefined;toast(j.ok?'Key removed':(j.error||'Failed'));if(UI.view==='svc')render()}catch(e){toast('Cannot reach the server')}}
+ });
  Object.assign(A,{
   async scAdd(){const el=document.getElementById('sc-in'),v=el&&el.value.trim();if(!v)return toast('Enter an email or number');try{const j=await sc('POST',{id:v,role:'scorer'});if(el)el.value='';UI.scl=undefined;toast(j.ok?(j.applied?'Scorer added':(j.note||'Invited')):(j.error||'Failed'),j.ok&&!j.applied?5000:undefined);if(UI.view==='svc')render()}catch(e){toast('Cannot reach the server')}},
   async scRemove(d){try{const j=await sc('POST',{id:d.v,role:'viewer'});UI.scl=undefined;toast(j.ok?'Scorer removed':(j.error||'Failed'));if(UI.view==='svc')render()}catch(e){toast('Cannot reach the server')}}
@@ -8693,6 +8699,30 @@ S.stream.scene=S.stream.scene||'bug';S.stream.card=S.stream.card||{t:'Starting s
   if(j&&j.ok&&j.profile&&j.profile.role&&j.profile.role!==S.user.role){S.user.role=j.profile.role;try{save()}catch(e){}render()}}catch(e){}};
  setTimeout(window.shSyncRole,2500);setInterval(window.shSyncRole,120000);
  setInterval(()=>{try{if(!document.hidden&&UI.view==='wmatch'&&UI.wm)load(UI.wm)}catch(e){}},8000);
+}
+
+/* ---------------- 55 WORLD SCORES for basketball, volleyball, handball, rugby (Highlightly through the server; free plan, so lists refresh every few minutes). Only what the provider sends. ---------------- */
+{
+ const HLS={basketball:'Basketball',volleyball:'Volleyball',handball:'Handball',rugby:'Rugby',hockey:'Hockey',tennis:'Tennis'};
+ UI.sx=UI.sx||{};
+ const load=async(sp,force)=>{
+  const x=UI.sx[sp]=UI.sx[sp]||{list:null,err:'',at:0,busy:0};
+  if(x.busy||!apiBase()||(!force&&Date.now()-x.at<300000))return;x.busy=1;
+  try{const r=await fetch(apiBase()+'/api/sx/live?sport='+sp,{signal:AbortSignal.timeout(15000),cache:'no-store'}),j=await r.json();if(j.ok){x.list=j.matches||[];x.err='';x.note=j.note||''}else x.err=j.error||'Feed unavailable'}catch(e){x.err='Feed unreachable'}
+  x.at=Date.now();x.busy=0;if(UI.view==='home'&&UI.sport===sp)render();
+ };
+ const st=m=>m.live?(m.state||'Live')+(!m.state&&m.period!=null&&m.period!==''?' · P'+m.period:''):m.ended?'FT':m.startsAt?new Date(m.startsAt).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'-';
+ const sc=v=>v==null?'-':v;
+ window.shWorldScores=function(sp){
+  if(!HLS[sp]||!apiBase())return '';
+  load(sp,false);const x=UI.sx[sp];
+  if(!x||(!x.list&&!x.err))return `<div class="hh-box"><div class="b">World ${esc(HLS[sp].toLowerCase())}</div><div class="mu sm">Loading...</div></div>`;
+  if(x.err&&!x.list)return x.err==='This sport feed is not connected yet'?'':`<div class="hh-box"><div class="b">World ${esc(HLS[sp].toLowerCase())}</div><div class="mu sm">${esc(x.err)}</div></div>`;
+  const L=(x.list||[]).filter(m=>m.home&&m.away&&m.home.name&&m.away.name),by=new Map();L.forEach(m=>{const k=(m.country?m.country+' · ':'')+(m.league||HLS[sp]);(by.get(k)||by.set(k,[]).get(k)).push(m)});
+  const live=L.filter(m=>m.live).length;
+  return `<div class="hh-box"><div class="b">World ${esc(HLS[sp].toLowerCase())} <span class="mu sm">${live?live+' live':'today'}${x.note?' · '+esc(x.note):''}</span></div>${L.length?[...by.entries()].map(([k,a])=>`<div class="mu sm" style="margin:8px 2px 0">${esc(k)}</div>`+a.map(m=>`<div style="display:grid;grid-template-columns:1fr auto 1fr;gap:6px;align-items:center;background:#0c1d4a;border:1px solid #2a4cb0;border-radius:10px;padding:10px;margin:6px 0"><b style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(m.home.short||m.home.name)}</b><div style="text-align:center"><b style="font-size:18px">${sc(m.home.score)} - ${sc(m.away.score)}</b><div style="font-size:11px;color:${m.live?'#ff5a6a':'#9fb3c8'};font-weight:800">${m.live?'● ':''}${esc(st(m))}</div></div><b style="text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(m.away.short||m.away.name)}</b></div>`).join('')).join(''):'<div class="mu sm">No matches today.</div>'}<div class="mu sm" style="margin-top:6px">Scores from the data provider, refreshed every few minutes. Not scored by Scoring Heroes.</div></div>`;
+ };
+ const sb1=shBody;shBody=function(sp){const o=sb1.apply(this,arguments);return HLS[sp]?window.shWorldScores(sp)+o:o};
 }
 
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */

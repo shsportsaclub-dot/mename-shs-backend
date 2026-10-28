@@ -1,0 +1,11 @@
+const {chromium}=require('playwright');
+(async()=>{const b=await chromium.launch(),p=await b.newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));
+await p.addInitScript(()=>{window.fetch=async(u)=>{u=String(u);const J=o=>({ok:true,status:200,json:async()=>o,text:async()=>JSON.stringify(o)});
+ if(u.includes('/api/sx/live'))return J({ok:true,matches:[{id:'hlbasketball:1',sport:'basketball',league:'NBA',country:'USA',live:true,ended:false,state:'Q3',period:3,startsAt:'',home:{name:'Lakers',short:'LAL',score:80},away:{name:'Celtics',short:'BOS',score:77}},{id:'x',home:{name:''},away:{name:''}}]});
+ return J({ok:true})}});
+await p.goto('file:///home/claude/mename-shs-backend/app-index.html');await p.waitForTimeout(500);
+await p.evaluate(()=>{window.pullLive=async()=>{};window.apiBase=()=>'http://x';window.__h=shBody('basketball')});
+await p.waitForTimeout(1200);
+const h=await p.evaluate(()=>shBody('basketball').replace(/<[^>]+>/g,' '));
+console.log(/LAL/.test(h)&&/BOS/.test(h)&&/80 - 77/.test(h)&&!/Loading/.test(h)&&!/undefined/.test(h)?'PASS cards':'FAIL '+h.slice(0,400));
+console.log(errs.length?'ERR '+errs:'no errors');await b.close()})();
