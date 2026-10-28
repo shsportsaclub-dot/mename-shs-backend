@@ -7526,6 +7526,55 @@ window.shNoteGroups=function(notes){
  document.addEventListener('pointerup',end);document.addEventListener('pointercancel',end);
  window.fabReset=()=>{pos=null;try{localStorage.removeItem(KEY)}catch(e){}render()};
 }
+/* ---------------- TEAM DASHBOARD: squad roles, invite link, join requests, transfers (TM-014) ----------------
+   Data is stored on this device until server sync exists; the screen says so. */
+S.joinReq=S.joinReq||[];S.transfers=S.transfers||[];UI.td=UI.td||{id:'',tab:'squad'};
+{
+ const st=document.createElement('style');st.textContent='.td-h{display:flex;gap:12px;align-items:center}.td-st{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:10px 0}.td-st div{background:var(--c2,#0c1d4a);border-radius:10px;padding:8px 4px;text-align:center}.td-st b{display:block;font-size:18px}.td-st span{font-size:11px;opacity:.7}.td-p{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--bd,#ffffff22);flex-wrap:wrap}.td-p .nm{flex:1;min-width:120px}.td-tg{font-size:11px;padding:2px 7px;border-radius:99px;border:1px solid var(--ac);color:var(--ac)}';document.head.appendChild(st);
+ const me=()=>S.user&&(S.user.id||S.user.uid||S.user.name),tm=id=>S.teams.find(t=>t.id===id),pl=id=>S.players.find(p=>p.id===id);
+ const mgr=t=>can()||(t&&t.mgr&&t.mgr===me());
+ const link=t=>location.origin+location.pathname+'?join='+encodeURIComponent(t.id);
+ const stats=t=>{const ms=S.matches.filter(m=>m.status==='done'&&(m.a===t.id||m.b===t.id));return{p:ms.length,w:ms.filter(m=>m.win===t.id).length,l:ms.filter(m=>m.win&&m.win!==t.id).length}};
+ const pend=t=>S.joinReq.filter(r=>r.tid===t.id&&r.status==='pending'),inc=t=>S.transfers.filter(x=>x.to===t.id&&x.status==='pending');
+ XV.tdash=function(){const t=tm(UI.td.id);if(!t){UI.view='teams';return vTeams()}
+  const tab=UI.td.tab,m=mgr(t),s=stats(t),rq=pend(t),tr=inc(t);
+  const tabs=[['squad','Squad'],['invite','Invite'],['req','Requests'+(rq.length?' ('+rq.length+')':'')],['tr','Transfers'+(tr.length?' ('+tr.length+')':'')]];
+  let b='';
+  if(tab==='squad'){b=(t.players.length?t.players.map(id=>{const p=pl(id);if(!p)return'';
+    const tg=[t.cap===id?'C':'',t.vc===id?'VC':'',t.wk===id?'WK':''].filter(Boolean).map(x=>`<span class="td-tg">${x}</span>`).join(' ');
+    return `<div class="td-p"><div class="nm"><b>${esc(p.name)}</b> ${tg}<div class="mu sm">${esc(p.role||'')}${p.jersey?' | #'+esc(p.jersey):''}</div></div>${m?`<button class="btn sm ghost" data-a="tdRole" data-id="${id}" data-v="cap">C</button><button class="btn sm ghost" data-a="tdRole" data-id="${id}" data-v="vc">VC</button><button class="btn sm ghost" data-a="tdRole" data-id="${id}" data-v="wk">WK</button><button class="btn sm ghost" data-a="tdXfer" data-id="${id}">Transfer</button><button class="btn sm ghost" data-a="tdRelease" data-id="${id}">Release</button>`:''}</div>`}).join(''):'<div class="mu">No players yet. Share the invite link so players can ask to join.</div>')}
+  else if(tab==='invite'){const l=link(t),w='https://wa.me/?text='+encodeURIComponent('Join '+t.name+' on Scoring Heroes: '+l);
+   b=`<div class="b">Invite players</div><div class="mu sm" style="margin:6px 0">Anyone who opens this link can ask to join. You approve each request.</div><input readonly value="${esc(l)}" onclick="this.select()" style="width:100%"><div class="row" style="gap:6px;margin-top:8px"><a class="btn sm" href="${w}" target="_blank" rel="noopener">Share on WhatsApp</a><button class="btn sm ghost" data-a="tdCopy">Copy link</button></div>
+   ${m?`<form data-f="tdAdd" style="margin-top:12px"><div class="b">Add a player by name</div><div class="row" style="gap:6px"><input name="name" placeholder="Player name" required style="flex:1"><input name="phone" placeholder="Phone (optional)" inputmode="numeric" style="flex:1"></div><button class="btn sm" style="margin-top:6px">Add to squad</button></form>`:''}`}
+  else if(tab==='req'){b=rq.length?rq.map(r=>`<div class="td-p"><div class="nm"><b>${esc(r.name)}</b><div class="mu sm">${esc(r.phone||'')} ${esc(r.msg||'')}</div></div>${m?`<button class="btn sm" data-a="tdAcc" data-id="${r.id}">Accept</button><button class="btn sm ghost" data-a="tdDec" data-id="${r.id}">Decline</button>`:''}</div>`).join(''):'<div class="mu">No join requests.</div>'}
+  else{const out=S.transfers.filter(x=>x.from===t.id).slice().reverse();
+   b=`<div class="b">Incoming</div>${tr.length?tr.map(x=>`<div class="td-p"><div class="nm"><b>${esc(nm(x.pid))}</b><div class="mu sm">from ${esc((tm(x.from)||{}).name||'?')}${x.note?' | '+esc(x.note):''}</div></div>${m?`<button class="btn sm" data-a="tdTrAcc" data-id="${x.id}">Accept</button><button class="btn sm ghost" data-a="tdTrDec" data-id="${x.id}">Decline</button>`:''}</div>`).join(''):'<div class="mu">None.</div>'}
+   <div class="b" style="margin-top:12px">Sent</div>${out.length?out.map(x=>`<div class="td-p"><div class="nm">${esc(nm(x.pid))} to ${esc((tm(x.to)||{}).name||'?')}</div><span class="pill">${esc(x.status)}</span></div>`).join(''):'<div class="mu">None.</div>'}`}
+  return `<div class="bar"><button class="btn sm ghost" data-a="go" data-v="teams">Back</button><h2 style="margin-left:8px">${esc(t.name)}</h2></div>
+  <div class="card"><div class="td-h">${logo(t,56)}<div><div class="b">${esc(t.name)} <span class="mu">(${esc(t.short)})</span></div><div class="mu sm">${t.players.length} players${t.cap?' | Captain '+esc(nm(t.cap)):''}</div></div></div>
+  <div class="td-st"><div><b>${s.p}</b><span>Played</span></div><div><b>${s.w}</b><span>Won</span></div><div><b>${s.l}</b><span>Lost</span></div><div><b>${t.players.length}</b><span>Squad</span></div></div>
+  <div class="tabs">${tabs.map(([k,l])=>`<button class="${tab===k?'on':''}" data-a="tdTab" data-v="${k}">${l}</button>`).join('')}</div><div style="margin-top:8px">${b}</div>
+  <div class="mu sm" style="margin-top:10px">Requests and transfers are saved on this device for now.</div></div>`};
+ const vt=vTeams;vTeams=function(){let h=vt.apply(this,arguments);S.teams.forEach(t=>{const k='<h3>'+esc(t.name)+'</h3>';h=h.replace(k,`<h3 data-a="tdOpen" data-id="${t.id}" role="button" style="cursor:pointer">${esc(t.name)} &rsaquo;</h3>`)});return h};
+ const add=(t,p)=>{p.team=t.id;if(!t.players.includes(p.id))t.players.push(p.id)};
+ Object.assign(A,{tdOpen(d){UI.td={id:d.id,tab:'squad'};UI.view='tdash';render();window.scrollTo&&window.scrollTo(0,0)},tdTab(d){UI.td.tab=d.v;render()},
+  tdRole(d){const t=tm(UI.td.id);if(!t||!mgr(t))return;t[d.v]=t[d.v]===d.id?null:d.id;commit()},
+  tdRelease(d){const t=tm(UI.td.id);if(!t||!mgr(t))return;t.players=t.players.filter(x=>x!==d.id);['cap','vc','wk'].forEach(k=>{if(t[k]===d.id)t[k]=null});const p=pl(d.id);if(p)p.team=null;commit();toast('Released to free agents')},
+  tdCopy(){const t=tm(UI.td.id);try{navigator.clipboard.writeText(link(t));toast('Link copied')}catch(e){toast('Select the link and copy it')}},
+  tdXfer(d){const t=tm(UI.td.id),o=S.teams.filter(x=>x.id!==t.id);UI.modal={t:'html',html:`<h3>Transfer ${esc(nm(d.id))}</h3><form data-f="tdXfer"><input type="hidden" name="pid" value="${esc(d.id)}"><label>To team<select name="to">${o.map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join('')}</select></label><label>Note (optional)<input name="note"></label><div class="mu sm" style="margin:6px 0">The other team must accept. The player stays here until then.</div><button class="btn wide">Send transfer request</button></form>`};renderModal()},
+  tdAcc(d){const r=S.joinReq.find(x=>x.id===d.id),t=r&&tm(r.tid);if(!t||!mgr(t))return;let p=r.pid&&pl(r.pid);if(!p){p={id:uid(),name:r.name,role:'BAT',team:null,phone:r.phone||'',bat:'Right-hand',bowl:'',jersey:0,photo:null,avatar:null};S.players.push(p)}add(t,p);r.status='accepted';commit();toast(r.name+' added')},
+  tdDec(d){const r=S.joinReq.find(x=>x.id===d.id);if(!r)return;r.status='declined';commit()},
+  tdTrAcc(d){const x=S.transfers.find(z=>z.id===d.id),to=x&&tm(x.to),fr=x&&tm(x.from),p=x&&pl(x.pid);if(!to||!p||!mgr(to))return;if(fr){fr.players=fr.players.filter(i=>i!==p.id);['cap','vc','wk'].forEach(k=>{if(fr[k]===p.id)fr[k]=null})}add(to,p);x.status='accepted';commit();toast('Transfer done')},
+  tdTrDec(d){const x=S.transfers.find(z=>z.id===d.id);if(!x)return;x.status='declined';commit()},
+  joinSend(){const t=tm(UI.joinTid);if(!t)return;const u=S.user||{};const nmv=u.nick||u.name||'Player';
+   if(S.joinReq.some(r=>r.tid===t.id&&r.status==='pending'&&r.name===nmv)){UI.modal=null;renderModal();return toast('Request already sent')}
+   const mp=S.players.find(p=>p.name===nmv&&p.phone&&p.phone===u.phone);S.joinReq.push({id:uid(),tid:t.id,name:nmv,phone:u.phone||'',pid:mp?mp.id:null,at:Date.now(),status:'pending'});UI.modal=null;commit();toast('Request sent to '+t.name)}});
+ Object.assign(F,{tdAdd(fd){const t=tm(UI.td.id);if(!t||!mgr(t))return;const n=String(fd.get('name')||'').trim();if(!n)return;const p={id:uid(),name:n,role:'BAT',team:null,phone:String(fd.get('phone')||''),bat:'Right-hand',bowl:'',jersey:0,photo:null,avatar:null};S.players.push(p);add(t,p);commit();toast(n+' added')},
+  tdXfer(fd){const t=tm(UI.td.id),to=fd.get('to'),pid=fd.get('pid');if(!t||!to||!pid)return;S.transfers.push({id:uid(),pid,from:t.id,to,note:String(fd.get('note')||''),at:Date.now(),status:'pending'});UI.modal=null;commit();toast('Transfer request sent')}});
+ /* ?join=<teamId> link: ask the signed-in person to confirm a join request */
+ const jp=new URLSearchParams(location.search).get('join');
+ if(jp){UI.joinTid=jp;const oi=window.__joinPrompt=()=>{const t=tm(jp);if(!t||!S.user||S.user.guest)return;UI.modal={t:'html',html:`<h3>Join ${esc(t.name)}?</h3><div class="mu sm" style="margin:6px 0">The team manager will see your request and can accept it.</div><button class="btn wide" data-a="joinSend">Send join request</button>`};renderModal()};setTimeout(oi,1200)}
+}
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});
