@@ -1749,8 +1749,9 @@ function attachHls(){document.querySelectorAll('video[data-hls]:not([data-on])')
 {const m0=vMatch;vMatch=function(){const o=m0(),m=curM();if(!m)return o;const live=m.status==='live'||m.status==='break',c=streamCard('m'+m.id,live);return c?o.replace('<div class="tabs">',c+'<div class="tabs">'):o}}
 
 /* ---------------- APP LOOKS (themes). Names can be changed in Settings. ---------------- */
-const LOOKS=[['sh','Sky High'],['mday','Match Day'],['sx','Southern Cross'],['exch','Exchange']];
-const lookName=k=>((S.settings.themeNames||{})[k])||(LOOKS.find(x=>x[0]===k)||[0,k])[1];
+const LOOKS=[['mday','Light']];
+window.shTheme=()=>{let t=S.settings.appTheme;if(t!=='hero'&&t!=='mday')t=null;return t||(S.user?'hero':'mday')};
+const lookName=k=>(LOOKS.find(x=>x[0]===k)||[0,k])[1];
 {const st=document.createElement('style');st.textContent=
 'html[data-theme=mday]{--bg:#eef1f4;--card:#ffffff;--c2:#f3f5f8;--tx:#10161c;--mu:#5d6b78;--ac:#e11d2e;--ac2:#f5a623;--bd:#d6dce3;--on:#ffffff;--bl:#1d6fe0;--grad:linear-gradient(90deg,#0a1f5c,#e11d2e)}'+
 'html[data-theme=sx]{--bg:#06100b;--card:#0e1c15;--c2:#16291f;--tx:#f0f5ee;--mu:#9bb0a3;--ac:#ffcd00;--ac2:#2ee6a6;--bd:#23382c;--on:#10200f;--bl:#38bdf8;--grad:linear-gradient(90deg,#0b3d2e,#0f5a3f 55%,#b99400)}'+
@@ -1758,13 +1759,12 @@ const lookName=k=>((S.settings.themeNames||{})[k])||(LOOKS.find(x=>x[0]===k)||[0
 'html[data-theme=mday]{--ac:#e11d2e;--grad:linear-gradient(90deg,#0a1f5c,#e11d2e);--ui:Roboto,"Helvetica Neue",Arial,system-ui,sans-serif}'+'html[data-theme=mday] .wser{background:#e4e8ec;color:#10161c;margin:0;padding:8px 14px;font-size:12px;text-transform:uppercase;letter-spacing:.6px;opacity:1}'+'html[data-theme=mday] .wcard{background:#fff;border:0;border-bottom:1px solid #e3e7ec;border-radius:0;margin:0;padding:12px 14px}'+'html[data-theme=mday] .wst{border:0;margin-top:4px;padding-top:0;font-weight:600}html[data-theme=mday] .wlive{color:#cb2431}html[data-theme=mday] .wres{color:#10161c}html[data-theme=mday] .wup{color:#5d6b78}'+'html[data-theme=mday] .tbadge{background:#dfe4ea;color:#10161c}html[data-theme=mday] .wrow{font-size:15px}'+'html[data-theme=mday] .htabs{gap:0;border-bottom:1px solid #d6dce3;margin:6px -2px 0}html[data-theme=mday] .htabs .btn{background:transparent;border:0;border-bottom:3px solid transparent;border-radius:0;color:#5d6b78;box-shadow:none;font-weight:600}html[data-theme=mday] .htabs .btn:not(.ghost){color:#e11d2e;border-bottom-color:#e11d2e}'+'html[data-theme=mday] .card{border-radius:6px;box-shadow:0 1px 2px rgba(16,22,28,.06)}html[data-theme=mday] .sec h3{text-transform:uppercase;font-size:13px;letter-spacing:.6px}'+
 'html[data-theme=exch] .wsc,html[data-theme=exch] .score{font-variant-numeric:tabular-nums;font-family:ui-monospace,Menlo,Consolas,monospace}html[data-theme=exch] .wcard,html[data-theme=exch] .card{border-radius:6px}html[data-theme=mday] .hero{color:#fff}';
 document.head.appendChild(st)}
-{const r0=render;render=function(){r0.apply(this,arguments);if(location.hash!=='#overlay')document.documentElement.dataset.theme=S.settings.appTheme||'hero';setTimeout(attachHls,0)}}
+{const r0=render;render=function(){r0.apply(this,arguments);if(location.hash!=='#overlay')document.documentElement.dataset.theme=window.shTheme();setTimeout(attachHls,0)}}
 {const m0=renderModal;renderModal=function(){m0.apply(this,arguments);setTimeout(attachHls,0)}}
 Object.assign(A,{look(d){S.settings.appTheme=d.v;commit()}});
 F.looks=function(fd){const n={};LOOKS.forEach(([k,l])=>{const v=String(fd.get('n_'+k)||'').trim().slice(0,24);if(v&&v!==l)n[k]=v});S.settings.themeNames=n;commit();toast('Look names saved')};
-{const v0=vSettings;vSettings=function(){const cur=S.settings.appTheme||'hero';
-  const card=`<div class="card"><h3>App look</h3><div class="hscroll" style="margin:8px 0">${LOOKS.map(([k])=>`<button class="tile ${cur===k?'on':''}" data-a="look" data-v="${k}" style="min-width:110px"><div>${esc(lookName(k))}</div></button>`).join('')}</div>
-  <form data-f="looks"><div class="mu sm">Give each look any name you like.</div>${LOOKS.map(([k,l])=>`<label>${esc(l)}<input name="n_${k}" maxlength="24" value="${esc(lookName(k))}"></label>`).join('')}<button class="btn sm">Save names</button></form></div>`;
+{const v0=vSettings;vSettings=function(){const cur=window.shTheme(),D={hero:['Sky High','Dark stadium look (default)'],mday:['Light','Clean white look, easy in daylight']};
+  const card=`<div class="card"><h3>App look</h3><div class="mu sm">Choose how the app looks. It is saved on this phone.</div><div class="g2" style="margin-top:8px">${LOOKS.map(([k])=>`<button type="button" class="btn ${cur===k?'':'ghost'}" data-a="look" data-v="${k}" style="text-align:left;padding:12px"><b>${esc(D[k][0])}${cur===k?' ✓':''}</b><div class="sm" style="opacity:.8;font-weight:400">${esc(D[k][1])}</div></button>`).join('')}</div></div>`;
   const o=v0(),i=o.indexOf('<div class="g2">');return i<0?o+card:o.replace('<div class="g2">','<div class="g2">'+card)}}
 
 /* ---------------- START MATCH WIZARD (mode, teams, format, players, venue, officials, broadcast, toss, review, start gate) ---------------- */
@@ -1916,7 +1916,7 @@ function reelStrip(){let R=[];try{R=reelItems()}catch(e){}if(!R.length||R[0].kin
 const isDemo=m=>!!m&&(m.demo||m.umpires==='Demo umpires');
 {const d0=demoMatch;demoMatch=function(){const r=d0.apply(this,arguments);const m=S.matches[S.matches.length-1];if(m)m.demo=true;return r}}
 {const r0=reelItems;reelItems=function(){const R=r0.apply(this,arguments),real=S.matches.some(m=>!isDemo(m)&&m.innings.length);return R.filter(x=>!['sh','potm','moments'].includes(x.kind)||real)}}
-function lookBar(){return `<div class="hscroll" style="gap:6px;margin:0 0 10px;align-items:center"><span class="mu sm" style="flex:none">Look</span>${LOOKS.map(([k])=>`<button type="button" class="btn sm ${((S.settings.appTheme||'hero')===k)?'':'ghost'}" data-a="look" data-v="${k}" style="flex:none">${esc(lookName(k))}</button>`).join('')}</div>`}
+function lookBar(){return `<div class="hscroll" style="gap:6px;margin:0 0 10px;align-items:center"><span class="mu sm" style="flex:none">Look</span>${LOOKS.map(([k])=>`<button type="button" class="btn sm ${(window.shTheme()===k)?'':'ghost'}" data-a="look" data-v="${k}" style="flex:none">${esc(lookName(k))}</button>`).join('')}</div>`}
 {const h2=vHome;vHome=function(){let o=h2();
   const live=S.matches.slice().reverse().find(m=>m.status==='live'||m.status==='break')||S.matches[S.matches.length-1];
   if(live&&isDemo(live))o=o.replace(/<span class="pill[^"]*">(LIVE NOW|RESULT|INNINGS BREAK|UPCOMING)<\/span>/,'<span class="pill">DEMO MATCH (sample data, not real)</span>');
@@ -2246,7 +2246,7 @@ function cbHome(){
   <div class="cbfeat">${lead?`<div class="tag">${esc(lead.source||'Cricket news')}</div><a ${lead.link?`href="${esc(lead.link)}" target="_blank" rel="noopener"`:''} style="text-decoration:none;color:inherit"><div class="im">${esc(lead.title)}</div></a><div class="mu sm" style="margin-top:8px">${lead.date?cbAgo(lead.date):''}</div>`:'<div class="mu">Top story appears here.</div>'}</div></div>`}
 Object.assign(A,{cbf(){const o=['all','live','rec','up'];UI.cbf=o[(o.indexOf(UI.cbf||'all')+1)%4];render()},cbNews(){UI.view='epaper';render()}});
 {const h9=vHome;vHome=function(){
-  if((S.settings.appTheme||'hero')!=='mday')return h9();
+  if(window.shTheme()!=='mday')return h9();
   const demo=S.matches.some(isDemo)&&!S.matches.some(m=>!isDemo(m))?`<div class="row" style="margin:10px 0;align-items:center"><span class="mu sm" style="flex:1">A sample match is loaded (not real).</span><button class="btn sm ghost" data-a="open" data-id="${S.matches.find(isDemo).id}">View sample</button></div>`:'';
   let pv='';try{const h=location.hostname||'';if(h&&!/onrender\.com$|^localhost$|^127\./.test(h))pv='<div class="card" style="border-color:var(--ac);margin:10px 0"><div class="b">You are viewing a preview copy</div><div class="mu sm" style="margin:4px 0 8px">Live scores and news cannot load here. Open the real app:</div><a class="btn sm" href="https://scoring-heroes-api.onrender.com/" target="_blank" rel="noopener">Open live app</a></div>'}catch(e){}
   const r=reelStrip();
@@ -2409,7 +2409,7 @@ const MENU2=[
 drawer=function(){
   if(!UI.drawer)return'';
   const cur=UI.view==='tour'?'tours':UI.view,adm=S.user&&(S.user.role==='admin'||S.user.role==='scorer');
-  const item=([k,e,l])=>{if(k==='@lookpick')return `<div class="grp" style="padding-top:6px">${e} ${l}</div><div class="looks">${LOOKS.map(([lk])=>`<button type="button" class="btn sm ${((S.settings.appTheme||'hero')===lk)?'':'ghost'}" data-a="look" data-v="${lk}">${esc(lookName(lk))}</button>`).join('')}</div>`;
+  const item=([k,e,l])=>{if(k==='@lookpick')return `<div class="grp" style="padding-top:6px">${e} ${l}</div><div class="looks">${LOOKS.map(([lk])=>`<button type="button" class="btn sm ${(window.shTheme()===lk)?'':'ghost'}" data-a="look" data-v="${lk}">${esc(lookName(lk))}</button>`).join('')}</div>`;
     if(k[0]==='@'){if((k==='@newMatch'||k==='@pimport')&&!adm)return '';return `<button class="mi" data-a="dact" data-v="${k.slice(1)}"><span class="e">${e}</span>${l}</button>`}
     return `<button class="mi ${cur===k?'on':''}" data-a="go" data-v="${k}"><span class="e">${e}</span>${l}</button>`};
   return `<div class="scrim" data-a="menu"></div><aside class="drawer"><div class="dh"><img src="${logoSrc()}" alt="Scoring Heroes" style="height:60px;width:auto"><div class="mu sm" style="margin-top:6px">${esc(S.user.nick||S.user.name)} (${esc(S.user.kind||S.user.role)})${viewerISO()?' | '+esc(viewerISO()):''}</div></div>
@@ -2598,7 +2598,7 @@ Object.assign(F,{
  dlsRec(fd){const m=curM();if(!can()||!m)return;(m.dlsRec=m.dlsRec||[]).push({id:uid(),target:+fd.get('target'),overs:fd.get('overs'),note:fd.get('note')||'',t:Date.now()});commit();toast('DLS saved')}});
 
 /* ---------------- SH HEROES LOOK (dark, per master mock) ---------------- */
-LOOKS.unshift(['hero','Heroes Dark']);
+LOOKS.unshift(['hero','Sky High']);
 {const st=document.createElement('style');st.textContent='html[data-theme=hero]{--bg:#060a1d;--card:#0c1333;--c2:#121b45;--tx:#f2f5ff;--mu:#9aa6d0;--ac:#e11d2e;--ac2:#f5b335;--bd:#26326b;--on:#ffffff;--bl:#3b82f6;--grad:linear-gradient(90deg,#0a1f5c,#e11d2e);--ui:Inter,system-ui,sans-serif}'+
 'html[data-theme=hero]{background:#060a1d}html[data-theme=hero] body{min-height:100vh;background:radial-gradient(1200px 500px at 85% -10%,#3a0d28 0,transparent 60%),radial-gradient(900px 500px at 0 0,#10246b 0,transparent 55%),#060a1d;background-repeat:no-repeat;background-attachment:fixed}'+
 '.hh-nav{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;padding:8px;border:1px solid var(--bd);border-radius:14px;background:var(--card);margin-bottom:10px}.hh-nav::-webkit-scrollbar{display:none}'+
@@ -2684,7 +2684,7 @@ Object.assign(A,{
  htab2(d){const v=d.v;if(v==='@tours'){UI.view='tours';render();return}if(v.startsWith('cat:')){UI.hf.cat=v.slice(4);render();return}UI.hf.tab=v;render()},
  hnav(d){const v=d.v;if(v==='@live'){UI.hf.tab='live';UI.view='home';render()}else if(v==='@results'){UI.hf.tab='rec';UI.view='home';render()}else if(v==='@cricket'){UI.sport='cricket';UI.view='home';render()}else if(v==='@more'){A.menu&&A.menu()}else{UI.view=v;render()}}});
 Object.assign(C,{hf(v,el){const k=el&&el.dataset?el.dataset.k:null;if(k){UI.hf[k]=v;render()}},hq(v){UI.hf.q=v;render();const i=document.querySelector('input[data-c="hq"]');if(i){i.focus();i.setSelectionRange(v.length,v.length)}}});
-{const h8=vHome;vHome=function(){if((S.settings.appTheme||'hero')==='hero'){let pv='';try{const h=location.hostname||'';if(h&&!/onrender\.com$|^localhost$|^127\./.test(h))pv='<div class="hh-box" style="border-color:var(--ac)"><div class="b">You are viewing a preview copy</div><div class="mu sm">Live scores, news and streams cannot load here. Open your Render link to see real data.</div></div>'}catch(e){}let o=heroHome();if(platKind()==='phone'){o=o.replace('<div class="hh-fil">','<details class="hh-box" style="padding:8px 12px"><summary style="font-weight:700;cursor:pointer">Filters</summary><div class="hh-fil" style="margin-top:8px">').replace('</div>\n <div class="hh-tabs">','</div></details>\n <div class="hh-tabs">')}return pv+o}return h8()}}
+{const h8=vHome;vHome=function(){if(window.shTheme()==='hero'){let pv='';try{const h=location.hostname||'';if(h&&!/onrender\.com$|^localhost$|^127\./.test(h))pv='<div class="hh-box" style="border-color:var(--ac)"><div class="b">You are viewing a preview copy</div><div class="mu sm">Live scores, news and streams cannot load here. Open your Render link to see real data.</div></div>'}catch(e){}let o=heroHome();if(platKind()==='phone'){o=o.replace('<div class="hh-fil">','<details class="hh-box" style="padding:8px 12px"><summary style="font-weight:700;cursor:pointer">Filters</summary><div class="hh-fil" style="margin-top:8px">').replace('</div>\n <div class="hh-tabs">','</div></details>\n <div class="hh-tabs">')}return pv+o}return h8()}}
 
 /* ---------------- PER-DEVICE EXPERIENCE: phone, tablet, desktop (Windows/Mac), TV; installable app ---------------- */
 function platKind(){const ua=navigator.userAgent||'',w=window.innerWidth||390;
@@ -4149,7 +4149,7 @@ const guestLeft=x=>{const ms=x.gts+GUEST_MS-Date.now();return ms<=0?'now':ms>36e
 setInterval(()=>{if(guestPurge()){try{save()}catch(e){}render()}},60000);
 {const e0=enter;enter=function(){const r=e0.apply(this,arguments);gCols().forEach(L=>(L||[]).forEach(x=>{if(x&&x.gts&&!x.keep){delete x.gts;delete x.guest}}));try{save()}catch(e){}return r}}
 {const m0=mHead;mHead=function(m){const o=m0(m);return m&&m.gts?`<div class="mu sm" style="margin:2px 0 6px;color:#ffd27a">Guest match: kept on this device for 24 hours only (about ${guestLeft(m)} left). Log in or register before it is removed if you want to keep it.</div>`+o:o}}
-{const h0=vHome;vHome=function(){const o=h0.apply(this,arguments);return S.user&&S.user.guest&&(S.settings.appTheme||'hero')!=='hero'?`<div class="card"><div class="mu sm">You are using the app as a guest. Matches you score are kept for 24 hours, then removed. Guest data is not saved to the server.</div></div>`+o:o}}
+{const h0=vHome;vHome=function(){const o=h0.apply(this,arguments);return S.user&&S.user.guest&&window.shTheme()!=='hero'?`<div class="card"><div class="mu sm">You are using the app as a guest. Matches you score are kept for 24 hours, then removed. Guest data is not saved to the server.</div></div>`+o:o}}
 /* ---------------- MATCH SKINS: every match list and match page can be shown in 2 skins (Cricbuzz style / Cricket Australia style) ---------------- */
 {const MSK=[['cb','SH Pulse'],['ca','SH Stadium']];
 const st0=document.createElement('style');st0.textContent=
@@ -9123,6 +9123,46 @@ window.shXIOf=(mine)=>{const c=mine.filter(p=>p.confirmed);if(c.length)return {x
   if(ex)return;const d=document.createElement('div');d.id='iosb';d.className='iosb';d.innerHTML='<img src="/icon-192.png" alt=""><span>Install Scoring Heroes on your iPhone<small>Full screen app, free. Share → Add to Home Screen</small></span><a href="/install">How</a><button type="button" aria-label="Close">×</button>';
   d.querySelector('button').onclick=()=>{try{localStorage.setItem('sh_ios_b','1')}catch(e){}d.remove()};document.body.appendChild(d)};
  const r1=render;render=function(){const o=r1.apply(this,arguments);try{window.shIosBanner()}catch(e){}return o};
+}
+
+
+/* ---------------- 73 LIGHT look (Cricbuzz-style): white surfaces, dark text, brand red accent; live score hero cards keep their colours ---------------- */
+{
+ const L='html[data-theme=mday]';
+ const css=[
+ L+'{color-scheme:light;--bg:#f1f3f6;--card:#ffffff;--c2:#f5f7fa;--tx:#111827;--mu:#566274;--bd:#dde2e9;--ac:#e11d2e;--on:#ffffff;--bl:#1d6fe0}',
+ L+',html[data-theme=mday] body{background:#f1f3f6!important;background-image:none!important;color:#111827}',
+ L+' .hdr{background:#ffffff!important;color:#111827;border-bottom:1px solid #dde2e9;box-shadow:0 1px 6px #0000000d}',
+ L+' .hdr .btn.ghost,'+L+' .hdr button{color:#111827}',
+ L+' .cbnav{background:#ffffff!important;border-bottom:1px solid #dde2e9}',
+ L+' .cbnav button{color:#566274!important;background:transparent!important}',
+ L+' .cbnav button.on,'+L+' .cbnav .cbx.on{color:#e11d2e!important;background:transparent!important;box-shadow:inset 0 -3px 0 #e11d2e}',
+ L+' .cbstrip{background:#ffffff!important;color:#111827;border-bottom:1px solid #dde2e9}',
+ L+' .bnav{background:#ffffff!important;border-top:1px solid #dde2e9;box-shadow:0 -2px 10px #0000000f}',
+ L+' .bnav button{color:#566274}',L+' .bnav button.on{color:#e11d2e}',
+ L+' .card,'+L+' .wcard{background:#ffffff;color:#111827;border-color:#dde2e9;box-shadow:0 1px 3px #0000000a}',
+ L+' .mu{color:#566274}',
+ L+' input,'+L+' select,'+L+' textarea{background:#ffffff!important;color:#111827!important;border:1px solid #cfd6df!important}',
+ L+' .btn.ghost{background:#ffffff;color:#111827;border:1px solid #cfd6df}',
+ L+' .btn.ghost.on,'+L+' .tile.on{border-color:#e11d2e}',
+ L+' .auth{background:#ffffff!important;color:#111827;border:1px solid #dde2e9;box-shadow:0 12px 40px #0000001a}',
+ L+' .auth .hero{background:linear-gradient(135deg,#0a1f5c,#e11d2e)!important;color:#fff;border-radius:14px}',
+ L+' .auth .card{background:#ffffff}',
+ L+' .seg{background:#eef1f5!important;border:1px solid #dde2e9}',L+' .seg button{color:#566274;background:transparent}',L+' .seg button.on{background:#ffffff!important;color:#e11d2e;box-shadow:0 1px 4px #0000001f}',
+ L+' .otpx .obx input,'+L+' .otpx .asg{background:#f5f7fa!important}',L+' .otpx .asg{border-color:#dde2e9}',
+ L+' .otpx .tst{background:#fff1f2}',
+ L+' .sgpanel{background:#ffffff;color:#111827;border:1px solid #dde2e9;box-shadow:0 12px 30px #00000026}',L+' .sgl button{color:#111827}',
+ L+' .drawer,'+L+' .sheet{background:#ffffff;color:#111827}',
+ L+' .pill{background:#eef1f5;color:#111827}',L+' .pill.ok{background:#e3f6ea;color:#0f6b36}',
+ L+' .hh-box{background:#ffffff;color:#111827}',
+ L+' .auth .card,'+L+' .card.mu,'+L+' .card:not([style*=background]),'+L+' .wcard{background:#ffffff!important;color:#111827}',
+ L+' .cbstrip .lb{background:#eef1f5!important;color:#111827!important}',
+ L+' .cbstrip button.al{background:#eef1f5!important;color:#111827!important;border-left:1px solid #dde2e9}',
+ L+' .hword i{color:#e11d2e!important;-webkit-text-fill-color:#e11d2e!important;text-shadow:none!important;background:none!important}',
+ L+' .hword b{color:#14267a!important;-webkit-text-fill-color:#14267a!important;text-shadow:none!important;background:none!important}',
+ L+' a{color:#1d6fe0}',
+ ].join('\n');
+ const st=document.createElement('style');st.id='sh-light';st.textContent=css;document.head.appendChild(st);
 }
 
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
