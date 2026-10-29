@@ -8743,7 +8743,8 @@ const card=m=>`<div class="ig-sq fbc" data-a="fbOpen" data-id="${esc(m.id)}" sty
  // ONE scrollable "Select game" strip with every sport; the page below shows only that sport's own screens
  {const st=document.createElement('style');st.textContent='.shsel{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x proximity;padding:8px;border:1px solid var(--bd);border-radius:14px;background:var(--card);margin-bottom:10px;scrollbar-width:none;-webkit-overflow-scrolling:touch}.shsel::-webkit-scrollbar{display:none}.shsel button{flex:none;scroll-snap-align:start;min-width:78px;display:flex;flex-direction:column;align-items:center;gap:4px;background:transparent;border:1px solid transparent;border-radius:10px;color:var(--tx);padding:8px 6px;font:600 10.5px var(--ui);letter-spacing:.4px;text-transform:uppercase;cursor:pointer}.shsel button i{font-style:normal;font-size:22px;line-height:1}.shsel button.on{background:#ffffff14;border-color:var(--ac);color:var(--ac)}';document.head.appendChild(st)}
  const SEL=HSPORTS.map(([id,ic,nm])=>[id,ic,nm]);
- shRow=function(sp){return `<div class="mu sm" style="margin:2px 2px 4px">Select game <span style="opacity:.7">(swipe for more)</span></div><div class="shsel" id="shsel">${SEL.map(([id,ic,nm])=>`<button class="${sp===id?'on':''}" data-a="hsport" data-v="${id}"><i>${ic}</i>${nm}</button>`).join('')}</div>`};
+ // Sport is picked from the title-bar "Select game" button only; no second strip on the page
+ shRow=function(sp){return '<!--shsel-->'};
  const sc0=A.hsport;A.hsport=function(d){const r=sc0.apply(this,arguments);setTimeout(()=>{const b=document.querySelector('#shsel button.on');if(b&&b.scrollIntoView)b.scrollIntoView({inline:'center',block:'nearest'})},30);return r};
  // Match centre for other sports: opens from a World scores card. Uses only what the provider sent.
  const findM=(sp,id)=>((UI.sx[sp]||{}).list||[]).find(m=>m.id===id);
@@ -8815,8 +8816,8 @@ const card=m=>`<div class="ig-sq fbc" data-a="fbOpen" data-id="${esc(m.id)}" sty
   return o};
  setInterval(()=>{const w=document.getElementById('shad');if(!w)return;const S2=[...w.querySelectorAll('.shad-s')];if(S2.length<2)return;let i=S2.findIndex(x=>x.style.display!=='none');i=(i+1)%S2.length;S2.forEach((x,k)=>x.style.display=k===i?'':'none');w.querySelectorAll('.shad-d').forEach((d,k)=>d.style.background=k===i?'var(--ac)':'#7f8aa8')},5000);
  // place it right under the match cards
- const hh0=heroHome;heroHome=function(){const o=hh0.apply(this,arguments);if(UI.sport&&UI.sport!=='cricket')return o.replace(/<div class="ig-top">[\s\S]*?(?=<div class="mu sm" style="margin:2px 2px 4px">Select game)/,'');let x='';try{x=window.shHomeExtras()}catch(e){x=''}if(!x)return o;
-  if(UI.sport&&UI.sport!=='cricket')return o.replace(/<div class="ig-top">[\s\S]*?(?=<div class="mu sm" style="margin:2px 2px 4px">Select game)/,'');
+ const hh0=heroHome;heroHome=function(){const o=hh0.apply(this,arguments);if(UI.sport&&UI.sport!=='cricket')return o.replace(/<div class="ig-top">[\s\S]*?(?=<!--shsel-->)/,'');let x='';try{x=window.shHomeExtras()}catch(e){x=''}if(!x)return o;
+  if(UI.sport&&UI.sport!=='cricket')return o.replace(/<div class="ig-top">[\s\S]*?(?=<!--shsel-->)/,'');
   const m=/(<div class="ig-dots" id="igdots">.*?<\/div>)/s.exec(o);if(m){const k=m.index+m[1].length;return o.slice(0,k)+x+o.slice(k)}
   const q=o.indexOf('<div class="sec"><h3>Posts</h3>');return q>=0?o.slice(0,q)+x+o.slice(q):o+x};
  // ADMIN card
