@@ -1952,7 +1952,7 @@ function lookBar(){return `<div class="hscroll" style="gap:6px;margin:0 0 10px;a
 '.cxbb div.on{border-color:var(--ac)}'+
 '.cxch{display:flex;gap:6px;align-items:center;margin-top:10px;flex-wrap:wrap;font-size:12px;color:var(--mu)}'+
 '.cxq{display:flex;gap:14px;margin-top:10px;font-size:12px;color:var(--mu);flex-wrap:wrap;align-items:center}.cxq b{color:var(--tx)}'+
-'.cxn{display:flex;gap:6px;align-items:center}';
+'.cxn{display:flex;gap:6px;align-items:center}.cxw{margin-top:6px;font:700 10.5px var(--ui);color:var(--mu);letter-spacing:.3px;white-space:nowrap}.cxw.fav{color:#2fd27a}';
 document.head.appendChild(cs)}
 {const h2=mHead;mHead=function(m){
   const s=st(m);if(!s)return h2(m);
@@ -1960,7 +1960,7 @@ document.head.appendChild(cs)}
   const sc=t=>{const ix=[];m.innings.forEach((inn,i)=>{if(inn.bat===t.id)ix.push(i)});
     if(!ix.length)return'<div class="sc"><small>Yet to bat</small></div>';
     return '<div class="sc">'+ix.map((i,j)=>{const q=calc(m,i);return (j?'<small>& </small>':'')+q.runs+'/'+q.wk+'<small>('+fmtOv(q.lg)+' ov)</small>'}).join('')+'</div>'};
-  const side=t=>`<div class="cxs ${s.bat.id===t.id&&!done?'bt':'dim'}">${logo(t,48)}<div class="n">${esc(t.short)}</div>${sc(t)}</div>`;
+  const side=t=>`<div class="cxs ${s.bat.id===t.id&&!done?'bt':'dim'}">${logo(t,48)}<div class="n">${esc(t.short)}</div>${sc(t)}${done?'':(()=>{const v=t.id===A.id?w.a:w.b,o=t.id===A.id?w.b:w.a;return `<div class="cxw ${v>o?'fav':''}" title="Model estimate from run rate, wickets and target. Not betting odds.">${v>o?'Favourite · ':''}Win chance ${v}%</div>`})()}</div>`;
   const bt1=c.s!=null?(k.bat[c.s]||{r:0,b:0}):null,bt2=c.n!=null?(k.bat[c.n]||{r:0,b:0}):null,bw=c.bl?(k.bowl[c.bl]||{b:0,r:0,w:0}):null;
   const st1=m.status==='live'?'LIVE':done?'RESULT':'BREAK';
   const need=done?m.result:m.status==='break'?'Innings break':s.i===1?`${s.bat.name} need ${Math.max(0,s.need)} run${s.need===1?'':'s'} from ${s.left} balls`:`Projected score ${Math.round(k.runs+s.left/BPO*s.crr)} at current rate`;
@@ -8939,6 +8939,18 @@ const card=m=>`<div class="ig-sq fbc" data-a="fbOpen" data-id="${esc(m.id)}" sty
  document.addEventListener('input',e=>{const q=e.target;if(!q||q.id!=='sgq')return;const v=q.value.trim().toLowerCase();let n=0;document.querySelectorAll('.sgl button').forEach(b=>{const ok=!v||(b.dataset.n||'').includes(v);b.style.display=ok?'':'none';if(ok)n++});const no=document.querySelector('.sgno');if(no)no.style.display=n?'none':'block'});
  {const st=document.createElement('style');st.textContent='.sgbtn{white-space:nowrap;display:inline-flex;gap:4px;align-items:center}.sgback{position:fixed;inset:0;z-index:70;background:#0006}.sgpanel{position:fixed;z-index:71;top:56px;right:8px;width:min(300px,calc(100vw - 16px));max-height:70vh;overflow:auto;background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:10px;box-shadow:0 10px 30px #0008}.sgpanel input{width:100%;box-sizing:border-box;margin-bottom:8px;padding:10px;border-radius:10px;border:1px solid var(--bd);background:transparent;color:var(--tx);font:500 14px var(--ui)}.sgl{display:flex;flex-direction:column;gap:2px}.sgl button{display:flex;align-items:center;gap:10px;text-align:left;background:transparent;border:1px solid transparent;border-radius:10px;color:var(--tx);padding:10px;font:600 14px var(--ui);cursor:pointer}.sgl button i{font-style:normal;font-size:20px}.sgl button em{margin-left:auto;font-style:normal;font-size:11px;color:var(--ac)}.sgl button.on{border-color:var(--ac);background:#ffffff10}@media(max-width:420px){.sgbtn{font-size:10px;padding:6px 7px}}';document.head.appendChild(st)}
  const pr0=XV.profile;XV.profile=function(){return pr0.apply(this,arguments)+`<div class="card"><div class="b">Select game</div><div class="mu sm" style="margin:4px 0 8px">Pick any sport. It becomes your dashboard.</div><button class="btn sm" data-a="sgOpen">${cur().ic} ${esc(cur().nm)} ▾ Change game</button></div>`};
+}
+/* ---------------- 61 Win chance under each team (model estimate, not betting odds) ---------------- */
+{
+ const est=(R,K,need,left,crr)=>{if(need<=0)return 99;if(left<=0||K>=10)return 1;const wf=Math.pow(Math.max(.02,(10-K)/10),.5),proj=left/6*Math.max(.5,crr||6)*(.7+.5*wf),sd=6+Math.sqrt(left)*1.6,z=(proj-need)/sd;return Math.max(3,Math.min(97,Math.round(100/(1+Math.exp(-1.7*z)))))};
+ const c0=cx3Panel;cx3Panel=function(W){const h=c0.apply(this,arguments);if(typeof h!=='string'||h.indexOf('class="cx3r"')<0||h.indexOf('cx3w')>=0)return h;
+  const sc=h.match(/font-size:40px">(\d+)-(\d+)<\/b>/),nd=h.match(/need (\d+) runs? in (\d+) balls/),cr=h.match(/CRR: <b>([\d.]+)/);
+  if(!sc||!nd)return h;const m=(W&&W.m)||{},tm=(m.teams||[]).filter(t=>t&&(t.name||t.short));if(tm.length<2)return h;
+  const R=+sc[1],K=+sc[2],need=+nd[1],left=+nd[2],pb=est(R,K,need,left,cr?+cr[1]:0),bat=(h.match(/<div class="cx3team">[\s\S]*?<b>([^<]*)<\/b>/)||[])[1]||'',
+   bi=tm.findIndex(t=>String(t.short||t.name).toLowerCase()===bat.toLowerCase()||String(t.name).toLowerCase()===bat.toLowerCase()),b=bi<0?0:bi,o=1-b,P=[];P[b]=pb;P[o]=100-pb;
+  const col=i=>`<span class="cx3wt ${P[i]>=50?'fav':''}">${P[i]>=50?'\u2605 ':''}${esc(tm[i].short||tm[i].name)} <b>${P[i]}%</b></span>`;
+  return h.replace('<div class="cx3r">',`<div class="cx3w" title="Model estimate from score, wickets and balls left. Not betting odds.">Win chance ${col(0)}${col(1)}</div><div class="cx3r">`)};
+ {const st=document.createElement('style');st.textContent='.cx3w{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;margin:6px 0 2px;font:600 11px var(--ui);color:#b9c4e6}.cx3wt b{font-weight:800;color:#fff}.cx3wt.fav,.cx3wt.fav b{color:#2fd27a}';document.head.appendChild(st)}
 }
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
