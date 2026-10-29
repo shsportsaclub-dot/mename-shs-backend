@@ -8995,22 +8995,28 @@ const card=m=>`<div class="ig-sq fbc" data-a="fbOpen" data-id="${esc(m.id)}" sty
 }
 /* ---------------- 63 Hero card: only the big score keeps the black box; detail rows are plain text ---------------- */
 {const st=document.createElement('style');st.textContent='.rp .hero .row,.rp .hero .dls{background:none!important;border-radius:0;text-shadow:0 1px 5px #000,0 0 3px #000}.rp .hero .row{padding:3px 6px}.rp .hero .dls{padding:2px 8px}.rp .hero .box>.sh-act{opacity:.3}.rp .hero .nxo{font-size:11px;flex-wrap:nowrap}.rp .hero .nxo b{font-size:13.5px}.rp .hero .tm .sh-team-mark{background:transparent!important;border:0!important;box-shadow:none!important;border-radius:0!important}.rp .hero .tm .sh-team-mark img{background:transparent!important;border-radius:0!important;filter:drop-shadow(0 2px 6px #0009)}';document.head.appendChild(st)}
-/* ---------------- 64 Squads tab laid out like the Info tab squads (both teams side by side, every player) ---------------- */
+/* ---------------- 64 Squads tab: Playing XI side by side (home left, away right), then Bench; no status chips ---------------- */
 {
+ const ORD=['bat','wk','ar','pace','spin','bowl','unknown'],RL={wk:'WK-Batter',bat:'Batter',ar:'Allrounder',pace:'Bowler',spin:'Bowler',bowl:'Bowler',unknown:''};
  const c0=cbpSquads;
  cbpSquads=function(W){
   try{const m=(W&&W.m)||{},t=m.teams||[];if(t.length<2||typeof shRoster!=='function')return c0.apply(this,arguments);
    const ros=shRoster(W)||[];if(!ros.length)return c0.apply(this,arguments);
-   const row=(p,n)=>`<button type="button" class="ipl sh-squad-player" data-a="shRosterProfile" data-id="${esc(p.id)}"><div class="ph">${cbpImg(p.playerImg,p.name)}</div><b>${esc(p.name)}${p.captain?' (c)':''}${p.isKeeper?' (wk)':''}</b><small>${esc([p.battingStyle||p.bat||'',p.confirmed?'Confirmed XI':p.observed?'Observed participant':p.excluded?'Unavailable':'XI unconfirmed'].filter(Boolean).join(' · ')||p.role||'')}</small></button>`;
-   const teams=t.slice(0,2).map(shTeamName),cnt=n=>ros.filter(p=>p.team===n).length;
+   const teams=t.slice(0,2).map(shTeamName),cat=p=>shMatchIntelligence.category(p),o=p=>{const k=ORD.indexOf(cat(p));return k<0?9:k};
+   const mine=n=>ros.filter(p=>p.team===n).sort((a,b)=>o(a)-o(b));
+   const cell=(p,right)=>{if(!p)return '<div class="sqc"></div>';const r=RL[cat(p)]||'';
+    return `<button type="button" class="sqc sh-squad-player${right?' rt':''}" data-a="shRosterProfile" data-id="${esc(p.id)}"><div class="ph">${cbpImg(p.playerImg,p.name)}</div><span><b>${esc(p.name)}${p.captain?' (C)':''}${p.isKeeper?' (WK)':''}</b><small>${esc(r)}</small></span></button>`};
+   const pair=(L,R)=>{const n=Math.max(L.length,R.length);let h='';for(let i=0;i<n;i++)h+=`<div class="sqp">${cell(L[i],false)}${cell(R[i],true)}</div>`;return h};
+   const xi=teams.map(n=>mine(n).filter(p=>p.confirmed)),known=xi[0].length>0&&xi[1].length>0;
+   const cnt=n=>ros.filter(p=>p.team===n).length;
    const head=`<div class="sqh">${teams.map(n=>`<h3>${esc(n)}<span>Squad (${cnt(n)})</span></h3>`).join('')}</div>`;
-   const grp=(typeof SH_ROLE_GROUPS!=='undefined'?SH_ROLE_GROUPS:[]).map(([key,label])=>{if(!ros.some(p=>shMatchIntelligence.category(p)===key))return '';
-    return `<h4 class="sqr">${esc(label)}</h4><div class="isq">${teams.map(n=>{const mine=ros.filter(p=>p.team===n&&shMatchIntelligence.category(p)===key);return `<div>${mine.length?mine.map(p=>row(p)).join(''):'<div class="mu sm" style="padding:8px">None supplied</div>'}</div>`}).join('')}</div>`}).join('');
-   const sq=grp?head+grp:'';
-   if(!sq)return c0.apply(this,arguments);
+   let body;
+   if(known){const bench=teams.map((n,i)=>mine(n).filter(p=>!xi[i].includes(p)));
+    body=`<h4 class="sqr">Playing XI</h4>${pair(xi[0],xi[1])}${bench[0].length||bench[1].length?`<h4 class="sqr">Bench</h4>${pair(bench[0],bench[1])}`:''}`}
+   else body=`<h4 class="sqr">Squad · Playing XI not announced yet</h4>${pair(mine(teams[0]),mine(teams[1]))}`;
    setTimeout(()=>{typeof ar9Zoom==='function'&&ar9Zoom()},0);
-   return `<div class="rp rpi tnh ar12h sh-squad-comparison">${sq}<div class="mu sm" style="padding:6px 4px">Role categories use the supplied career role and bowling style. Role not supplied or style unverified players are kept separate. Squad lists are as sent by the data provider; players not named in the playing XI are not confirmed.</div></div>`}catch(e){return c0.apply(this,arguments)}};
- {const st=document.createElement('style');st.textContent='.rp .sqh{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:0 4px}.rp .sqh h3{margin:0;padding:8px 6px;font:700 14px var(--f);display:flex;justify-content:space-between;gap:6px;background:#0c1d4a;border:1px solid #2a4cb0;border-radius:6px 6px 0 0}.rp .sqh h3 span{font:400 11px var(--f);border:1px solid #2a4cb0;border-radius:10px;padding:1px 8px}.rp.tnh button.ipl{border:0;background:transparent;color:inherit;text-align:left;width:100%;cursor:pointer;font:inherit}.rp.tnh .ipl{display:grid;grid-template-columns:34px 1fr;gap:0 8px;align-items:center;padding:6px 6px}.rp.tnh .ipl i{display:none}.rp.tnh .ipl .ph{grid-row:1/3}.rp.tnh .ipl b{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.2;font-size:13px}.rp.tnh .ipl small{white-space:normal;text-align:left;font-size:11px;opacity:.8}.rp .sqr{margin:8px 4px 0;padding:5px 8px;background:#12306a;font:700 12px var(--f)}';document.head.appendChild(st)}
+   return `<div class="rp rpi tnh ar12h sh-squad-comparison">${head}${body}<div class="mu sm" style="padding:6px 4px">Squad lists and roles are as sent by the data provider. Players without a photo show the Scoring Heroes helmet avatar.</div></div>`}catch(e){return c0.apply(this,arguments)}};
+ {const st=document.createElement('style');st.textContent='.rp .sqh{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:0 4px}.rp .sqh h3{margin:0;padding:8px 6px;font:700 14px var(--f);display:flex;justify-content:space-between;gap:6px;background:#0c1d4a;border:1px solid #2a4cb0;border-radius:6px 6px 0 0}.rp .sqh h3 span{font:400 11px var(--f);border:1px solid #2a4cb0;border-radius:10px;padding:1px 8px}.rp .sqr{margin:10px 4px 0;padding:6px 8px;background:#12306a;font:700 12px var(--f);text-align:center;letter-spacing:.6px;text-transform:uppercase}.rp .sqp{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid #2a4cb055}.rp.tnh button.sqc{border:0;background:transparent;color:inherit;font:inherit;cursor:pointer;display:flex!important;flex-direction:row!important;justify-content:flex-start!important;align-items:center;gap:8px;padding:7px 6px;text-align:left!important;min-width:0;width:100%}.rp.tnh button.sqc.rt{flex-direction:row-reverse!important;text-align:right!important;border-left:1px solid #2a4cb055}.rp .sqc .ph{width:34px;height:34px;border-radius:50%;overflow:hidden;flex:none;background:#16286a}.rp .sqc .ph img{width:100%;height:100%;object-fit:cover}.rp .sqc b{display:block;font-size:13px;line-height:1.2;white-space:normal}.rp .sqc small{display:block;font-size:11px;opacity:.75}.rp .sqc span{min-width:0}';document.head.appendChild(st)}
 }
 /* ---------------- 65 No 'Ball-by-ball: not sent' chip in the score card (looked like an error); ON chip stays ---------------- */
 {const st=document.createElement('style');st.textContent='.bbbg.off{display:none!important}';document.head.appendChild(st)}

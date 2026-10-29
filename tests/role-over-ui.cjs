@@ -19,7 +19,7 @@ const { chromium } = require('playwright');
     return out;
   });
   const t = h => h.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' '), ok = (c, m) => { if (!c) { console.error('FAIL', m); process.exitCode = 1; } };
-  ok(/Wicketkeepers/.test(r.sq) && /Batters/.test(r.sq) && /All-rounders/.test(r.sq) && /(Fast|Pace) \/ medium bowlers/.test(r.sq) && /Spin(ner)?s?( bowlers)?/.test(r.sq) && /(Role not supplied|style unverified)/.test(r.sq), 'role groups: ' + t(r.sq).slice(0, 400));
+  ok(/(Playing XI|Squad)/.test(r.sq) && /Batter/.test(r.sq) && /WK-Batter/.test(r.sq) && /Allrounder/.test(r.sq) && /Bowler/.test(r.sq) && !/XI unconfirmed|Observed participant/.test(r.sq), 'role labels: ' + t(r.sq).slice(0, 400));
   ok(/Team Alpha/.test(r.sq) && /Team Beta/.test(r.sq), 'both teams');
   ok(/(Pre-match|pick before the match)/.test(r.pre.eleven) && /(Wicketkeepers|Keepers)/i.test(r.pre.eleven), 'pre phase');
   ok(/live top 11/i.test(r.live.eleven), 'live phase'); ok(/final top 11/i.test(r.end.eleven), 'final phase');
