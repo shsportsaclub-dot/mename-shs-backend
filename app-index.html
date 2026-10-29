@@ -9044,6 +9044,21 @@ const card=m=>`<div class="ig-sq fbc" data-a="fbOpen" data-id="${esc(m.id)}" sty
   return leg+r};
 }
 
+
+/* ---------------- 68 PLAYER PHOTO MEMORY: a real photo the provider sent once (squad, scorecard or profile) is remembered by player name and reused on every screen; helmet avatar only when no photo was ever sent ---------------- */
+{
+ const K='sh_phc',key=n=>String(n||'').toLowerCase().replace(/[^a-z]/g,'');let C={};
+ try{C=JSON.parse(localStorage.getItem(K)||'{}')||{}}catch(e){C={}}
+ const keep=()=>{try{const ks=Object.keys(C);if(ks.length>400)ks.slice(0,ks.length-400).forEach(k=>delete C[k]);localStorage.setItem(K,JSON.stringify(C))}catch(e){}};
+ window.shPhotoMem={get:n=>C[key(n)]||null,set:(n,u)=>{const k=key(n);if(k.length>3&&/^https?:/i.test(u||'')&&C[k]!==u){C[k]=u;keep()}}};
+ const c2=cbpImg;
+ cbpImg=function(u,n){const h=c2.apply(this,arguments),ph=h.indexOf('src="data:image/svg+xml')>-1;
+  if(!ph){window.shPhotoMem.set(n,u);return h}
+  const m=window.shPhotoMem.get(n);return m&&m!==u?c2.call(this,m,n):h};
+ const w0=XV.wplayer;
+ XV.wplayer=function(){try{const P=UI.wp,d=P&&P.data;if(d&&d.playerImg){window.shPhotoMem.set(P.name,d.playerImg);if(d.name)window.shPhotoMem.set(d.name,d.playerImg)}}catch(e){}return w0.apply(this,arguments)};
+}
+
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});
