@@ -8563,18 +8563,19 @@ S.stream.scene=S.stream.scene||'bug';S.stream.card=S.stream.card||{t:'Starting s
   try{const r=await fetch(apiBase()+'/api/fb/match?id='+encodeURIComponent(id),{signal:AbortSignal.timeout(15000),cache:'no-store'}),j=await r.json();if(j.ok){f.m=j.match;f.mErr=''}else f.mErr=j.error||'Match unavailable'}catch(e){f.mErr='Football feed unreachable'}
   f.mAt=Date.now();f.mBusy=0;if(UI.view==='fbmatch')render();
  }
- const card=m=>`<div class="fbc" data-a="fbOpen" data-id="${esc(m.id)}" style="display:grid;grid-template-columns:1fr auto 1fr;gap:6px;align-items:center;background:#0c1d4a;border:1px solid #2a4cb0;border-radius:10px;padding:10px;margin:6px 0;cursor:pointer">
-  <div style="display:flex;gap:8px;align-items:center;min-width:0">${m.home.img?`<img src="${esc(m.home.img)}" alt="" style="width:26px;height:26px;object-fit:contain">`:''}<b style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(m.home.short||m.home.name)}</b></div>
-  <div style="text-align:center"><b style="font-size:18px">${gl(m.home.goals)} - ${gl(m.away.goals)}</b><div style="font-size:11px;color:${m.live?'#ff5a6a':'#9fb3c8'};font-weight:800">${m.live?'● ':''}${esc(stTxt(m))}</div></div>
-  <div style="display:flex;gap:8px;align-items:center;justify-content:flex-end;min-width:0"><b style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(m.away.short||m.away.name)}</b>${m.away.img?`<img src="${esc(m.away.img)}" alt="" style="width:26px;height:26px;object-fit:contain">`:''}</div></div>`;
+const card=m=>`<div class="ig-sq fbc" data-a="fbOpen" data-id="${esc(m.id)}" style="aspect-ratio:auto;flex:0 0 min(210px,62vw);gap:10px;padding:12px;background:linear-gradient(155deg,#0a1f5c 0%,#1d2f7a 55%,#1fae6ecc 140%)"><div><div class="tg"><span>⚽ FOOTBALL</span><em class="${m.live?'lv':''}">${m.live?'LIVE':m.ended?'RESULT':'UPCOMING'}</em></div><div class="se">${esc((m.country?m.country+' · ':'')+(m.league||'Football'))}</div></div>
+  <div>${[m.home,m.away].map(tt=>`<div class="tr">${tt.img?`<img src="${esc(tt.img)}" alt="" style="width:22px;height:22px;object-fit:contain">`:(window.wBadge?wBadge(tt):'')}<b>${esc((tt.name||'').length>11&&tt.short?tt.short:tt.name)}</b><span>${gl(tt.goals)}</span></div>`).join('')}</div>
+  <div class="ss">${m.live?'● ':''}${esc(stTxt(m))}</div><div class="ft"><span>TIMELINE</span><span>RECAP</span></div></div>`;
  window.fbWorld=function(){
   const f=UI.fb;fbLoadList(false);
   if(!apiBase())return '';
   if(!f.list&&!f.err)return '<div class="hh-box"><div class="b">World football</div><div class="mu sm">Loading live football...</div></div>';
   if(f.err&&!f.list)return `<div class="hh-box"><div class="b">World football</div><div class="mu sm">${esc(f.err)}</div></div>`;
-  const L=f.list||[],by=new Map();L.forEach(m=>{const k=(m.country?m.country+' · ':'')+(m.league||'Football');(by.get(k)||by.set(k,[]).get(k)).push(m)});
-  const live=L.filter(m=>m.live).length;
-  return `<div class="hh-box"><div class="b">World football <span class="mu sm">${live?live+' live':'today'}${f.stale?' · older data':''}</span></div>${L.length?[...by.entries()].map(([k,a])=>`<div class="mu sm" style="margin:8px 2px 0">${esc(k)}</div>`+a.map(card).join('')).join(''):'<div class="mu sm">No football matches in the feed right now.</div>'}</div>`;
+  const L=(f.list||[]).slice().sort((a,b)=>(b.live-a.live)||(a.ended-b.ended)||String(a.startsAt).localeCompare(String(b.startsAt)));
+  const g={live:L.filter(m=>m.live),up:L.filter(m=>!m.live&&!m.ended),rec:L.filter(m=>m.ended)};
+  UI.sxt=UI.sxt||{};let tb=UI.sxt.football;if(!tb||!g[tb])tb=g.live.length?'live':g.up.length?'up':g.rec.length?'rec':'live';
+  const lab={live:'Live',up:'Upcoming',rec:'Results'},cards=g[tb];
+  return `<div class="sec"><h3>⚽ World football${f.stale?' <span class="mu sm">older data</span>':''}</h3></div><div class="hh-tabs sx-tabs">${Object.keys(lab).map(k=>`<button class="${tb===k?'on':''}" data-a="sxTabSet" data-v="football|${k}">${lab[k]}${g[k].length?' ('+g[k].length+')':''}</button>`).join('')}</div>${cards.length?`<div class="ig-sl" id="igsl">${cards.map(card).join('')}</div>`:`<div class="hh-box"><div class="mu">${tb==='live'?'No live matches right now. Check Upcoming or Results.':tb==='up'?'No upcoming matches in this list.':'No finished matches yet today.'}</div></div>`}`;
  };
  const sb0=shBody;shBody=function(sp){const o=sb0.apply(this,arguments);return sp==='football'?window.fbWorld()+o:o};
  window.fbLoadMatch=fbLoadMatch;
