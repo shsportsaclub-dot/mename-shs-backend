@@ -548,7 +548,7 @@ routes['GET /api/legacy-player-profile'] = async (req, body) => {
   catch { return [503, { ok: false, error: 'Profile capture not available' }]; }
   const player = capture.player || {};
   const matches = [...new Map((capture.records || []).flatMap(r => r.linked_records || [])
-    .filter(r => r.kind === 'scorecard' && /^\\d+$/.test(String(r.source_id || '')))
+    .filter(r => r.kind === 'scorecard' && /^\d+$/.test(String(r.source_id || '')))
     .map(r => [String(r.source_id), { id: String(r.source_id), title: r.label, sourceUrl: r.url }])).values()];
   return [200, { ok: true, player: { name: player.name, sourceId: id, sport: 'cricket',
     source: 'CricHeroes', sourceUrl: player.source_url || 'https://cricheroes.com/player-profile/' + id,
