@@ -19,6 +19,7 @@ import tls from 'node:tls';
 import { createHistory, sameTeamName } from './history.mjs';
 import { snapshotOf, diffSnapshots } from './observer.mjs';
 import { createRecent, buildBbb, buildFow, buildPartnerships, inningsTotals, RECENT_SOURCE } from './recent.mjs';
+import { oddsOrWinningProbability } from './odds-probability.mjs';
 
 const E = process.env;
 const PORT = +E.PORT || 8080;
@@ -533,6 +534,17 @@ async function infoOf(id) {
   const r = await fetch(`${CRIC_BASE}/match_info?apikey=${encodeURIComponent(CRIC_KEY)}&id=${encodeURIComponent(id)}`, { signal: AbortSignal.timeout(4000) }), j = await r.json();
   return j.status === 'success' ? j.data : null;
 }
+// Scoreboard display adapter: only accepts provider-supplied odds or independently computed probabilities.
+// Missing data remains unavailable; never invent a market price or a win percentage.
+routes['GET /api/scoreboard-market'] = async (req, body) => {
+  const id = String(body.id || '');
+  if (!/^(sm)?[0-9a-z-]{1,40}$/i.test(id)) return [400, { ok: false, error: 'Bad match ID' }];
+  const entry = db.shared?.scoreboardMarket?.[id];
+  if (!entry) return [200, { ok: true, id, display: { mode: 'unavailable', home: null, away: null } }];
+  return [200, { ok: true, id, display: oddsOrWinningProbability({
+    odds: entry.odds, probabilities: entry.probabilities
+  }) }];
+};
 routes['GET /api/cric'] = async (req, body, ip) => {
   const ep = String(body.ep || ''), id = String(body.id || '');
   if (!['match_scorecard', 'players_info', 'match_info', 'match_squad', 'match_bbb'].includes(ep) || !/^(sm)?[0-9a-z-]{1,40}$/i.test(id)) return [400, { ok: false, error: 'Bad request' }];
