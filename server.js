@@ -538,6 +538,24 @@ async function infoOf(id) {
 // Missing data remains unavailable; never invent a market price or a win percentage.
 // Universal rule for every sport: provider odds > valid win probability > blank.
 // Namespaced keys prevent two sports with the same fixture ID from colliding.
+// Public, read-only legacy profile bridge. Captures are partial and never alter career totals.
+routes['GET /api/legacy-player-profile'] = async (req, body) => {
+  const id = String(body.id || '').trim();
+  if (!['216859', '5295710'].includes(id)) return [404, { ok: false, error: 'Profile not found' }];
+  const filename = id === '216859' ? 'cricheroes-thaman-216859.json' : 'cricheroes-hemanth-5295710.json';
+  let capture;
+  try { capture = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'imports', 'staging', filename), 'utf8')); }
+  catch { return [503, { ok: false, error: 'Profile capture not available' }]; }
+  const player = capture.player || {};
+  const matches = [...new Map((capture.records || []).flatMap(r => r.linked_records || [])
+    .filter(r => r.kind === 'scorecard' && /^\\d+$/.test(String(r.source_id || '')))
+    .map(r => [String(r.source_id), { id: String(r.source_id), title: r.label, sourceUrl: r.url }])).values()];
+  return [200, { ok: true, player: { name: player.name, sourceId: id, sport: 'cricket',
+    source: 'CricHeroes', sourceUrl: player.source_url || 'https://cricheroes.com/player-profile/' + id,
+    completeness: capture.completeness, identityVerified: capture.identity_verified === true },
+    tabs: ['Profile', 'Matches', 'Stats', 'Awards', 'Teams'],
+    matches, careerStats: null, note: 'Partial source capture; totals not independently verified' }];
+};
 routes['GET /api/scoreboard-market'] = async (req, body) => {
   const id = String(body.id || '').trim();
   const sport = String(body.sport || 'cricket').trim().toLowerCase();
