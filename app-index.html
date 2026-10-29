@@ -8948,10 +8948,9 @@ const card=m=>`<div class="ig-sq fbc" data-a="fbOpen" data-id="${esc(m.id)}" sty
   const sc=h.match(/class="big n[^"]*">(\d+)-(\d+)/),cr=h.match(/CRR <b>([\d.]+)/),tg=h.match(/TARGET <b>(\d+)/),ol=h.match(/OVERS LEFT <b>(\d+)\.(\d)/);
   if(!sc||!ol||/won|tied|draw/i.test((h.match(/class="dls n">([^]*?)<\/div>/)||[])[1]||''))return h;
   const R=+sc[1],K=+sc[2],left=(+ol[1])*6+(+ol[2]),crr=cr?+cr[1]:0;let t1,t2;
-  if(tg){const p=est(R,K,+tg[1]-R,left,crr);t1=tag((p>=50?'★ ':'')+'Win '+p+'%',p>=50);t2=tag((p<50?'★ ':'')+'Win '+(100-p)+'%',p<50)}
-  else{const m=(W&&W.m)||{},ty=String(m.type||'').toLowerCase(),wm=/women|\bw\b/i.test(String(m.name||'')),par=/t20/.test(ty)?(wm?125:160):/odi|50/.test(ty)?(wm?225:280):/t10/.test(ty)?(wm?75:95):null;
-   if(!par||(R===0&&left<=0))return h;const wf=Math.pow(Math.max(.05,(10-K)/10),.4),proj=R+Math.max(crr||0,1)*left/6*(.75+.35*wf),sd=par*.14,p=Math.max(25,Math.min(75,Math.round(100/(1+Math.exp(-1.6*(proj-par)/sd)))));
-   t1=tag((p>=50?'\u2605 ':'')+'Win '+p+'%',p>=50);t2=tag((p<50?'\u2605 ':'')+'Win '+(100-p)+'%',p<50)}
+  const wf=Math.pow(Math.max(.05,(10-K)/10),.4),proj=R+Math.max(crr||0,1)*left/6*(.75+.35*wf),lo=Math.round(Math.max(R,proj*.92)),hi=Math.round(Math.max(R,proj*1.08));
+  const rng=lo>=hi?String(hi):lo+'-'+hi;t1=tag('Runs '+rng);
+  t2=tg?tag('Target '+tg[1]):tag('Tgt '+(lo+1)+'-'+(hi+1));
   const i1=h.indexOf('</div><div class="box">');if(i1<0)return h;let o=h.slice(0,i1)+t1+h.slice(i1);
   const e='</div></div></section>',i2=o.indexOf(e);if(i2<0)return o;return o.slice(0,i2)+t2+o.slice(i2)};
  {const st=document.createElement('style');st.textContent='.hero .tm small.wc{display:block;margin-top:2px;font:700 10px var(--f,system-ui);letter-spacing:.4px;color:#c6cfea;text-align:center;text-transform:none}.hero .tm small.wc.fav{color:#2fd27a}';document.head.appendChild(st)}
