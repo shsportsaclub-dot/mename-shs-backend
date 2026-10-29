@@ -9,6 +9,7 @@ import { createHighlightly, SPORTS as HL_SPORTS } from './highlightly.mjs';
 import { createLiveTennis } from './livetennis.mjs';
 import http from 'node:http';
 import crypto from 'node:crypto';
+import zlib from 'node:zlib';
 import fs from 'node:fs';
 import path from 'node:path';
 const path_ = path;
@@ -866,6 +867,12 @@ async function fbCached(key, ttl, fn) {
   const d = await fn(); fbCache.set(key, { t: Date.now(), d }); if (fbCache.size > 300) fbCache.clear(); return d;
 }
 // Other sports (basketball, volleyball, handball, hockey, rugby, football) from Highlightly. The free plan is ~100 requests a day, so lists are cached and a daily budget is enforced.
+let APP_PAGE = null;
+function appPage() {
+  if (APP_PAGE) return APP_PAGE;
+  const html = Buffer.from(fs.readFileSync(new URL('./app-index.html', import.meta.url), 'utf8').replace('__SH_BUILD__', String(E.RENDER_GIT_COMMIT || '').slice(0, 7) || 'local').replace('</head>', '<style id="sh-main-live-reference">' + fs.readFileSync(new URL('./public/main-live-reference.css', import.meta.url), 'utf8') + '</style></head>'));
+  return (APP_PAGE = { html, gz: zlib.gzipSync(html, { level: 9 }), br: zlib.brotliCompressSync(html, { params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 6 } }), etag: '"' + crypto.createHash('sha1').update(html).digest('hex').slice(0, 24) + '"' });
+}
 const hlCache = new Map(); let hlDay = { d: '', n: 0 }, tnDay = { d: '', n: 0 };
 const HL_DAILY = +E.HIGHLIGHTLY_DAILY_BUDGET || 85, HL_TTL = (+E.HIGHLIGHTLY_CACHE_SECONDS || 600) * 1000;
 routes['GET /api/sx/live'] = async (req, body, ip) => {
@@ -1321,10 +1328,13 @@ http.createServer(async (req, res) => {
     catch { return out(404, { ok: false, error: 'Live studio not installed' }); }
   }
   if (req.method === 'GET' && (path === '/' || path === '/index.html')) {   // serve the app itself, same address as the API
-    try {
-      const html = Buffer.from(fs.readFileSync(new URL('./app-index.html', import.meta.url), 'utf8').replace('__SH_BUILD__', String(E.RENDER_GIT_COMMIT || '').slice(0, 7) || 'local').replace('</head>', '<style id="sh-main-live-reference">'+fs.readFileSync(new URL('./public/main-live-reference.css', import.meta.url), 'utf8')+'</style></head>'));
-      res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store', 'x-sh-commit': String(E.RENDER_GIT_COMMIT || 'local') });
-      return res.end(html);
+    try {   // the page is ~2.5 MB: build it once, compress it, and let browsers revalidate with an ETag (a 304 costs almost nothing). This is what keeps Render bandwidth low.
+      const P = appPage(), inm = String(req.headers['if-none-match'] || ''), ae = String(req.headers['accept-encoding'] || '');
+      const base = { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache', etag: P.etag, vary: 'accept-encoding', 'x-sh-commit': String(E.RENDER_GIT_COMMIT || 'local') };
+      if (inm === P.etag) { res.writeHead(304, base); return res.end(); }
+      if (/\bbr\b/.test(ae)) { res.writeHead(200, { ...base, 'content-encoding': 'br', 'content-length': P.br.length }); return res.end(P.br); }
+      if (/\bgzip\b/.test(ae)) { res.writeHead(200, { ...base, 'content-encoding': 'gzip', 'content-length': P.gz.length }); return res.end(P.gz); }
+      res.writeHead(200, base); return res.end(P.html);
     } catch { /* fall through to 404 */ }
   }
   if (path === '/api/academy' || path === '/api/academy/mine') {   // academy backup/sync for the owner; parents read only their own child's record by signed-in mobile number
