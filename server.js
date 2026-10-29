@@ -43,6 +43,8 @@ const FB_TOKEN = E.FOOTBALL_TOKEN || '';
 let FB = FB_TOKEN ? createFootball({ token: FB_TOKEN, base: E.FOOTBALL_BASE || undefined }) : null;
 const LIVE_TTL = (+E.LIVE_CACHE_SECONDS || 60) * 1000;
 const envKey = s => { if (String(s).includes('@')) return 'e:' + String(s).trim().toLowerCase().replace(/^e:/i, ''); const d = String(s).replace(/\D/g, ''); return d.length === 10 ? d : (d.startsWith('91') && d.length === 12 ? d.slice(2) : d); };
+// Test mode: SMS_SCREEN_OTP=1 shows the code on the phone screen instead of sending an SMS. Anyone who knows a number can then sign in as it, so admin/scorer numbers are always excluded.
+const SCREEN_OTP = E.SMS_SCREEN_OTP === '1';
 const ADMINS = (E.ADMIN_PHONES || '').split(',').map(envKey).filter(Boolean);
 const SCORERS = (E.SCORER_PHONES || '').split(',').map(envKey).filter(Boolean);
 const MO_NUMBER = E.MO_NUMBER || '';            // the SH Sports number users send the SMS to, e.g. +919XXXXXXXXX
@@ -377,6 +379,8 @@ const routes = {
       pending.delete(phone); links.delete(linkToken);
       return [429, { ok: false, error: 'SMS trial quota is finished. Please use email to sign in.' }];
     }
+    const onScreen = SMS_PROVIDER === 'console' || (SCREEN_OTP && !ADMINS.includes(phone) && !SCORERS.includes(phone) && !['admin', 'scorer'].includes(db.users[phone]?.role) && Object.keys(db.users).length > 0);
+    if (SCREEN_OTP && SMS_PROVIDER !== 'console' && onScreen) return [200, { ok: true, exists: false, screenOtp: true, devCode: code, devOtp: code }];
     let transport;
     try { transport = await sendSms(P.nat, code, `${APP_URL}/#v=${linkToken}`, P.cc); svcLast.sms = SMS_PROVIDER === 'console' ? { ok: false, at: Date.now(), err: 'console mode: the code was only printed in the server log, no SMS was sent' } : { ok: true, at: Date.now() }; }
     catch (e) {
