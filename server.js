@@ -536,13 +536,19 @@ async function infoOf(id) {
 }
 // Scoreboard display adapter: only accepts provider-supplied odds or independently computed probabilities.
 // Missing data remains unavailable; never invent a market price or a win percentage.
+// Universal rule for every sport: provider odds > valid win probability > blank.
+// Namespaced keys prevent two sports with the same fixture ID from colliding.
 routes['GET /api/scoreboard-market'] = async (req, body) => {
-  const id = String(body.id || '');
-  if (!/^(sm)?[0-9a-z-]{1,40}$/i.test(id)) return [400, { ok: false, error: 'Bad match ID' }];
-  const entry = db.shared?.scoreboardMarket?.[id];
-  if (!entry) return [200, { ok: true, id, display: null }];
+  const id = String(body.id || '').trim();
+  const sport = String(body.sport || 'cricket').trim().toLowerCase();
+  if (!/^[a-z0-9_-]{1,64}$/i.test(id) || !/^[a-z][a-z0-9_-]{0,39}$/.test(sport))
+    return [400, { ok: false, error: 'Bad sport or match ID' }];
+  const store = db.shared?.scoreboardMarket;
+  const entry = store?.[sport + ':' + id] || store?.[sport]?.[id] ||
+    (sport === 'cricket' ? store?.[id] : null);
+  if (!entry) return [200, { ok: true, sport, id, display: null }];
   const display = oddsOrWinningProbability({ odds: entry.odds, probabilities: entry.probabilities });
-  return [200, { ok: true, id, display: display?.mode === 'unavailable' ? null : display }];
+  return [200, { ok: true, sport, id, display: display?.mode === 'unavailable' ? null : display }];
 };
 routes['GET /api/cric'] = async (req, body, ip) => {
   const ep = String(body.ep || ''), id = String(body.id || '');
