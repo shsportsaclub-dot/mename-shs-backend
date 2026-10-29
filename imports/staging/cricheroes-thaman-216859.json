@@ -1,0 +1,137 @@
+{
+  "schema": "scoringheroes.import-staging.v1",
+  "source": "cricheroes",
+  "player": {
+    "name": "Thaman",
+    "source_id": "216859"
+  },
+  "completeness": "partial",
+  "identity_verified": false,
+  "records": [
+    {
+      "captured_at": "2026-10-05T17:07:46.369Z",
+      "source_url": "https://cricheroes.com/player-profile/216859/Thaman/matches",
+      "linked_records": [
+        {
+          "kind": "player-profile",
+          "label": "Profile",
+          "source_id": "216859",
+          "url": "https://cricheroes.com/player-profile/216859/Thaman/profile"
+        },
+        {
+          "kind": "scorecard",
+          "label": "Individual Match\n\nVijayanand Cricket Ground, Hyderabad, 26-Sep-26, 20 Ov.,\n\nUpcoming\nASPIRE ELEVEN\nTHAMAN HITTERS HYDERABD\nMatch scheduled at Sat,26 Sep, 06:00 PM",
+          "source_id": "27192764",
+          "url": "https://cricheroes.com/scorecard/27192764/individual/aspire-eleven-vs-thaman-hitters-hyderabd/upcoming"
+        },
+        {
+          "kind": "scorecard",
+          "label": "CineCric Premier League Season - 3\n\nSCG CRICKET GROUND, Hyderabad (Telangana), 21-Aug-26, 20 Ov.,\n\nFinal\nPast\nCOMMITTEE KURROLLU\n(19.4)\nTolly Strivers XI\n(17.4)\nTolly Strivers XI won by 4 wickets",
+          "source_id": "26717937",
+          "url": "https://cricheroes.com/scorecard/26717937/cinecric-premier-league-season-3/committee-kurrollu-vs-tolly-strivers-xi/summary"
+        },
+        {
+          "kind": "scorecard",
+          "label": "CineCric Premier League Season - 3\n\nSCG CRICKET GROUND, Hyderabad (Telangana), 12-Aug-26, 20 Ov.,\n\nLeague Matches\nPast\nTolly Strivers XI\n(20.0)\nTollywood Avengers\n(19.3)\nTolly Strivers XI won by 76 runs",
+          "source_id": "26587326",
+          "url": "https://cricheroes.com/scorecard/26587326/cinecric-premier-league-season-3/tolly-strivers-xi-vs-tollywood-avengers/summary"
+        },
+        {
+          "kind": "scorecard",
+          "label": "Individual Match\n\nSCG CRICKET GROUND, Hyderabad (Telangana), 26-Jun-26, 20 Ov.,\n\nPast\nTHAMAN HITTERS HYDERABD\n(5.2)\nBeeramguda Riders\n(0.0)\nAbandoned (Due to rain)",
+          "source_id": "25800472",
+          "url": "https://cricheroes.com/scorecard/25800472/individual/thaman-hitters-hyderabd-vs-beeramguda-riders/summary"
+        },
+        {
+          "kind": "scorecard",
+          "label": "Individual Match\n\nVijay Anand CRICKET GROUND, Hyderabad (Telangana), 26-Sep-26, 20 Ov.,\n\nPast\nASPIRE ELEVEN\n(20.0)\nTHAMAN HITTERS HYDERABD\n(17.0)\nTHAMAN HITTERS HYDERABD won by 8 wickets",
+          "source_id": "27319961",
+          "url": "https://cricheroes.com/scorecard/27319961/individual/aspire-eleven-vs-thaman-hitters-hyderabd/summary"
+        },
+        {
+          "kind": "scorecard",
+          "label": "CineCric Premier League Season - 3\n\nSCG CRICKET GROUND, Hyderabad (Telangana), 18-Aug-26, 20 Ov.,\n\nSemi Final 1\nPast\nTolly Strivers XI\n(20.0)\nSHAASTRA KINGS\n(19.3)\nTolly Strivers XI won by 73 runs",
+          "source_id": "26688300",
+          "url": "https://cricheroes.com/scorecard/26688300/cinecric-premier-league-season-3/tolly-strivers-xi-vs-shaastra-kings/summary"
+        },
+        {
+          "kind": "scorecard",
+          "label": "CineCric Premier League Season - 3\n\nSCG CRICKET GROUND, Hyderabad (Telangana), 10-Aug-26, 20 Ov.,\n\nLeague Matches\nPast\nTolly Strivers XI\n(20.0)\nCINE WARRIORS\n(16.4)\nTolly Strivers XI won by 57 runs",
+          "source_id": "26419726",
+          "url": "https://cricheroes.com/scorecard/26419726/cinecric-premier-league-season-3/tolly-strivers-xi-vs-cine-warriors/summary"
+        },
+        {
+          "kind": "scorecard",
+          "label": "FIVE ELEMENTS PRACTICE TOURNAMENT\n\nPrime Arena, Hyderabad (Telangana), 25-Sep-26, 20 Ov.,\n\nLeague Matches\nPast\nT V Riders\n(20.0)\nTerminus Lions\n(20.0)\nT V Riders won by 27 runs",
+          "source_id": "27295308",
+          "url": "https://cricheroes.com/scorecard/27295308/five-elements-practice-tournament/t-v-riders-vs-terminus-lions/summary"
+        },
+        {
+          "kind": "scorecard",
+          "label": "CineCric Premier League Season - 3\n\nSCG CRICKET GROUND, Hyderabad (Telangana), 13-Aug-26, 20 Ov.,\n\nLeague Matches\nPast\nCOMMITTEE KURROLLU\n(19.4)\nTolly Strivers XI\n(20.0)\nCOMMITTEE KURROLLU won by 9 runs",
+          "source_id": "26587342",
+          "url": "https://cricheroes.com/scorecard/26587342/cinecric-premier-league-season-3/committee-kurrollu-vs-tolly-strivers-xi/summary"
+        },
+        {
+          "kind": "scorecard",
+          "label": "Individual Match\n\nAbhiram Cricket County, Hyderabad (Telangana), 08-Aug-26, 20 Ov.,\n\nPast\nAvengers\n(20.0)\nTHAMAN HITTERS HYDERABD\n(12.0)\nTHAMAN HITTERS HYDERABD won by 10 wickets",
+          "source_id": "26520979",
+          "url": "https://cricheroes.com/scorecard/26520979/individual/avengers-vs-thaman-hitters-hyderabd/summary"
+        }
+      ],
+      "rendered_cricket_text": "HARD HITTER\nWILDCARD\nThaman\nChennai32901 Views\nRHB\nRight-arm Off Break\n-\nMatches\n-\nRuns\n-\nWickets\nMatches\nStats\nAwards\nBadges\nTeams\nPhotos\nConnections\nProfile\nIndividual Match\n\nVijayanand Cricket Ground, Hyderabad, 26-Sep-26, 20 Ov.,\n\nUpcoming\nASPIRE ELEVEN\nTHAMAN HITTERS HYDERABD\nMatch scheduled at Sat,26 Sep, 06:00 PM\nCineCric Premier League Season - 3\n\nSCG CRICKET GROUND, Hyderabad (Telangana), 21-Aug-26, 20 Ov.,\n\nFinal\nPast\nCOMMITTEE KURROLLU\n(19.4)\nTolly Strivers XI\n(17.4)\nTolly Strivers XI won by 4 wickets\nCineCric Premier League Season - 3\n\nSCG CRICKET GROUND, Hyderabad (Telangana), 12-Aug-26, 20 Ov.,\n\nLeague Matches\nPast\nTolly Strivers XI\n(20.0)\nTollywood Avengers\n(19.3)\nTolly Strivers XI won by 76 runs\nIndividual Match\n\nSCG CRICKET GROUND, Hyderabad (Telangana), 26-Jun-26, 20 Ov.,\n\nPast\nTHAMAN HITTERS HYDERABD\n(5.2)\nBeeramguda Riders\n(0.0)\nAbandoned (Due to rain)\nIndividual Match\n\nVijay Anand CRICKET GROUND, Hyderabad (Telangana), 26-Sep-26, 20 Ov.,\n\nPast\nASPIRE ELEVEN\n(20.0)\nTHAMAN HITTERS HYDERABD\n(17.0)\nTHAMAN HITTERS HYDERABD won by 8 wickets\nCineCric Premier League Season - 3\n\nSCG CRICKET GROUND, Hyderabad (Telangana), 18-Aug-26, 20 Ov.,\n\nSemi Final 1\nPast\nTolly Strivers XI\n(20.0)\nSHAASTRA KINGS\n(19.3)\nTolly Strivers XI won by 73 runs\nCineCric Premier League Season - 3\n\nSCG CRICKET GROUND, Hyderabad (Telangana), 10-Aug-26, 20 Ov.,\n\nLeague Matches\nPast\nTolly Strivers XI\n(20.0)\nCINE WARRIORS\n(16.4)\nTolly Strivers XI won by 57 runs\nFIVE ELEMENTS PRACTICE TOURNAMENT\n\nPrime Arena, Hyderabad (Telangana), 25-Sep-26, 20 Ov.,\n\nLeague Matches\nPast\nT V Riders\n(20.0)\nTerminus Lions\n(20.0)\nT V Riders won by 27 runs\nCineCric Premier League Season - 3\n\nSCG CRICKET GROUND, Hyderabad (Telangana), 13-Aug-26, 20 Ov.,\n\nLeague Matches\nPast\nCOMMITTEE KURROLLU\n(19.4)\nTolly Strivers XI\n(20.0)\nCOMMITTEE KURROLLU won by 9 runs\nIndividual Match\n\nAbhiram Cricket County, Hyderabad (Telangana), 08-Aug-26, 20 Ov.,\n\nPast\nAvengers\n(20.0)\nTHAMAN HITTERS HYDERABD\n(12.0)\nTHAMAN HITTERS HYDERABD won by 10 wickets\nLoad more\nMatch Type\nSelect...\nYears\nALL\nOvers\nSelect...\nBall Type\nALL\nTournaments\nALL\nTeams\nALL\nInnings\nALL\nApply\nReset\nClose\nFILTERS"
+    },
+    {
+      "captured_at": "2026-10-05T17:10:28.376Z",
+      "source_url": "https://cricheroes.com/player-profile/216859/Thaman/stats",
+      "linked_records": [
+        {
+          "kind": "player-profile",
+          "label": "Profile",
+          "source_id": "216859",
+          "url": "https://cricheroes.com/player-profile/216859/Thaman/profile"
+        }
+      ],
+      "rendered_cricket_text": "HARD HITTER\nWILDCARD\nThaman\nChennai32901 Views\nRHB\nRight-arm Off Break\n238\nMatches\n7453\nRuns\n163\nWickets\nMatches\nStats\nAwards\nBadges\nTeams\nPhotos\nConnections\nProfile\nBatting\nBowling\nFielding\nCaptain\n\n238\n\nMatches\n\n224\n\nInnings\n\n29\n\nNot out\n\n7453\n\nRuns\n\n132*\n\nHighest Runs\n\n38.22\n\nAvg\n\n150.41\n\nSR\n\n43\n\n30s\n\n43\n\n50s\n\n11\n\n100s\n\n871\n\n4s\n\n377\n\n6s\n\n9\n\nDucks\n\n156\n\nWon\n\n67\n\nLoss\n\nMatch Type\nSelect...\nYears\nALL\nOvers\nSelect...\nBall Type\nALL\nTournaments\nALL\nTeams\nALL\nInnings\nALL\nApply\nReset\nClose\nFILTERS"
+    },
+    {
+      "captured_at": "2026-10-05T17:10:51.598Z",
+      "source_url": "https://cricheroes.com/player-profile/216859/Thaman/stats",
+      "linked_records": [
+        {
+          "kind": "player-profile",
+          "label": "Profile",
+          "source_id": "216859",
+          "url": "https://cricheroes.com/player-profile/216859/Thaman/profile"
+        }
+      ],
+      "rendered_cricket_text": "HARD HITTER\nWILDCARD\nThaman\nChennai32901 Views\nRHB\nRight-arm Off Break\n238\nMatches\n7453\nRuns\n163\nWickets\nMatches\nStats\nAwards\nBadges\nTeams\nPhotos\nConnections\nProfile\nBatting\nBowling\nFielding\nCaptain\n\n238\n\nMatches\n\n158\n\nInnings\n\n456.3\n\nOvers\n\n3\n\nMaidens\n\n163\n\nWickets\n\n3859\n\nRuns\n\n4/23\n\nBest Bowling\n\n13\n\n3 Wickets\n\n0\n\n5 Wickets\n\n8.45\n\nEconomy\n\n16.80\n\nSR\n\n23.67\n\nAvg\n\n137\n\nWides\n\n33\n\nNoBalls\n\n910\n\nDot Balls\n\n300\n\n4s\n\n131\n\n6s\n\nMatch Type\nSelect...\nYears\nALL\nOvers\nSelect...\nBall Type\nALL\nTournaments\nALL\nTeams\nALL\nInnings\nALL\nApply\nReset\nClose\nFILTERS"
+    },
+    {
+      "captured_at": "2026-10-05T17:11:08.846Z",
+      "source_url": "https://cricheroes.com/player-profile/216859/Thaman/stats",
+      "linked_records": [
+        {
+          "kind": "player-profile",
+          "label": "Profile",
+          "source_id": "216859",
+          "url": "https://cricheroes.com/player-profile/216859/Thaman/profile"
+        }
+      ],
+      "rendered_cricket_text": "HARD HITTER\nWILDCARD\nThaman\nChennai32901 Views\nRHB\nRight-arm Off Break\n238\nMatches\n7453\nRuns\n163\nWickets\nMatches\nStats\nAwards\nBadges\nTeams\nPhotos\nConnections\nProfile\nBatting\nBowling\nFielding\nCaptain\n\n238\n\nMatches\n\n43\n\nCatches\n\n0\n\nCaught behind\n\n3\n\nRun outs\n\n0\n\nStumpings\n\n3\n\nAssisted Run Outs\n\nMatch Type\nSelect...\nYears\nALL\nOvers\nSelect...\nBall Type\nALL\nTournaments\nALL\nTeams\nALL\nInnings\nALL\nApply\nReset\nClose\nFILTERS"
+    },
+    {
+      "captured_at": "2026-10-05T17:11:27.135Z",
+      "source_url": "https://cricheroes.com/player-profile/216859/Thaman/stats",
+      "linked_records": [
+        {
+          "kind": "player-profile",
+          "label": "Profile",
+          "source_id": "216859",
+          "url": "https://cricheroes.com/player-profile/216859/Thaman/profile"
+        }
+      ],
+      "rendered_cricket_text": "HARD HITTER\nWILDCARD\nThaman\nChennai32901 Views\nRHB\nRight-arm Off Break\n238\nMatches\n7453\nRuns\n163\nWickets\nMatches\nStats\nAwards\nBadges\nTeams\nPhotos\nConnections\nProfile\nBatting\nBowling\nFielding\nCaptain\n\n112\n\nMatches\n\n76\n\nToss Won\n\n67.96%\n\nWin Per\n\n32.04%\n\nLoss Per\n\nMatch Type\nSelect...\nYears\nALL\nOvers\nSelect...\nBall Type\nALL\nTournaments\nALL\nTeams\nALL\nInnings\nALL\nApply\nReset\nClose\nFILTERS"
+    }
+  ]
+}
