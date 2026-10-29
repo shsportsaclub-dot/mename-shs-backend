@@ -2619,7 +2619,7 @@ LOOKS.unshift(['hero','Sky High']);
 '.hh-sr{display:flex;gap:8px;margin-bottom:10px}.hh-sr input{flex:1;background:var(--card);border:1px solid var(--bd);border-radius:24px;color:var(--tx);padding:11px 16px;font:500 14px var(--ui)}'+
 '.hh-reg{background:linear-gradient(90deg,#c1121f,#ff2d3d);border:2px solid #ffb3ba;color:#fff;border-radius:24px;padding:0 16px;font:800 12px var(--ui);letter-spacing:.6px;cursor:pointer;text-transform:uppercase}'+
 '.hh-pl .it{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--bd);font-size:13px}.hh-pl .it b.v{margin-left:auto;font-size:15px}';document.head.appendChild(st)}
-const HSPORTS=[['cricket','\u{1F3CF}','Cricket'],['football','⚽','Football'],['tennis','\u{1F3BE}','Tennis'],['hockey','\u{1F3D1}','Hockey'],['badminton','\u{1F3F8}','Badminton'],['volleyball','\u{1F3D0}','Volleyball'],['kabaddi','\u{1F93C}','Kabaddi'],['basketball','\u{1F3C0}','Basketball'],['baseball','⚾','Baseball'],['rugby','\u{1F3C9}','Rugby']];
+const HSPORTS=[['cricket','\u{1F3CF}','Cricket'],['football','⚽','Football'],['tennis','\u{1F3BE}','Tennis'],['hockey','\u{1F3D1}','Hockey'],['badminton','\u{1F3F8}','Badminton'],['volleyball','\u{1F3D0}','Volleyball'],['kabaddi','\u{1F93C}','Kabaddi'],['basketball','\u{1F3C0}','Basketball'],['baseball','⚾','Baseball'],['rugby','\u{1F3C9}','Rugby'],['handball','\u{1F93E}','Handball'],['american-football','\u{1F3C8}','American Football']];
 const HNAV=[['home','\u{1F3E0}','Home'],['@cricket','\u{1F3CF}','Cricket'],['@live','\u{1F4E1}','Live'],['matches','\u{1F4C5}','Schedule'],['@results','\u{1F3C1}','Results'],['players','\u{1F9D1}','Players'],['tours','\u{1F3C6}','Series'],['auction','\u{1F528}','Auction'],['players','\u{1F4CA}','Stats'],['epaper','\u{1F4F0}','News'],['reels','\u{1F3AC}','Video'],['epaper','\u{1F5DE}','ePaper'],['book','\u{1F3DF}','Grounds'],['book','\u{1F39F}','Bookings'],['@more','⋯','More']];
 UI.hf=UI.hf||{cat:'all',g:'all',f:'all',y:'all',mo:'all',loc:'all',ser:'all',tab:'all',q:''};
 function hhMatches(){const j=UI.live;if(!j||!j.ok)return null;const F2=wFilter(),h=UI.hf;
@@ -3743,7 +3743,8 @@ const CAT0=[['cricket','Cricket','\u{1F3CF}','Bat and ball',['क्रिके
 ['badminton','Badminton','\u{1F3F8}','Racket',['shuttle','बैडमिंटन','బ్యాడ్మింటన్'],['3x21','3x15 (BWF 2026)'],'LIMITED'],
 ['volleyball','Volleyball','\u{1F3D0}','Team ball',['वॉलीबॉल','వాలీబాల్','beach volleyball'],['Indoor','Beach'],'LIMITED'],
 ['basketball','Basketball','\u{1F3C0}','Team ball',['बास्केटबॉल','బాస్కెట్‌బాల్','hoops'],['FIBA','NBA'],'LIMITED'],
-['baseball','Baseball','⚾','Bat and ball',['बेसबॉल','బేస్‌బాల్'],[],'COMING SOON'],
+['baseball','Baseball','⚾','Bat and ball',['बेसबॉल','బేస్‌బాల్'],[],'LIMITED'],
+['american-football','American Football','\u{1F3C8}','Contact team',['nfl','gridiron','अमेरिकन फुटबॉल'],['NFL','NCAA'],'LIMITED'],
 ['rugby','Rugby','\u{1F3C9}','Contact team',['रग्बी','రగ్బీ'],['Union','Sevens','League'],'LIMITED'],
 ['table-tennis','Table Tennis','\u{1F3D3}','Racket',['ping pong','tt','टेबल टेनिस','టేబుల్ టెన్నిస్'],['Best of 5','Best of 7'],'LIMITED'],
 ['kho-kho','Kho-Kho','\u{1F3C3}','Chase and tag',['खो-खो','ఖో-ఖో'],[],'COMING SOON'],
@@ -3753,7 +3754,7 @@ const CAT0=[['cricket','Cricket','\u{1F3CF}','Bat and ball',['क्रिके
 ['boxing','Boxing','\u{1F94A}','Combat',['मुक्केबाजी','బాక్సింగ్'],[],'COMING SOON'],
 ['archery','Archery','\u{1F3F9}','Precision',['तीरंदाजी','విలువిద్య'],[],'COMING SOON'],
 ['chess','Chess','♟️','Mind sport',['शतरंज','చదరంగం'],['Classical','Rapid','Blitz'],'LIMITED'],
-['handball','Handball','\u{1F93E}','Team ball',['हैंडबॉल','హ్యాండ్‌బాల్'],[],'COMING SOON'],
+['handball','Handball','\u{1F93E}','Team ball',['हैंडबॉल','హ్యాండ్‌బాల్'],[],'LIMITED'],
 ['golf','Golf','⛳','Precision',['गोल्फ','గోల్ఫ్'],['Stroke play','Stableford'],'LIMITED'],
 ['carrom','Carrom','\u{1F534}','Board and table',['carom','कैरम','క్యారమ్'],['Singles','Doubles'],'LIMITED']];
 const CAT_SCORER={football:['football'],tennis:['tennis'],kabaddi:['kabaddi'],pickleball:['pb'],badminton:['bd15','bd'],volleyball:['vb','vbb'],basketball:['basketball'],rugby:['rugby'],'table-tennis':['tt'],chess:['chess'],golf:['golf'],carrom:['carrom']};
@@ -8711,7 +8712,7 @@ const card=m=>`<div class="ig-sq fbc" data-a="fbOpen" data-id="${esc(m.id)}" sty
 
 /* ---------------- 55 WORLD SCORES for basketball, volleyball, handball, rugby (Highlightly through the server; free plan, so lists refresh every few minutes). Only what the provider sends. ---------------- */
 {
- const HLS={basketball:'Basketball',volleyball:'Volleyball',handball:'Handball',rugby:'Rugby',hockey:'Hockey',tennis:'Tennis'};
+ const HLS={basketball:'Basketball',volleyball:'Volleyball',handball:'Handball',rugby:'Rugby',hockey:'Hockey',tennis:'Tennis',baseball:'Baseball','american-football':'American Football'};
  UI.sx=UI.sx||{};
  const load=async(sp,force)=>{
   const x=UI.sx[sp]=UI.sx[sp]||{list:null,err:'',at:0,busy:0};
@@ -8722,7 +8723,7 @@ const card=m=>`<div class="ig-sq fbc" data-a="fbOpen" data-id="${esc(m.id)}" sty
  const st=m=>m.live?(m.state||'Live')+(!m.state&&m.period!=null&&m.period!==''?' · P'+m.period:''):m.ended?'FT':m.startsAt?new Date(m.startsAt).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'-';
  const sc=v=>v==null?'-':v;
  // each sport gets its own icon, accent colour and period wording
- const TH={basketball:{ic:'\u{1F3C0}',c:'#ff8a3d',p:'Q',u:'Quarters'},volleyball:{ic:'\u{1F3D0}',c:'#ffd23d',p:'Set',u:'Sets (points)',sets:1},handball:{ic:'\u{1F93E}',c:'#4fd1c5',p:'H',u:'Halves'},rugby:{ic:'\u{1F3C9}',c:'#7bd88f',p:'H',u:'Halves'},hockey:{ic:'\u{1F3D2}',c:'#5cc8ff',p:'P',u:'Periods'},tennis:{ic:'\u{1F3BE}',c:'#c6f135',p:'Set',u:'Sets (games)',sets:1}};
+ const TH={basketball:{ic:'\u{1F3C0}',c:'#ff8a3d',p:'Q',u:'Quarters'},volleyball:{ic:'\u{1F3D0}',c:'#ffd23d',p:'Set',u:'Sets (points)',sets:1},handball:{ic:'\u{1F93E}',c:'#4fd1c5',p:'H',u:'Halves'},rugby:{ic:'\u{1F3C9}',c:'#7bd88f',p:'H',u:'Halves'},hockey:{ic:'\u{1F3D2}',c:'#5cc8ff',p:'P',u:'Periods'},tennis:{ic:'\u{1F3BE}',c:'#c6f135',p:'Set',u:'Sets (games)',sets:1},baseball:{ic:'⚾',c:'#e8e8ff',p:'Inn',u:'Innings'},'american-football':{ic:'\u{1F3C8}',c:'#c98a5a',p:'Q',u:'Quarters'}};
  const brk=(sp,m)=>{const t=TH[sp];if(!t||!m.periods||!m.periods.length)return '';return `<div style="grid-column:1/-1;display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:4px">${m.periods.map((p,i)=>`<span style="font-size:11px;background:#0a1740;border:1px solid #2a4cb0;border-radius:6px;padding:2px 6px;color:#cfe0ff">${t.p}${i+1} <b>${sc(p[0])}-${sc(p[1])}</b></span>`).join('')}</div>`};
  A.sxTabSet=d=>{const [sp,k]=String(d.v||'').split('|');UI.sxt=UI.sxt||{};UI.sxt[sp]=k;render()};
  window.shWorldScores=function(sp){
