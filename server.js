@@ -1355,6 +1355,10 @@ http.createServer(async (req, res) => {
       return res.end(html);
     } catch { return out(404, { ok: false, error: 'Broadcast demo unavailable' }); }
   }
+  if (req.method === 'GET' && (path === '/install' || path === '/install.html')) {   // install guide: iPhone (Add to Home Screen) and Android (APK)
+    try { const html = fs.readFileSync(new URL('./public/install.html', import.meta.url)); res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache' }); return res.end(html); }
+    catch { return out(404, { ok: false, error: 'Install page not available' }); }
+  }
   if (req.method === 'GET' && path === '/live-studio') {
     try { const html = fs.readFileSync(new URL('./public/live-studio.html', import.meta.url)); res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' }); return res.end(html); }
     catch { return out(404, { ok: false, error: 'Live studio not installed' }); }

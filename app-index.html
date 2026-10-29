@@ -9112,6 +9112,19 @@ window.shXIOf=(mine)=>{const c=mine.filter(p=>p.confirmed);if(c.length)return {x
  setInterval(()=>{const b=document.getElementById('wspb');if(!b)return;const p=Math.min(99,Math.floor((Date.now()-t0)/MS*100));b.style.width=p+'%';const e=document.getElementById('wspp');if(e)e.textContent=p+'%'},60);
 }
 
+
+/* ---------------- 72 iPhone install helper: in Safari (not yet installed) a dismissible banner opens the step-by-step guide ---------------- */
+{
+ const st=document.createElement('style');st.textContent='.iosb{position:fixed;left:10px;right:10px;bottom:calc(76px + env(safe-area-inset-bottom,0px));z-index:60;display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:#0c1d4af2;border:1px solid #2a4cb0;box-shadow:0 10px 30px #0009;color:#fff;font:600 13px var(--f,system-ui)}.iosb img{width:34px;height:34px;border-radius:9px}.iosb span{flex:1;min-width:0}.iosb small{display:block;font-weight:400;opacity:.8}.iosb a{padding:8px 12px;border-radius:10px;background:linear-gradient(90deg,#1a3fa0,#e3122d);color:#fff;text-decoration:none;font-weight:800;font-size:12px}.iosb button{background:none;border:0;color:#fff;font-size:18px;opacity:.7;padding:4px}';document.head.appendChild(st);
+ const isIos=()=>/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+ const installed=()=>{try{return !!navigator.standalone||matchMedia('(display-mode: standalone)').matches}catch(e){return false}};
+ const gone=()=>{try{return localStorage.getItem('sh_ios_b')==='1'}catch(e){return false}};
+ window.shIosBanner=()=>{const ex=document.getElementById('iosb');if(!isIos()||installed()||gone()||!S.user||UI.stage!=='app'){if(ex)ex.remove();return}
+  if(ex)return;const d=document.createElement('div');d.id='iosb';d.className='iosb';d.innerHTML='<img src="/icon-192.png" alt=""><span>Install Scoring Heroes on your iPhone<small>Full screen app, free. Share → Add to Home Screen</small></span><a href="/install">How</a><button type="button" aria-label="Close">×</button>';
+  d.querySelector('button').onclick=()=>{try{localStorage.setItem('sh_ios_b','1')}catch(e){}d.remove()};document.body.appendChild(d)};
+ const r1=render;render=function(){const o=r1.apply(this,arguments);try{window.shIosBanner()}catch(e){}return o};
+}
+
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});

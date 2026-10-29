@@ -1,0 +1,39 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Install Scoring Heroes</title><meta name="theme-color" content="#050c24"><link rel="icon" href="/icon-192.png"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<style>
+:root{--bg:#050c24;--card:#0c1d4a;--bd:#2a4cb0;--fg:#fff;--mu:#b6c2e6;--red:#e3122d}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(70% 40% at 20% 0,#e3122d33,transparent 70%),radial-gradient(60% 40% at 90% 10%,#1a6dff33,transparent 70%),var(--bg);color:var(--fg);font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;min-height:100vh;padding:max(18px,env(safe-area-inset-top)) 16px 40px}
+.w{max-width:520px;margin:0 auto}.hd{display:flex;align-items:center;gap:12px;margin-bottom:18px}.hd img{width:54px;height:54px;border-radius:14px}.hd h1{font-size:22px;margin:0;font-style:italic;letter-spacing:.5px}.hd p{margin:2px 0 0;color:var(--mu);font-size:13px}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}.tabs button{padding:12px;border-radius:12px;border:1px solid var(--bd);background:var(--card);color:var(--fg);font:700 14px inherit;cursor:pointer}.tabs button.on{background:linear-gradient(90deg,#1a3fa0,var(--red));border-color:transparent}
+.card{background:#0c1d4acc;border:1px solid var(--bd);border-radius:16px;padding:16px;margin-bottom:12px}.card h2{margin:0 0 4px;font-size:17px}.mu{color:var(--mu);font-size:13px}
+.st{display:grid;grid-template-columns:36px 1fr;gap:12px;align-items:center;padding:12px 0;border-top:1px solid #2a4cb055;opacity:.45;transition:opacity .4s,transform .4s}.st:first-of-type{border-top:0}.st.on{opacity:1}.st i{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--red);font:800 15px inherit;font-style:normal}.st.on i{animation:pu 1.6s ease-in-out infinite}@keyframes pu{50%{box-shadow:0 0 0 8px #e3122d33}}.st b{display:block}.st svg{vertical-align:-5px}
+.btn{display:block;text-align:center;text-decoration:none;color:#fff;background:linear-gradient(90deg,#1a3fa0,var(--red));padding:14px;border-radius:12px;font-weight:800;margin-top:10px}.btn.g{background:transparent;border:1px solid var(--bd)}
+.note{border-left:3px solid #ffc61a;padding:6px 10px;margin-top:10px;font-size:13px;color:var(--mu)}.ft{text-align:center;color:var(--mu);font-size:12px;margin-top:18px}
+.pane{display:none}.pane.on{display:block}
+</style></head><body><div class="w">
+<div class="hd"><img src="/icon-192.png" alt=""><div><h1>SCORING HEROES</h1><p>Install the app: free, full screen, no store needed</p></div></div>
+<div class="tabs"><button id="tI" onclick="sel('i')">iPhone / iPad</button><button id="tA" onclick="sel('a')">Android</button></div>
+<div class="pane" id="pi">
+ <div class="card"><h2>Add to Home Screen (iPhone)</h2><div class="mu">Works like an app: full screen, own icon, opens instantly. Use <b>Safari</b> (not Chrome).</div>
+ <div id="steps">
+  <div class="st"><i>1</i><div><b>Open this site in Safari</b><span class="mu">scoring-heroes-api.onrender.com</span></div></div>
+  <div class="st"><i>2</i><div><b>Tap the Share button</b><span class="mu">Square with an arrow
+   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg> at the bottom (iPad: top)</span></div></div>
+  <div class="st"><i>3</i><div><b>Scroll and tap "Add to Home Screen"</b><span class="mu">Then tap <b>Add</b> (top right)</span></div></div>
+  <div class="st"><i>4</i><div><b>Open Scoring Heroes from your Home Screen</b><span class="mu">Full screen app, signed in, with live scores</span></div></div>
+ </div>
+ <div class="note">iOS rule: only Safari can add apps to the Home Screen. If you opened this in WhatsApp or Chrome, tap the share/menu and choose "Open in Safari".</div>
+ <a class="btn" href="/">Open the app now</a></div>
+</div>
+<div class="pane" id="pa">
+ <div class="card"><h2>Android app (APK)</h2><div class="mu">Install file for Android phones. It opens the live Scoring Heroes, so it always has the newest version.</div>
+ <a class="btn" href="https://github.com/shsportsaclub-dot/mename-shs-backend/releases/latest" rel="noopener">Download Android APK</a>
+ <div class="note">Open the page, tap <b>ScoringHeroes-test.apk</b>, allow "Install from this source" when Android asks.</div>
+ <a class="btn g" href="/">Or just use it in the browser (Chrome menu → Install app)</a></div>
+</div>
+<div class="ft">Scoring Heroes · SH Sports</div></div>
+<script>
+var ios=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+function sel(k){document.getElementById('pi').className='pane'+(k==='i'?' on':'');document.getElementById('pa').className='pane'+(k==='a'?' on':'');document.getElementById('tI').className=k==='i'?'on':'';document.getElementById('tA').className=k==='a'?'on':''}
+sel(ios?'i':'a');
+var s=[].slice.call(document.querySelectorAll('.st')),n=0;function tick(){s.forEach(function(e,i){e.className='st'+(i===n?' on':'')});n=(n+1)%s.length}tick();setInterval(tick,2200);
+</script></body></html>
