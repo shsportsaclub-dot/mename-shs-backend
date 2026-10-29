@@ -11,8 +11,8 @@ await p.click('.hdr .sgbtn');await p.click('.sgl button[data-v=tennis]');await p
 await p.click('#igsl .ig-sq');await p.waitForTimeout(600);
 const r=await p.evaluate(()=>{const t=document.querySelector('.tnh .hero');return t?{txt:t.innerText.replace(/\s+/g,' '),big:t.querySelector('.big').innerText.replace(/\s+/g,' ')}:null});
 ok(r&&/1-1/.test(r.big),'sets '+JSON.stringify(r));
-ok(r&&/GAMES 2-1/.test(r.txt)&&/POINTS 40-30/.test(r.txt),'games/points '+(r&&r.txt));
-ok(r&&/S1 6-3/.test(r.txt)&&/S2 4-6/.test(r.txt),'previous sets');
+ok(r&&/Alcaraz 6 4 1 2 40/.test(r.txt)&&/Sinner 3 6 1 1 30/.test(r.txt),'table rows '+(r&&r.txt));
+ok(r&&/S1 S2 SETS GAMES POINTS/.test(r.txt),'table header');
 ok(r&&/Serving/.test(r.txt)&&/ATP Paris Masters/.test(r.txt),'serving + league');
 console.log(await p.evaluate(()=>{const e=[...document.querySelectorAll('*')].find(x=>x.children.length<4&&/Virtual live/.test(x.textContent)&&x.textContent.length<40);if(!e)return 'none';const r=e.getBoundingClientRect(),c=getComputedStyle(e.closest('.card')||e);let a=e,o=[];while(a&&a!==document.body){const cs=getComputedStyle(a);if(cs.display==='none')o.push(a.tagName+'.'+a.className+'#'+a.id);a=a.parentElement}const cd=e.closest('.card');const hit=[];for(const ss of document.styleSheets){try{for(const r of ss.cssRules){if(r.selectorText&&r.style&&r.style.display==='none'&&cd.matches(r.selectorText))hit.push(r.selectorText)}}catch(x){}}return hit.join(' ;; ')+' || '+ o.join(' > ')+' | style='+cd.getAttribute('style')+' | cls='+cd.className+' | parent='+cd.parentElement.className+' | prev='+(cd.previousElementSibling&&cd.previousElementSibling.className)}));await p.evaluate(()=>{UI.sx.tennis.list[0].extra.points='40-40';render()});await p.waitForTimeout(200);
 ok(await p.evaluate(()=>{const f=[...document.querySelectorAll('.tnh .tm')];return f[1].classList.contains('fl')&&!f[0].classList.contains('fl')&&/POINT/.test(f[1].innerText)}),'point flash on the side that scored');
