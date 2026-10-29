@@ -1,0 +1,14 @@
+{
+  "schema": "scoringheroes.import-staging.v1",
+  "source": "cricheroes",
+  "player": {
+    "name": "Hemanth",
+    "source_id": "5295710",
+    "source_url": "https://cricheroes.com/player-profile/5295710/hemanth/matches"
+  },
+  "completeness": "reference-only",
+  "identity_verified": false,
+  "records": [],
+  "import_status": "awaiting-captured-records",
+  "note": "Profile URL confirmed from supplied screenshot; screenshot is not a complete machine-readable match capture. Do not infer statistics or write career totals."
+}
