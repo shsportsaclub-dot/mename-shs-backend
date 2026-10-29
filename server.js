@@ -562,6 +562,12 @@ routes['GET /api/legacy-player-profile'] = async (req, body) => {
       battingRows: ['Matches', 'Innings', 'Runs', 'Balls', 'Highest', 'Average', 'Strike Rate', 'Not Out', 'Fours', 'Sixes', '50s', '100s'],
       bowlingRows: ['Matches', 'Innings', 'Balls', 'Runs', 'Wickets', 'Best (inn)', 'Best (match)', 'Average', 'Economy', 'Strike Rate', '5W', '10W'],
       tournamentBreakdown: true,
+      seriesBreakdown: true,
+      individualMatchScorecards: true,
+      overallCareerTotals: true,
+      deduplicateCareerMatchesBy: ['source', 'matchId', 'playerId'],
+      professionalCompetitions: 'Only show IPL, Ranji or other professional competitions when actual participation records exist',
+      recordGroups: ['Tournaments', 'Series', 'Individual Matches', 'T20', 'Other Formats', 'Overall Career'],
       sourceSeparation: 'Outside records are never merged into verified Scoring Heroes totals',
       missingValue: null
     },
