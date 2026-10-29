@@ -13,5 +13,5 @@ ok(t.length===2&&/Runs \d+/.test(t[0])&&/Tgt \d+/.test(t[1]),'1st inns '+t);
 await open([{inning:'Zimbabwe Women Inning 1',r:200,w:10,o:50},{inning:'India Women Inning 1',r:150,w:3,o:35}],35,'Live');await p.waitForTimeout(300);
 t=await p.evaluate(()=>[...document.querySelectorAll('.hero .tm small.wc')].map(x=>x.innerText));
 ok(t.length===2&&/Runs \d+/.test(t[0])&&/Target 201/.test(t[1]),'chase '+t);
-await p.screenshot({path:'/tmp/wc2.png'});ok(await p.evaluate(()=>!!document.querySelector('.wbar .wt u')),'bar');
+await p.screenshot({path:'/tmp/wc2.png'});ok(await p.evaluate(()=>!!document.querySelector('.hero .wbar .wt u')),'bar');
 ok(!errs.length,errs.join(';'));await b.close();if(!process.exitCode)console.log('PASS: win chance',t.join(' / '));})();
