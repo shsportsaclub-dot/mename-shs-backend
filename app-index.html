@@ -8453,7 +8453,7 @@ S.stream.scene=S.stream.scene||'bug';S.stream.card=S.stream.card||{t:'Starting s
 /* ---------------- 49 "BALL-BY-BALL ONLY" filter for the world matches list ---------------- */
 {
  const f0=wFilter;
- wFilter=function(){const F=f0.apply(this,arguments);if(!UI.wbbb)return F;const k=a=>a.filter(m=>m.bbb===true);return{live:k(F.live),up:k(F.up),rec:k(F.rec)}};
+ wFilter=function(){const F=f0.apply(this,arguments),first=a=>a.slice().sort((x,y)=>(y.bbb===true)-(x.bbb===true)),k=a=>UI.wbbb?a.filter(m=>m.bbb===true):first(a);return{live:k(F.live),up:k(F.up),rec:k(F.rec)}};
  const mx0=XV.matches;
  XV.matches=function(){
   let o=mx0.apply(this,arguments);
