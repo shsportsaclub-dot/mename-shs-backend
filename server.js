@@ -870,7 +870,7 @@ async function fbCached(key, ttl, fn) {
 let APP_PAGE = null;
 function appPage() {
   if (APP_PAGE) return APP_PAGE;
-  const html = Buffer.from(fs.readFileSync(new URL('./app-index.html', import.meta.url), 'utf8').replace('__SH_BUILD__', String(E.RENDER_GIT_COMMIT || '').slice(0, 7) || 'local').replace('</head>', '<style id="sh-main-live-reference">' + fs.readFileSync(new URL('./public/main-live-reference.css', import.meta.url), 'utf8') + '</style></head>'));
+  const html = Buffer.from(fs.readFileSync(new URL('./app-index.html', import.meta.url), 'utf8').replace('__SH_BUILD__', String(E.RENDER_GIT_COMMIT || '').slice(0, 7) || 'local').replace('</head>', '<style id="sh-main-live-reference">' + fs.readFileSync(new URL('./public/main-live-reference.css', import.meta.url), 'utf8') + '</style><script>' + fs.readFileSync(new URL('./public/match-market-display.js', import.meta.url), 'utf8') + '</script></head>'));
   return (APP_PAGE = { html, gz: zlib.gzipSync(html, { level: 9 }), br: zlib.brotliCompressSync(html, { params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 6 } }), etag: '"' + crypto.createHash('sha1').update(html).digest('hex').slice(0, 24) + '"' });
 }
 const hlCache = new Map(); let hlDay = { d: '', n: 0 }, tnDay = { d: '', n: 0 };
