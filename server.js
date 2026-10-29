@@ -268,7 +268,7 @@ async function hybridLive(base) {
     smBy.set(m.id, String(c.id).replace(/^sm/, ''));
     return { ...m, smId: c.id };
   });
-  await Promise.all(out.filter(m => m.smId && m.started && !m.ended).slice(0, 6).map(async m => { const b = await smBalls(m.smId.slice(2), 90e3); if (b.length) { m.bbb = true; m.bbbSrc = 'sportmonks'; } }));
+  await Promise.all(out.filter(m => m.smId && m.started && !m.ended).slice(0, 12).map(async m => { const b = await smBalls(m.smId.slice(2), 90e3); if (b.length) { m.bbb = true; m.bbbSrc = 'sportmonks'; } }));
   hy = { t: Date.now(), src: base, data: { ...base, matches: out } };
   return hy.data;
 }
