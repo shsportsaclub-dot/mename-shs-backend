@@ -554,6 +554,17 @@ routes['GET /api/legacy-player-profile'] = async (req, body) => {
     source: 'CricHeroes', sourceUrl: player.source_url || 'https://cricheroes.com/player-profile/' + id,
     completeness: capture.completeness, identityVerified: capture.identity_verified === true },
     tabs: ['Profile', 'Matches', 'Stats', 'Awards', 'Teams'],
+    playerLevel: 'local',
+    statsLayout: {
+      type: 'local-tournament',
+      sections: ['Info', 'Batting', 'Bowling'],
+      columns: ['Tournament', 'Series', 'Individual Matches', 'T20', 'Other Formats'],
+      battingRows: ['Matches', 'Innings', 'Runs', 'Balls', 'Highest', 'Average', 'Strike Rate', 'Not Out', 'Fours', 'Sixes', '50s', '100s'],
+      bowlingRows: ['Matches', 'Innings', 'Balls', 'Runs', 'Wickets', 'Best (inn)', 'Best (match)', 'Average', 'Economy', 'Strike Rate', '5W', '10W'],
+      tournamentBreakdown: true,
+      sourceSeparation: 'Outside records are never merged into verified Scoring Heroes totals',
+      missingValue: null
+    },
     matches, careerStats: null, note: 'Partial source capture; totals not independently verified' }];
 };
 routes['GET /api/scoreboard-market'] = async (req, body) => {
