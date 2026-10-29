@@ -8604,7 +8604,7 @@ const card=m=>`<div class="ig-sq fbc" data-a="fbOpen" data-id="${esc(m.id)}" sty
     side=e=>{const h=+e.teamId===+m.home.id,a=+e.teamId===+m.away.id;return (own(e)?a:h)?'r':'l'},lbl=e=>(e.player||'Goal')+' '+(e.minute!=null?e.minute+(e.extra?'+'+e.extra:'')+"'":'')+(e.kind==='pengoal'?' (pen)':own(e)?' (og)':'');
    const mk=e=>{const s2=side(e),n=E.filter(x=>side(x)===s2),k=n.indexOf(e),x=s2==='r'?300:20,y=40+k*26;return `<g><circle cx="${x}" cy="${y}" r="9" fill="#fff"/><text x="${x}" y="${y+4}" text-anchor="middle" font-size="11">⚽</text><text x="${s2==='r'?x-14:x+14}" y="${y+4}" text-anchor="${s2==='r'?'end':'start'}" font-size="9" fill="#fff" font-weight="700">${esc((e.player||'Goal').split(' ').slice(-1)[0])} ${e.minute!=null?e.minute+(e.extra?'+'+e.extra:'')+"'":''}${e.kind==='pengoal'?' (pen)':own(e)?' (og)':''}</text></g>`};
    const ev=E.slice().sort((a,b)=>(a.minute||0)-(b.minute||0)).map(e=>({side:side(e),text:'⚽ '+lbl(e)+' · '+(side(e)==='r'?m.home.short||m.home.name:m.away.short||m.away.name)}));
-   return window.shArena('football',{home:m.home.short||m.home.name,away:m.away.short||m.away.name,events:ev,extra:E.map(mk).join(''),cap:m.live?'Live '+(m.minute!=null?m.minute+"'":''):'',note:'Goal markers sit in the net they went into, from the provider\'s events. Replay shows each goal in order; the ball is not tracked live.'})})();
+   return window.shArena('football',{key:'F'+m.id,sc:[m.home.goals,m.away.goals],lu:m.lineups&&{l:m.lineups[m.home.id],r:m.lineups[m.away.id]},live:m.live,home:m.home.short||m.home.name,away:m.away.short||m.away.name,events:ev,extra:E.map(mk).join(''),cap:m.live?'Live '+(m.minute!=null?m.minute+"'":''):'',note:'Goal markers sit in the net they went into, from the provider\'s events. Replay shows each goal in order; the ball is not tracked live.'})})();
   return cbpHead(ttl0,[['tl','Timeline'],['rc','Recap'],['lu','Line-ups'],['st','Stats']],f.tab,'fbTab')+`<div class="sxm">${head}${pitch}${body}<div class="mu sm" style="margin:8px 4px">Data from the football provider; nothing here is added by the app.</div></div>`;
  };
  setInterval(()=>{if(document.hidden)return;if(UI.view==='fbmatch'&&UI.fb.id)fbLoadMatch(UI.fb.id,false);else if(UI.view==='home'&&UI.sport==='football')fbLoadList(false)},5000);
@@ -8765,7 +8765,7 @@ const card=m=>`<div class="ig-sq fbc" data-a="fbOpen" data-id="${esc(m.id)}" sty
    const cap=sp==='tennis'?(sv?(sv===1?H:Aw)+' serving'+(e.points?' · '+e.points:'')+(e.tiebreak?' · tie-break':''):''):(m.live?st(m):'');
    const sfm=v=>/clay/i.test(v)?'clay':/grass/i.test(v)?'grass':/carpet|mat/i.test(v)?'carpet':/hard/i.test(v)?'hard':undefined;
    const live=m.live,pl=(m.periods||[]).filter(q=>q[0]!=null&&q[1]!=null),prev=live?pl.slice(0,-1):pl,cur=live&&pl.length?pl[pl.length-1]:null;const board=sp==='tennis'?{key:'W'+m.id,p:[H,Aw],state:m.live?'LIVE':m.ended?'RESULT':'UPCOMING',ticker:(m.country?m.country+' · ':'')+(m.league||'Tennis'),prev,sets:[m.home.score,m.away.score],games:cur,pts:e.points?String(e.points).split(/[-:]/).map(x=>x.trim()).slice(0,2):null,srv:sv?(sv===1?0:1):null,note:'Points, games and sets are as sent by the data provider.'}:null;
-   return window.shArena(sp,{board,surf:sp==='tennis'?sfm(e.surface||''):undefined,indoor:!!e.indoor,home:H,away:Aw,events:evs,pos,cap,note:sp==='tennis'?'Ball sits at the serving end (from the provider). Replay shows each set as recorded; the ball is not tracked live.':null})})():'';
+   return window.shArena(sp,{key:'W'+m.id,sc:[m.home.score,m.away.score],lu:m.lineups&&{l:m.lineups[m.home.id],r:m.lineups[m.away.id]},live:m.live,board,surf:sp==='tennis'?sfm(e.surface||''):undefined,indoor:!!e.indoor,home:H,away:Aw,events:evs,pos,cap,note:sp==='tennis'?'Ball sits at the serving end (from the provider). Replay shows each set as recorded; the ball is not tracked live.':null})})():'';
   const pr0=(m.periods||[]).filter(q=>q[0]!=null&&q[1]!=null),nm0=x=>{const n=String(x.short||x.name||'');return n.length>11?n.split(' ').slice(-1)[0]:n},tot=[m.home.score,m.away.score],tbl=pr0.length?`<div class="tnt"><div class="tnr tnh0"><span></span>${pr0.map((_,i)=>`<span>${esc(t.p||'P')}${i+1}</span>`).join('')}<span>${t.sets?'SETS':'TOTAL'}</span></div>${[m.home,m.away].map((x,q)=>`<div class="tnr"><span class="nm">${esc(nm0(x))}</span>${pr0.map(z=>`<span class="lv">${esc(z[q])}</span>`).join('')}<span class="lv">${esc(tot[q]==null?'-':tot[q])}</span></div>`).join('')}</div>`:'';
   const heroX=window.shHero({table:tbl||undefined,t:[m.home,m.away],score:[m.home.score,m.away.score],unit:t.sets?'sets':'',prev:pr0,pl:t.p||'P',ticker:(m.country?m.country+' · ':'')+(m.league||''),state:m.live?'LIVE':m.ended?'RESULT':'UPCOMING',status:st(m)});
   let body='';const tb=X.tab||'live';
@@ -9016,6 +9016,34 @@ const card=m=>`<div class="ig-sq fbc" data-a="fbOpen" data-id="${esc(m.id)}" sty
 {const st=document.createElement('style');st.textContent='.bbbg.off{display:none!important}';document.head.appendChild(st)}
 /* ---------------- 66 Court uses the full width ---------------- */
 {const st=document.createElement('style');st.textContent='.arena svg{max-height:none!important;max-width:900px;margin:0 auto}';document.head.appendChild(st)}
+
+/* ---------------- 67 TENNIS TABLE CENTRED + TEAM-COLOURED PLAYERS + BALL GOES TO THE END WHERE A TEAM JUST SCORED (football / basketball) ---------------- */
+{
+ const st=document.createElement('style');st.textContent='.tnh .tnr{grid-template-columns:minmax(64px,120px)!important}.tnh .tnt{width:max-content;max-width:100%;margin:6px auto 0}.arena .pl{transition:opacity .3s}.arleg{display:flex;gap:12px;justify-content:center;align-items:center;font:700 11px var(--f,system-ui);margin:4px 0 2px;flex-wrap:wrap}.arleg i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px;border:1px solid #fff}';document.head.appendChild(st);
+ const HC='#2d7cff',AC='#ff4d4d',MIR=a=>a.map(([x,y])=>[320-x,y]);
+ const LAY={basketball:[[62,100],[92,58],[92,142],[126,80],[126,120]],football:[[24,100],[62,38],[62,76],[62,124],[62,162],[104,60],[104,100],[104,140],[140,48],[140,100],[140,152]]};
+ const a0=window.shArena;
+ window.shArena=function(sp,o){
+  if(!o||(sp!=='basketball'&&sp!=='football'))return a0.apply(this,arguments);
+  let pos=o.pos,cap=o.cap,hit=null;
+  try{UI.ar.last=UI.ar.last||{};const k=o.key,sc=(o.sc||[]).map(x=>x==null||x===''?null:Number(x));
+   if(k!=null&&sc[0]!=null&&sc[1]!=null){const pr=UI.ar.last[k];
+    if(pr&&(sc[0]!==pr.sc[0]||sc[1]!==pr.sc[1])){const dh=sc[0]-pr.sc[0],da=sc[1]-pr.sc[1];if(dh>0||da>0){hit={side:dh>0?'r':'l',d:dh>0?dh:da,team:dh>0?o.home:o.away,at:Date.now()};UI.ar.last[k]={sc,hit}}else UI.ar.last[k]={sc,hit:pr.hit}}
+    else if(!pr)UI.ar.last[k]={sc,hit:null};
+    const h=UI.ar.last[k].hit;if(h&&Date.now()-h.at<6000){const bx=sp==='football'?(h.side==='r'?296:24):(h.side==='r'?288:32);pos=[bx,100];cap=(sp==='football'?'GOAL':h.d===1?'FREE THROW':h.d===3?'THREE-POINTER':'BASKET')+' · '+h.team+(sp==='basketball'&&h.d>0?' +'+h.d:'');
+     setTimeout(()=>{const b=document.getElementById('arball');if(b)b.style.transform='translate(160px,100px)'},5200)}}}catch(e){}
+  const r=a0.call(this,sp,Object.assign({},o,{pos:pos||o.pos,cap:cap||o.cap}));
+  // players: only when the provider published a line-up; shirt numbers only, standard layout (not live positions)
+  let pl='',leg='';
+  try{const lu=o.lu||{},P=(L)=>((L&&L.starters)||[]).slice(0,sp==='basketball'?5:11);
+   const dots=(L,col,mir)=>{const lay=LAY[sp].slice(0,P(L).length);return (mir?MIR(lay):lay).map(([x,y],i)=>{const q=P(L)[i];return `<g class="pl"><circle cx="${x}" cy="${y}" r="8.5" fill="${col}" stroke="#fff" stroke-width="1.4"/><text x="${x}" y="${y+3.2}" text-anchor="middle" font-size="8.5" font-weight="800" fill="#fff">${q&&q.number!=null?esc(q.number):''}</text><title>${esc(q&&q.name||'')}</title></g>`}).join('')};
+   const hs=P(lu.l),as=P(lu.r);if(hs.length||as.length){pl=dots(lu.l,HC,false)+dots(lu.r,AC,true);}
+   leg=`<div class="arleg"><span><i style="background:${HC}"></i>${esc(o.home||'Home')}</span><span><i style="background:${AC}"></i>${esc(o.away||'Away')}</span></div>`;
+   if(pl&&r.indexOf('<g id="arball"')>-1)return leg+r.replace('<g id="arball"',pl+'<g id="arball"').replace(/Drawn from the provider[^<]*/,x=>x+' Players are the published starters in a standard layout, not live positions.');
+  }catch(e){}
+  return leg+r};
+}
+
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});
