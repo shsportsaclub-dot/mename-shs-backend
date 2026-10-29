@@ -8540,7 +8540,7 @@ S.stream.scene=S.stream.scene||'bug';S.stream.card=S.stream.card||{t:'Starting s
   let o=x0.apply(this,arguments);const W=UI.wm;
   if(typeof o!=='string'||!W||!W.m||!W.m.started||W.m.ended||(W.tab||'live')!=='live')return o;
   let last=0;try{const a=window.shTlObserve?window.shTlObserve(W):[];last=a.length?a[a.length-1].t:0}catch(e){}
-  const chk=W.scoreAt||W.detailAt||0,bb=W.m.bbb===true?'ball-by-ball ON':W.m.bbb===false?'ball-by-ball not sent by provider':'';
+  const chk=W.scoreAt||W.detailAt||0,bb=W.m.bbb===true?'ball-by-ball ON':'';
   const line=`<div class="mu sm" style="margin:6px 4px">${last?'Score last changed '+hm(last)+' ('+ago(last)+' ago)':'Waiting for a score change'} · app checked ${chk?ago(chk)+' ago':'-'}${bb?' · '+bb:''}</div>`;
   if(o.indexOf('<div class="sv">')>=0)return o.replace('<div class="sv">',line+'<div class="sv">');
   if(o.indexOf('data-a="shWorldRefresh"')>=0)return o.replace('<button class="btn sm ghost" data-a="shWorldRefresh">',line+'<button class="btn sm ghost" data-a="shWorldRefresh">');
@@ -8998,6 +8998,8 @@ const card=m=>`<div class="ig-sq fbc" data-a="fbOpen" data-id="${esc(m.id)}" sty
    return `<div class="rp rpi tnh ar12h sh-squad-comparison">${sq}<div class="mu sm" style="padding:6px 4px">Role categories use the supplied career role and bowling style. Role not supplied or style unverified players are kept separate. Squad lists are as sent by the data provider; players not named in the playing XI are not confirmed.</div></div>`}catch(e){return c0.apply(this,arguments)}};
  {const st=document.createElement('style');st.textContent='.rp .sqh{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:0 4px}.rp .sqh h3{margin:0;padding:8px 6px;font:700 14px var(--f);display:flex;justify-content:space-between;gap:6px;background:#0c1d4a;border:1px solid #2a4cb0;border-radius:6px 6px 0 0}.rp .sqh h3 span{font:400 11px var(--f);border:1px solid #2a4cb0;border-radius:10px;padding:1px 8px}.rp.tnh button.ipl{border:0;background:transparent;color:inherit;text-align:left;width:100%;cursor:pointer;font:inherit}.rp.tnh .ipl{display:grid;grid-template-columns:34px 1fr;gap:0 8px;align-items:center;padding:6px 6px}.rp.tnh .ipl i{display:none}.rp.tnh .ipl .ph{grid-row:1/3}.rp.tnh .ipl b{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.2;font-size:13px}.rp.tnh .ipl small{white-space:normal;text-align:left;font-size:11px;opacity:.8}.rp .sqr{margin:8px 4px 0;padding:5px 8px;background:#12306a;font:700 12px var(--f)}';document.head.appendChild(st)}
 }
+/* ---------------- 65 No 'Ball-by-ball: not sent' chip in the score card (looked like an error); ON chip stays ---------------- */
+{const st=document.createElement('style');st.textContent='.bbbg.off{display:none!important}';document.head.appendChild(st)}
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
 window.addEventListener('hashchange',()=>location.reload());
 window.addEventListener('storage',e=>{if(e.key===LS&&location.hash==='#overlay'){S=load();render()}});
