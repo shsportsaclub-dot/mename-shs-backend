@@ -1,0 +1,21 @@
+// Title bar Select game dropdown: a World scores strip; tapping Tennis opens the tennis card even when the user picked no sports.
+const {chromium}=require('playwright');
+(async()=>{const b=await chromium.launch(),p=await b.newPage({viewport:{width:412,height:880}}),errs=[];p.on('pageerror',e=>errs.push(e.message));
+const ok=(c,m)=>{if(!c){console.log('FAIL',m);process.exitCode=1}};
+await p.addInitScript(()=>{window.fetch=async(u)=>{u=String(u);const J=o=>({ok:true,status:200,json:async()=>o,text:async()=>JSON.stringify(o)});
+ if(u.includes('/api/sx/live'))return J({ok:true,matches:[{id:'hltennis:1',sport:'tennis',league:'ATP Paris',live:true,state:'Live 40-30',periods:[[6,4],[3,6]],home:{name:'Carlos Alcaraz',short:'Alcaraz',score:1},away:{name:'Jannik Sinner',short:'Sinner',score:1}}]});return J({ok:true})}});
+await p.goto('file://'+require('path').resolve(__dirname,'../app-index.html'));await p.waitForTimeout(400);
+await p.evaluate(()=>{window.pullLive=async()=>{};window.apiBase=()=>'http://x';UI.stage='app';S.tok='t';S.user={id:'u',name:'T',phone:'1',role:'viewer'};S.prefs=Object.assign({},S.prefs,{asked:1,welcomed:1});UI.live={ok:true,matches:[]};UI.view='home';UI.sport='cricket';render()});
+await p.waitForTimeout(300);
+await p.waitForTimeout(300);
+ok(await p.evaluate(()=>!!document.querySelector('.hdr .sgbtn')),'header button');
+await p.click('.hdr .sgbtn');await p.waitForTimeout(200);
+ok(await p.evaluate(()=>document.querySelectorAll('.sgl button').length>=8&&document.activeElement.id==='sgq'),'panel open + search focused');
+await p.fill('#sgq','ten');await p.waitForTimeout(100);
+ok(await p.evaluate(()=>[...document.querySelectorAll('.sgl button')].filter(b=>b.style.display!=='none').length===1),'search filters');
+await p.click('.sgl button[data-v=tennis]');await p.waitForTimeout(300);
+ok(await p.evaluate(()=>UI.sport==='tennis'&&!document.querySelector('.sgpanel')&&/Tennis/.test(document.querySelector('.hdr .sgbtn').innerText+document.body.innerText)),'picked tennis, panel closed');
+await p.evaluate(()=>{UI.view='profile';render()});await p.waitForTimeout(200);
+ok(await p.evaluate(()=>/Change game/.test(document.body.innerText)),'profile card');
+ok(await p.evaluate(()=>document.querySelector('.hdr').getBoundingClientRect().width<=window.innerWidth+1),'no overflow');
+console.log(errs.length?'ERR '+errs.join('|'):'no errors');await b.close();console.log('done')})();
