@@ -9,7 +9,7 @@ await p.addInitScript(()=>{window.fetch=async(u)=>{u=String(u);const J=o=>({ok:t
  return J({ok:true})}});
 await p.goto('file://'+require('path').resolve(__dirname,'../app-index.html'));await p.waitForTimeout(400);
 await p.evaluate(()=>{window.pullLive=async()=>{};window.apiBase=()=>'http://x';UI.stage='app';S.tok='t';S.user={id:'u',name:'T',phone:'1',role:'viewer'};S.prefs=Object.assign({},S.prefs,{asked:1,welcomed:1});UI.live={ok:true,matches:[]};UI.view='home';UI.sport='cricket';render()});
-await p.click('button[data-a="hsport"][data-v="tennis"]');await p.waitForTimeout(1200);
+await p.evaluate(()=>A.sgPick({v:'tennis'}));await p.waitForTimeout(1200);
 await p.click('[data-a="sxOpen"]');await p.waitForTimeout(300);
 ok(await p.evaluate(()=>!!document.querySelector('svg[aria-label="Tennis court"]')&&/Sinner/.test(document.body.innerText)&&/serving/.test(document.getElementById('arcap').textContent)),'tennis court');
 await p.click('[data-a="ar3d"]');await p.waitForTimeout(900);ok(await p.evaluate(()=>!!document.querySelector('.arena.on')),'3D on');await p.screenshot({path:'/tmp/court3d.png'});

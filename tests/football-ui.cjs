@@ -8,7 +8,7 @@ await p.evaluate(()=>{
  const match=Object.assign({},list[0],{venue:'Home Park',events:[{id:1,minute:12,kind:'goal',teamId:1,player:'A Forward',result:'1-0'},{id:2,minute:60,kind:'yellow',teamId:2,player:'C Mid'},{id:3,minute:70,kind:'sub',teamId:1,player:'New',related:'Old'}],lineups:{1:{starters:[{id:9,name:'A Forward',number:9,img:''}],bench:[{id:20,name:'Sub One',number:20,img:''}]}},stats:[{name:'Corners',home:4,away:2}]});
  window.fetch=(u)=>{u=String(u);if(/\/api\/fb\/live/.test(u))return Promise.resolve({json:async()=>({ok:true,matches:list})});if(/\/api\/fb\/match/.test(u))return Promise.resolve({json:async()=>({ok:true,match})});return new Promise(()=>{})};
  window.pullLive=async()=>{};UI.stage='app';S.user={id:'u1',name:'T',phone:'9999999999',role:'admin'};S.prefs=Object.assign({},S.prefs,{asked:1,welcomed:1});S.settings.apiUrl='https://api.test';S.prefs.sports=['cricket','football'];(shGet('football')||{}).on=true;UI.sport='cricket';UI.view='home';render()});
-await p.click('[data-a=hsport][data-v=football]');await p.waitForTimeout(800);
+await p.evaluate(()=>A.sgPick({v:'football'}));await p.waitForTimeout(800);
 ok(await p.evaluate(()=>/World football/.test(document.getElementById('app').innerText)&&/Premier League/.test(document.getElementById('app').innerText)&&document.querySelectorAll('.fbc').length===1&&/2\s+[\s\S]*1/.test(document.querySelector('.fbc').innerText)&&/67'/.test(document.querySelector('.fbc').innerText)),'list card');
 await p.click('.fbc');await p.waitForTimeout(500);
 let t=await p.evaluate(()=>document.getElementById('app').innerText);

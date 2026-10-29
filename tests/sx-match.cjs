@@ -5,7 +5,7 @@ const ok=(c,m)=>{if(!c){console.log('FAIL',m);process.exitCode=1}};
 await p.addInitScript(()=>{window.fetch=async(u)=>{u=String(u);const J=o=>({ok:true,status:200,json:async()=>o,text:async()=>JSON.stringify(o)});
  if(u.includes('/api/sx/live'))return J({ok:true,matches:[{id:'hlvolleyball:9',sport:'volleyball',league:'Superliga',country:'Poland',live:true,state:'Set 3',periods:[[25,20],[20,25],[12,10]],startsAt:'2026-10-28T12:00:00Z',home:{name:'Warsaw',short:'WAR',score:1},away:{name:'Krakow',short:'KRA',score:1}}]});return J({ok:true})}});
 await p.goto('file://'+require('path').resolve(__dirname,'../app-index.html'));await p.waitForTimeout(400);
-await p.evaluate(()=>{window.pullLive=async()=>{};window.apiBase=()=>'http://x';UI.stage='app';S.tok='t';S.user={id:'u',name:'T',phone:'1',role:'viewer'};S.prefs=Object.assign({},S.prefs,{asked:1,welcomed:1});UI.live={ok:true,matches:[]};UI.view='home';UI.sport='cricket';render()});await p.click('button[data-a="hsport"][data-v="volleyball"]');
+await p.evaluate(()=>{window.pullLive=async()=>{};window.apiBase=()=>'http://x';UI.stage='app';S.tok='t';S.user={id:'u',name:'T',phone:'1',role:'viewer'};S.prefs=Object.assign({},S.prefs,{asked:1,welcomed:1});UI.live={ok:true,matches:[]};UI.view='home';UI.sport='cricket';render()});await p.evaluate(()=>A.sgPick({v:'volleyball'}));
 await p.waitForTimeout(1200);
 await p.click('[data-a="sxOpen"]');await p.waitForTimeout(300);
 let t=await p.evaluate(()=>document.body.innerText);

@@ -7,8 +7,8 @@ await p.addInitScript(()=>{window.fetch=async(u)=>{u=String(u);const J=o=>({ok:t
 await p.goto('file://'+require('path').resolve(__dirname,'../app-index.html'));await p.waitForTimeout(400);
 await p.evaluate(()=>{window.pullLive=async()=>{};window.apiBase=()=>'http://x';UI.stage='app';S.tok='t';S.user={id:'u',name:'T',phone:'1',role:'viewer'};S.prefs=Object.assign({},S.prefs,{asked:1,welcomed:1});UI.live={ok:true,matches:[]};UI.view='home';UI.sport='cricket';render()});
 await p.waitForTimeout(300);
-ok(await p.evaluate(()=>/Select game/.test(document.body.innerText)&&!!document.querySelector('#shsel')),'strip visible');
-await p.click('button[data-a="hsport"][data-v="tennis"]');await p.waitForTimeout(1200);
+ok(await p.evaluate(()=>!!document.querySelector('.hdr .sgbtn')),'select game button');
+await p.evaluate(()=>A.sgPick({v:'tennis'}));await p.waitForTimeout(1200);
 const t=await p.evaluate(()=>document.body.innerText);
 ok(/World tennis/i.test(t)&&/Alcaraz/.test(t)&&/Sinner/.test(t)&&!!(await p.$('#igsl .ig-sq')),'tennis card: '+t.slice(0,300));
 await p.screenshot({path:'/tmp/strip.png'});

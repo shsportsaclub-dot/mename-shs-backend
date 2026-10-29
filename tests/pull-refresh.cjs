@@ -10,5 +10,5 @@ await drag(120,330,'#app');await p.waitForTimeout(500);
 ok(await p.evaluate(()=>window.__n)>=1,'pull refreshed live data');ok(await p.evaluate(()=>window.__marker===1),'page was not reloaded');
 await p.evaluate(()=>{window.__n=0});await drag(120,150,'#app');await p.waitForTimeout(300);ok(await p.evaluate(()=>window.__n)===0,'short drag does nothing');
 await p.evaluate(()=>{window.__n=0;UI.view='score'});await drag(120,330,'#app');await p.waitForTimeout(300);ok(await p.evaluate(()=>window.__n)===0,'not active while scoring');
-await p.evaluate(()=>{UI.view='home';render()});await drag(120,330,'#shsel');await p.waitForTimeout(300);ok(await p.evaluate(()=>window.__n)===0,'not active on horizontal strips');
+await p.evaluate(()=>{UI.view='home';render()});await p.evaluate(()=>{const d=document.createElement('div');d.id='hz';d.className='hscroll';d.style.cssText='overflow-x:auto;width:200px;height:40px';d.innerHTML='<div style="width:900px;height:20px">x</div>';document.getElementById('app').prepend(d)});await drag(120,330,'#hz');await p.waitForTimeout(300);ok(await p.evaluate(()=>window.__n)===0,'not active on horizontal strips');
 ok(!errs.length,errs.join(';'));await b.close();if(!process.exitCode)console.log('PASS: pull to refresh');})();
