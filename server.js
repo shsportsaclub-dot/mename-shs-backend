@@ -894,6 +894,17 @@ routes['GET /api/admin/sx-probe'] = async (req, body) => {   // admin only: show
   if (!u) return [401, { ok: false, error: 'Please sign in again' }];
   promote(u, phone); if (u.role !== 'admin') return [403, { ok: false, error: 'Only an admin can see this' }];
   if (String(body.sport) === 'tennis') { if (!TN) return [200, { ok: false, error: 'Live Tennis key is not set' }]; try { return [200, { ok: true, sport: 'tennis', ...(await TN.raw()), usedToday: hlDay.n }]; } catch (e) { return [200, { ok: false, error: String(e.message || 'error').slice(0, 200) }]; } }
+  if (String(body.sport) === 'cricket') {   // Highlightly Cricket API: shows the real list + one match detail so ball-by-ball/scorecard fields can be checked
+    const key = E.HIGHLIGHTLY_KEY; if (!key) return [200, { ok: false, error: 'Highlightly key is not set' }];
+    try {
+      const get = async path => { const r = await fetch('https://cricket.highlightly.net' + path, { headers: { 'x-rapidapi-key': key }, signal: AbortSignal.timeout(12000) }); const t = await r.text(); return { status: r.status, text: t }; };
+      const day = new Date().toISOString().slice(0, 10), L = await get('/matches?limit=8&date=' + day);
+      let list = null; try { list = JSON.parse(L.text); } catch {}
+      const arr = list && Array.isArray(list.data) ? list.data : [], pick = arr.find(m => m && m.state && /live|progress|innings/i.test(String(m.state.description || ''))) || arr[0];
+      const D = pick && pick.id != null ? await get('/matches/' + pick.id) : null;
+      return [200, { ok: L.status === 200, sport: 'cricket', listStatus: L.status, listCount: arr.length, listSample: L.text.slice(0, 900), pickedId: pick ? pick.id : null, detailStatus: D ? D.status : null, detail: D ? D.text.slice(0, 2400) : null }];
+    } catch (e) { return [200, { ok: false, error: String(e.message || 'error').slice(0, 200) }]; }
+  }
   if (!HL) return [200, { ok: false, error: 'Highlightly key is not set' }];
   if (body.kind && body.id) { try { hlDay.n++; const j = await HL.detail(String(body.sport), String(body.kind), String(body.id)); return [200, { ok: true, kind: body.kind, json: JSON.stringify(j).slice(0, 6000) }]; } catch (e) { return [200, { ok: false, error: String(e.message || 'error').slice(0, 200) }]; } }
   const sport = HL_SPORTS.includes(String(body.sport)) ? String(body.sport) : 'basketball';
