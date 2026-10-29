@@ -540,10 +540,9 @@ routes['GET /api/scoreboard-market'] = async (req, body) => {
   const id = String(body.id || '');
   if (!/^(sm)?[0-9a-z-]{1,40}$/i.test(id)) return [400, { ok: false, error: 'Bad match ID' }];
   const entry = db.shared?.scoreboardMarket?.[id];
-  if (!entry) return [200, { ok: true, id, display: { mode: 'unavailable', home: null, away: null } }];
-  return [200, { ok: true, id, display: oddsOrWinningProbability({
-    odds: entry.odds, probabilities: entry.probabilities
-  }) }];
+  if (!entry) return [200, { ok: true, id, display: null }];
+  const display = oddsOrWinningProbability({ odds: entry.odds, probabilities: entry.probabilities });
+  return [200, { ok: true, id, display: display?.mode === 'unavailable' ? null : display }];
 };
 routes['GET /api/cric'] = async (req, body, ip) => {
   const ep = String(body.ep || ''), id = String(body.id || '');
