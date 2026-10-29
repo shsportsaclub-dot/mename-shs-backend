@@ -8782,10 +8782,16 @@ const card=m=>`<div class="ig-sq fbc" data-a="fbOpen" data-id="${esc(m.id)}" sty
     body=sum+`<div class="card"><b>${t.sets?'Points by set (running total)':'Score progression'}</b><svg viewBox="0 0 ${W} ${Ht}" width="100%" role="img" aria-label="Running score by ${esc(t.p)}">${grid}${lab}${line(Aw,'#9fb3c8')}${line(H,hc)}</svg>
      <div style="display:flex;gap:14px;font-size:12px;margin-top:4px"><span style="color:${hc}">● ${esc(m.home.short||m.home.name)}</span><span style="color:#9fb3c8">● ${esc(m.away.short||m.away.name)}</span></div></div>
      <div class="card"><b>${t.sets?'Who won each set':'Who gained points in each '+esc((t.u||'period').toLowerCase().replace(/s$/,''))}</b>${P.map((p,i)=>{const d=p[0]-p[1],w=d>0?m.home:d<0?m.away:null;return `<div style="display:grid;grid-template-columns:34px 1fr auto;gap:8px;align-items:center;padding:6px 0;border-top:1px solid #1d357f"><span class="mu sm">${t.p}${i+1}</span><span>${w?'<b>'+esc(w.short||w.name)+'</b> '+(t.sets?'took the set':'+'+Math.abs(d)+' net'):'Level'}</span><b>${p[0]}-${p[1]}</b></div>`}).join('')}<div class="mu sm" style="margin-top:6px">Built from the score by ${esc((t.u||'period').toLowerCase())} that the provider sends. Player-wise scoring needs the provider's box score, which is not connected yet.</div></div>`}}
+  else if(tb==='cm'){const H=m.home.short||m.home.name,Aw=m.away.short||m.away.name,L=[],ico={goal:'⚽',pengoal:'⚽',owngoal:'⚽',yellow:'🟨',red:'🟥',yellowred:'🟥',sub:'🔁'},nmT=id=>+id===+m.home.id?H:+id===+m.away.id?Aw:'';
+   (m.events||[]).forEach(e=>{const mn=e.minute!=null?e.minute+(e.extra?'+'+e.extra:'')+"'":'';L.push({k:(e.minute||0)*10+(e.extra||0),t:mn,x:(ico[e.kind]||'•')+' '+({goal:'Goal',pengoal:'Penalty goal',owngoal:'Own goal',yellow:'Yellow card',red:'Red card',yellowred:'Second yellow, sent off',sub:'Substitution'}[e.kind]||'Event')+(e.player?' — '+e.player:'')+(nmT(e.teamId)?' ('+nmT(e.teamId)+')':'')})});
+   const P=(m.periods||[]).filter(q=>q[0]!=null&&q[1]!=null);P.forEach((q,i)=>{const d=q[0]-q[1],last=i===P.length-1,run=m.live&&last,w=d>0?H:d<0?Aw:'';L.push({k:100000+i,t:(t.p||'P')+(i+1),x:(run?'In progress: ':'Ended: ')+H+' '+q[0]+' - '+q[1]+' '+Aw+(w?' ('+w+' ahead by '+Math.abs(d)+')':' (level)')})});
+   if(m.ended)L.push({k:200000,t:'FT',x:'Full time: '+H+' '+m.home.score+' - '+m.away.score+' '+Aw});
+   L.sort((a2,b2)=>b2.k-a2.k);
+   body=sum+(L.length?`<div class="cbp-cd">${L.map(r=>`<div class="cbp-kv" style="padding:8px 0;border-top:1px solid var(--bd)"><span><b>${esc(r.t)}</b></span><span style="width:auto">${esc(r.x)}</span></div>`).join('')}</div><div class="mu sm" style="margin:6px 4px">Written from the provider's recorded events and scores only; nothing is invented.</div>`:'<div class="card mu sm">Commentary appears here once the provider sends events or scores for this match.</div>');}
   else if(tb==='rc')body=sum+`<div class="card"><b>✨ Match recap</b><br>${recap(sp,m).map(esc).join('<br>')}<br><span class="mu sm">Written automatically from the provider's score data only.</span></div>`;
   else if(tb==='sq')body=`<div class="cbp-lb">Teams</div><div class="cbp-cd">${[m.home,m.away].map(tm=>`<div class="cbp-kv"><span style="display:flex;align-items:center;gap:8px">${wBadge(tm)}</span><b>${esc(tm.name)}</b></div>`).join('')}</div><div class="cbp-cd cbp-note"><b>Squads and line-ups</b>The free data feed does not publish squads, shirt numbers or player records for this sport yet, so none are shown.</div>`;
   else body=`<div class="card"><div class="mu sm">League</div><b>${esc(m.league||'-')}</b>${m.country?'<div class="mu sm" style="margin-top:8px">Country</div><b>'+esc(m.country)+'</b>':''}<div class="mu sm" style="margin-top:8px">Start</div><b>${m.startsAt?esc(new Date(m.startsAt).toLocaleString()):'-'}</b><div class="mu sm" style="margin-top:8px">Status</div><b>${esc(st(m))}</b><div class="mu sm" style="margin-top:10px">Scores refresh every few minutes from the data provider (free plan). Line-ups and player stats are not in this feed yet. Not scored by Scoring Heroes.</div></div>`;
-  return cbpHead(ttl,[['info','Info'],['live','Live'],['rc','Recap'],['sc','Scoreboard'],['gr','Graphs'],['sq','Squads']],tb,'sxTab')+`<div class="sxm">${body}</div>`;
+  return cbpHead(ttl,[['info','Info'],['live','Live'],['cm','Commentary'],['rc','Recap'],['sc','Scoreboard'],['gr','Graphs'],['sq','Squads']],tb,'sxTab')+`<div class="sxm">${body}</div>`;
  };
  setInterval(()=>{if(!document.hidden&&UI.view==='sxmatch'&&UI.sxm&&HLS[UI.sxm.sp])load(UI.sxm.sp,false)},30000);
  const sb1=shBody;shBody=function(sp){const o=sb1.apply(this,arguments);return HLS[sp]?window.shWorldScores(sp)+o:o};
@@ -9166,6 +9172,49 @@ window.shXIOf=(mine)=>{const c=mine.filter(p=>p.confirmed);if(c.length)return {x
  L+' a{color:#1d6fe0}',
  ].join('\n');
  const st=document.createElement('style');st.id='sh-light';st.textContent=css;document.head.appendChild(st);
+}
+
+/* ---------------- 74 Light look for the match centre: same layout, light colours ---------------- */
+{
+ const L='html[data-theme=mday] .rp',M='html[data-theme=mday] #app',D='#0f1a33',B='#dde2ea';
+ const css=[
+  L+'{--fg:'+D+';--mute:#5b6577;--g0:#f1f3f6;--g1:#fff;--g2:#fff;--g3:#eef1f6;--edge:'+B+';color:'+D+';background:#f1f3f6!important;color-scheme:light}',
+  L+' header,'+L+' .hero,'+L+' .hero *,'+L+' header *{--fg:#fff;color:#fff}',
+  L+' section.ar12,'+L+' section.h11,'+L+' .bt,'+L+' .bw,'+L+' .tab9,'+L+' .bbt{background:#fff!important;color:'+D+'!important;border:1px solid '+B+'!important;box-shadow:0 1px 3px #0a1f5c14}',
+  L+' section.ar12 *,'+L+' section.h11 *,'+L+' .bt *,'+L+' .bw *,'+L+' .tab9 *,'+L+' .bbt *{color:inherit;text-shadow:none}',
+  L+' .ribn{background:#fff!important;color:'+D+'!important;border-color:'+B+'!important}',
+  L+' .ribn *{color:inherit}',
+  L+' .subs button{background:#fff!important;color:'+D+'!important;border:1px solid '+B+'!important}',
+  L+' .subs button[aria-selected=true],'+L+' .subs button.on{background:#e3122d!important;color:#fff!important;border-color:#e3122d!important}',
+  L+' .ribn button{background:#fff!important;color:#1a3fa0!important}',
+  L+' .sv button{background:#fff!important;color:'+D+'!important;border:1px solid '+B+'!important;border-radius:10px}',
+  L+' .sv button *{color:inherit}',
+  L+' .lv,'+L+' .cv,'+L+' .bl,'+L+' .sv .lv{color:#fff!important}',
+  L+' .seg,'+L+' .seg button{color:#c4102a!important}',
+  L+' .sh-act,'+L+' .sh-act *{color:'+D+'}',
+  L+' .sh-act .bl{color:#fff}',
+  L+' .ptn,'+L+' .ptn *{color:#5b6577!important}',
+  L+' .pr b{color:#b7791f!important}',
+  L+' .cmf button{background:#fff!important;color:'+D+'!important;border:1px solid '+B+'!important}',
+  L+' .cmf button.on,'+L+' .cmf button[aria-selected=true]{background:#0a1f5c!important;color:#fff!important}',
+  'html[data-theme=mday] #app:has(.rp) main,html[data-theme=mday] #app:has(.rp) .msk,html[data-theme=mday] #app:has(.rp) .sh-live-window{background:#f1f3f6!important}',
+  M+' .cbp-cd .btn:not(.ghost),'+M+' .cbp-cd button.on,'+M+' .card .btn:not(.ghost),'+M+' [class*=chip] .on,'+M+' .btn.sm:not(.ghost){color:#fff!important}',
+  M+' .cbp-h{background:#0a1f5c!important;color:#fff!important}',
+  M+' .cbp-h *{color:inherit}',
+  'html[data-theme=mday] .msk,html[data-theme=mday] main:has(.msk),html[data-theme=mday] main:has(.cbp-h){background:#f1f3f6!important;color:'+D+'}',
+  M+' .lc-head{background:#fff!important;color:'+D+'!important;border:1px solid '+B+';box-shadow:0 1px 3px #0a1f5c14}',
+  M+' .lc-head *{color:inherit}',
+  M+' .lc-state.live{color:#fff!important}',
+  M+' .cbp-cd,'+M+' .sh-chart,'+M+' .ph,'+M+' .ovh,'+M+' .chipx,'+M+' .ibn,'+M+' .sh-squad-comparison,'+M+' .sh-squad-head,'+M+' .cd{background:#fff!important;color:'+D+'!important;border:1px solid '+B+'!important}',
+  M+' .cbp-cd *,'+M+' .sh-chart *,'+M+' .ph *,'+M+' .ovh *,'+M+' .chipx *,'+M+' .ibn *,'+M+' .sh-squad-comparison *,'+M+' .cd *{color:inherit}',
+  M+' .cbp-inn.on{background:#0a1f5c!important;color:#fff!important}',
+  M+' .cbp-inn.on *{color:#fff!important}',
+  M+' .cbp-tb thead,'+M+' .cbp-tb th{background:#eef1f6!important;color:#5b6577!important}',
+  M+' .cbp-note,'+M+' .cbp-note *,'+M+' .mu,'+M+' .mu *,'+M+' .sm{color:#5b6577!important}',
+  M+' .mskbar button:not(.on){color:#5b6577}',
+  L+' .rph,'+L+' .rph *{color:#fff}'
+ ].join('\n');
+ const st=document.createElement('style');st.textContent=css;document.head.appendChild(st);
 }
 
 /* ---------------- 6/7 BOOT (overlay refresh + start) ---------------- */
