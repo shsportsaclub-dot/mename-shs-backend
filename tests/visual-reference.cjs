@@ -15,7 +15,7 @@ const fs=require('node:fs');
    UI.live={ok:true,matches:[{id:'visual-ended',ended:true,started:false,status:'India won by 6 wickets',name:'India vs Australia',type:'t20',teams:[{name:'India',short:'IND'},{name:'Australia',short:'AUS'}]}]};render();
   });
   await page.locator('.sh-visual-hero').waitFor();
-  assert(await page.locator('.hh-sports').isVisible(),'Sport selection remains visible for one selected sport');
+  assert(await page.locator('.hdr .sgbtn').isVisible(),'Select game button stays in the title bar');
   assert.match(await page.locator('.ig-sq .ss').first().innerText(),/India won/);
   const result=await page.evaluate(()=>({fit:document.documentElement.scrollWidth<=innerWidth,art:getComputedStyle(document.querySelector('.sh-visual-hero')).backgroundImage.includes('data:image/webp;base64'),emojis:[...document.querySelectorAll('.drawer .mi .e')].every(e=>!!e.querySelector('svg')),card:getComputedStyle(document.querySelector('.ig-sq')).aspectRatio,stage:document.documentElement.dataset.visualStage}));
   assert(result.fit,'Page must not overflow horizontally');assert(result.art);assert(result.emojis);assert.equal(result.card,'auto');assert.equal(result.stage,'app');
