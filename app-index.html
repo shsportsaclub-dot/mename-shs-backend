@@ -10826,7 +10826,7 @@ document.addEventListener('input',e=>{const el=e.target;if(!el||!/^qt-n-[ab]$/.t
 {
  const Z=()=>S.stream;
  const q=()=>{const z=Z();z.q=z.q||[];return z};
- const LB={intro:'Batter intro',xi:'Playing XI',fow:'Fall of wickets',card:'Scorecard',points:'Points table',fix:'Fixtures',lead:'Leaders',qr:'QR link'};
+ const LB={intro:'Batter intro',xi:'Playing XI',fow:'Fall of wickets',card:'Scorecard',points:'Points table',fix:'Fixtures',lead:'Leaders',qr:'QR link',bint:'Bowler intro',tint:'Team intro',tick:'Score ticker',sold:'Auction SOLD'};
  const NEW=Object.keys(LB);
  const tourOf=m=>m&&m.tid&&S.tours.find(t=>t.id===m.tid);
  const G2={
@@ -10839,6 +10839,11 @@ document.addEventListener('input',e=>{const el=e.target;if(!el||!/^qt-n-[ab]$/.t
   fix:m=>{const t=tourOf(m);if(!t)return '<h4>Fixtures</h4><div class="l"><span>This match is not in a tournament</span></div>';const up=t.fixtures.filter(f=>!f.mid).slice(0,6);return `<h4>Next fixtures</h4>`+(up.length?up.map(f=>`<div class="l"><span>${esc((T(f.a)||{}).name||'')} v ${esc((T(f.b)||{}).name||'')}</span><b>${esc(f.date||'')}</b></div>`).join(''):'<div class="l"><span>No fixtures left</span></div>')},
   lead:m=>{const t=tourOf(m),L=t?tourMatches(t):S.matches.filter(x=>!isDemo(x));const bat={},wk={};L.forEach(x=>{try{x.innings.forEach((inn,i)=>{const k=calc(x,i);Object.entries(k.bat||{}).forEach(([id,b])=>{bat[id]=(bat[id]||0)+(b.r||0)});Object.entries(k.bowl||{}).forEach(([id,b])=>{wk[id]=(wk[id]||0)+(b.w||0)})})}catch(e){}});
    const top=o=>Object.entries(o).sort((a,b)=>b[1]-a[1]).slice(0,3).filter(x=>x[1]>0).map(([id,v])=>`<div class="l"><span>${esc(nm(id))}</span><b>${v}</b></div>`).join('')||'<div class="l"><span>No data yet</span></div>';return `<h4>Most runs</h4>${top(bat)}<h4 style="margin-top:1cqw">Most wickets</h4>${top(wk)}`},
+  bint:(m,s)=>{if(!s)return '';const id=s.inn.cur.bl;if(!id)return '<h4>Bowler intro</h4><div class="l"><span>No bowler selected yet</span></div>';const p=P(id)||{},bw=(s.k.bowl||{})[id]||{},a=(typeof ppAgg==='function'?ppAgg(id,{fmt:'all',yr:'all',comp:'all'}):null);
+   return `<h4>${esc(nm(id))}</h4><div class="l"><span>${esc(p.role||'')}${p.bowl?' · '+esc(p.bowl):''}</span><b>${esc(s.bowl.short||'')}</b></div><div class="l"><span>This spell</span><b>${bw.w||0}-${bw.r||0}</b></div>`+(a&&a.w!=null?`<div class="l"><span>Career wickets</span><b>${a.w}</b></div>`:'')},
+  tint:m=>[m.a,m.b].map(id=>{const t=T(id)||{};const cap=(t.players||[]).find(x=>(P(x)||{}).cap)||m.cap&&m.cap[id];return `<h4>${esc(t.name||'')}</h4><div class="l"><span>${cap?'Captain':'Squad'}</span><b>${cap?esc(nm(cap)):((m.xi[id]||[]).length||(t.players||[]).length)+' players'}</b></div>`}).join(''),
+  tick:(m,s)=>{const L=S.matches.filter(x=>!isDemo(x)&&x.status!=='done'&&x.id!==m.id).slice(0,3);let h=s?`<div class="l"><span>${esc(s.bat.short||'')} ${s.k.runs}-${s.k.wk} (${fmtOv(s.k.lg)})</span><b>${esc(s.bowl.short||'')}</b></div>`:'';L.forEach(x=>{try{const y=st(x);h+=`<div class="l"><span>${esc(T(x.a).short)} v ${esc(T(x.b).short)}</span><b>${y.k.runs}-${y.k.wk}</b></div>`}catch(e){}});return `<h4>Live scores</h4>`+(h||'<div class="l"><span>No live matches</span></div>')},
+  sold:m=>{const a=S.auction,x=a&&a.sold&&a.sold[a.sold.length-1];if(!x)return '<h4>SOLD</h4><div class="l"><span>No player sold yet</span></div>';return `<h4 style="color:#e8590c">SOLD</h4><div class="l"><span>${esc(nm(x.pid))}</span><b>${money(x.price)}</b></div><div class="l"><span>to ${esc((T(x.tid)||{}).name||'')}</span></div>`},
   qr:m=>{let img='';try{const cv=qrCanvas(shLink('match',m.id),200);img=cv?`<img src="${cv.toDataURL()}" alt="QR" style="width:14cqw;background:#fff;border-radius:.6cqw;float:right;margin-left:1.5cqw">`:''}catch(e){}return `<h4>Follow live</h4>${img}<div class="l"><span>Scan to open ${esc(T(m.a).short)} v ${esc(T(m.b).short)} on Scoring Heroes</span></div>`}};
  const FX={four:['FOUR','#2f9e44'],six:['SIX','#e8590c'],wicket:['WICKET','#e03131'],fifty:['FIFTY','#1971c2'],hundred:['HUNDRED','#9c36b5']};
  const o0=overlayHTML;
