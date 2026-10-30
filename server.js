@@ -1057,6 +1057,14 @@ routes['GET /api/social/feed'] = async (req, body, ip) => {
     socCache.set(c.yt, { t: Date.now(), d: items }); return [200, { ok: true, items, youtube: true }];
   } catch (e) { return hit ? [200, { ok: true, items: hit.d, stale: true, youtube: true }] : [502, { ok: false, error: String(e.message || 'Feed error').slice(0, 120) }]; }
 };
+routes['GET /api/admin/users-count'] = async (req) => {   // admin only: how many people have registered
+  const phone = readSession((req.headers.authorization || '').replace(/^Bearer /, '')), u = phone && db.users[phone];
+  if (!u) return [401, { ok: false, error: 'Please sign in again' }];
+  promote(u, phone);
+  if (u.role !== 'admin') return [403, { ok: false, error: 'Only an admin can see this' }];
+  const all = Object.values(db.users), day = Date.now() - 864e5;
+  return [200, { ok: true, total: all.length, today: all.filter(x => (x.created || 0) > day).length }];
+};
 routes['GET /api/admin/scorers'] = async (req) => {   // who can score matches: admins see and manage the Scorer list from the app
   const phone = readSession((req.headers.authorization || '').replace(/^Bearer /, '')), u = phone && db.users[phone];
   if (!u) return [401, { ok: false, error: 'Please sign in again' }];
