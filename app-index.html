@@ -9395,7 +9395,7 @@ window.shXIOf=(mine)=>{const c=mine.filter(p=>p.confirmed);if(c.length)return {x
  // Career table: Overall first, then one column per tournament (like the format columns of the reference, with tournaments in place of IPL). Swipe sideways for more.
  function careerTable(p,st,all){const bat=st==='bat',base=careerRows(p,st,all),hasE=!!p.earlier,G=all.length?ppRecords(p):[];
   const cols=[{h:'Overall',v:base.map(r=>r[3])}];
-  if(hasE)cols.push({h:'Past career',v:base.map(r=>r[1])},{h:'Scoring Heroes',v:base.map(r=>r[2])});
+  if(hasE&&all.length)cols.push({h:'Past career',v:base.map(r=>r[1])},{h:'Scoring Heroes',v:base.map(r=>r[2])});
   // Format columns from the match length: 20 overs or fewer = T20, 21-50 overs (35/40-over academy matches too) = ODI, unlimited = Test.
   const FM=m=>(m.overs>=900?'Test':m.overs<=20?'T20':'ODI');
   ['T20','ODI','Test'].forEach(f=>{const L=all.filter(e=>FM(e.m)===f),ef=(p.earlierF||{})[f];if(L.length||ef)cols.splice(cols.findIndex(c=>c.h==='Overall')+1+cols.filter(c=>/^(T20|ODI|Test)$/.test(c.h)).length,0,{h:f,v:careerRows({earlier:ef},st,L).map(r=>r[3])})});
