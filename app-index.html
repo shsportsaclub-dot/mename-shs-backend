@@ -10977,6 +10977,29 @@ document.addEventListener('input',e=>{const el=e.target;if(!el||!/^qt-n-[ab]$/.t
   async bdAdmAdd(){const b=BD(),r=await call('POST','/api/boards/admin',{id:b.id,phone:val('bd-p')});if(need(r,'Admin added'))open(b.id)},
   async bdAdmDel(d){const b=BD(),r=await call('POST','/api/boards/admin',{id:b.id,phone:d.p,remove:true});if(need(r,'Removed'))open(b.id)}});
 }
+/* ---------------- 85 NUMBER CHANGE + MERGE REVIEW (R09), SCORER LOOKUP WITH MINIMUM PROFILE (R10) ---------------- */
+{
+ const base=()=>(typeof apiBase==='function'&&apiBase())||'';
+ const call=async(m,path,body)=>{try{const r=await fetch(base()+path,{method:m,headers:{'Content-Type':'application/json',Authorization:'Bearer '+(S.tok||'')},body:m==='GET'?undefined:JSON.stringify(body||{})});return await r.json()}catch(e){return {ok:false,error:'No connection'}}};
+ const N=()=>(UI.numc=UI.numc||{mine:null,adm:null,found:null,msg:''});
+ const val=id=>String((document.getElementById(id)||{}).value||'').trim();
+ const signed=()=>!!(S.tok&&S.user&&!S.user.guest);
+ const role=()=>S.user&&S.user.role;
+ const ST={pending:'Waiting for admin',approved:'Approved',rejected:'Rejected'};
+ const refresh=async()=>{if(!signed())return;const n=N(),r=await call('GET','/api/me/number-change');n.mine=r.ok?r.items:[];if(role()==='admin'){const a=await call('GET','/api/admin/number-requests');n.adm=a.ok?a.items:[]}render()};
+ const v0=vSettings;vSettings=function(){const o=v0.apply(this,arguments);if(!signed())return o;const n=N();if(n.mine===null){n.mine=[];setTimeout(refresh,0)}
+  const mine=`<div class="card" id="numchg-card"><h3>Change my number</h3><div class="mu sm">Lost your SIM or switching number? Your matches and records stay with your account. An admin reviews the request first. If the new number already has its own account, it is reviewed as a merge.</div>
+   <div class="row" style="gap:8px;margin-top:6px"><input id="nc-p" inputmode="tel" placeholder="New mobile number" style="flex:1"><input id="nc-pin" type="password" inputmode="numeric" maxlength="6" placeholder="PIN" style="width:90px"></div><input id="nc-r" maxlength="160" placeholder="Reason" style="margin-top:6px"><button type="button" class="btn sm" style="margin-top:6px" data-a="ncSend">Send request</button>
+   ${n.mine.length?n.mine.map(r=>`<div class="item" style="display:block;padding:6px 0;border-top:1px solid var(--bd)"><div class="row" style="justify-content:space-between"><span>${esc(r.newNumber)} <span class="mu sm">${r.kind==='merge'?'merge':'change'}</span></span><span class="pill ${r.status==='approved'?'ok':r.status==='rejected'?'bad':''}">${ST[r.status]||r.status}</span></div>${r.why?`<div class="mu sm">Reason: ${esc(r.why)}</div>`:''}</div>`).join(''):''}</div>`;
+  const adm=role()==='admin'&&n.adm&&n.adm.length?`<div class="card"><h3>Number requests (${n.adm.length})</h3><label>Reason (needed to reject)<input id="nc-why" maxlength="160"></label>${n.adm.map(r=>`<div class="item" style="display:block;padding:6px 0;border-top:1px solid var(--bd)"><b>${esc(r.nick)}</b> → ${esc(r.newNumber)} <span class="mu sm">${r.merge?'MERGE with account "'+esc(r.otherNick)+'" (it will be closed, its records kept)':'change'} · ${esc(r.reason)}</span><div class="row" style="gap:6px;margin-top:4px"><button type="button" class="btn sm" data-a="ncYes" data-id="${esc(r.id)}">Approve</button><button type="button" class="btn sm ghost" data-a="ncNo" data-id="${esc(r.id)}">Reject</button></div></div>`).join('')}</div>`:'';
+  const f=n.found,lk=(role()==='admin'||role()==='scorer')?`<div class="card" id="lookup-card"><h3>Find a player by phone</h3><div class="mu sm">Shows only the name, SH ID, type and city. Phone, email and age are never shown. Every lookup is logged.</div><div class="row" style="gap:8px;margin-top:6px"><input id="lk-p" inputmode="tel" placeholder="Mobile number" style="flex:1"><button type="button" class="btn sm" data-a="lkFind">Find</button></div>${f===false?'<div class="mu sm" style="margin-top:6px">No player with this number.</div>':f?`<div class="item" style="margin-top:6px"><div style="flex:1"><b>${esc(f.name)}</b><div class="mu sm">${[f.shid,f.kind,f.city].filter(Boolean).map(esc).join(' · ')}</div></div><button type="button" class="btn sm" data-a="lkAdd">Add to my players</button></div>`:''}</div>`:'';
+  return o+mine+adm+lk};
+ Object.assign(A,{async ncSend(){if(val('nc-r').length<3)return toast('Say why you are changing the number');const r=await call('POST','/api/me/number-change',{phone:val('nc-p'),pin:val('nc-pin'),reason:val('nc-r')});if(!r.ok)return toast(r.error||'Could not send',4000);toast(r.kind==='merge'?'Sent as a merge request for admin review':'Request sent for admin review',4000);refresh()},
+  async ncYes(d){const r=await call('POST','/api/admin/number-decide',{rid:d.id,status:'approved'});if(!r.ok)return toast(r.error||'Failed',4000);toast('Approved');refresh()},
+  async ncNo(d){const why=val('nc-why');if(why.length<3)return toast('Type a short reason first',4000);const r=await call('POST','/api/admin/number-decide',{rid:d.id,status:'rejected',reason:why});if(!r.ok)return toast(r.error||'Failed',4000);toast('Rejected');refresh()},
+  async lkFind(){const n=N(),r=await call('POST','/api/scorer/lookup',{phone:val('lk-p')});if(!r.ok)return toast(r.error||'Lookup failed',4000);n.found=r.found?r.profile:false;render()},
+  lkAdd(){const f=N().found;if(!f)return;if(S.players.some(p=>p.shid===f.shid))return toast('Already in your players');S.players.push({id:uid(),name:f.name,role:'ALL',shid:f.shid});commit();toast(f.name+' added to your players')}});
+}
 </script>
 </body>
 </html>

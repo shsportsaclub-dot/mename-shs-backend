@@ -1241,6 +1241,59 @@ routes['POST /api/boards/decide'] = async (req, body) => {
   return [200, { ok: true }];
 };
 
+// Number change, recovery and merge review. A signed-in user (with PIN) asks to use a new number. Nothing moves until an admin approves: approval adds the new number as an alias that signs in to the SAME account (all matches, tournaments and ownership stay put). If the new number already has its own account it is flagged as a merge: approval closes that second account (records are kept) and points its number at the first. Every decision is recorded.
+const nrBag = () => (db.shared.numreq = db.shared.numreq || []);
+const aliasBag = () => (db.shared.alias = db.shared.alias || {});
+const nrPub = r => ({ id: r.id, kind: r.kind, newNumber: r.newKey.replace(/.(?=.{3}$)/g, '*'), nick: r.nick, reason: r.reason, status: r.status, why: r.why, t: r.t });
+routes['POST /api/me/number-change'] = async (req, body) => {
+  const s = grUser(req); if (!s) return [401, { ok: false, error: 'Please sign in first' }];
+  if (limited('nrq:' + s.phone, 15, 864e5)) return [429, { ok: false, error: 'Too many requests today' }];
+  if (s.u.ph && !safeEq(pinHash(body.pin || '', s.u.salt), s.u.ph)) return [200, { ok: false, error: 'Wrong PIN' }];
+  const P = pk({ phone: body.phone, cc: body.cc }); if (P.isEmail || !validIntl(P)) return [400, { ok: false, error: BADNUM }];
+  if (P.key === s.phone) return [400, { ok: false, error: 'This is already your number' }];
+  if (aliasBag()[P.key]) return [409, { ok: false, error: 'This number is already linked to an account' }];
+  const reason = trNm(body.reason, 160); if (reason.length < 3) return [400, { ok: false, error: 'Say why you are changing the number' }];
+  if (nrBag().some(r => r.by === s.phone && r.status === 'pending')) return [409, { ok: false, error: 'You already have a request waiting' }];
+  const r = { id: 'nr' + crypto.randomBytes(4).toString('hex'), by: s.phone, nick: String(s.u.nick || '').slice(0, 30), newKey: P.key, kind: db.users[P.key] ? 'merge' : 'change', reason, status: 'pending', t: Date.now() };
+  nrBag().push(r); saveDb(); return [200, { ok: true, id: r.id, kind: r.kind }];
+};
+routes['GET /api/me/number-change'] = async (req) => {
+  const s = grUser(req); if (!s) return [401, { ok: false, error: 'Please sign in first' }];
+  return [200, { ok: true, items: nrBag().filter(r => r.by === s.phone).slice(-10).reverse().map(nrPub) }];
+};
+routes['GET /api/admin/number-requests'] = async (req) => {
+  const s = grUser(req); if (!s || s.u.role !== 'admin') return [403, { ok: false, error: 'Admins only' }];
+  return [200, { ok: true, items: nrBag().filter(r => r.status === 'pending').map(r => ({ ...nrPub(r), merge: r.kind === 'merge', otherNick: r.kind === 'merge' && db.users[r.newKey] ? String(db.users[r.newKey].nick || '') : '' })) }];
+};
+routes['POST /api/admin/number-decide'] = async (req, body) => {
+  const s = grUser(req); if (!s || s.u.role !== 'admin') return [403, { ok: false, error: 'Admins only' }];
+  const r = nrBag().find(x => x.id === body.rid && x.status === 'pending'); if (!r) return [404, { ok: false, error: 'Request not found' }];
+  const st = body.status === 'approved' ? 'approved' : body.status === 'rejected' ? 'rejected' : ''; if (!st) return [400, { ok: false, error: 'Choose approve or reject' }];
+  const why = trNm(body.reason, 160); if (st === 'rejected' && why.length < 3) return [400, { ok: false, error: 'Give a short reason' }];
+  if (st === 'approved') {
+    const u = db.users[r.by]; if (!u) return [404, { ok: false, error: 'Account no longer exists' }];
+    if (aliasBag()[r.newKey]) return [409, { ok: false, error: 'Number already linked' }];
+    const o = db.users[r.newKey];
+    if (o) { if (o.role === 'admin') return [400, { ok: false, error: 'An admin account cannot be merged' }]; o.closed = Date.now(); o.mergedInto = r.by; o.revokeBefore = Date.now(); }
+    aliasBag()[r.newKey] = r.by; u.altNumbers = (u.altNumbers || []).concat(r.newKey).slice(-5);
+  }
+  r.status = st; r.why = st === 'rejected' ? why : ''; r.decidedBy = s.phone; r.decidedAt = Date.now(); saveDb();
+  return [200, { ok: true }];
+};
+
+// Scorer lookup: a scorer or admin adds a player to a squad by phone number. The reply carries the minimum profile only (name, SH ID, kind, city), never the phone, email or age. Rate limited and every lookup is logged.
+routes['POST /api/scorer/lookup'] = async (req, body) => {
+  const s = grUser(req); if (!s) return [401, { ok: false, error: 'Please sign in first' }];
+  if (s.u.role !== 'admin' && s.u.role !== 'scorer') return [403, { ok: false, error: 'Only scorers and admins can look people up' }];
+  if (limited('lk:' + s.phone, 30, 36e5)) return [429, { ok: false, error: 'Too many lookups this hour' }];
+  const P = pk({ phone: body.phone, cc: body.cc }); if (!P.isEmail && !validIntl(P)) return [400, { ok: false, error: BADNUM }];
+  const key = aliasBag()[P.key] || P.key, u = db.users[key];
+  const log = db.shared.lookups = db.shared.lookups || []; log.push({ by: s.phone, t: Date.now(), hit: !!(u && !u.closed) }); if (log.length > 500) log.splice(0, log.length - 500); saveDb();
+  if (!u || u.closed) return [200, { ok: true, found: false }];
+  if (!u.shid) { let id; do { id = 'SH-' + crypto.randomBytes(5).toString('hex').slice(0, 8).toUpperCase(); } while (Object.values(db.users).some(x => x.shid === id)); u.shid = id; saveDb(); }
+  return [200, { ok: true, found: true, profile: { shid: u.shid, name: String(u.nick || '').slice(0, 30), kind: u.kind || '', city: String((u.loc && (u.loc.city || u.loc)) || '').slice(0, 40) } }];
+};
+
 // Sessions and account closure. Tokens carry their issue time; "sign out everywhere" invalidates every older token. Closing an account stops sign-in at once; matches, tournaments and other records stay (they are never deleted); signing in again within 30 days reopens it.
 routes['POST /api/me/signout-all'] = async (req) => {
   const s = grUser(req); if (!s) return [401, { ok: false, error: 'Please sign in again' }];
@@ -1790,7 +1843,7 @@ routes['POST /api/auth/register'] = async (req, body, ip) => {
   if (!validIntl(P)) return [400, { ok: false, error: P.isEmail ? 'Enter a valid email address' : BADNUM }];
   if (!validPin(body.pin)) return [400, { ok: false, error: 'PIN must be 4 to 6 digits' }];
   if (limited('reg:' + ip, 20, 36e5)) return [429, { ok: false, error: 'Too many sign-ups from this device. Try later.' }];
-  if (db.users[phone]) return [200, { ok: false, exists: true, error: P.isEmail ? 'This email is already registered. Please login.' : 'This number is already registered. Please login.' }];
+  if (db.users[phone] || aliasBag()[phone]) return [200, { ok: false, exists: true, error: P.isEmail ? 'This email is already registered. Please login.' : 'This number is already registered. Please login.' }];
   if (P.isEmail && !useProof(body.proof, P.email, 'register')) return [400, { ok: false, needCode: true, error: 'Verify your email with the code we send you first' }];
   const c = cleanProfile(P.isEmail ? Object.assign({}, body.profile, { email: P.email }) : body.profile);
   if (c.error) return [400, { ok: false, error: c.error }];
@@ -1801,7 +1854,7 @@ routes['POST /api/auth/register'] = async (req, body, ip) => {
   return [200, { ok: true, profile: pub(u), token: sign(phone) }];
 };
 routes['POST /api/auth/login'] = async (req, body) => {
-  const phone = pk(body).key, u = db.users[phone];
+  const k0 = pk(body).key, phone = aliasBag()[k0] || k0, u = db.users[phone];
   if (locked(phone)) return [429, { ok: false, error: 'Too many wrong PINs. Try again in 15 minutes.' }];
   if (!u) return [200, { ok: false, noAccount: true, error: 'No account for this number. Please register.' }];
   if (!u.ph) return [200, { ok: false, error: 'This account has no PIN yet. Ask the admin to reset it.' }];

@@ -15,8 +15,8 @@ Requirements are kept separate from implementation status. Conflicts: latest exp
 | R06 | SMS OTP delivery country-aware | Number doc 8 | OTP | SMS_REGIONS | Server | Unsupported status tested | DEFERRED: user chose email OTP instead; existing MSG91 code left in place, unused |
 | R07 | OTP for registration | User 2026-10-14: email OTP is the best option; no SMS/network gateway | Register (email mode), Forgot PIN | /api/email/send, /api/email/verify, /api/auth/reset | Public | Playwright with console provider: register needs code, wrong code rejected, proof single-use, forgot-PIN works; SMTP client verified against a local fake SMTP server | PARTIAL: BUILT-TESTED for email accounts. Real delivery NOT verified (needs EMAIL_PROVIDER=smtp/resend env on Render; TLS/STARTTLS paths untested against a real server). Mobile-number accounts still have no OTP (PIN only) |
 | R08 | Permanent SH ID separate from phone | Number doc 6 | Profile | server-issued | - | Tested | BUILT-TESTED |
-| R09 | Change number / recovery / merge review | Number doc 7 | Account | - | - | - | NOT BUILT |
-| R10 | Scorer private phone lookup, minimum participant profile | Number doc 5 | Scorer squad | - | Role-based | - | NOT BUILT |
+| R09 | Change number / recovery / merge review | Number doc 7 | Account | - | - | - | Number change + merge with admin review, alias sign-in (block 85, tests/number-change*) | BUILT |
+| R10 | Scorer private phone lookup, minimum participant profile | Number doc 5 | Scorer squad | - | Role-based | - | Scorer lookup, minimum profile, logged (block 85) | BUILT |
 | R11 | World location hierarchy with stable IDs | Number doc 3 | Location | - | - | - | NOT BUILT (SOURCE: dataset required) |
 | R12 | Guardian/student links | Number doc 10 | Account | - | - | - | NOT BUILT |
 | R13 | Player profile tabs (Overview..Social), filters, empty states | Player doc | Player | ppBody | Public | Playwright, 10 tabs screenshotted, no JS errors | BUILT-TESTED for cricket data from SH matches; Academy/Gallery/Social are honest placeholders |
