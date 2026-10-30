@@ -1195,6 +1195,45 @@ routes['POST /api/me/close'] = async (req, body) => {
   s.u.closed = Date.now(); saveDb();
   return [200, { ok: true, reopenDays: 30 }];
 };
+
+// Editorial articles: 8 types, one canonical article plus optional translations, drafts and published, every change to a published article is kept in a correction history.
+const ED_TYPES = { result: 'Match report', preview: 'Match preview', player: 'Player spotlight', tournament: 'Tournament update', ground: 'Ground and venue', auction: 'Auction news', announce: 'Announcement', feature: 'Feature' };
+const ED_LANGS = ['te', 'hi'];
+const edBag = () => (db.shared.editorial = db.shared.editorial || {});
+const edT = (v, n) => String(v == null ? '' : v).replace(/[<>]/g, '').replace(/[ \t]+/g, ' ').trim().slice(0, n);
+const edBody = b => (Array.isArray(b) ? b : String(b || '').split(/\n+/)).map(x => edT(x, 1500)).filter(Boolean).slice(0, 12);
+const edPub = (a, editor) => ({ id: a.id, type: a.type, typeName: ED_TYPES[a.type], h: a.h, sub: a.sub, body: a.body, tr: a.tr || {}, status: a.status, by: a.byName, t: a.t, updated: a.updated, history: (a.history || []).map(x => ({ t: x.t, note: x.note, by: x.byName, ...(editor ? { prev: x.prev } : {}) })) });
+routes['GET /api/editorial'] = async (req, body) => {
+  const s = grUser(req), ed = !!(s && ['admin', 'scorer'].includes(s.u.role));
+  let L = Object.values(edBag());
+  if (body.id) { const a = edBag()[String(body.id)]; if (!a || (a.status !== 'published' && !ed)) return [404, { ok: false, error: 'Article not found' }]; return [200, { ok: true, item: edPub(a, ed), types: ED_TYPES }]; }
+  if (!(ed && body.all)) L = L.filter(a => a.status === 'published');
+  return [200, { ok: true, types: ED_TYPES, editor: ed, items: L.sort((a, b) => b.updated - a.updated).slice(0, 60).map(a => edPub(a, false)) }];
+};
+routes['POST /api/editorial'] = async (req, body) => {
+  const s = grUser(req); if (!s) return [401, { ok: false, error: 'Please sign in first' }];
+  if (!['admin', 'scorer'].includes(s.u.role)) return [403, { ok: false, error: 'Only scorers and admins can write articles' }];
+  if (limited('ed:' + s.phone, 60, 36e5)) return [429, { ok: false, error: 'Too many requests, slow down' }];
+  if (!ED_TYPES[body.type]) return [400, { ok: false, error: 'Choose an article type' }];
+  const h = edT(body.h, 160), sub = edT(body.sub, 300), bd = edBody(body.body);
+  if (h.length < 5) return [400, { ok: false, error: 'Write a headline (5+ letters)' }]; if (!bd.length) return [400, { ok: false, error: 'Write the article text' }];
+  const tr = {}; for (const l of ED_LANGS) { const t = body.tr && body.tr[l]; if (t && (t.h || t.body)) { const tb = edBody(t.body); if (edT(t.h, 160) && tb.length) tr[l] = { h: edT(t.h, 160), sub: edT(t.sub, 300), body: tb }; } }
+  const status = body.publish ? 'published' : 'draft', now = Date.now();
+  let a = body.id ? edBag()[String(body.id)] : null;
+  if (body.id && !a) return [404, { ok: false, error: 'Article not found' }];
+  if (a) {
+    if (a.by !== s.phone && s.u.role !== 'admin') return [403, { ok: false, error: 'Only the author or an admin can change this article' }];
+    const changed = a.h !== h || a.sub !== sub || JSON.stringify(a.body) !== JSON.stringify(bd) || JSON.stringify(a.tr || {}) !== JSON.stringify(tr);
+    if (a.status === 'published' && changed) {
+      const note = edT(body.note, 200); if (note.length < 3) return [400, { ok: false, error: 'This article is already published. Say what you corrected (3+ letters)' }];
+      (a.history = a.history || []).push({ t: now, note, by: s.phone, byName: String(s.u.nick || s.u.name || '').slice(0, 30), prev: { h: a.h, sub: a.sub, body: a.body } });
+    }
+    Object.assign(a, { type: body.type, h, sub, body: bd, tr, status, updated: now }); if (status === 'published' && !a.t) a.t = now;
+  } else {
+    const id = 'ed' + crypto.randomBytes(5).toString('hex'); a = edBag()[id] = { id, type: body.type, h, sub, body: bd, tr, status, by: s.phone, byName: String(s.u.nick || s.u.name || '').slice(0, 30), t: status === 'published' ? now : 0, updated: now, history: [] };
+  }
+  saveDb(); return [200, { ok: true, item: edPub(a, true) }];
+};
 // ---------- Teams and players registry (like CricHeroes / CrickPro): unique team names, players found by name or mobile, no duplicate players, creator/admin rights, verification by a registered account with the same mobile ----------
 const RG_ROLES = ['BAT', 'BOWL', 'AR', 'WK'], RG_BAT = ['Right-hand', 'Left-hand'], RG_BOWL = ['', 'Right-arm fast', 'Right-arm medium', 'Off spin', 'Left-arm fast', 'Left-arm spin', 'Leg spin'], RG_LEVELS = ['national', 'state', 'district', 'club', 'academy', 'corporate', 'school', 'college'], RG_MAX = 30;
 const rgTeams = () => (db.shared.rgTeams = db.shared.rgTeams || {}), rgPlayers = () => (db.shared.rgPlayers = db.shared.rgPlayers || {});
@@ -2134,7 +2173,7 @@ http.createServer(async (req, res) => {
   const h = routes[req.method + ' ' + pth];
   if (!h) return out(404, { ok: false, error: 'Not found' });
   let raw = '';
-  for await (const c of req) { raw += c; if (raw.length > (pth === '/api/paper' ? 300000 : pth === '/api/admin/home-config' ? 400000 : pth === '/api/grounds/photo' ? 330000 : 20000)) return out(413, { ok: false, error: 'Too large' }); }
+  for await (const c of req) { raw += c; if (raw.length > (pth === '/api/paper' ? 300000 : pth === '/api/admin/home-config' ? 400000 : pth === '/api/grounds/photo' ? 330000 : pth === '/api/editorial' ? 120000 : 20000)) return out(413, { ok: false, error: 'Too large' }); }
   let body = {};
   try { body = raw ? (raw.trim().startsWith('{') ? JSON.parse(raw) : Object.fromEntries(new URLSearchParams(raw))) : {}; } catch { return out(400, { ok: false, error: 'Bad body' }); }
   if (req.method === 'GET') body = { ...Object.fromEntries(new URL(req.url, 'http://x').searchParams), ...body };
