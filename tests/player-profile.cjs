@@ -21,7 +21,8 @@ ok(await p.evaluate(()=>/Kakinada/.test(document.querySelector('.pp .body').inne
 await p.evaluate(()=>{A.ppTab({v:'stats'});});
 ok(await p.evaluate(()=>/Individual Matches/.test((A.ppSt({v:'bat'}),document.querySelector('.pp .body').innerText))&&/Overall Total/.test(document.querySelector('.pp .body').innerText)&&!/T20|ODI|IPL/.test(document.querySelector('.pp .body').innerText)),'tournament-wise batting table, no format columns');
 await p.evaluate(()=>A.ppTour({v:'ind'}));await p.waitForTimeout(100);await p.screenshot({path:'/tmp/pp_bat.png'});ok(await p.evaluate(()=>/Match-wise/.test(document.querySelector('.pp .body').innerText)),'tournament row opens match-wise detail');
-await p.evaluate(()=>A.ppSt({v:'bowl'}));ok(await p.evaluate(()=>/Wkts/.test(document.querySelector('.pp .body').innerText)),'bowling tab');
+await p.evaluate(()=>{A.ppSt({v:'info'})});ok(await p.evaluate(()=>/Earlier career/.test(document.querySelector('.pp .body').innerText)&&/377/.test(document.querySelector('.pp .body').innerText)&&/115\*/.test(document.querySelector('.pp .body').innerText)),'earlier career (self-reported) card with the screenshot figures');
+await p.evaluate(()=>A.ppSt({v:'bat'}));await p.evaluate(()=>A.ppSt({v:'bowl'}));ok(await p.evaluate(()=>/Wkts/.test(document.querySelector('.pp .body').innerText)),'bowling tab');
 await p.evaluate(()=>A.ppBack());ok(await p.evaluate(()=>UI.view==='profile'),'back returns');
 ok(!errs.length,errs.join(';'));
 await b.close();if(!process.exitCode)console.log('PASS: player profile');})();

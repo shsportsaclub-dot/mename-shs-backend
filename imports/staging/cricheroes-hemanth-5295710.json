@@ -6,9 +6,43 @@
     "source_id": "5295710",
     "source_url": "https://cricheroes.com/player-profile/5295710/hemanth/matches"
   },
-  "completeness": "reference-only",
+  "completeness": "partial",
   "identity_verified": false,
-  "records": [],
-  "import_status": "awaiting-captured-records",
-  "note": "Profile URL confirmed from supplied screenshot; screenshot is not a complete machine-readable match capture. Do not infer statistics or write career totals."
+  "records": [
+    {
+      "kind": "career-batting-overall",
+      "captured_from": "profile screenshot supplied by the player (Stats tab, Batting filter)",
+      "as_of": "2026-10-30",
+      "values": {
+        "matches": 90,
+        "innings": 55,
+        "not_out": 15,
+        "runs": 377,
+        "highest": "115*",
+        "average": 9.43
+      },
+      "not_visible": [
+        "strike rate",
+        "fours",
+        "sixes",
+        "fifties",
+        "bowling totals"
+      ]
+    },
+    {
+      "kind": "best-bowling-shown",
+      "captured_from": "profile screenshot (Trophies tab)",
+      "values": {
+        "overs": 4.0,
+        "maidens": 0,
+        "runs": 39,
+        "wickets": 4,
+        "economy": 9.75,
+        "match": "HAPUR TITANS FOR SH SPORTSC vs Hapur PANKSHI blas...",
+        "date": "2025-01-08"
+      }
+    }
+  ],
+  "import_status": "partial-captured-self-reported",
+  "note": "Player-supplied screenshot values only. Shown in the app as Earlier career, separate from totals computed from matches scored in Scoring Heroes. Nothing else is inferred."
 }
