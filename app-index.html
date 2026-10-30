@@ -9845,6 +9845,10 @@ try{if(S.settings&&S.settings.mskin==='ca'){S.settings.mskin='cb';try{save()}cat
  };
  render();
 }
+
+/* HEADER: viewers pill sits above Select game; brand title is never covered */
+{const st=document.createElement('style');st.textContent='.hdr .hlogo{flex:0 0 auto;min-width:0}.hdr .hword{white-space:nowrap}.hdr .grow{flex:1 1 0;min-width:0}.hstk{display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex:0 0 auto}.hstk .ucnt{margin:0;padding:2px 7px;font-size:11px}.hdr .hstk .sgbtn{font-size:10px!important;padding:5px 5px!important;gap:1px}@media(max-width:420px){.hdr{gap:3px!important;padding-left:8px!important;padding-right:8px!important}.hdr .iconbtn{width:30px!important;height:30px!important}.hdr .hlogo{gap:3px!important}.hdr .hlogo img{height:24px!important}.hdr .hword{font-size:12px!important;letter-spacing:0!important}.hdr .hword .hw small{font-size:7px!important}}';document.head.appendChild(st);
+ const h9z=hdr;hdr=function(){let o=h9z.apply(this,arguments);const m=o.match(/<span class="ucnt"[\s\S]*?<\/span>/),b=o.match(/<button type="button" class="btn sm sgbtn"[\s\S]*?<\/button>/);if(!b)return o;let r=o;if(m)r=r.replace(m[0],'');r=r.replace(b[0],'<div class="hstk">'+(m?m[0]:'')+b[0]+'</div>');return r}}
 </script>
 </body>
 </html>
