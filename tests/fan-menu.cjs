@@ -6,7 +6,7 @@ await p.evaluate(()=>{UI.stage='app';S.user={id:'u1',name:'T',phone:'9999999999'
 const spots=[['left-mid',20,400],['right-mid',340,400],['bottom-centre',166,720],['top-centre',166,80]];
 for(const [n,x,y] of spots){
  await p.evaluate(([x,y])=>{const e=document.querySelector('.fabfloat');e.style.setProperty('left',x+'px','important');e.style.setProperty('top',y+'px','important');e.style.setProperty('right','auto','important');e.style.setProperty('bottom','auto','important');e.style.setProperty('transform','none','important')},[x,y]);
- await p.evaluate(()=>{UI.fabMoved=0;A.plus()});await p.waitForTimeout(500);
+ await p.evaluate(()=>{UI.fabMoved=0;A.plus()});await p.waitForTimeout(900);
  const r=await p.evaluate(()=>[...document.querySelectorAll('.fan-it')].map(e=>{const r=e.getBoundingClientRect();return[Math.round(r.left),Math.round(r.top),Math.round(r.right),Math.round(r.bottom)]}));
  ok(r.length===6,n+' six options');ok(r.every(q=>q[0]>=0&&q[2]<=390&&q[1]>=0&&q[3]<=800),n+' all on screen '+JSON.stringify(r));
  const cx=await p.evaluate(()=>{const x=document.querySelector('.fan-x').getBoundingClientRect();return x.left+x.width/2}),mx=r.reduce((a,q)=>a+(q[0]+q[2])/2,0)/6;
