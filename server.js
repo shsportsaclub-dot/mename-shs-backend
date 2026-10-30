@@ -538,6 +538,13 @@ async function infoOf(id) {
 // Missing data remains unavailable; never invent a market price or a win percentage.
 // Universal rule for every sport: provider odds > valid win probability > blank.
 // Namespaced keys prevent two sports with the same fixture ID from colliding.
+// Match data captured from player-supplied screenshots: every JSON in imports/match-data is served automatically, so adding a file and pushing is enough.
+routes['GET /api/match-data'] = async () => {
+  const dir = path.join(process.cwd(), 'imports', 'match-data'); const out = {};
+  try { for (const f of fs.readdirSync(dir)) if (/^\d+\.json$/.test(f)) { const d = JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8')); out[d.meta && d.meta.match_id || f.replace('.json', '')] = d; } }
+  catch { return [200, { ok: true, matches: {} }]; }
+  return [200, { ok: true, matches: out }];
+};
 // Public, read-only legacy profile bridge. Captures are partial and never alter career totals.
 routes['GET /api/legacy-player-profile'] = async (req, body) => {
   const id = String(body.id || '').trim();
