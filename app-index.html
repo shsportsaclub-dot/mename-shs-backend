@@ -9703,7 +9703,39 @@ function shMatchWorkspace(m,mode){
   shShort(){const m=cur();if(!m||m.status!=='live'||m.paused)return;if(!confirm('Short run signalled? The last ball is removed so you can enter the runs actually completed.'))return;UI._shortRun=1;let ok=false;try{ok=undo(m)}finally{UI._shortRun=0}if(!ok)return toast('Nothing to correct');log(m,'short_run');commit();toast('Last ball removed. Enter the correct runs.',3500)},
   shApprove(){const m=S.matches.find(x=>x.id===UI.sid);if(!m||m.rm||!can()||m.status!=='done')return;m.approved={by:who(),at:Date.now()};log(m,'scorecard_approved');commit();toast('Scorecard approved')}
  });
+ // Edit any past ball of the current innings (runs / extra type). Everything after it is replayed so strike, overs, wickets and the result stay consistent.
+ const legalX=x=>x!=='wd'&&x!=='nb';
+ window.shEditBall=function(m,idx,patch){
+  const inn=m&&m.innings&&m.innings[m.cur],ev=inn&&inn.ev;if(!ev||!ev[idx])return{ok:false,error:'Ball not found'};
+  const e0=ev[idx],nx=patch.x==null?e0.x:patch.x,nr=Math.max(0,Math.min(36,Math.floor(+patch.r)||0));
+  if(!['','wd','nb','b','lb'].includes(nx))return{ok:false,error:'Unknown extra type'};
+  if(legalX(nx)!==legalX(e0.x))return{ok:false,error:'A wide or no ball changes the over count. Use Undo back to that ball instead.'};
+  setFmt(m);const snap=JSON.stringify(inn);
+  let c={s:e0.pre.s,n:e0.pre.n,bl:e0.pre.bl},lg=0;for(let j=0;j<idx;j++)if(legalX(ev[j].x))lg++;
+  const out=ev.slice(0,idx);
+  for(let j=idx;j<ev.length;j++){
+   const e=ev[j],sp=e.pre;
+   if(j>idx){
+    const have=[c.s,c.n].filter(Boolean),need=[sp.s,sp.n].filter(Boolean);
+    if(c.s==null)c.s=need.find(id=>!have.includes(id))||null;
+    if(c.n==null)c.n=need.find(id=>id!==c.s&&!have.includes(id))||null;
+    if(c.bl==null||c.bl!==sp.bl)c.bl=sp.bl;
+    if([c.s,c.n].sort().join()!==[sp.s,sp.n].sort().join()){inn.ev=JSON.parse(snap).ev;return{ok:false,error:'This change would alter who is batting later in the innings. Use Undo back to that ball instead.'}}
+   }
+   const ne=Object.assign({},e,j===idx?{r:nr,x:nx}:{});
+   ne.bt=c.s;ne.bl=c.bl;ne.pre={s:c.s,n:c.n,bl:c.bl,used:(sp.used||[]).slice()};
+   if(ne.w&&((!NOBOWL.includes(ne.w)&&ne.out!==c.s)||(ne.out!==c.s&&ne.out!==c.n))){return{ok:false,error:'This change would alter who is dismissed later in the innings. Use Undo back to that ball instead.'}}
+   if(ne.w){if(c.s===ne.out)c.s=null;else if(c.n===ne.out)c.n=null}
+   if(ne.r%2===1)[c.s,c.n]=[c.n,c.s];
+   if(legalX(ne.x)){lg++;if(lg%BPO===0){[c.s,c.n]=[c.n,c.s];c.bl=null}}
+   out.push(ne)}
+  inn.ev=out;Object.assign(inn.cur,{s:c.s,n:c.n,bl:c.bl});inn.done=false;m.status='live';m.result='';m.win=null;checkEnd(m);
+  return{ok:true,from:{r:e0.r,x:e0.x},to:{r:nr,x:nx}}};
+ const lbl=(m,i)=>{const inn=m.innings[m.cur];let lg=0;for(let j=0;j<i;j++)if(legalX(inn.ev[j].x))lg++;const e=inn.ev[i],t=e.w?'W':e.x?(e.x+(e.r?e.r:'')):e.r;return 'Ov '+(Math.floor(lg/BPO)+1)+'.'+(lg%BPO+1)+' · '+nm(e.bl)+' to '+nm(e.bt)+' · '+t};
  Object.assign(F,{
+  shEdit(fd){const m=cur();if(!m||m.status==='setup'||m.paused)return;const i=+fd.get('i'),inn=m.innings[m.cur];if(!inn||!inn.ev[i])return toast('Pick a ball to edit');
+   const was=lbl(m,i),res=window.shEditBall(m,i,{r:fd.get('r'),x:fd.get('x')});if(!res.ok)return toast(res.error,4500);
+   UI.redo[m.id]=[];log(m,'ball_edited',{ball:i+1,from:res.from,to:res.to,was});commit();toast('Ball corrected. Scorecard recalculated.',3500)},
   shSeven(fd){const m=cur();if(!m||m.status!=='live'||m.paused)return;const r=Math.max(7,Math.min(36,Math.floor(+fd.get('r'))||7));A.run({v:r})},
   shBowler(fd){const m=cur();if(!m||m.status!=='live')return;const id=fd.get('id'),inn=m.innings[m.cur];if(!id||!(m.xi[inn.bowl]||[]).includes(id))return toast('Pick a bowler from the fielding XI');const old=inn.cur.bl;inn.cur.bl=id;log(m,'bowler_replaced',{from:old,to:id});commit();toast('Bowler: '+nm(id))},
   shBatter(fd){const m=cur();if(!m||m.status!=='live')return;const id=fd.get('id'),w=fd.get('w')==='n'?'n':'s',inn=m.innings[m.cur];if(!id||!avail(m).includes(id))return toast('Pick an available batter');const old=inn.cur[w];inn.cur[w]=id;if(!inn.used.includes(id))inn.used.push(id);log(m,'batter_replaced',{role:w,from:old,to:id});commit();toast('Batter changed: '+nm(id))},
@@ -9721,10 +9753,11 @@ function shMatchWorkspace(m,mode){
  const tools=m=>{const inn=m.innings[m.cur],redo=(UI.redo[m.id]||[]).length,bowlers=(m.xi[inn.bowl]||[]).filter(id=>id!==inn.cur.bl).map(id=>[id,nm(id)]),bats=avail(m).map(id=>[id,nm(id)]);
   return `<details class="card sh-tools"><summary>Scorer tools</summary><div class="tg"><button class="btn ghost sm" data-a="shRedo" ${redo?'':'disabled'}>Redo${redo?' ('+redo+')':''}</button><button class="btn ghost sm" data-a="shDead">Dead ball</button><button class="btn ghost sm" data-a="shShort">Short run</button>${m.paused?'<button class="btn sm" data-a="shResume">Resume match</button>':'<button class="btn ghost sm" data-a="shPause">Pause match</button>'}<button class="btn ghost sm" data-a="rainOpen" data-id="${m.id}">Rain / DLS result</button><button class="btn ghost sm" data-a="go" data-v="dlstool">DLS calculator</button></div>
   <form data-f="shSeven"><label style="flex:1">Runs off the bat, 7 or more<input name="r" type="number" min="7" max="36" value="7" inputmode="numeric"></label><button class="btn sm">Add runs</button></form>
+  ${inn.ev.length?`<form data-f="shEdit"><label style="flex:2 1 100%">Correct a past ball<select name="i">${inn.ev.map((e,i)=>[i,lbl(m,i)]).slice(-24).reverse().map(([v,l])=>`<option value="${v}">${esc(l)}</option>`).join('')}</select></label><label style="flex:1">Runs<select name="r">${[0,1,2,3,4,5,6,7].map(n=>`<option>${n}</option>`).join('')}</select></label><label style="flex:1">Type<select name="x"><option value="">Off the bat</option><option value="b">Bye</option><option value="lb">Leg bye</option><option value="wd">Wide</option><option value="nb">No ball</option></select></label><button class="btn sm ghost">Correct ball</button></form>`:''}
   ${bowlers.length?`<form data-f="shBowler"><label style="flex:1">Replace bowler<select name="id">${opt(bowlers,'')}</select></label><button class="btn sm ghost">Replace</button></form>`:''}
   ${bats.length?`<form data-f="shBatter"><label style="flex:1">Change batter<select name="w"><option value="s">Striker</option><option value="n">Non-striker</option></select></label><label style="flex:1">New batter<select name="id">${opt(bats,'')}</select></label><button class="btn sm ghost">Change</button></form>`:''}
   <form data-f="shEnd"><label style="flex:1">End match<select name="why">${opt(['Match abandoned','No result','Match tied','Match drawn','Ended by organiser'].map(x=>[x,x]),'Match abandoned')}</select></label><button class="btn sm ghost">End match</button></form>
-  <div class="mu sm">Dead ball counts nothing. Short run removes the last ball so you re-enter the runs completed (Law 18). Every action goes in the audit log.</div></details>`};
+  <div class="mu sm">Dead ball counts nothing. Short run removes the last ball so you re-enter the runs completed (Law 18). Correct a past ball re-plays the innings from that ball (a wide or no ball cannot be changed into a legal ball, use Undo for that). Every action goes in the audit log.</div></details>`};
  const c0=scoreConsole;scoreConsole=function(m){const h=c0.apply(this,arguments);if(m.rm||!can()||!m.innings[m.cur])return h;setFmt(m);return strip(m)+h+tools(m)};
  const v0=vScore;vScore=function(){const h=v0.apply(this,arguments),m=S.matches.find(x=>x.id===UI.sid);
   if(!m||m.rm||!can()||m.status!=='done')return h;
