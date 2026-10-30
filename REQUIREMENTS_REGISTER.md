@@ -20,7 +20,7 @@ Requirements are kept separate from implementation status. Conflicts: latest exp
 | R11 | World location hierarchy with stable IDs | Number doc 3 | Location | - | - | - | NOT BUILT (SOURCE: dataset required) |
 | R12 | Guardian/student links | Number doc 10 | Account | - | - | - | NOT BUILT |
 | R13 | Player profile tabs (Overview..Social), filters, empty states | Player doc | Player | ppBody | Public | Playwright, 10 tabs screenshotted, no JS errors | BUILT-TESTED for cricket data from SH matches; Academy/Gallery/Social are honest placeholders |
-| R14 | Career timeline with Verified/Imported/Self-declared labels | Player doc 4 | Career tab | - | - | Basic timeline from matches only | PARTIAL |
+| R14 | Career timeline with Verified/Imported/Self-declared labels | Player doc 4 | Career tab | - | - | Achievements tab: VERIFIED vs SELF-DECLARED labels, own career entries (block 86, tests/career-labels.cjs) | BUILT |
 | R15 | Rankings per sport with disclosed method | Player doc 6, Rem. 5 | Rankings tab | - | - | Simple runs/wickets leaderboard, disclosed as NOT a points formula | PARTIAL; formulas SOURCE/DEFINITION REQUIRED |
 | R16 | Social auto-posting to connected accounts | Player doc 5 | Social | - | Connected accounts + editorial review | - | NOT BUILT |
 | R17 | Match category/eligibility (Men/Women/Mixed, age, level, ball type) | Rem. 1 | Match Start wizard, Format step | m.cat | Scorer | Playwright: required category, saved on match, shown in header | PARTIAL: labels built; competition-specific player eligibility and inherited approved rules NOT BUILT |
