@@ -3319,7 +3319,7 @@ async function shPush(){
     (S.tours||[]).filter(t=>!t.rm&&!t.gts).forEach(t=>jobs.push(['tours',t.id,shPack('tours',t)]));
     (S.auc||[]).filter(a=>!a.rm&&!a.gts).forEach(a=>jobs.push(['auc',a.id,shPack('auc',a)]));
     for(const [col,id,data] of jobs){const h=JSON.stringify(data);if(UI.sh.hash[col+id]===h)continue;
-      const r=await fetch(apiBase()+'/api/shared/'+col+'/'+id,{method:'PUT',headers:{'Authorization':'Bearer '+shTok(),'Content-Type':'application/json'},body:JSON.stringify({data})});
+      const ac=typeof AbortController!=='undefined'?new AbortController():null,tm=ac?setTimeout(()=>ac.abort(),20000):0;let r;try{r=await fetch(apiBase()+'/api/shared/'+col+'/'+id,{method:'PUT',headers:{'Authorization':'Bearer '+shTok(),'Content-Type':'application/json'},body:JSON.stringify({data}),signal:ac?ac.signal:undefined})}finally{clearTimeout(tm)}
       const j=await r.json();if(j.ok)UI.sh.hash[col+id]=h;else{UI.sh.err=j.error||'';if(r.status===401){UI.sh.state='login';break}}}
     UI.sh.state=UI.sh.state==='login'?'login':'ok';
   }catch(e){UI.sh.state='offline'}
@@ -3396,7 +3396,7 @@ Object.assign(F,{
     if(rf===rs){m.so={text:'Super Over tied: '+txt};m.result='Match tied (Super Over also tied)';m.win=null}
     else{const w=rf>rs?f:s;m.so={text:txt,win:w};m.result=`${T(w).name} won the Super Over (${txt})`;m.win=fd.get('win')?w:null}
     UI.modal=null;commit();toast(m.result,4000)}});
-window.addEventListener('online',()=>{UI.sh.state='idle';shPush();render()});window.addEventListener('offline',()=>render());
+window.addEventListener('online',()=>{UI.sh.state='idle';shPush();render()});document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&S.user&&navigator.onLine!==false){UI.sh.state=UI.sh.state==='offline'?'idle':UI.sh.state;shPush()}});window.addEventListener('offline',()=>render());
 setInterval(()=>{if(navigator.onLine!==false&&UI.sh.state==='offline')shPush()},30000);
 
 Object.assign(A,{
