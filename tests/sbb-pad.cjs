@@ -29,7 +29,7 @@ await p.click('button[data-a=sbbPick][data-v=bw]');await p.fill('#sbb-free','Har
 // wicket: striker out -> must choose new batter
 await p.click('button[data-a=sbbAdd][data-v="ext:w"]');await p.click('button[data-a=sbbAdd][data-v="out:s"]');L=await p.evaluate(()=>UI.wm.sbb);ok(L[4].wicket&&L[4].out==='Michael Bracewell','striker out');
 pd=await p.evaluate(()=>UI.wm.pad);ok(!pd.s||!pd.n,'new batter needed '+JSON.stringify(pd));
-await p.evaluate(()=>A.sbbSet({v:'s',n:'Tim Seifert'}));await p.click('button[data-a=sbbAdd][data-v="0"]');L=await p.evaluate(()=>UI.wm.sbb);ok(L[5]&&L[5].batsman==='Tim Seifert','next ball by the new batter');
+ok(/who came in/.test(await pad()),'prompt after wicket '+await pad());await p.evaluate(()=>{const r0=shRoster;shRoster=W=>r0(W).concat([{name:'Tim Seifert',team:'New Zealand'},{name:'Finn Allen',team:'New Zealand'}]);render()});ok(await p.evaluate(()=>/OK: Tim Seifert/.test(document.querySelector('.sbb-new').innerText)),'suggests next unused batter');await p.click('.sbb-new button[data-a=sbbSet]');ok(await p.evaluate(()=>UI.wm.pad.s==='Tim Seifert'||UI.wm.pad.n==='Tim Seifert'),'OK fills batter');await p.evaluate(()=>A.sbbSet({v:'s',n:'Tim Seifert'}));await p.click('button[data-a=sbbAdd][data-v="0"]');L=await p.evaluate(()=>UI.wm.sbb);ok(L[5]&&L[5].batsman==='Tim Seifert','next ball by the new batter');
 // undo restores the state of that ball
 await p.click('button[data-a=sbbAdd][data-v=undo]');pd=await p.evaluate(()=>UI.wm.pad);ok(pd.s==='Tim Seifert'&&pd.bw==='Hardik Pandya','undo restores');
 // commentary text
