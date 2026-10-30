@@ -9402,12 +9402,14 @@ window.shXIOf=(mine)=>{const c=mine.filter(p=>p.confirmed);if(c.length)return {x
   const FM=m=>(m.overs>=900?'Test':m.overs<=20?'T20':'ODI');
   ['T20','ODI','Test'].forEach(f=>{const L=all.filter(e=>FM(e.m)===f),ef=(p.earlierF||{})[f];if(L.length||ef)cols.splice(cols.findIndex(c=>c.h==='Overall')+1+cols.filter(c=>/^(T20|ODI|Test)$/.test(c.h)).length,0,{h:f,v:careerRows({earlier:ef},st,L).map(r=>r[3])})});
   G.forEach(g=>{const R=careerRows({},st,g.L);cols.push({h:g.name,v:R.map(r=>r[2])})});
+  // Tournament columns from the player's match list: how many matches he played in each (player-level runs and wickets per tournament are added when supplied).
+  {const id=LEGID(p),E=id&&(UI.legacy||{})[id],g=E&&E.data&&E.data.matchGroups;if(g){const have=new Set(G.map(x=>x.name));[...(g.tournaments||[]).map(t=>[t.name,t.matches.length]),['Individual Matches',(g.individualMatches||[]).length]].forEach(([n,c])=>{if(c&&!have.has(n))cols.push({h:n,v:base.map(r=>r[0]==='Matches'?String(c):D)})})}}
   for(let i=cols.length-1;i>0;i--)if(!cols[i].v.some(x=>x!==D&&x!=='0'&&x!==0&&x!=='0.00'))cols.splice(i,1);
   const sc='position:sticky;left:0;z-index:1';
   return `<style>.cr td:first-child,.cr th:first-child{position:sticky;left:0;background:#17181d}html[data-theme=mday] .cr td:first-child,html[data-theme=mday] .cr th:first-child{background:#fff!important;color:#0f1a33!important}</style><div class="cd" style="padding:0;overflow-x:auto"><div style="padding:14px 16px 4px;font-weight:800;font-size:17px">${bat?'Batting':'Bowling'} career</div><table class="ct cr"><tr><th style="text-align:left;${sc}">${bat?'Batting':'Bowling'}</th>${cols.map(c=>`<th style="min-width:84px">${esc(c.h)}</th>`).join('')}</tr>${base.map((r,i)=>`<tr><td style="${sc}">${r[0]}</td>${cols.map(c=>`<td>${esc(c.v[i])}</td>`).join('')}</tr>`).join('')}</table><div class="mu2" style="padding:10px 16px 14px">Matches are grouped by length: up to 20 overs = T20, 21-50 overs = ODI, unlimited = Test. Each tournament has its own column - swipe sideways. Past career numbers you typed (Edit &rarr; Past career, per format) are added to matches scored in Scoring Heroes.</div></div>`}
- function ppStats(p){const G=ppRecords(p),st=UI.pp.st||'info';
+ function ppStats(p){const G=ppRecords(p),st=UI.pp.st||'info';legacyLoad(p);
   const sub=`<div class="seg2" style="margin:0 0 14px">${[['info','Info'],['bat','Batting'],['bowl','Bowling']].map(([k,l])=>`<button class="${st===k?'on':''}" data-a="ppSt" data-v="${k}">${l}</button>`).join('')}</div>`;
-  if(!G.length)return sub+(st==='info'?earlier(p):careerTable(p,st,[]))+'<div class="cd mu2">No scored matches for this player yet. Records appear tournament by tournament as matches are scored in Scoring Heroes.</div>';
+  if(!G.length)return sub+(st==='info'?earlier(p):careerTable(p,st,[]))+'<div class="cd mu2">No scored matches for this player yet. Runs and wickets per tournament appear as matches are scored in Scoring Heroes.</div>';
   const all=G.flatMap(g=>g.L),yr=g=>{const y=[...g.yrs].sort();return y.length>1?y[0]+'-'+y[y.length-1]:(y[0]||'')};
   const opp=e=>{const o=e.my===e.m.a?e.m.b:e.my===e.m.b?e.m.a:null;return o?tn(o):tn(e.m.b)};
   const tile=a=>`<div class="tl">${a.map(([l,v])=>`<div><b>${v}</b><span>${l}</span></div>`).join('')}</div>`;

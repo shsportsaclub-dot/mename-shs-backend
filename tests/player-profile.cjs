@@ -46,6 +46,7 @@ await p.evaluate(()=>{S.matches=[];P(S.user.pid).earlierF=undefined;P(S.user.pid
 const cell=(row,col)=>p.evaluate(([r,c])=>{const th=[...document.querySelectorAll('.pp table.cr th')].map(x=>x.innerText),i=th.indexOf(c),tr=[...document.querySelectorAll('.pp table.cr tr')].find(x=>new RegExp('^'+r).test(x.children[0].innerText));return i<0||!tr?null:tr.children[i].innerText.trim()},[row,col]);
 ok(await cell('Runs','Overall')==='377'&&await cell('Runs','T20')==='375'&&await cell('Runs','ODI')==='2'&&await cell('Matches','T20')==='80'&&await cell('Matches','ODI')==='10','batting: Overall 377 = T20 375 + ODI 2; matches 90 = 80 + 10');
 ok(await cell('Highest','T20')==='115*'&&await cell('Average','T20')==='10.14','batting: T20 highest and average');
+ok(await cell('Matches','CineCric Premier League Season - 3')==='1'&&await cell('Matches','Individual Matches')==='1'&&await cell('Runs','Individual Matches')==='—','tournament columns from the match list show matches played');
 await p.evaluate(()=>{A.ppSt({v:'bowl'})});await p.waitForTimeout(100);
 ok(await cell('Wickets','Overall')==='61'&&await cell('Wickets','T20')==='57'&&await cell('Wickets','ODI')==='4'&&await cell('Runs','T20')==='1414'&&await cell('Best Bowling','ODI')==='2/9','bowling: Overall 61 wkts = T20 57 + ODI 4');
 await b.close();if(!process.exitCode)console.log('PASS: player profile');})();
