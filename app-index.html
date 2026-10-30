@@ -10821,6 +10821,60 @@ document.addEventListener('input',e=>{const el=e.target;if(!el||!/^qt-n-[ab]$/.t
  A.closeAcct=async function(){const v=id=>String((document.getElementById(id)||{}).value||'').trim();if(v('ac-cf')!=='CLOSE')return toast('Type CLOSE to confirm');
   try{const j=await call('/api/me/close',{confirm:'CLOSE',pin:v('ac-pin')});if(j.ok){toast('Account closed. Sign in within 30 days to reopen it.',5000);S.tok='';A.logout()}else toast(j.error||'Could not close',4000)}catch(e){toast('No connection',3000)}};
 }
+
+/* ---------------- 81 OVERLAY PACK: player intro, XI, FOW, scorecard, points, fixtures, leaders, QR; 4/6/W/50/100 effects; operator position, size, preview then take, queue; safe margins ---------------- */
+{
+ const Z=()=>S.stream;
+ const q=()=>{const z=Z();z.q=z.q||[];return z};
+ const LB={intro:'Batter intro',xi:'Playing XI',fow:'Fall of wickets',card:'Scorecard',points:'Points table',fix:'Fixtures',lead:'Leaders',qr:'QR link'};
+ const NEW=Object.keys(LB);
+ const tourOf=m=>m&&m.tid&&S.tours.find(t=>t.id===m.tid);
+ const G2={
+  intro:(m,s)=>{if(!s)return '';const id=s.inn.cur.s;if(!id)return '';const p=P(id)||{},a=(typeof ppAgg==='function'?ppAgg(id,{fmt:'all',yr:'all',comp:'all'}):null);
+   return `<h4>${esc(nm(id))}</h4><div class="l"><span>${esc(p.role||'')}${p.bat?' · '+esc(p.bat):''}</span><b>${esc(s.bat.short||'')}</b></div>`+(a?`<div class="l"><span>Matches</span><b>${a.m.size}</b></div><div class="l"><span>Runs</span><b>${a.r}</b></div><div class="l"><span>High score</span><b>${a.hs}</b></div><div class="l"><span>50s / 100s</span><b>${a.f50} / ${a.f100}</b></div>`:'')},
+  xi:m=>[m.a,m.b].map(id=>`<h4>${esc(T(id).name)}</h4><div class="l" style="display:block;font-size:2.1cqw;line-height:1.5">${(m.xi[id]||[]).map(x=>esc(nm(x))).join(' · ')}</div>`).join(''),
+  fow:(m,s)=>{if(!s)return '';const k=s.k;return `<h4>Fall of wickets</h4>`+(k.fow.length?k.fow.map(f=>`<div class="l"><span>${f.w}. ${esc(nm(f.id))}</span><b>${f.r}-${f.w} (${f.ov} ov)</b></div>`).join(''):'<div class="l"><span>No wicket yet</span></div>')},
+  card:(m,s)=>{if(!s)return '';const k=s.k;return `<h4>${esc(s.bat.name)} ${k.runs}-${k.wk} (${fmtOv(k.lg)})</h4>`+s.inn.used.map(id=>{const b=k.bat[id]||{r:0,b:0};return `<div class="l"><span>${esc(nm(id))} <small style="opacity:.7">${esc(b.out&&b.outw?b.out:'not out')}</small></span><b>${b.r} (${b.b})</b></div>`}).join('')},
+  points:m=>{const t=tourOf(m);if(!t)return '<h4>Points table</h4><div class="l"><span>This match is not in a tournament</span></div>';return `<h4>${esc(t.name)}</h4>`+standings(t).slice(0,8).map((r,i)=>`<div class="l"><span>${i+1}. ${esc((T(r.id)||{}).name||'')}</span><b>${r.p} · ${r.pts} pts · ${r.nrr>=0?'+':''}${r.nrr.toFixed(2)}</b></div>`).join('')},
+  fix:m=>{const t=tourOf(m);if(!t)return '<h4>Fixtures</h4><div class="l"><span>This match is not in a tournament</span></div>';const up=t.fixtures.filter(f=>!f.mid).slice(0,6);return `<h4>Next fixtures</h4>`+(up.length?up.map(f=>`<div class="l"><span>${esc((T(f.a)||{}).name||'')} v ${esc((T(f.b)||{}).name||'')}</span><b>${esc(f.date||'')}</b></div>`).join(''):'<div class="l"><span>No fixtures left</span></div>')},
+  lead:m=>{const t=tourOf(m),L=t?tourMatches(t):S.matches.filter(x=>!isDemo(x));const bat={},wk={};L.forEach(x=>{try{x.innings.forEach((inn,i)=>{const k=calc(x,i);Object.entries(k.bat||{}).forEach(([id,b])=>{bat[id]=(bat[id]||0)+(b.r||0)});Object.entries(k.bowl||{}).forEach(([id,b])=>{wk[id]=(wk[id]||0)+(b.w||0)})})}catch(e){}});
+   const top=o=>Object.entries(o).sort((a,b)=>b[1]-a[1]).slice(0,3).filter(x=>x[1]>0).map(([id,v])=>`<div class="l"><span>${esc(nm(id))}</span><b>${v}</b></div>`).join('')||'<div class="l"><span>No data yet</span></div>';return `<h4>Most runs</h4>${top(bat)}<h4 style="margin-top:1cqw">Most wickets</h4>${top(wk)}`},
+  qr:m=>{let img='';try{const cv=qrCanvas(shLink('match',m.id),200);img=cv?`<img src="${cv.toDataURL()}" alt="QR" style="width:14cqw;background:#fff;border-radius:.6cqw;float:right;margin-left:1.5cqw">`:''}catch(e){}return `<h4>Follow live</h4>${img}<div class="l"><span>Scan to open ${esc(T(m.a).short)} v ${esc(T(m.b).short)} on Scoring Heroes</span></div>`}};
+ const FX={four:['FOUR','#2f9e44'],six:['SIX','#e8590c'],wicket:['WICKET','#e03131'],fifty:['FIFTY','#1971c2'],hundred:['HUNDRED','#9c36b5']};
+ const o0=overlayHTML;
+ overlayHTML=function(prev){let h=o0.apply(this,arguments).replace('<div class="ovgfx"></div>','');const z=Z(),m=ovMatch();if(!m)return h;let s=null;try{s=st(m)}catch(e){}
+  const add=[];
+  if(z.gfx&&G2[z.gfx]&&!/ovgfx/.test(h)){let body='';try{body=G2[z.gfx](m,s)}catch(e){}if(body)add.push(`<div class="ovgfx ovx">${body}</div>`)}
+  const fx=z.fx;if(z.fxOn!==false&&fx&&FX[fx.k]&&Date.now()-fx.at<5000){add.push(`<div class="ovfx" style="--fxc:${FX[fx.k][1]}"><b>${FX[fx.k][0]}</b>${fx.who?`<span>${esc(fx.who)}</span>`:''}</div>`);if(location.hash==='#overlay'&&!prev)setTimeout(()=>{if(location.hash==='#overlay')render()},5100-(Date.now()-fx.at))}
+  if(!add.length&&!z.pos&&!z.size&&!z.safe)return h;
+  h=h.replace(/(<div class="ovroot ov"[^>]*)>/,`$1 data-pos="${z.pos||'c'}" data-size="${z.size||'m'}" data-safe="${z.safe?1:0}">`);
+  return h.replace(/(<img class="ovlogo")/,add.join('')+'$1')};
+ /* record effects after every scored ball */
+ const b0=ball;ball=function(m,o){const before=(()=>{try{const i=m.innings[m.cur],c=i.cur;return {id:c.s,r:c.s?(calc(m,m.cur).bat[c.s]||{}).r||0:0}}catch(e){return null}})();const r=b0.apply(this,arguments);
+  try{const z=Z(),i=m.innings[m.cur],e=i.ev[i.ev.length-1];if(e){let k='';const bat=!e.x&&!e.w;if(e.w&&e.w!=='')k='wicket';else if(bat&&e.r===6)k='six';else if(bat&&e.r===4)k='four';
+   if(before&&before.id&&e.r>0){const a=(calc(m,m.cur).bat[before.id]||{}).r||0;if(before.r<100&&a>=100)k='hundred';else if(before.r<50&&a>=50&&k!=='six'&&k!=='four')k='fifty';else if(before.r<50&&a>=50)z.fxQ=1}
+   if(k){z.fx={k,at:Date.now(),who:before&&before.id?nm(before.id):''};if(k==='wicket'&&e.out)z.fx.who=nm(e.out)}}}catch(x){}
+  return r};
+ /* operator: position, size, safe margins, effects, preview then take, queue */
+ const v0=vStream;vStream=function(){let h=v0.apply(this,arguments);const z=Z(),on=(a,b)=>a===b?'':'ghost',m=ovMatch();
+  const sg=(k,v,l,cur)=>`<button type="button" class="btn sm ${on(cur,v)}" data-a="ovSet" data-k="${k}" data-v="${v}">${l}</button>`;
+  const pv=z.pv&&G2[z.pv]&&m?(()=>{let s=null;try{s=st(m)}catch(e){}let b='';try{b=G2[z.pv](m,s)}catch(e){}return `<div class="ovprev"><div class="ovroot ov" data-t="sh" data-pos="${z.pos||'c'}" data-size="${z.size||'m'}"><div class="ovgfx ovx">${b}</div></div></div>`})():'';
+  const card=`<div class="card" id="ovpack"><h3>Graphics pack</h3><div class="mu sm">Pick a graphic to preview it here first, then take it to air. Nothing reaches the overlay until you press Take.</div>
+   <div class="pick">${NEW.map(k=>`<button class="${z.pv===k?'on':''}" data-a="ovPv" data-v="${k}">${LB[k]}</button>`).join('')}</div>${pv}
+   <div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap"><button type="button" class="btn sm" data-a="ovTake">Take to air</button><button type="button" class="btn sm ghost" data-a="ovQueue">Add to queue</button><button type="button" class="btn sm ghost" data-a="ovNext">Next in queue (${(z.q||[]).length})</button><button type="button" class="btn sm ghost" data-a="gfx" data-v="">Hide</button></div>
+   <div class="mu sm" style="margin-top:8px">Position</div><div class="row" style="gap:6px">${sg('pos','l','Left',z.pos||'c')}${sg('pos','c','Centre',z.pos||'c')}${sg('pos','r','Right',z.pos||'c')}</div>
+   <div class="mu sm" style="margin-top:6px">Size</div><div class="row" style="gap:6px">${sg('size','s','Small',z.size||'m')}${sg('size','m','Medium',z.size||'m')}${sg('size','l','Large',z.size||'m')}</div>
+   <div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap"><button type="button" class="btn sm ${z.fxOn===false?'ghost':''}" data-a="ovFx">FOUR / SIX / WICKET / 50 / 100 effects: ${z.fxOn===false?'OFF':'ON'}</button><button type="button" class="btn sm ${z.safe?'':'ghost'}" data-a="ovSafe">Safe margins: ${z.safe?'ON':'OFF'}</button></div>
+   <div class="mu sm" style="margin-top:6px">Overlay output: transparent background, 1920x1080, works as an OBS or vMix browser source. Labels are English only for now.</div></div>`;
+  return h.replace(/<div class="g2"><div class="card"><h3>Broadcast message/,card+'<div class="g2"><div class="card"><h3>Broadcast message')};
+ const z0=()=>{const z=Z();z.q=z.q||[];return z};
+ const air=k=>{const z=z0();z.gfx=k;commit();if(k){setTimeout(()=>{if(Z().gfx===k){Z().gfx='';commit();if((Z().q||[]).length&&Z().qAuto){A.ovNext()}}},(z.auto||8)*1000)}};
+ Object.assign(A,{ovSet(d){const z=z0();z[d.k]=d.v;commit()},ovPv(d){z0().pv=d.v;render()},ovTake(){const z=z0();if(!z.pv)return toast('Pick a graphic to preview first');air(z.pv)},
+  ovQueue(){const z=z0();if(!z.pv)return toast('Pick a graphic first');z.q.push(z.pv);commit();toast('Added to queue ('+z.q.length+')')},ovNext(){const z=z0();if(!z.q.length)return toast('Queue is empty');air(z.q.shift())},
+  ovFx(){const z=z0();z.fxOn=z.fxOn===false;commit()},ovSafe(){const z=z0();z.safe=!z.safe;commit()}});
+ const st2=document.createElement('style');st2.textContent='.ovx{width:56cqw}.ovx .l{display:flex;justify-content:space-between;gap:2cqw}.ovroot[data-pos=l] .ovgfx{left:3cqw;transform:translateY(-50%)}.ovroot[data-pos=r] .ovgfx{left:auto;right:3cqw;transform:translateY(-50%)}.ovroot[data-size=s] .ovgfx{width:40cqw;font-size:2cqw}.ovroot[data-size=l] .ovgfx{width:70cqw;font-size:3.2cqw}.ovroot[data-safe="1"] .ovbug{left:5cqw;bottom:6cqw}.ovroot[data-safe="1"] .ovlogo{margin:3cqw}.ovfx{position:absolute;left:50%;top:3%;transform:translateX(-50%);background:var(--fxc,#e03131);color:#fff;padding:1.2cqw 5cqw;border-radius:1cqw;text-align:center;font-weight:900;box-shadow:0 1cqw 4cqw #0008;animation:ovfxin .35s cubic-bezier(.2,1.4,.4,1)}.ovfx b{display:block;font-size:6.5cqw;letter-spacing:.4cqw;line-height:1}.ovfx span{display:block;font-size:2.8cqw;margin-top:.6cqw}@keyframes ovfxin{from{transform:translateX(-50%) scale(.4);opacity:0}to{transform:translateX(-50%) scale(1);opacity:1}}.pick button.on{background:var(--ac,#e53946);color:#fff}@media(prefers-reduced-motion:reduce){.ovfx{animation:none}}';document.head.appendChild(st2);
+ if(location.hash==='#overlay')setTimeout(()=>{try{render()}catch(e){}},0);
+}
 </script>
 </body>
 </html>
