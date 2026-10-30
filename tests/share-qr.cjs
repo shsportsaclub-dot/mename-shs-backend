@@ -1,0 +1,20 @@
+const {chromium}=require('playwright');
+(async()=>{const b=await chromium.launch(),p=await b.newPage({viewport:{width:390,height:900}}),errs=[];p.on('pageerror',e=>errs.push(e.message));
+const ok=(c,m)=>{if(!c){console.log('FAIL',m);process.exitCode=1}};
+await p.goto('file://'+require('path').resolve(__dirname,'../app-index.html')+'?ground=g77');await p.waitForTimeout(400);
+const r=await p.evaluate(async()=>{window.apiBase=()=>'http://x';
+ window.fetch=async(u)=>({json:async()=>/grounds\/detail/.test(String(u))?{ok:true,item:{id:'g77',name:'Deep Link Ground',lat:1,lng:1,photos:0,rating:0,reviews:0},photos:[],reviews:[]}:{ok:false}});
+ UI.stage='app';S.user={name:'QA',role:'admin',kind:'Scorer'};S.prefs={...S.prefs,asked:1,welcomed:1};
+ S.players=Array.from({length:22},(_,i)=>({id:'p'+i,name:'P'+i,role:'BAT'}));
+ S.teams=[{id:'a',name:'India',short:'IND',players:S.players.slice(0,11).map(p=>p.id)},{id:'b',name:'Aus',short:'AUS',players:S.players.slice(11).map(p=>p.id)}];
+ const m=newMatch({a:'a',b:'b',overs:20,toss:'a',dec:'bat',xiA:S.teams[0].players,xiB:S.teams[1].players,venue:'x',date:'2026-10-30'});S.matches.push(m);startInnings(m,0,'p0','p1','p11');
+ const t={id:'tr1',name:'Cup',teams:['a','b'],fixtures:[],overs:20,kind:'tournament'};S.tours=[t];
+ render();await new Promise(r=>setTimeout(r,700));const o={};
+ o.groundDeep=UI.view==='gground'&&/Deep Link Ground/.test(document.body.innerText);
+ A.qrShare({k:'match',id:m.id});await new Promise(r=>setTimeout(r,200));o.qrCanvas=!!document.querySelector('#shQrBox canvas');o.link=document.getElementById('shQrLink').value;
+ UI.modal=null;renderModal();o.shareLink=shareText(m).includes('?match='+m.id);
+ UI.tid='tr1';UI.view='tour';UI.ttab='teams';UI.tf={q:''};render();o.tourBtn=!!document.querySelector('[data-a=qrShare][data-k=tour]');
+ return o});
+await p.screenshot({path:'/tmp/tour.png'});console.log(JSON.stringify(r));
+ok(r.groundDeep,'?ground= opens the ground');ok(r.qrCanvas&&/\?match=/.test(r.link),'match QR + link');ok(r.shareLink,'share text has the link');ok(r.tourBtn,'tournament QR button');
+ok(!errs.length,'errors '+errs);console.log(process.exitCode?'FAILED':'PASS share links + QR');await b.close()})()
