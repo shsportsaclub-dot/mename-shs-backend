@@ -25,7 +25,7 @@ const { chromium } = require('playwright');
   need(/SIX\. A Khan 10 \(5 balls\)/.test(s6), 'six: wide is not a ball faced');
   need(/OUT! A Khan c C Lee b J Smith\. A Khan made 10 \(5 balls\)\. Score 12\/1\. J Smith has 1 wicket\./.test(w), 'wicket line from recorded facts: ' + w);
   need(/1 bye\./.test(bye), 'bye');
-  need(r.rows.some(t => /^Y Two to H Jones, 1 run\. H Jones 1 \(1 ball\)\.$/.test(t)), 'inning 2 has its own state: ' + r.rows.join(' | '));
+  need(r.rows.some(t => /^Y Two to H Jones, 1 run\. H Jones 1 \(1 ball\)\./.test(t)), 'inning 2 has its own state: ' + r.rows.join(' | '));
   need(r.rows.some(t => /OUT! G Harris lbw b X One\. G Harris made 4 \(2 balls\)\. Score 4\/1/.test(t)), 'lbw: ' + r.rows.join(' | '));
   need(r.rows.includes('Provider says hello'), 'provider text kept');
   const bad = [...r.L, ...r.rows].filter(t => /covers|midwicket|gate|plumb|beaten|lofted|driven|glanced|launched/i.test(t));

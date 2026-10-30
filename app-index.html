@@ -520,15 +520,53 @@ function engDism(k,bowl,fld){
   if(k==='run out')return 'run out'+(fld?' ('+fld+')':'');
   if(k==='hit wicket')return 'hit wicket b '+bowl;
   return (k&&k!=='out')?k:(fld?'out ('+fld+' fielding)':'out')}
+/* Commentary voice: warm, plain-spoken and context-aware (story, pressure, milestones), like a good broadcaster. It is written ONLY from recorded facts:
+   runs, extras, wickets, how many balls/fours/sixes/dots so far. It never invents shot type, direction, catch position, pace or delivery type. Wording is picked by ball number, so a replay always reads the same. */
+const engOrd=n=>n+(['th','st','nd','rd'][(n%100>10&&n%100<14)?0:Math.min(n%10,4)>3?0:n%10]||'th');
+const engPick=(st,a,k)=>a[((st.n||0)*3+(k||0))%a.length];
+function engVoice(n,st,B,pre,dots0){
+  const bat=n.bat||'The batter',P=a=>' '+engPick(st,a,String(bat).length);
+  if(n.x==='wd')return P(['Strays down the leg or off side, a free run for the batting side.'.replace('down the leg or off side, ',''),'Too wide, and the batting side take the extra.','Loose from '+n.bowl+', and it costs.']);
+  if(n.x==='nb')return P(['Overstepped. Another ball to bowl.','A no ball: an extra delivery and an extra run.']);
+  if(n.x==='b'||n.x==='lb')return P(['Every run counts; the extras add up.','They sneak it through for extras.']);
+  if(n.tot===0){
+    if(st.dots>=5)return ' Real pressure on '+bat+' now.';
+    if(st.dots>=3)return ' '+n.bowl+' is squeezing '+bat+'.';
+    return P(['A quiet delivery.','Nothing to score from that one.','Tidy work from '+n.bowl+'.']);
+  }
+  let v='';
+  if(n.brun>0&&pre===0&&B.b===1)v+=' '+bat+' is off the mark.';
+  else if(n.brun>0&&pre===0)v+=' '+bat+' gets going at last.';
+  if(n.brun===4){const c=B.f4||1;v+=c===1?P(['Finds the rope.','The first boundary comes.','Four more to the total.']):' That is '+(c===2?'a second':'the '+engOrd(c))+' four for '+bat+'.'}
+  else if(n.brun===6){const c=B.f6||1;v+=c===1?P(['Over the rope!','Clears the boundary.','Six! A big moment.']):' '+bat+' has '+c+' sixes now.'}
+  else if(n.brun===2)v+=P(['Good running for two.','Pushes hard and gets two.']);
+  else if(n.brun===3)v+=' Three! Excellent running between the wickets.';
+  else if(n.brun===1)v+=P(['Works it for a single.','Keeps the scoreboard moving.','A single, and the strike changes.']);
+  if(dots0>=3&&n.brun>0)v+=' That breaks the pressure after '+dots0+' dots.';
+  if(B.b>=12&&n.brun>0){const sr=B.r*100/B.b;if(sr>=150)v+=' '+bat+' is moving along at a strike rate of '+Math.round(sr)+'.'}
+  return v}
+function engVoiceW(n,st,O,Bw,cred){
+  const out=n.wk.out,r=O?O.r:0,b=O?O.b:0;let v='';
+  if(b>0&&r===0)v+=' '+out+' goes for a duck.';
+  else if(r>=100)v+=' A magnificent innings of '+r+' ends.';
+  else if(r>=50)v+=' A fine innings of '+r+' comes to an end.';
+  else if(r>=20)v+=' '+out+' had made a start, and it ends here.';
+  else v+=' '+engPick(st,[out+' has to walk back.','That is a big moment in this game.','The batting side lose another.'],String(out).length);
+  v+=st.wk===1?' The first wicket falls.':' That is the '+engOrd(st.wk)+' wicket down.';
+  if(cred&&Bw.w===2)v+=' '+n.bowl+' now has two.';
+  if(cred&&Bw.w===3)v+=' A three-wicket haul for '+n.bowl+'.';
+  if(cred&&Bw.w>=5)v+=' A five-wicket haul for '+n.bowl+'!';
+  return v}
 /* n = {bat,bowl,brun (runs off the bat),tot (all runs on the ball),x:''|'wd'|'nb'|'b'|'lb',wk:null|{out,kind,fld}}; st = running state from engNew(), or null for a plain line */
 function engText(n,st){
   const head=n.bat?n.bowl+' to '+n.bat:n.bowl;let B=null,Bw=null,pre=0;
-  if(st){B=st.bs[n.bat||'?']=st.bs[n.bat||'?']||{r:0,b:0};Bw=st.bw[n.bowl]=st.bw[n.bowl]||{w:0};pre=B.r;B.r+=n.brun;if(n.x!=='wd')B.b++;st.tot+=n.tot}
+  let dots0=0;
+  if(st){B=st.bs[n.bat||'?']=st.bs[n.bat||'?']||{r:0,b:0};Bw=st.bw[n.bowl]=st.bw[n.bowl]||{w:0};dots0=st.dots;st.n=(st.n||0)+1;pre=B.r;B.r+=n.brun;if(n.x!=='wd')B.b++;if(!n.x||n.x==='nb'){if(n.brun===4)B.f4=(B.f4||0)+1;if(n.brun===6)B.f6=(B.f6||0)+1}st.tot+=n.tot}
   if(n.wk){
     const k=String(n.wk.kind||'').toLowerCase().replace(/\s+/g,' '),cred=ENG_CRED.includes(k);
     if(st){st.wk++;st.dots=0;if(cred)Bw.w++}
     const O=st?st.bs[n.wk.out]:null;
-    return `${head}, OUT! ${n.wk.out} ${engDism(k,n.bowl,n.wk.fld)}.`+(O&&O.b?` ${n.wk.out} made ${O.r} (${engPl(O.b,'ball')}).`:'')+(st?` Score ${st.tot}/${st.wk}.`:'')+(st&&cred?` ${n.bowl} has ${engPl(Bw.w,'wicket')}.`:'')}
+    return `${head}, OUT! ${n.wk.out} ${engDism(k,n.bowl,n.wk.fld)}.`+(O&&O.b?` ${n.wk.out} made ${O.r} (${engPl(O.b,'ball')}).`:'')+(st?` Score ${st.tot}/${st.wk}.`:'')+(st&&cred?` ${n.bowl} has ${engPl(Bw.w,'wicket')}.`:'')+(st?engVoiceW(n,st,O,Bw,cred):'')}
   let t;
   if(n.x==='wd')t=`${head}, wide${n.tot>1?', '+engPl(n.tot,'run')+' in all':''}.`;
   else if(n.x==='nb')t=`${head}, no ball${n.brun?', '+engPl(n.brun,'run')+' off the bat':''}.`;
@@ -541,7 +579,8 @@ function engText(n,st){
   if(st){
     if(n.x!=='wd'&&n.x!=='b'&&n.x!=='lb'&&n.brun>0){t+=` ${n.bat} ${B.r} (${engPl(B.b,'ball')}).`;
       for(const th of [50,100,150,200,250,300])if(pre<th&&B.r>=th)t+=` ${n.bat} reaches ${th===50?'a fifty':th===100?'a hundred':th}!`}
-    if(n.tot===0){st.dots++;if(st.dots>=3)t+=` ${st.dots} dot balls in a row.`}else st.dots=0}
+    if(n.tot===0){st.dots++;if(st.dots>=3)t+=` ${st.dots} dot balls in a row.`}else st.dots=0;
+    t+=engVoice(n,st,B,pre,dots0)}
   return t}
 function cNorm(e){return {bat:sh(e.bt),bowl:sh(e.bl),brun:(!e.x||e.x==='nb')?e.r:0,tot:e.r+(e.x==='wd'?1:e.x==='nb'?NBP:0),x:e.x||'',wk:e.w?{out:sh(e.out),kind:e.w,fld:e.fld}:null}}
 function cText(e){return engText(cNorm(e),null)}
@@ -3420,7 +3459,7 @@ function dlsTerminate(m){const A=T(m.innings[m.cur].bat),mn=dlsMin(m);
 Object.assign(A,{rainOpen(d){const m=S.matches.find(x=>x.id===d.id);if(!m||m.status!=='live')return;const inn=m.innings[m.cur],left=Math.max(0,(mxi(m,m.cur)-inn.lg)/(m.bpo||6));
   UI.modal={t:'html',html:`<h3>Rain / interruption</h3><form data-f="rain" data-id="${m.id}"><div class="mu sm" style="margin-bottom:8px">Now: ${calc(m,m.cur).runs}/${calc(m,m.cur).wk}, ${ovTxt2(left)} overs left. The ICC result rules apply: a result needs at least ${dlsMin(m)||'the full'} overs for each side unless a team is all out or the chase is complete.</div><label>Overs lost<input name="lost" placeholder="e.g. 5 (blank if none)"></label><label class="ck"><input type="checkbox" name="end"> Play cannot resume: decide the match now</label><button class="btn wide">Save</button></form>`};renderModal()}});
 Object.assign(F,{rain(fd,el){const m=S.matches.find(x=>x.id===(el&&el.dataset?el.dataset.id:UI.sid));if(!m)return;const inn=m.innings[m.cur],k=calc(m,m.cur),lost=dlsOv(fd.get('lost'));
-  if(lost>0)(m.ints=m.ints||[]).push({inn:m.cur,left:Math.max(0,(mxi(m,m.cur)-inn.lg)/(m.bpo||6)),wk:k.wk,lost});
+  if(lost>0&&!fd.get('end'))(m.ints=m.ints||[]).push({inn:m.cur,left:Math.max(0,(mxi(m,m.cur)-inn.lg)/(m.bpo||6)),wk:k.wk,lost});
   UI.modal=null;if(fd.get('end')){dlsTerminate(m);commit();toast(m.result,5000)}else{commit();toast('Interruption saved. Open the DLS tab to get the revised target.',4500)}}});
 /* ---------------- OTHER SPORT SCORERS: FOOTBALL (IFAB laws) AND TENNIS (ITF rules) ---------------- */
 S.sg=S.sg||[];UI.sg=UI.sg||{};
@@ -9678,7 +9717,7 @@ function shMatchWorkspace(m,mode){
   if(lw)P.push(`<span>Last wkt ${esc(nm(lw.id))} · ${lw.r}/${lw.w} (${lw.ov})</span>`);
   return `<div class="sh-sst">${P.join('')}</div>`};
  const tools=m=>{const inn=m.innings[m.cur],redo=(UI.redo[m.id]||[]).length,bowlers=(m.xi[inn.bowl]||[]).filter(id=>id!==inn.cur.bl).map(id=>[id,nm(id)]),bats=avail(m).map(id=>[id,nm(id)]);
-  return `<details class="card sh-tools"><summary>Scorer tools</summary><div class="tg"><button class="btn ghost sm" data-a="shRedo" ${redo?'':'disabled'}>Redo${redo?' ('+redo+')':''}</button><button class="btn ghost sm" data-a="shDead">Dead ball</button><button class="btn ghost sm" data-a="shShort">Short run</button>${m.paused?'<button class="btn sm" data-a="shResume">Resume match</button>':'<button class="btn ghost sm" data-a="shPause">Pause match</button>'}</div>
+  return `<details class="card sh-tools"><summary>Scorer tools</summary><div class="tg"><button class="btn ghost sm" data-a="shRedo" ${redo?'':'disabled'}>Redo${redo?' ('+redo+')':''}</button><button class="btn ghost sm" data-a="shDead">Dead ball</button><button class="btn ghost sm" data-a="shShort">Short run</button>${m.paused?'<button class="btn sm" data-a="shResume">Resume match</button>':'<button class="btn ghost sm" data-a="shPause">Pause match</button>'}<button class="btn ghost sm" data-a="rainOpen" data-id="${m.id}">Rain / DLS result</button><button class="btn ghost sm" data-a="go" data-v="dlstool">DLS calculator</button></div>
   <form data-f="shSeven"><label style="flex:1">Runs off the bat, 7 or more<input name="r" type="number" min="7" max="36" value="7" inputmode="numeric"></label><button class="btn sm">Add runs</button></form>
   ${bowlers.length?`<form data-f="shBowler"><label style="flex:1">Replace bowler<select name="id">${opt(bowlers,'')}</select></label><button class="btn sm ghost">Replace</button></form>`:''}
   ${bats.length?`<form data-f="shBatter"><label style="flex:1">Change batter<select name="w"><option value="s">Striker</option><option value="n">Non-striker</option></select></label><label style="flex:1">New batter<select name="id">${opt(bats,'')}</select></label><button class="btn sm ghost">Change</button></form>`:''}
