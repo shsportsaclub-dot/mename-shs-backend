@@ -1043,6 +1043,58 @@ routes['PUT /api/desk'] = async (req, body) => {
   if (!item.s && !item.n && !item.bw) return [400, { ok: false, error: 'Enter at least one batter or the bowler' }];
   (db.shared.desk = db.shared.desk || {})[id] = item; saveDb(); return [200, { ok: true, item }];
 };
+// Ground registry: GPS-registered grounds. No two grounds within 200 m of each other; an owner can claim, rename and read the match records of their ground.
+const GR_NEAR = 200;
+const grKm = (a, b, c, d) => { const R = 6371000, r = x => x * Math.PI / 180, dl = r(c - a), dg = r(d - b), h = Math.sin(dl / 2) ** 2 + Math.cos(r(a)) * Math.cos(r(c)) * Math.sin(dg / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(h)); };   // metres
+const grBag = () => (db.shared.grounds = db.shared.grounds || {});
+const grPub = (g, d) => ({ id: g.id, name: g.name, lat: g.lat, lng: g.lng, owned: !!g.owner, owner: g.ownerName || '', by: g.byName || '', matches: (g.recs || []).length, dist: d == null ? undefined : Math.round(d) });
+const grNm = v => String(v || '').replace(/[<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, 60);
+const grUser = req => { const phone = readSession((req.headers.authorization || '').replace(/^Bearer /, '')), u = phone && db.users[phone]; if (u) promote(u, phone); return u ? { phone, u } : null; };
+const grLL = b => { const lat = +b.lat, lng = +b.lng; return Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180 && !(lat === 0 && lng === 0) ? { lat: +lat.toFixed(6), lng: +lng.toFixed(6) } : null; };
+routes['GET /api/grounds'] = async (req, body) => {
+  const p = grLL(body), all = Object.values(grBag());
+  if (!p) return [200, { ok: true, items: all.slice(-30).reverse().map(g => grPub(g)) }];
+  const r = Math.min(Math.max(+body.r || 5000, 50), 50000);
+  const items = all.map(g => [g, grKm(p.lat, p.lng, g.lat, g.lng)]).filter(x => x[1] <= r).sort((a, b) => a[1] - b[1]).slice(0, 30).map(x => grPub(x[0], x[1]));
+  return [200, { ok: true, items, within: items.filter(x => x.dist <= GR_NEAR).length }];
+};
+routes['POST /api/grounds'] = async (req, body) => {
+  const s = grUser(req); if (!s) return [401, { ok: false, error: 'Please sign in first' }];
+  if (limited('gr:' + s.phone, 20, 36e5)) return [429, { ok: false, error: 'Too many requests, slow down' }];
+  const name = grNm(body.name), p = grLL(body); if (name.length < 3) return [400, { ok: false, error: 'Enter the ground name (3+ letters)' }]; if (!p) return [400, { ok: false, error: 'Location is needed: allow GPS and try again' }];
+  const clash = Object.values(grBag()).map(g => [g, grKm(p.lat, p.lng, g.lat, g.lng)]).filter(x => x[1] <= GR_NEAR).sort((a, b) => a[1] - b[1])[0];
+  if (clash) return [409, { ok: false, error: 'A ground is already registered within 200 m: ' + clash[0].name, existing: grPub(clash[0], clash[1]) }];
+  const id = 'g' + crypto.randomBytes(5).toString('hex'), g = { id, name, lat: p.lat, lng: p.lng, by: s.phone, byName: String(s.u.nick || s.u.name || '').slice(0, 30), t: Date.now(), owner: body.owner ? s.phone : '', ownerName: body.owner ? String(s.u.nick || s.u.name || '').slice(0, 30) : '', recs: [] };
+  grBag()[id] = g; saveDb(); return [200, { ok: true, item: grPub(g, 0) }];
+};
+routes['POST /api/grounds/claim'] = async (req, body) => {
+  const s = grUser(req); if (!s) return [401, { ok: false, error: 'Please sign in first' }];
+  const g = grBag()[String(body.id || '')]; if (!g) return [404, { ok: false, error: 'Ground not found' }];
+  if (g.owner && g.owner !== s.phone && s.u.role !== 'admin') return [409, { ok: false, error: 'This ground already has an owner' }];
+  g.owner = s.phone; g.ownerName = String(s.u.nick || s.u.name || '').slice(0, 30); saveDb(); return [200, { ok: true, item: grPub(g) }];
+};
+routes['PUT /api/grounds'] = async (req, body) => {   // owner (or admin) renames the ground
+  const s = grUser(req); if (!s) return [401, { ok: false, error: 'Please sign in first' }];
+  const g = grBag()[String(body.id || '')]; if (!g) return [404, { ok: false, error: 'Ground not found' }];
+  if (g.owner !== s.phone && s.u.role !== 'admin') return [403, { ok: false, error: 'Only the ground owner can change this' }];
+  const name = grNm(body.name); if (name.length < 3) return [400, { ok: false, error: 'Enter the ground name (3+ letters)' }];
+  if (Object.values(grBag()).some(o => o.id !== g.id && o.name.toLowerCase() === name.toLowerCase() && grKm(o.lat, o.lng, g.lat, g.lng) <= GR_NEAR)) return [409, { ok: false, error: 'Another ground with this name is within 200 m' }];
+  g.name = name; saveDb(); return [200, { ok: true, item: grPub(g) }];
+};
+routes['POST /api/grounds/record'] = async (req, body) => {   // a scorer's match played at this ground; the owner reads these
+  const s = grUser(req); if (!s) return [401, { ok: false, error: 'Please sign in first' }];
+  const g = grBag()[String(body.id || '')]; if (!g) return [404, { ok: false, error: 'Ground not found' }];
+  const r = body.rec || {}, mid = String(r.mid || '').replace(/[^\w-]/g, '').slice(0, 40); if (!mid) return [400, { ok: false, error: 'Bad match' }];
+  const rec = { mid, a: grNm(r.a), b: grNm(r.b), overs: Math.max(0, Math.min(100, Math.floor(+r.overs) || 0)), date: String(r.date || '').slice(0, 10), status: ['live', 'done', 'setup', 'break'].includes(r.status) ? r.status : 'live', result: grNm(r.result).slice(0, 120), score: grNm(r.score).slice(0, 60), by: s.phone, t: Date.now() };
+  g.recs = g.recs || []; const i = g.recs.findIndex(x => x.mid === mid); if (i >= 0) { if (g.recs[i].by !== s.phone && s.u.role !== 'admin') return [403, { ok: false, error: 'Not your match' }]; g.recs[i] = rec; } else { if (g.recs.length >= 2000) g.recs.shift(); g.recs.push(rec); }
+  saveDb(); return [200, { ok: true }];
+};
+routes['GET /api/grounds/records'] = async (req, body) => {
+  const s = grUser(req); if (!s) return [401, { ok: false, error: 'Please sign in first' }];
+  const g = grBag()[String(body.id || '')]; if (!g) return [404, { ok: false, error: 'Ground not found' }];
+  if (g.owner !== s.phone && s.u.role !== 'admin') return [403, { ok: false, error: 'Only the ground owner can read the records' }];
+  return [200, { ok: true, name: g.name, items: (g.recs || []).slice().reverse().map(x => ({ mid: x.mid, a: x.a, b: x.b, overs: x.overs, date: x.date, status: x.status, result: x.result, score: x.score })) }];
+};
 routes['GET /api/find-match'] = async (req) => {   // what does the provider actually list? e.g. /api/find-match?q=india
   const q = String(new URL(req.url, 'http://x').searchParams.get('q') || '').toLowerCase().slice(0, 40);
   let d = null; try { d = await cdLive(); } catch (e) { return [200, { ok: false, error: e.message }]; }
