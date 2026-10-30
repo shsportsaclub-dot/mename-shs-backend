@@ -9405,7 +9405,7 @@ window.shXIOf=(mine)=>{const c=mine.filter(p=>p.confirmed);if(c.length)return {x
     ['Economy',ew.eco?f2(num(ew.eco)):f2(eco(ev('runs'),eBalls)),f2(eco(s.runs,s.balls)),f2(eco(T.runs,tb))],['Average',ew.avg?f2(num(ew.avg)):f2(avg(ev('runs'),ev('wkts'))),f2(avg(s.runs,s.w)),f2(avg(T.runs,T.w))],['Strike Rate',ew.sr?f2(num(ew.sr)):f2(srr(eBalls,ev('wkts'))),f2(srr(s.balls,s.w)),f2(srr(tb,T.w))],['5W',I(ew.w5),I(s.w5),I(T.w5)]]}
   return rows}
  // Career table: Overall first, then one column per tournament (like the format columns of the reference, with tournaments in place of IPL). Swipe sideways for more.
- const FMTS=['Test','Academic','ODI','T20','T10','The 100','Super 6'];
+ const FMTS=['Academic','Test','ODI','T20','T10','The 100','Super 6'];
  // Format: Academic = academy matches; else by match length (or an explicit m.fmt): unlimited = Test, 21-50 ov = ODI, 11-20 = T20, 7-10 = T10, up to 6 = Super 6.
  const fmtOfM=m=>m.fmt&&FMTS.includes(m.fmt)?m.fmt:((t=>t&&/academ/i.test(t.name||''))(m.tid&&trObj(m.tid)))?'Academic':(m.overs>=900?'Test':m.overs<=6?'Super 6':m.overs<=10?'T10':m.overs<=20?'T20':'ODI');
  function careerTable(p,st,all,ttl){const bat=st==='bat',base=careerRows(p,st,all),hasE=!!p.earlier,G=all.length?ppRecords(p):[];
