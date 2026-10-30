@@ -314,7 +314,7 @@ details.card summary{cursor:pointer;color:var(--ac2)}</style>
 .cbb{width:36px;height:36px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:14px}.cbb.dot{background:#9a9a9a}.cbb.run{background:#3fa745}.cbb.four{background:#2196f3}.cbb.six{background:#9b27b0}.cbb.w{background:#d9232d}.cbb.x{background:#ffc107;color:#111}
 .cbact{padding:12px 4px;border-bottom:1px solid #eee}.cbact .mu{margin-top:4px;color:#666}</style>
 <style>.cbzchips{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 10px;margin:0 -2px}.cbzchips button{flex:none;display:flex;align-items:center;gap:8px;background:var(--c2);border:1px solid var(--bd);color:var(--tx);border-radius:10px;padding:12px 16px;font-weight:600;white-space:nowrap}</style>
-</head>
+<style id="qs-steps-css">.qs-steps{display:flex;gap:6px;margin:6px 0 10px}.qs-steps span{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:6px 2px;border-radius:18px;border:1px solid var(--bd);font-size:11px;color:var(--mu)}.qs-steps span b{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;background:var(--bd);color:var(--fg);font-size:10px}.qs-steps span.on{border-color:var(--ac);color:var(--fg)}.qs-steps span.on b{background:var(--ac);color:#000}.qs-steps span.done b{background:#22a559;color:#fff}</style></head>
 <body>
 <div id="app"></div><div id="modal"></div><div id="toast"></div>
 <script>
@@ -9908,29 +9908,37 @@ try{if(S.settings&&S.settings.mskin==='ca'){S.settings.mskin='cb';try{save()}cat
    <details ${q.pl[tid]||xi.length<2?'open':''} data-qsd="${tid}"><summary class="mu sm" style="cursor:pointer">${xi.length<2?'Add at least 2 players':'Change players'}</summary>
    ${t.players.map(id=>`<label class="ck"><input type="checkbox" data-c="qsxi" data-t="${tid}" value="${id}" ${xi.includes(id)?'checked':''}> ${esc(nm(id))}${(P(id)||{}).unv?' <span class="pill" title="Added by mobile number; verified when this person registers with the same number">Unverified</span>':''}</label>`).join('')}
    ${window.shQsPlayerBox?window.shQsPlayerBox(tid):`<div class="row" style="margin-top:6px"><input id="qs-pn-${tid}" placeholder="New player name" style="flex:1" maxlength="30"><button type="button" class="btn sm" data-a="qsPlayer" data-t="${tid}">Add</button></div>`}</details></div>`};
-  return `<h3>Start a match</h3>
-  ${window.shQsTeams?window.shQsTeams():''}
-  <div class="b" style="margin:8px 0 4px">Overs</div><div class="row" style="flex-wrap:wrap;gap:6px">${QO.map(([v,l])=>chip('overs',v,l,String(q.overs)===v)).join('')}</div>
+  const ok2=q.a&&q.b&&q.a!==q.b,stp=q.step||0,STEPS=['Teams','Players','Match','Toss'];
+  const head=`<h3>Start a match</h3><div class="qs-steps">${STEPS.map((n,i)=>`<span class="${i===stp?'on':i<stp?'done':''}"><b>${i<stp?'✓':i+1}</b>${n}</span>`).join('')}</div>`;
+  const nav=`<div class="row" style="margin-top:14px;gap:8px">${stp>0?'<button type="button" class="btn ghost" data-a="qsStep" data-v="-1">Back</button>':''}<div class="grow"></div>${stp<3?'<button type="button" class="btn" data-a="qsStep" data-v="1">Next</button>':'<button type="button" class="btn" data-a="qsStart">Start match</button>'}</div>`;
+  const body=[
+   `${window.shQsTeams?window.shQsTeams():''}`,
+   ok2?pl(q.a)+pl(q.b):'<div class="need">Pick both teams first.</div>',
+   `<div class="b" style="margin:8px 0 4px">Overs</div><div class="row" style="flex-wrap:wrap;gap:6px">${QO.map(([v,l])=>chip('overs',v,l,String(q.overs)===v)).join('')}</div>
   <div class="b" style="margin:10px 0 4px">Ball</div><div class="row" style="gap:6px">${chip('ball','leather','Leather',q.ball==='leather')}${chip('ball','tennis','Tennis ball',q.ball==='tennis')}</div>
   <div class="b" style="margin:10px 0 4px">Pitch (optional)</div><div class="row" style="flex-wrap:wrap;gap:6px">${['Turf','Matting','Cement','Astro turf'].map(x=>chip('pitchType',x,x,q.pitchType===x)).join('')}</div>
-  <label style="margin-top:10px">Ground / venue<input name="venue" id="qs-venue" list="qs-vl" value="${esc(q.venue)}" placeholder="Ground name" maxlength="60" autocomplete="off"><datalist id="qs-vl">${rec.map(n=>`<option value="${esc(n)}">`).join('')}</datalist></label>${window.shQsGround?window.shQsGround():''}
-  ${q.a&&q.b&&q.a!==q.b?pl(q.a)+pl(q.b):''}
-  <div class="b" style="margin:8px 0 4px">Toss won by</div>${q.a&&q.b&&q.a!==q.b?`<div class="row" style="gap:6px">${chip('toss',q.a,T(q.a)?T(q.a).name:'',q.toss===q.a)}${chip('toss',q.b,T(q.b)?T(q.b).name:'',q.toss===q.b)}</div>`:'<div class="mu sm">Choose both teams first</div>'}
+  <label style="margin-top:10px">Ground / venue<input name="venue" id="qs-venue" list="qs-vl" value="${esc(q.venue)}" placeholder="Ground name" maxlength="60" autocomplete="off"><datalist id="qs-vl">${rec.map(n=>`<option value="${esc(n)}">`).join('')}</datalist></label>${window.shQsGround?window.shQsGround():''}`,
+   `<div class="b" style="margin:8px 0 4px">Toss won by</div>${ok2?`<div class="row" style="gap:6px">${chip('toss',q.a,T(q.a)?T(q.a).name:'',q.toss===q.a)}${chip('toss',q.b,T(q.b)?T(q.b).name:'',q.toss===q.b)}</div>`:'<div class="mu sm">Choose both teams first</div>'}
   <div class="b" style="margin:8px 0 4px">Chose to</div><div class="row" style="gap:6px">${chip('dec','bat','Bat',q.dec==='bat')}${chip('dec','bowl','Bowl',q.dec==='bowl')}</div>
   <details ${q.more?'open':''} style="margin-top:10px" data-qsm="1"><summary class="mu sm" style="cursor:pointer">More options (optional)</summary>
    <label>Match name<input id="qs-name" value="${esc(q.name)}" placeholder="e.g. Sunday friendly" maxlength="50"></label>
    <div class="row"><label style="flex:1">Category<select data-c="qs" name="gender">${opt([['men','Men'],['women','Women'],['mixed','Mixed']],q.gender)}</select></label><label style="flex:1">Scorer<input id="qs-sc" value="${esc(q.sc)}" maxlength="40"></label></div>
    <div class="row"><label style="flex:1">Umpire 1<input id="qs-u1" value="${esc(q.u1)}" maxlength="40"></label><label style="flex:1">Umpire 2<input id="qs-u2" value="${esc(q.u2)}" maxlength="40"></label></div>
-   <div class="mu sm">Officials, broadcast and more can be changed later from Scorer tools. <a href="#" data-a="newMatchAdv">Advanced setup (all steps)</a></div></details>
-  <button type="button" class="btn wide" style="margin-top:12px" data-a="qsStart">Start match</button>`}
+   <div class="mu sm">Officials, broadcast and more can be changed later from Scorer tools. <a href="#" data-a="newMatchAdv">Advanced setup (all steps)</a></div></details>`][stp];
+  return head+body+nav}
  const qsShow=()=>{UI.modal={t:'html',html:qsHTML()};renderModal()};
  window.shQsShow=qsShow;window.shQsT=()=>UI.qs;
  const qsRead=()=>{const q=UI.qs,g=id=>{const e=document.getElementById(id);return e?String(e.value||'').replace(/\s+/g,' ').trim():null};
   const v=g('qs-venue');if(v!=null)q.venue=v;const n=g('qs-name');if(n!=null)q.name=n;['sc','u1','u2'].forEach(k=>{const x=g('qs-'+k);if(x!=null)q[k]=x});const d=document.querySelector('[data-qsm]');if(d)q.more=d.open};
  window.shQsRead=()=>{qsRead();const q=UI.qs,g=UI.qg;if(q&&q.gid&&g&&g.sel&&q.venue!==g.sel.name){q.gid='';g.sel=null}};
  const A0=A.newMatch;A.newMatchAdv=function(d,el,e){if(e&&e.preventDefault)e.preventDefault();return A0.apply(this,arguments)};
- A.newMatch=function(){if(!can())return toast('Only Admin or Scorer accounts can start matches');UI.qs=qnew();if(UI.qs.a&&UI.qs.toss!==UI.qs.a&&UI.qs.toss!==UI.qs.b)UI.qs.toss=UI.qs.a;qsShow()};
+ A.newMatch=function(){if(!can())return toast('Only Admin or Scorer accounts can start matches');UI.qs=qnew();UI.qs.step=0;if(UI.qs.a&&UI.qs.toss!==UI.qs.a&&UI.qs.toss!==UI.qs.b)UI.qs.toss=UI.qs.a;qsShow()};
  A.qsSet=function(d){qsRead();UI.qs[d.k]=d.v;qsShow()};
+ A.qsStep=function(d){qsRead();if(window.shQsRead)window.shQsRead();const q=UI.qs,st=q.step||0,go=+d.v;
+  if(go>0){if(st===0&&(!q.a||!q.b||q.a===q.b))return toast('Pick two different teams. Create a team with its name, or choose a saved one.');
+   if(st===1&&(xiOf(q,q.a).length<2||xiOf(q,q.b).length<2))return toast('Each team needs at least 2 players');
+   if(st===2&&q.venue.length<2)return toast('Enter the ground name')}
+  q.step=Math.max(0,Math.min(3,st+go));qsShow();const m=document.querySelector('.modal,#modal');if(m&&m.scrollTo)m.scrollTo(0,0)};
  A.qsTeam=function(){const el=document.getElementById('qs-tn'),n=String((el&&el.value)||'').replace(/\s+/g,' ').trim();if(n.length<2)return toast('Enter the team name');if(S.teams.some(t=>t.name.toLowerCase()===n.toLowerCase()))return toast('That team is already registered');
   qsRead();const t={id:uid(),name:n,short:(typeof shTeamCode==='function'?shTeamCode(n,''):n.slice(0,3)).toString().toUpperCase().slice(0,4),color:'#1d4ed8',preset:null,logo:null,players:[]};S.teams.push(t);const q=UI.qs;if(!q.a||q.a===q.b)q.a=t.id;else q.b=t.id;if(q.toss!==q.a&&q.toss!==q.b)q.toss=q.a;save();qsShow();toast('Team added')};
  A.qsPlayer=function(d){const el=document.getElementById('qs-pn-'+d.t),n=String((el&&el.value)||'').replace(/\s+/g,' ').trim();if(n.length<2)return toast('Enter the player name');qsRead();
@@ -10243,9 +10251,7 @@ try{if(S.settings&&S.settings.mskin==='ca'){S.settings.mskin='cb';try{save()}cat
     <div id="qt-sr-${s}"></div>
     ${ex.length?`<div class="qt-chips"><span class="mu sm">Saved:</span>${ex.map(x=>`<button type="button" class="btn sm ghost" data-a="qtUse" data-s="${s}" data-v="${x.id}">${esc(x.name)}</button>`).join('')}</div>`:''}
     <div class="qt-styles">${[0,1,2,3,4,5].map(i=>`<button type="button" class="${d.preset===i&&!d.logo?'on':''}" data-a="qtPreset" data-s="${s}" data-v="${i}" aria-label="Logo style ${i+1}">${crest(i,d.color,sh,26)}</button>`).join('')}<label class="qt-up">Upload logo<input type="file" accept="image/*" data-c="qtLogo" data-s="${s}" style="display:none"></label></div>
-    <div class="qt-grid"><label>City<input id="qt-t-${s}" value="${esc(d.city||'')}" maxlength="40" placeholder="e.g. Hyderabad"></label><label>Short name<input id="qt-s-${s}" value="${esc(d.short)}" placeholder="${esc(sh)}" maxlength="4"></label><label>Colour<input id="qt-c-${s}" type="color" value="${esc(d.color)}"></label></div>
-    <div class="mu sm" style="margin-top:4px">Short name = 2 to 4 letters of your team shown on the scoreboard (like IND, AUS, HYH). Leave it empty to make it from the team name.</div>
-    <details class="qt-more"><summary class="mu sm">More team details (level, country, state)</summary><div class="qt-grid2"><label>Level<select id="qt-l-${s}">${LEVELS.map(([v,l])=>`<option value="${v}" ${d.level===v?'selected':''}>${l}</option>`).join('')}</select></label><label>Country<select id="qt-k-${s}"><option value="">-</option>${Object.keys(STATES).map(c=>`<option ${d.country===c?'selected':''}>${c}</option>`).join('')}</select></label><label style="grid-column:1/-1">State / region<input id="qt-p-${s}" value="${esc(d.state||'')}" maxlength="40" placeholder="e.g. Telangana"></label></div></details>
+    <details class="qt-more"><summary class="mu sm">More team details (city, short name, colour, level, country)</summary>    <div class="qt-grid"><label>City<input id="qt-t-${s}" value="${esc(d.city||'')}" maxlength="40" placeholder="e.g. Hyderabad"></label><label>Short name<input id="qt-s-${s}" value="${esc(d.short)}" placeholder="${esc(sh)}" maxlength="4"></label><label>Colour<input id="qt-c-${s}" type="color" value="${esc(d.color)}"></label></div>    <div class="mu sm" style="margin-top:4px">Short name = 2 to 4 letters of your team shown on the scoreboard (like IND, AUS, HYH). Leave it empty to make it from the team name.</div><div class="qt-grid2"><label>Level<select id="qt-l-${s}">${LEVELS.map(([v,l])=>`<option value="${v}" ${d.level===v?'selected':''}>${l}</option>`).join('')}</select></label><label>Country<select id="qt-k-${s}"><option value="">-</option>${Object.keys(STATES).map(c=>`<option ${d.country===c?'selected':''}>${c}</option>`).join('')}</select></label><label style="grid-column:1/-1">State / region<input id="qt-p-${s}" value="${esc(d.state||'')}" maxlength="40" placeholder="e.g. Telangana"></label></div></details>
     <button type="button" class="btn wide" style="margin-top:10px" data-a="qtCreate" data-s="${s}">Create team ${L}</button></div>`};
   return `<div class="b" style="margin:6px 0 0">Teams</div>${Q.a&&Q.a===Q.b?'<div class="need">Pick two different teams.</div>':''}${slot('a')}${slot('b')}`};
 

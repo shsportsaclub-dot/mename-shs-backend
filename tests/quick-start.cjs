@@ -9,14 +9,15 @@ await p.evaluate(()=>{UI.stage='app';S.prefs=Object.assign({},S.prefs,{asked:1,w
  S.teams=[{id:'a',name:'Home XI',short:'HOME',players:S.players.slice(0,11).map(p=>p.id)},{id:'b',name:'Away XI',short:'AWAY',players:S.players.slice(11).map(p=>p.id)}];render();A.newMatch()});
 await p.waitForTimeout(200);
 const html=await p.evaluate(()=>document.getElementById('modal').innerText);
-ok(/Start a match/.test(html)&&/Overs/.test(html)&&/Toss won by/.test(html),'quick screen shown');ok(!/Step 1 of 9/.test(html),'not the 9-step wizard');
+ok(/Start a match/.test(html)&&/Teams/.test(html)&&/Players/.test(html)&&/Toss/.test(html),'step screen shown');ok(!/Step 1 of 9/.test(html),'not the 9-step wizard');
 // no venue -> refused, nothing created
 await p.evaluate(()=>A.qsStart());ok(await p.evaluate(()=>S.matches.length===0),'refused without a ground');
-await p.click('button[data-k=overs][data-v="10"]');await p.click('button[data-k=ball][data-v=tennis]');await p.click('button[data-k=dec][data-v=bowl]');
-await p.fill('#qs-venue','Gandhi Ground');
-// add a player by name to team A
+await p.click('button[data-a=qsStep][data-v="1"]');await p.waitForTimeout(150);
 await p.click('details[data-qsd=a] summary');await p.evaluate(()=>{document.querySelector('details[data-qsd=a] .qp details').open=true});await p.fill('#qp-n-a','Rahul Dev');await p.click('button[data-a=qpNew][data-t=a]');
-await p.fill('#qs-venue','Gandhi Ground');
+await p.click('button[data-a=qsStep][data-v="1"]');await p.waitForTimeout(150);
+await p.click('button[data-k=overs][data-v="10"]');await p.click('button[data-k=ball][data-v=tennis]');await p.fill('#qs-venue','Gandhi Ground');
+await p.click('button[data-a=qsStep][data-v="1"]');await p.waitForTimeout(150);
+await p.click('button[data-k=dec][data-v=bowl]');
 await p.click('button[data-a=qsStart]');await p.waitForTimeout(300);
 const r=await p.evaluate(()=>{const m=S.matches[0];return m&&{overs:m.overs,ball:m.ball,venue:m.venue,dec:m.dec,xiA:m.xi.a.length,status:m.status,ready:m.ready,view:UI.view,sc:m.scorer,gender:m.cat&&m.cat.gender,remembered:S.prefs.qs,wiz:S.wiz,audit:(m.audit||[]).map(a=>a.type)}});
 ok(r&&r.overs===10&&r.ball==='tennis'&&r.dec==='bowl'&&/Gandhi Ground/.test(r.venue),'settings applied '+JSON.stringify(r));ok(r&&r.xiA===11&&r.ready&&r.view==='score','lineup + ready '+JSON.stringify(r));

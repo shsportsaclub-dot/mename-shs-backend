@@ -10,7 +10,7 @@ await p.evaluate(()=>{window.apiBase=()=>'http://x';const G=[];window.__posts=[]
   return j({ok:false})};
  UI.stage='app';S.user={id:'u1',name:'T',phone:'9999999999',role:'admin'};S.tok='tok';S.prefs=Object.assign({},S.prefs,{asked:1,welcomed:1});
  const t=(n)=>({id:'t'+n,name:'Team '+n,short:'T'+n,color:'#123',players:[]});S.teams=[t(1),t(2)];for(const tm of S.teams)for(let i=0;i<3;i++){const p={id:tm.id+'p'+i,name:tm.name+' P'+i,role:'BAT',team:tm.id,bat:'Right-hand',bowl:''};S.players.push(p);tm.players.push(p.id)}
- UI.view='home';render();A.newMatch()});
+ UI.view='home';render();A.newMatch();UI.qs.step=2;shQsShow()});
 await p.waitForTimeout(300);
 ok(await p.evaluate(()=>/Use my location/.test(document.body.innerText)),'GPS button in Start a match');
 await p.click('button[data-a=qsGps]');await p.waitForTimeout(600);
@@ -18,11 +18,11 @@ ok(await p.evaluate(()=>/No ground is registered within 200 m/.test(document.bod
 await p.fill('#qg-name','Sky Turf Ground');await p.click('input#qg-own');await p.click('button[data-a=qsRegG]');await p.waitForTimeout(400);
 let q=await p.evaluate(()=>({v:UI.qs.venue,g:UI.qs.gid,t:document.body.innerText.includes('Google Maps')}));ok(q.v==='Sky Turf Ground'&&q.g==='g1'&&q.t,'registered + selected '+JSON.stringify(q));
 // second person at same spot gets the existing ground
-await p.evaluate(()=>{UI.qg=null;A.newMatch()});await p.click('button[data-a=qsGps]');await p.waitForTimeout(600);
+await p.evaluate(()=>{UI.qg=null;A.newMatch();UI.qs.step=2;shQsShow()});await p.click('button[data-a=qsGps]');await p.waitForTimeout(600);
 ok(await p.evaluate(()=>/You are at a registered ground/.test(document.body.innerText)&&/Sky Turf Ground/.test(document.body.innerText)),'existing ground offered');
 await p.click('button[data-a=qsPickG]');await p.waitForTimeout(200);
 await p.evaluate(()=>{for(const id of ['t1p0','t1p1'])UI.qs.xi&&0;});
-await p.click('button[data-a=qsStart]');await p.waitForTimeout(800);
+await p.evaluate(()=>{UI.qs.step=3;shQsShow()});await p.click('button[data-a=qsStart]');await p.waitForTimeout(800);
 const r=await p.evaluate(()=>({n:S.matches.length,gid:(S.venues.find(v=>v.name==='Sky Turf Ground')||{}).gid,posts:window.__posts.length}));
 ok(r.n>=1&&r.gid==='g1','match started with ground linked '+JSON.stringify(r));
 await p.evaluate(()=>shGroundSync());await p.waitForTimeout(300);

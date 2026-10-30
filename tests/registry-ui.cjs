@@ -16,7 +16,8 @@ await p.waitForTimeout(300);
 await p.fill('#qt-n-a','Hyderabad Hawks');await p.click('button[data-a=qtCreate][data-s=a]');await p.waitForTimeout(500);
 ok(await p.evaluate(()=>S.teams.length===1&&S.teams[0].rid==='t1'),'team registered on server, rid stored');
 await p.fill('#qt-n-b','Vizag Vipers');await p.click('button[data-a=qtCreate][data-s=b]');await p.waitForTimeout(500);
-// add a new player with details
+// add a new player with details (Players step)
+await p.click('button[data-a=qsStep][data-v="1"]');await p.waitForTimeout(200);
 await p.evaluate(()=>{document.querySelector('.qp details').open=true});
 const tid=await p.evaluate(()=>S.teams[0].id);
 await p.fill('#qp-n-'+tid,'Ravi Kumar');await p.fill('#qp-m-'+tid,'9876543210');await p.selectOption('#qp-r2-'+tid,'WK');await p.selectOption('#qp-b-'+tid,'Left-hand');await p.fill('#qp-j-'+tid,'7');
@@ -35,6 +36,7 @@ ok(await p.evaluate(id=>/Ravi Kumar/.test(document.getElementById('qp-r-'+id).in
 await p.click('button[data-a=qpAdd][data-t="'+tb+'"]');await p.waitForTimeout(400);
 ok(await p.evaluate(()=>S.teams[1].players.length===1),'registered player added to second team');
 // team already registered by someone else -> uses it
+await p.click('button[data-a=qsStep][data-v="-1"]');await p.waitForTimeout(200);
 await p.click('button[data-a=qtClear][data-s=a]');await p.fill('#qt-n-a','Vizag Vipers');await p.click('button[data-a=qtCreate][data-s=a]');await p.waitForTimeout(500);
 ok(await p.evaluate(()=>S.teams.filter(t=>t.name==='Vizag Vipers').length===1),'duplicate team name not created locally');
 // ID card + QR, and scan-link opening
