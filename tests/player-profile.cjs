@@ -8,7 +8,10 @@ await p.evaluate(()=>{UI.stage='app';UI.sportInit=1;S.prefs=Object.assign({},S.p
 S.players=Array.from({length:22},(_,i)=>({id:'p'+i,name:i===0?'Hemanth':'Player '+i,role:i===0?'AR':'BAT',loc:i===0?'Kakinada':'',bat:i===0?'RHB':'',bowl:i===0?'Right-arm Leg Break':'',team:i<11?'a':'b'}));
 S.teams=[{id:'a',name:'Home XI',short:'HOME',players:S.players.slice(0,11).map(p=>p.id)},{id:'b',name:'Away XI',short:'AWAY',players:S.players.slice(11).map(p=>p.id)}];
 S.user={id:'u',name:'QA',role:'admin',phone:'+910000000000',pid:'p0'};S.matches=[];demoMatch();render();UI.view='profile';render()});
-ok(await p.evaluate(()=>/View my player profile/.test(document.getElementById('app').innerText)),'profile page has the button');
+ok(await p.evaluate(()=>!!document.querySelector('.pp h1')&&/HEMANTH/i.test(document.querySelector('.pp h1').innerText)),'my profile opens as the player profile page');
+ok(await p.evaluate(()=>[...document.querySelectorAll('.pp .tabs button')].some(b=>b.innerText==='Edit')),'Edit tab for own profile');
+await p.evaluate(()=>A.ppTab({v:'edit'}));await p.waitForTimeout(150);ok(await p.evaluate(()=>/Make my Hero Card|Open my Hero Card/.test(document.querySelector('.pp .body').innerText)&&/Profile photo/.test(document.querySelector('.pp .body').innerText)),'edit tab has photo and hero card tools');
+await p.evaluate(()=>{S.settings.appTheme='mday';render()});await p.waitForTimeout(150);await p.screenshot({path:'/tmp/pp_light_edit.png'});await p.evaluate(()=>{A.ppTab({v:'stats'})});await p.waitForTimeout(100);await p.screenshot({path:'/tmp/pp_light_stats.png'});await p.evaluate(()=>{S.settings.appTheme='hero';render()});
 await p.evaluate(()=>A.ppOpen({id:'p0'}));await p.waitForTimeout(200);
 ok(await p.evaluate(()=>/HEMANTH/i.test(document.querySelector('.pp h1').innerText)),'name shown');
 ok(await p.evaluate(()=>/Home XI|Away XI/.test(document.querySelector('.pp .body').innerText)),'matches tab lists the scored match');
