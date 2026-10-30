@@ -19,7 +19,9 @@ await p.screenshot({path:'/tmp/pp1.png'});
 for(const t of ['stats','trophies','teams','profile']){await p.evaluate(t=>A.ppTab({v:t}),t);await p.waitForTimeout(100);await p.screenshot({path:'/tmp/pp_'+t+'.png'})}
 ok(await p.evaluate(()=>/Kakinada/.test(document.querySelector('.pp .body').innerText)),'profile details');
 await p.evaluate(()=>{A.ppTab({v:'stats'});});
-ok(await p.evaluate(()=>/Batting Career Summary/.test(document.querySelector('.pp .body').innerText)&&/Economy/.test(document.querySelector('.pp .body').innerText)&&/T20/.test(document.querySelector('.pp .body').innerText)),'Cricbuzz-style career tables with T20 first');
+ok(await p.evaluate(()=>/Individual Matches/.test((A.ppSt({v:'bat'}),document.querySelector('.pp .body').innerText))&&/Overall Total/.test(document.querySelector('.pp .body').innerText)&&!/T20|ODI|IPL/.test(document.querySelector('.pp .body').innerText)),'tournament-wise batting table, no format columns');
+await p.evaluate(()=>A.ppTour({v:'ind'}));await p.waitForTimeout(100);await p.screenshot({path:'/tmp/pp_bat.png'});ok(await p.evaluate(()=>/Match-wise/.test(document.querySelector('.pp .body').innerText)),'tournament row opens match-wise detail');
+await p.evaluate(()=>A.ppSt({v:'bowl'}));ok(await p.evaluate(()=>/Wkts/.test(document.querySelector('.pp .body').innerText)),'bowling tab');
 await p.evaluate(()=>A.ppBack());ok(await p.evaluate(()=>UI.view==='profile'),'back returns');
 ok(!errs.length,errs.join(';'));
 await b.close();if(!process.exitCode)console.log('PASS: player profile');})();
