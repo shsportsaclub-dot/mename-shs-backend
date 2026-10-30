@@ -319,6 +319,19 @@ async function fetchLiveMatches() {
           if (jx.status !== 'success' || !Array.isArray(jx.data) || !jx.data.length) { if (pg === 0) throw new Error(jx.reason || 'schedule unavailable'); break; }
           rows.push(...jx.data); if (jx.data.length < 25) break;
         }
+        // The paged list can still miss big fixtures (India). Also read the fixture list of any current India series.
+        try {
+          const sj = await (await fetch(`${CRIC_BASE}/series?apikey=${encodeURIComponent(CRIC_KEY)}&offset=0&search=India`, { signal: AbortSignal.timeout(10000) })).json();
+          const now = Date.now(), yr = new Date().getFullYear();
+          const cand = (Array.isArray(sj.data) ? sj.data : []).filter(x => x && x.id && /india/i.test(x.name || '')).filter(x => { const e = Date.parse(String(x.endDate || x.enddate || '') + (/\d{4}/.test(String(x.endDate || x.enddate || '')) ? '' : ' ' + yr)); return !e || e > now - 2 * 864e5; }).slice(0, 4);
+          for (const x of cand) {
+            try {
+              const si = await (await fetch(`${CRIC_BASE}/series_info?apikey=${encodeURIComponent(CRIC_KEY)}&id=${encodeURIComponent(x.id)}`, { signal: AbortSignal.timeout(10000) })).json();
+              const ml = si && si.data && Array.isArray(si.data.matchList) ? si.data.matchList : [];
+              rows.push(...ml.map(m => ({ ...m, series_id: m.series_id || x.id, seriesName: m.seriesName || x.name })));
+            } catch (e2) {}
+          }
+        } catch (e1) {}
         sched = { t: Date.now(), rows };
       } catch (e) { sched.t = Date.now() - 2 * 3600e3; }
     }
@@ -968,6 +981,12 @@ routes['GET /api/viewers'] = async () => {
 routes['GET /api/geo'] = async (req) => {   // viewer's country from the edge header (Render/Cloudflare), so the home list can put their country's matches first without a third-party lookup
   const iso = String(req.headers['cf-ipcountry'] || req.headers['x-vercel-ip-country'] || '').toUpperCase();
   return [200, { ok: true, iso: /^[A-Z]{2}$/.test(iso) && iso !== 'XX' && iso !== 'T1' ? iso : '' }];
+};
+routes['GET /api/find-match'] = async (req) => {   // what does the provider actually list? e.g. /api/find-match?q=india
+  const q = String(new URL(req.url, 'http://x').searchParams.get('q') || '').toLowerCase().slice(0, 40);
+  let d = null; try { d = await cdLive(); } catch (e) { return [200, { ok: false, error: e.message }]; }
+  const hit = (d.matches || []).filter(m => !q || (m.name + ' ' + (m.seriesName || '')).toLowerCase().includes(q)).slice(0, 40).map(m => ({ name: m.name, type: m.type, series: m.seriesName, date: m.time || m.date, started: m.started, ended: m.ended }));
+  return [200, { ok: true, total: (d.matches || []).length, found: hit.length, hit }];
 };
 routes['GET /api/status'] = async () => { const x = svcStatus(); return [200, { ok: true, emailReady: x.email.ready, smsReady: x.sms.ready, liveReady: x.live.ready }]; };
 const fbCache = new Map();
