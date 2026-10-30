@@ -37,5 +37,6 @@ await p.evaluate(()=>{render()});await p.waitForTimeout(200);
 const bx=await p.evaluate(()=>{const r=document.getElementById('wag').getBoundingClientRect();return {x:r.x,y:r.y,w:r.width,h:r.height}});
 await p.mouse.click(bx.x+bx.w*0.8,bx.y+bx.h*0.5);await p.waitForTimeout(200);await p.click('.sh-scorer-console .runs button:nth-child(1)');await p.waitForTimeout(300);
 ok(await p.evaluate(()=>{const m=S.matches.find(x=>x.id===UI.sid);const e=m.innings[m.cur].ev.at(-1);return e.r===0&&!!e.zone}),'dot ball keeps its place');
+ok(await p.evaluate(()=>SH_BC_LOG.length>=2&&SH_BC_LOG.at(-1).eventType==='BALL_CONFIRMED'&&!!SH_BC_LOG.at(-1).matchId),'broadcast event published');
 await p.screenshot({path:'/tmp/claude-0/bf.png',fullPage:false});
 ok(!errs.length,errs.join(';'));await b.close();if(!process.exitCode)console.log('PASS: ball flow');})();

@@ -10499,6 +10499,24 @@ document.addEventListener('input',e=>{const el=e.target;if(!el||!/^qt-n-[ab]$/.t
  const r0=render;render=function(){const o=r0.apply(this,arguments);try{build()}catch(e){console.error(e)}return o};
  const sty=document.createElement('style');sty.textContent='.bf{border:1px solid var(--ac)}.bf-top{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:6px;flex-wrap:wrap}.bf-h{display:flex;align-items:center;gap:8px;margin:12px 0 6px}.bf-n{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:var(--ac);color:#000;font-size:12px;font-weight:700}.bf-n.ok{background:#22a559;color:#fff}.bf-shots{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}.bf-shots button{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border:1px solid var(--bd);border-radius:10px;background:var(--card);color:var(--fg);font-size:10px;min-width:0}.bf-shots button.on{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 22%,transparent)}.bf-shots span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.bf-zone{text-align:center;margin-top:6px;min-height:28px}.bf-fl{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px}.bf-fl button,.bf-cm button{flex:none;padding:6px 10px;border:1px solid var(--bd);border-radius:18px;background:var(--card);color:var(--fg);font-size:11px}.bf-fl button.on,.bf-cm button.on{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 25%,transparent)}.bf-cm{display:flex;flex-wrap:wrap;gap:6px;align-items:center}';document.head.appendChild(sty);
 }
+
+/* ---------------- 70 BROADCAST MODULES: plan/config + BALL_CONFIRMED event (published locally; streaming, ground ads and authorised DLS are not built yet) ---------------- */
+{
+ const SH_BROADCAST_MODULES={
+  scoring:{workflow:['SHOT_SELECTION','GROUND_PLACE','RUNS_SELECTION','FIELDER_SELECTION','BALL_CONFIRM'],ground:{thirtyYardCircle:true,boundary:true,pitch:true,fielders:true,shotMapping:true,bowlerRunUp:true,batterRunningArea:true}},
+  graphics:{persistent:['SCORE_BUG','BATTER_BOWLER','RECENT_BALLS','TARGET_RRR'],eventEffects:['DOT','FOUR','SIX','WICKET','FREE_HIT','DRS','FIFTY','CENTURY','HAT_TRICK','DLS','SUPER_OVER','WINNER'],analysis:['WAGON_WHEEL','PITCH_MAP','MANHATTAN','RUN_RATE','PARTNERSHIP','PLAYER_RECORDS','H2H','VENUE_STATS','POINTS_TABLE']},
+  groundAdvertising:{zones:['BOUNDARY_ROPE','OUTFIELD','BOWLER_RUN_UP','BATTER_RUNNING_AREA','PITCH_SIDE','DUGOUT','SIGHT_SCREEN'],cameraCalibrationRequired:true,safePlacementRequired:true,sponsorApprovalRequired:true},
+  dls:{enabled:true,provider:'AUTHORIZED_DLS_ENGINE',allowEstimatedOfficialTarget:false,multipleInterruptions:true,revisedOvers:true,parScore:true,revisedTarget:true,officialApproval:true,resultIntegration:true},
+  commentary:{languages:['en','te','hi','ta','kn','ml','bn','mr','gu','pa','ur','or','ar','fr','es'],playerRecords:true,contextAware:true,avoidRepetition:true,voiceOver:true,skipAllowed:true,simpleFallback:true},
+  streaming:{modes:['DIRECT_LIVE','VIRTUAL_LIVE'],tickerEngine:true,overlayOutput:true,audioSync:true,replay:true,recording:true}};
+ const createBroadcastEvent=ball=>{if(!ball||!ball.id||!ball.matchId)throw new Error('Valid ball event required');
+  return {eventId:ball.id,matchId:ball.matchId,eventType:'BALL_CONFIRMED',ball,outputs:{score:true,ticker:true,graphics:true,playerStats:true,commentary:true,directLive:true,virtualLive:true}}};
+ window.SH_BROADCAST_MODULES=SH_BROADCAST_MODULES;window.createBroadcastEvent=createBroadcastEvent;window.SH_BC_LOG=[];
+ const b1=ball;
+ ball=function(m,s){const inn0=m&&m.innings&&m.innings[m.cur],n0=inn0?inn0.ev.length:0,r=b1.apply(this,arguments),inn=m&&m.innings&&m.innings[m.cur];
+  try{if(inn&&inn.ev.length>n0){const ev=createBroadcastEvent(Object.assign({},inn.ev[inn.ev.length-1],{matchId:m.id}));window.SH_BC_LOG.push(ev);if(window.SH_BC_LOG.length>200)window.SH_BC_LOG.shift();window.dispatchEvent(new CustomEvent('sh:ball-confirmed',{detail:ev}))}}catch(e){}
+  return r};
+}
 </script>
 </body>
 </html>
