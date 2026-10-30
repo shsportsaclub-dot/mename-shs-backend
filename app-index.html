@@ -9337,7 +9337,7 @@ window.shXIOf=(mine)=>{const c=mine.filter(p=>p.confirmed);if(c.length)return {x
   if(bat){const B=sumBat(all),hasS=all.length>0,s={mat:hasS?B.m:null,inn:hasS?B.inn:null,runs:hasS?B.r:null,balls:hasS?B.b:null,hs:hasS&&B.inn?B.hs+(B.hsno?'*':''):null,no:hasS?B.no:null,f4:hasS?B.f4:null,f6:hasS?B.f6:null,f50:hasS?B.f50:null,f100:hasS?B.f100:null};
    const ev=k=>num(eb[k]),sv=k=>s[k]==null?null:+s[k],tot=k=>{if(!hasE)return sv(k);if(!hasS)return ev(k);return col(ev(k),sv(k))};
    const T={mat:tot('mat'),inn:tot('inn'),runs:tot('runs'),balls:tot('balls'),no:tot('no'),f4:tot('f4'),f6:tot('f6'),f50:tot('f50'),f100:tot('f100')};
-   const hsv=[num(eb.hs),num(s.hs)].filter(x=>x!=null),hsT=hsv.length?Math.max(...hsv):null;
+   const hsc=[eb.hs,s.hs].filter(x=>x!=null&&x!==''&&num(x)!=null).sort((x,y)=>num(y)-num(x)||(/\*/.test(String(y))?1:-1)),hsT=hsc.length?String(hsc[0]):null;
    const avg=(r,i,n)=>r!=null&&i!=null&&n!=null&&i-n>0?r/(i-n):null,sr=(r,b)=>r!=null&&b?r*100/b:null;
    const eAvg=eb.avg!=null&&eb.avg!==''?num(eb.avg):avg(ev('runs'),ev('inn'),ev('no')),eSr=eb.sr!=null&&eb.sr!==''?num(eb.sr):sr(ev('runs'),ev('balls'));
    const I=x=>x==null?D:String(x);
