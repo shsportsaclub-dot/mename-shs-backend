@@ -15,7 +15,7 @@ await p.evaluate(()=>A.qsStart());ok(await p.evaluate(()=>S.matches.length===0),
 await p.click('button[data-k=overs][data-v="10"]');await p.click('button[data-k=ball][data-v=tennis]');await p.click('button[data-k=dec][data-v=bowl]');
 await p.fill('#qs-venue','Gandhi Ground');
 // add a player by name to team A
-await p.click('details[data-qsd=a] summary');await p.fill('#qs-pn-a','Rahul Dev');await p.click('button[data-a=qsPlayer][data-t=a]');
+await p.click('details[data-qsd=a] summary');await p.evaluate(()=>{document.querySelector('details[data-qsd=a] .qp details').open=true});await p.fill('#qp-n-a','Rahul Dev');await p.click('button[data-a=qpNew][data-t=a]');
 await p.fill('#qs-venue','Gandhi Ground');
 await p.click('button[data-a=qsStart]');await p.waitForTimeout(300);
 const r=await p.evaluate(()=>{const m=S.matches[0];return m&&{overs:m.overs,ball:m.ball,venue:m.venue,dec:m.dec,xiA:m.xi.a.length,status:m.status,ready:m.ready,view:UI.view,sc:m.scorer,gender:m.cat&&m.cat.gender,remembered:S.prefs.qs,wiz:S.wiz,audit:(m.audit||[]).map(a=>a.type)}});
