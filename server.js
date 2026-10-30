@@ -311,7 +311,16 @@ async function fetchLiveMatches() {
       }
     }
     if (Date.now() - sched.t > 3 * 3600e3) {
-      try { const j2 = await get('matches'); if (j2.status === 'success') sched = { t: Date.now(), rows: j2.data || [] }; else sched.t = Date.now() - 2 * 3600e3; } catch (e) { sched.t = Date.now() - 2 * 3600e3; }
+      try {
+        // The schedule list is paged (25 per page). Reading only page 1 hid upcoming matches such as India fixtures, so read several pages.
+        const sp = Math.max(1, Math.min(10, Number(E.CRICKETDATA_SCHEDULE_PAGES) || 6)), rows = [];
+        for (let pg = 0; pg < sp; pg++) {
+          const jx = await (await fetch(`${CRIC_BASE}/matches?apikey=${encodeURIComponent(CRIC_KEY)}&offset=${pg * 25}`, { signal: AbortSignal.timeout(10000) })).json();
+          if (jx.status !== 'success' || !Array.isArray(jx.data) || !jx.data.length) { if (pg === 0) throw new Error(jx.reason || 'schedule unavailable'); break; }
+          rows.push(...jx.data); if (jx.data.length < 25) break;
+        }
+        sched = { t: Date.now(), rows };
+      } catch (e) { sched.t = Date.now() - 2 * 3600e3; }
     }
     const seen = new Set(), rows = [...currentRows, ...sched.rows].filter(m => m && m.id && !seen.has(m.id) && seen.add(m.id));
     const matches = rows.map(m => ({
@@ -955,6 +964,10 @@ routes['POST /api/view'] = async (req, body, ip) => {
 routes['GET /api/viewers'] = async () => {
   viewPrune(); const v = {}; for (const [id, m] of viewMap) v[id] = m.size;
   return [200, { ok: true, windowSeconds: 180, v }];
+};
+routes['GET /api/geo'] = async (req) => {   // viewer's country from the edge header (Render/Cloudflare), so the home list can put their country's matches first without a third-party lookup
+  const iso = String(req.headers['cf-ipcountry'] || req.headers['x-vercel-ip-country'] || '').toUpperCase();
+  return [200, { ok: true, iso: /^[A-Z]{2}$/.test(iso) && iso !== 'XX' && iso !== 'T1' ? iso : '' }];
 };
 routes['GET /api/status'] = async () => { const x = svcStatus(); return [200, { ok: true, emailReady: x.email.ready, smsReady: x.sms.ready, liveReady: x.live.ready }]; };
 const fbCache = new Map();

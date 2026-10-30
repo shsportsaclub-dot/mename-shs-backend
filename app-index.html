@@ -2282,7 +2282,7 @@ function cbCard(m){
   ${tm.length?tm.map(row).join(''):`<div class="tr"><b>${esc(sp.teams)}</b></div>`}<div class="stx ${live?'l':m.ended?'r':'u'}">${esc(status)}</div>
   <div class="ft"><button data-a="go" data-v="tours">POINTS TABLE</button><button data-a="htab" data-v="up">SCHEDULE</button></div></div>`}
 function cbHome(){
-  const j=UI.live,F2=cbFilt(wFilter()),f=UI.cbf||'all';
+  const j=UI.live,F2=(r=>typeof mwRank==='function'?{live:mwRank(r.live),up:mwRank(r.up),rec:mwRank(r.rec)}:r)(cbFilt(wFilter())),f=UI.cbf||'all';
   let L=[];if(j&&j.ok){const rec=F2.rec.filter(m=>Date.now()-wTm(m)<21*864e5);L=f==='live'?F2.live:f==='rec'?rec:f==='up'?F2.up:[...F2.live,...F2.up.slice(0,6),...rec.slice(0,8)]}
   const chips=j&&j.ok?[...F2.live,...F2.rec.slice(0,6)].map(m=>`<span data-a="wOpen" data-id="${esc(m.id)}">${esc(cbShortRes(m))}</span>`).join(''):'';
   const N=(UI.news&&UI.news.ok?UI.news.items:[]);
@@ -2386,9 +2386,11 @@ const parseStream=raw=>{const s=String(raw||''),i=s.indexOf('#geo=');return i<0?
 const isoStore={get(){try{return localStorage.getItem('sh.iso')}catch(e){return null}},set(v){try{localStorage.setItem('sh.iso',v)}catch(e){}}};
 const viewerISO=()=>UI.iso||isoStore.get()||'';
 async function detectISO(){if(viewerISO())return;const t=async(u,f)=>{const c=new AbortController(),to=setTimeout(()=>c.abort(),4000);try{return f(await (await fetch(u,{signal:c.signal})).json())}finally{clearTimeout(to)}};
-  let c='';try{c=await t('https://ipapi.co/json/',j=>String(j.country_code||''))}catch(e){}
+  let c='';try{if(apiBase())c=await t(apiBase()+'/geo',j=>String(j.iso||''))}catch(e){}
+  if(!c)try{c=await t('https://ipapi.co/json/',j=>String(j.country_code||''))}catch(e){}
   if(!c)try{c=await t('https://ipwho.is/',j=>String(j.country_code||''))}catch(e){}
-  if(c){UI.iso=c.toUpperCase();isoStore.set(UI.iso);if(S.user&&UI.view==='match')render()}}
+  if(!c)try{const z=Intl.DateTimeFormat().resolvedOptions().timeZone||'',TZ={'Asia/Kolkata':'IN','Asia/Calcutta':'IN','Asia/Karachi':'PK','Asia/Dhaka':'BD','Asia/Colombo':'LK','Asia/Kathmandu':'NP','Asia/Kabul':'AF','Asia/Dubai':'AE','Pacific/Auckland':'NZ','Europe/London':'GB','Africa/Johannesburg':'ZA','Europe/Dublin':'IE','Asia/Muscat':'OM','Asia/Hong_Kong':'HK','Asia/Singapore':'SG'};c=TZ[z]||(/^Australia\//.test(z)?'AU':'')}catch(e){}
+  if(c){UI.iso=c.toUpperCase();isoStore.set(UI.iso);try{if(S.user&&['home','match','matches'].includes(UI.view)&&!document.activeElement?.matches?.('input,textarea,select'))render()}catch(e){}}}
 setTimeout(detectISO,500);
 {const st=document.createElement('style');st.textContent=
 '.swin.br{border-radius:10px;overflow:hidden;background:#000}.swin.br.th{position:fixed;left:0;right:0;top:env(safe-area-inset-top,0px);z-index:60;border-radius:0;margin:0}.swin.br:fullscreen{border-radius:0}'+
