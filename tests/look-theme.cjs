@@ -9,7 +9,7 @@ ok(await p.evaluate(()=>getComputedStyle(document.body).backgroundColor)==='rgb(
 await p.evaluate(()=>{S.user={id:'u',name:'T',nick:'T',phone:'1',role:'viewer'};UI.view='home';render()});
 ok(await p.evaluate(()=>document.documentElement.dataset.theme)==='hero','Sky High after login');
 await p.evaluate(()=>{UI.view='settings';render()});
-const t=await p.evaluate(()=>document.querySelector('[data-a=look][data-v=mday]').innerText);ok(/Light/.test(t),'settings has look tiles');
+const t=await p.evaluate(()=>document.querySelector('main [data-a=look][data-v=mday]').innerText);ok(/Light/.test(t),'settings has look tiles');
 ok(await p.evaluate(()=>LOOKS.map(l=>l[1]).join(','))==='Sky High,Light','only two looks');
 await p.evaluate(()=>{A.look({v:'mday'});render()});
 ok(await p.evaluate(()=>document.documentElement.dataset.theme)==='mday','choosing Light applies');
