@@ -149,7 +149,7 @@ function roleFor(phone, kind) {
 function cleanProfile(p) {
   p = p || {};
   const nick = String(p.nick || '').replace(/\s+/g, ' ').trim(), kind = ['Player', 'Fan', 'Scorer', 'Organiser'].includes(p.kind) ? p.kind : 'Fan';
-  if (!/^[\p{L}\p{M}\p{N}_.\- ]{3,20}$/u.test(nick)) return { error: 'Nickname must be 3-20 letters or numbers (spaces, dot, dash and underscore are allowed)' };
+  if (!/^[^<>\p{C}]{3,20}$/u.test(nick)) return { error: 'Nickname must be 3-20 characters (letters, numbers, spaces and symbols are fine; < and > are not allowed)' };
   let age = Math.round(+p.age), dob = '';
   if (p.dob != null && p.dob !== '') {
     const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(p.dob)), d = m && new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
