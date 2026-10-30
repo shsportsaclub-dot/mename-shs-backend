@@ -1863,7 +1863,7 @@ function wzStepHTML(){
     <label>Ball type (required)<select data-c="wz" name="ball">${opt([['','Choose ball type'],['leather','Leather ball'],['tennis','Tennis ball']],w.ball||'')}</select></label><div class="mu sm">Tennis ball here means the cricket ball type, not the sport Tennis. It is kept with the match and its stats.</div>
     <div class="row"><label style="flex:1">Category (required)<select data-c="wz" name="gender">${opt([['','Choose'],['men','Men'],['women','Women'],['mixed','Mixed']],w.gender||'')}</select></label><label style="flex:1">Age group<select data-c="wz" name="age">${opt([['','Not specified'],['open','Open (no age limit)'],['u19','Under 19'],['u16','Under 16'],['u14','Under 14'],['u12','Under 12'],['vet','Veterans']],w.age||'')}</select></label></div>
     <label>Match level<select data-c="wz" name="level">${opt([['','Not specified'],['local','Local'],['corporate','Corporate'],['academy','Academy'],['club','Club'],['board','Domestic board'],['national','National'],['intl','International']],w.level||'')}</select></label>
-    <div class="mu sm">These labels are kept with the match and shown on it. They do not yet block players by age or gender: competition-specific eligibility rules are not built.</div>`;
+    <div class="mu sm">These labels are kept with the match and shown on it. In a tournament match they follow the tournament's rules, and the age group is checked against each player's saved date of birth. Gender is not recorded per player, so it is a label only.</div>`;
   case 3:return [w.a,w.b].map(tid=>{const t=T(tid),xi=w.xi[tid]||[],sb=w.subs[tid]||[];
     return `<div class="card" style="margin:8px 0"><div class="b">${esc(t.name)}: playing XI ${xi.length}/11, substitutes ${sb.length}/4</div>
     ${t.players.length?t.players.map(id=>{const p=P(id)||{};return `<div class="row" style="justify-content:space-between;padding:4px 0"><span style="display:flex;align-items:center;gap:8px;min-width:0"><span class="pphoto" style="width:30px;height:30px;font-size:13px;flex:none">${typeof av==='function'?av(p):''}</span><span>${esc(p.name||'')} <span class="mu sm">${esc(p.role||'')}</span></span></span><span class="row" style="gap:10px;flex-wrap:nowrap"><label class="ck" style="margin:0"><input type="checkbox" data-c="wzxi" data-k="xi" data-t="${tid}" value="${id}" ${xi.includes(id)?'checked':''}> XI</label><label class="ck" style="margin:0"><input type="checkbox" data-c="wzxi" data-k="subs" data-t="${tid}" value="${id}" ${sb.includes(id)?'checked':''}> Sub</label></span></div>`}).join(''):'<div class="mu sm">No players yet. Add one below.</div>'}
@@ -11067,6 +11067,29 @@ document.addEventListener('input',e=>{const el=e.target;if(!el||!/^qt-n-[ab]$/.t
   async gpCopy(){const n=N(),z=UI.view&&S.stream,k=(S.stream&&(S.stream.pv||S.stream.gfx))||'fow',m=typeof ovMatch==='function'?ovMatch():null;if(!m){n.msg='No match is selected for the overlay.';return render()}let s=null;try{s=st(m)}catch(e){}
    const d=window.shGfxData(k,m,s);if(!d){n.msg='Could not build data for this graphic.';return render()}const ok=await copy(JSON.stringify(d,null,1));n.msg=ok?'Copied '+k+' data. Paste it into your studio.':'Copy was blocked. Long-press to copy: '+JSON.stringify(d);render()},
   async gpUrl(){const n=N(),u=base()+'/api/graphics/package';n.msg=(await copy(u))?'Manifest link copied.':'Manifest link: '+u;render()}});
+}
+/* ---------------- 89 TOURNAMENT ELIGIBILITY RULES (R17): a tournament sets category, age group and ball type; its matches inherit them; the match cannot start with a player whose recorded date of birth is outside the age group. Missing birth dates are listed, not guessed. Gender is not recorded per player, so category is a label only ---------------- */
+{
+ const AG={u19:['Under 19',19],u16:['Under 16',16],u14:['Under 14',14],u12:['Under 12',12]};
+ const VET=35;
+ const R=t=>(t.rules=t.rules||{});
+ const ageOn=(dob,d)=>{const b=new Date(dob),m=new Date(d||Date.now());if(isNaN(b)||isNaN(m))return null;let a=m.getFullYear()-b.getFullYear();if(m.getMonth()<b.getMonth()||(m.getMonth()===b.getMonth()&&m.getDate()<b.getDate()))a--;return a};
+ window.shEligibility=function(t,ids,date){const r=(t&&t.rules)||{},out={bad:[],unknown:[]};if(!r.age||r.age==='open')return out;
+  ids.forEach(id=>{const p=P(id);if(!p)return;if(!p.dob){out.unknown.push(p.name);return}const a=ageOn(p.dob,date);if(a==null){out.unknown.push(p.name);return}
+   if(r.age==='vet'){if(a<VET)out.bad.push(p.name+' (age '+a+')')}else if(AG[r.age]&&a>=AG[r.age][1])out.bad.push(p.name+' (age '+a+')')});return out};
+ const x0=XV.tour;XV.tour=function(){const o=x0.apply(this,arguments),t=trObj(UI.tid);if(!t||UI.ttab!=='info')return o;const r=t.rules||{},ed=can(),sel=(k,l,L)=>`<label>${l}<select data-c="trRule" data-k="${k}" ${ed?'':'disabled'}>${L.map(([v,n])=>`<option value="${v}" ${(r[k]||'')===v?'selected':''}>${n}</option>`).join('')}</select></label>`;
+  const card=`<div class="card" id="trrules"><h3>Eligibility rules</h3><div class="mu sm">Matches in this tournament inherit these. The age check uses the date of birth saved on each player, on the match date.</div>
+   ${sel('gender','Category',[['','Not set'],['men','Men'],['women','Women'],['mixed','Mixed']])}${sel('age','Age group',[['','Not set'],['open','Open (no age limit)'],['u19','Under 19'],['u16','Under 16'],['u14','Under 14'],['u12','Under 12'],['vet','Veterans ('+VET+'+)']])}${sel('ball','Ball type',[['','Not set'],['leather','Leather ball'],['tennis','Tennis ball']])}
+   <div class="mu sm" style="margin-top:6px">Players have no gender field, so Men, Women and Mixed are labels only and are not checked per player. Players without a date of birth are listed when a match starts, not blocked.</div></div>`;
+  return o.replace(/<\/div>\s*$/,card+'</div>')};
+ Object.assign(C,{trRule(v,el){if(!can())return;const t=trObj(UI.tid);if(!t)return;R(t)[el.dataset.k]=v;commit();toast('Rule saved')}});
+ const w0=A.wzStart;A.wzStart=function(d){const w=S.wiz,t=w&&w.tid&&trObj(w.tid),r=(t&&t.rules)||{};
+  if(t){['gender','age','ball'].forEach(k=>{if(r[k]&&!w[k])w[k]=r[k]});
+   const lab={gender:'category',age:'age group',ball:'ball type'};for(const k of ['gender','age','ball']){if(r[k]&&w[k]&&w[k]!==r[k]&&!(k==='age'&&r[k]==='open'))return toast('This tournament is set to '+lab[k]+' "'+r[k]+'" but the match says "'+w[k]+'". Change the match to follow the tournament.',5000)}
+   const e=window.shEligibility(t,[].concat(w.xi[w.a]||[],w.xi[w.b]||[]),w.date);
+   if(e.bad.length)return toast('Not eligible for '+(r.age==='vet'?'Veterans':(AG[r.age]||[r.age])[0])+': '+e.bad.slice(0,4).join(', ')+(e.bad.length>4?' and '+(e.bad.length-4)+' more':''),6000);
+   if(e.unknown.length&&!w._eligOk){w._eligOk=1;return toast('No date of birth saved for: '+e.unknown.slice(0,4).join(', ')+(e.unknown.length>4?' and '+(e.unknown.length-4)+' more':'')+'. Press Start match again to continue anyway.',6000)}}
+  return w0.apply(this,arguments)};
 }
 </script>
 </body>

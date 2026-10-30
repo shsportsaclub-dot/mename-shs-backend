@@ -1,0 +1,21 @@
+const {chromium}=require('playwright');
+(async()=>{const b=await chromium.launch(),p=await b.newPage({viewport:{width:390,height:800}}),errs=[];p.on('pageerror',e=>errs.push(e.message));
+const ok=(c,m)=>{if(!c){console.log('FAIL',m);process.exitCode=1}};
+await p.goto('file://'+require('path').resolve(__dirname,'../app-index.html'));await p.waitForTimeout(400);
+const r=await p.evaluate(()=>{UI.stage='app';S.user={name:'QA',role:'admin'};S.prefs={...S.prefs,asked:1,welcomed:1};
+const yr=n=>new Date(Date.now()-n*365.25*864e5).toISOString().slice(0,10);
+S.players=Array.from({length:22},(_,i)=>({id:'p'+i,name:'Player '+i,role:'BAT',dob:i===3?yr(20):i===5?'':yr(14)}));
+S.teams=[{id:'a',name:'A',short:'A',players:S.players.slice(0,11).map(p=>p.id)},{id:'b',name:'B',short:'B',players:S.players.slice(11).map(p=>p.id)}];
+const t={id:'t1',name:'U16 Cup',teams:['a','b'],fixtures:[],overs:20,kind:'tournament',rules:{}};S.tours=[t];
+const msgs=[];const tt=window.toast;window.toast=(m)=>{msgs.push(String(m))};
+const o={};
+UI.view='tour';UI.tid='t1';UI.ttab='info';render();o.card=!!document.getElementById('trrules');
+C.trRule('u16',{dataset:{k:'age'}});C.trRule('tennis',{dataset:{k:'ball'}});o.saved=t.rules.age==='u16'&&t.rules.ball==='tennis';
+const e=shEligibility(t,S.players.map(p=>p.id),new Date());o.bad=e.bad.length===1&&/Player 3/.test(e.bad[0]);o.unknown=e.unknown.length===1&&e.unknown[0]==='Player 5';
+t.rules.age='open';o.open=shEligibility(t,['p3'],new Date()).bad.length===0;t.rules.age='vet';o.vet=shEligibility(t,['p0'],new Date()).bad.length===1;t.rules.age='u16';
+const w=wzFresh();Object.assign(w,{tid:'t1',a:'a',b:'b',xi:{a:S.teams[0].players.slice(0,11),b:S.teams[1].players.slice(0,11)},subs:{a:[],b:[]},date:new Date().toISOString().slice(0,10)});S.wiz=w;
+const n=S.matches.length;A.wzStart({});o.blocked=S.matches.length===n&&msgs.some(m=>/Not eligible for Under 16: Player 3/.test(m));o.inherit=w.age==='u16'&&w.ball==='tennis';
+w.ball='leather';msgs.length=0;A.wzStart({});o.conflict=msgs.some(m=>/tournament is set to ball type/.test(m));
+w.ball='tennis';w.xi.a=S.teams[0].players.filter(x=>x!=='p3').slice(0,10).concat('p5');msgs.length=0;A.wzStart({});o.warnUnknown=msgs.some(m=>/No date of birth saved for: Player 5/.test(m));
+o.fit=document.documentElement.scrollWidth<=innerWidth;return o});
+console.log(JSON.stringify(r));for(const k of Object.keys(r))ok(r[k],k);ok(!errs.length,'errors '+errs);console.log(process.exitCode?'FAILED':'PASS tour eligibility');await b.close()})()
