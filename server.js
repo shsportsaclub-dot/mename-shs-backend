@@ -1134,6 +1134,47 @@ routes['POST /api/grounds/review'] = async (req, body) => {
   if (i >= 0) g.revs[i] = r; else g.revs.push(r);
   saveDb(); return [200, { ok: true, rating: grAvg(g), reviews: g.revs.length }];
 };
+
+// Tournament team approval: any signed-in team manager requests to join a published tournament; only the tournament owner (or admin) approves or rejects, with a reason on rejection.
+const trBag = () => (db.shared.treq = db.shared.treq || {});
+const trTour = id => { const x = (db.shared.tours || {})[String(id || '')]; return x || null; };
+const trNm = (v, n) => String(v || '').replace(/[<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, n);
+routes['GET /api/tours/info'] = async (req, body) => {
+  const x = trTour(body.tid); if (!x) return [404, { ok: false, error: 'Tournament not found. Ask the organiser to share it first.' }];
+  const t = (x.data && x.data.t) || x.data || {};
+  return [200, { ok: true, tour: { id: String(body.tid), name: trNm(t.name || x.name, 80), organizer: x.ownerName || '', overs: t.overs || '', city: trNm(t.city || t.venue, 40), teams: Array.isArray(t.teams) ? t.teams.length : 0 } }];
+};
+routes['POST /api/tours/join'] = async (req, body) => {
+  const s = grUser(req); if (!s) return [401, { ok: false, error: 'Please sign in first' }];
+  if (limited('trj:' + s.phone, 20, 36e5)) return [429, { ok: false, error: 'Too many requests, slow down' }];
+  const x = trTour(body.tid); if (!x) return [404, { ok: false, error: 'Tournament not found' }];
+  const name = trNm(body.name, 30); if (name.length < 2) return [400, { ok: false, error: 'Enter the team name' }];
+  const L = trBag()[String(body.tid)] = trBag()[String(body.tid)] || [];
+  if (L.some(r => r.name.toLowerCase() === name.toLowerCase() && r.status !== 'rejected' && r.by !== s.phone)) return [409, { ok: false, error: 'A team with this name has already requested to join' }];
+  const mine = L.find(r => r.by === s.phone && r.name.toLowerCase() === name.toLowerCase());
+  if (mine && mine.status !== 'rejected') return [409, { ok: false, error: mine.status === 'approved' ? 'This team is already approved' : 'Your request is already waiting for approval' }];
+  if (L.filter(r => r.status === 'pending').length >= 60) return [429, { ok: false, error: 'Too many pending requests for this tournament' }];
+  const r = { id: 'tr' + crypto.randomBytes(4).toString('hex'), by: s.phone, byName: String(s.u.nick || s.u.name || '').slice(0, 30), name, short: trNm(body.short, 4).toUpperCase(), city: trNm(body.city, 40), note: trNm(body.note, 160), status: 'pending', reason: '', t: Date.now() };
+  if (mine) Object.assign(mine, r, { id: mine.id }); else L.push(r);
+  saveDb(); return [200, { ok: true, id: (mine || r).id }];
+};
+routes['GET /api/tours/requests'] = async (req, body) => {
+  const s = grUser(req); if (!s) return [401, { ok: false, error: 'Please sign in first' }];
+  const x = trTour(body.tid); if (!x) return [404, { ok: false, error: 'Tournament not found' }];
+  const L = trBag()[String(body.tid)] || [], boss = x.owner === s.phone || s.u.role === 'admin';
+  const pub = r => ({ id: r.id, name: r.name, short: r.short, city: r.city, note: r.note, by: r.byName, status: r.status, reason: r.reason, t: r.t });
+  return [200, { ok: true, owner: boss, items: (boss ? L : L.filter(r => r.by === s.phone)).slice().reverse().map(pub) }];
+};
+routes['POST /api/tours/decide'] = async (req, body) => {
+  const s = grUser(req); if (!s) return [401, { ok: false, error: 'Please sign in first' }];
+  const x = trTour(body.tid); if (!x) return [404, { ok: false, error: 'Tournament not found' }];
+  if (x.owner !== s.phone && s.u.role !== 'admin') return [403, { ok: false, error: 'Only the tournament organiser can approve or reject teams' }];
+  const r = (trBag()[String(body.tid)] || []).find(q => q.id === body.rid); if (!r) return [404, { ok: false, error: 'Request not found' }];
+  const st = body.status === 'approved' ? 'approved' : body.status === 'rejected' ? 'rejected' : ''; if (!st) return [400, { ok: false, error: 'Choose approve or reject' }];
+  const reason = trNm(body.reason, 160); if (st === 'rejected' && reason.length < 3) return [400, { ok: false, error: 'Give a short reason for rejecting' }];
+  r.status = st; r.reason = st === 'rejected' ? reason : ''; r.decidedBy = s.phone; r.decidedAt = Date.now(); saveDb();
+  return [200, { ok: true, item: { id: r.id, name: r.name, short: r.short, city: r.city, status: r.status } }];
+};
 // ---------- Teams and players registry (like CricHeroes / CrickPro): unique team names, players found by name or mobile, no duplicate players, creator/admin rights, verification by a registered account with the same mobile ----------
 const RG_ROLES = ['BAT', 'BOWL', 'AR', 'WK'], RG_BAT = ['Right-hand', 'Left-hand'], RG_BOWL = ['', 'Right-arm fast', 'Right-arm medium', 'Off spin', 'Left-arm fast', 'Left-arm spin', 'Leg spin'], RG_LEVELS = ['national', 'state', 'district', 'club', 'academy', 'corporate', 'school', 'college'], RG_MAX = 30;
 const rgTeams = () => (db.shared.rgTeams = db.shared.rgTeams || {}), rgPlayers = () => (db.shared.rgPlayers = db.shared.rgPlayers || {});
