@@ -10845,6 +10845,7 @@ document.addEventListener('input',e=>{const el=e.target;if(!el||!/^qt-n-[ab]$/.t
   tick:(m,s)=>{const L=S.matches.filter(x=>!isDemo(x)&&x.status!=='done'&&x.id!==m.id).slice(0,3);let h=s?`<div class="l"><span>${esc(s.bat.short||'')} ${s.k.runs}-${s.k.wk} (${fmtOv(s.k.lg)})</span><b>${esc(s.bowl.short||'')}</b></div>`:'';L.forEach(x=>{try{const y=st(x);h+=`<div class="l"><span>${esc(T(x.a).short)} v ${esc(T(x.b).short)}</span><b>${y.k.runs}-${y.k.wk}</b></div>`}catch(e){}});return `<h4>Live scores</h4>`+(h||'<div class="l"><span>No live matches</span></div>')},
   sold:m=>{const a=S.auction,x=a&&a.sold&&a.sold[a.sold.length-1];if(!x)return '<h4>SOLD</h4><div class="l"><span>No player sold yet</span></div>';return `<h4 style="color:#e8590c">SOLD</h4><div class="l"><span>${esc(nm(x.pid))}</span><b>${money(x.price)}</b></div><div class="l"><span>to ${esc((T(x.tid)||{}).name||'')}</span></div>`},
   qr:m=>{let img='';try{const cv=qrCanvas(shLink('match',m.id),200);img=cv?`<img src="${cv.toDataURL()}" alt="QR" style="width:14cqw;background:#fff;border-radius:.6cqw;float:right;margin-left:1.5cqw">`:''}catch(e){}return `<h4>Follow live</h4>${img}<div class="l"><span>Scan to open ${esc(T(m.a).short)} v ${esc(T(m.b).short)} on Scoring Heroes</span></div>`}};
+ window.shG2=G2;window.shG2Labels=LB;
  const FX={four:['FOUR','#2f9e44'],six:['SIX','#e8590c'],wicket:['WICKET','#e03131'],fifty:['FIFTY','#1971c2'],hundred:['HUNDRED','#9c36b5']};
  const o0=overlayHTML;
  overlayHTML=function(prev){let h=o0.apply(this,arguments).replace('<div class="ovgfx"></div>','');const z=Z(),m=ovMatch();if(!m)return h;let s=null;try{s=st(m)}catch(e){}
@@ -11044,6 +11045,28 @@ document.addEventListener('input',e=>{const el=e.target;if(!el||!/^qt-n-[ab]$/.t
   mdPub(d){const p=P(d.p),m=p&&own(p)&&M(p).find(x=>x.id===d.id);if(!m)return;m.sh='on';m.pubAt=Date.now();commit();toast('Now visible on your profile')},
   mdWd(d){const p=P(d.p),m=p&&own(p)&&M(p).find(x=>x.id===d.id);if(!m)return;m.sh='withdrawn';m.wdAt=Date.now();commit();toast('Withdrawn. It is no longer visible to others.')},
   mdDel(d){const p=P(d.p);if(!p||!own(p))return;p.media=M(p).filter(x=>x.id!==d.id);commit()}});
+}
+/* ---------------- 88 SHARED GRAPHICS PACKAGE (R47): the same graphics as JSON under schema sh.graphic/1, a versioned manifest from the server, update check ---------------- */
+{
+ const SCHEMA='sh.graphic/1',LOCAL='1.1.0';
+ const base=()=>(typeof apiBase==='function'&&apiBase())||'';
+ const cmp=(a,b)=>{const x=String(a).split('.').map(Number),y=String(b).split('.').map(Number);for(let i=0;i<3;i++){if((x[i]||0)!==(y[i]||0))return (x[i]||0)>(y[i]||0)?1:-1}return 0};
+ window.shGfxData=function(k,m,s){const G=window.shG2;if(!G||!G[k]||!m)return null;let html='';try{html=G[k](m,s)}catch(e){return null}
+  const d=new DOMParser().parseFromString('<div>'+html+'</div>','text/html'),title=(d.querySelector('h4')||{}).textContent||'',rows=[];
+  d.querySelectorAll('.l').forEach(l=>{const sp=l.querySelector('span'),b=l.querySelector('b');rows.push({l:((sp?sp.textContent:l.textContent)||'').trim(),v:b?b.textContent.trim():''})});
+  return {schema:SCHEMA,version:LOCAL,template:k,matchId:m.id,title:title.trim(),rows,at:Date.now()}};
+ const N=()=>(UI.gpk=UI.gpk||{pkg:null,msg:''});
+ const v0=vStream;vStream=function(){let h=v0.apply(this,arguments);const n=N(),p=n.pkg,upd=p&&cmp(p.version,LOCAL)>0;
+  const card=`<div class="card" id="gpkg"><h3>Shared graphics package</h3><div class="mu sm">One set of graphics for the web overlay, the Windows or Web Studio and the Broadcast Companion. Studios read the same data and draw it with their own engine.</div>
+   <div class="mu sm" style="margin-top:6px">App package ${LOCAL} · schema ${SCHEMA}${p?' · server '+esc(p.version)+(upd?' (newer)':' (up to date)'):''}</div>
+   ${upd?`<div class="need" style="margin-top:6px">Package ${esc(p.version)} is available: ${esc(((p.changelog||[])[0]||{}).note||'')} Update the app to use it.</div>`:''}
+   <div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap"><button type="button" class="btn sm ghost" data-a="gpCheck">Check for update</button><button type="button" class="btn sm ghost" data-a="gpCopy">Copy graphic data (JSON)</button><button type="button" class="btn sm ghost" data-a="gpUrl">Copy manifest link</button></div>${n.msg?`<div class="mu sm" style="margin-top:6px">${esc(n.msg)}</div>`:''}</div>`;
+  return h.replace('<div class="card" id="ovpack">',card+'<div class="card" id="ovpack">')};
+ const copy=async t=>{try{await navigator.clipboard.writeText(t);return true}catch(e){return false}};
+ Object.assign(A,{async gpCheck(){const n=N();try{const r=await fetch(base()+'/api/graphics/package'),j=await r.json();n.pkg=j.package||null;n.msg=n.pkg?(cmp(n.pkg.version,LOCAL)>0?'A newer package exists.':'You have the latest package.'):'Could not read the package.'}catch(e){n.msg='No connection'}render()},
+  async gpCopy(){const n=N(),z=UI.view&&S.stream,k=(S.stream&&(S.stream.pv||S.stream.gfx))||'fow',m=typeof ovMatch==='function'?ovMatch():null;if(!m){n.msg='No match is selected for the overlay.';return render()}let s=null;try{s=st(m)}catch(e){}
+   const d=window.shGfxData(k,m,s);if(!d){n.msg='Could not build data for this graphic.';return render()}const ok=await copy(JSON.stringify(d,null,1));n.msg=ok?'Copied '+k+' data. Paste it into your studio.':'Copy was blocked. Long-press to copy: '+JSON.stringify(d);render()},
+  async gpUrl(){const n=N(),u=base()+'/api/graphics/package';n.msg=(await copy(u))?'Manifest link copied.':'Manifest link: '+u;render()}});
 }
 </script>
 </body>
