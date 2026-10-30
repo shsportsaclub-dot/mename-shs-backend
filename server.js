@@ -1555,12 +1555,14 @@ routes['GET /api/freephoto/img'] = async (req, body, ip) => {
 // ---- Sports news (Google News RSS, cached 10 min) ----
 const NEWS_BASE = E.NEWS_BASE || 'https://news.google.com/rss/search';
 const NEWS_QUERY = E.NEWS_QUERY || 'cricket';
-let newsC = { t: 0, data: null };
+const newsC = {};   // per language cache
+const NEWS_LANG = { en: { q: NEWS_QUERY, hl: 'en-IN', ceid: 'IN:en' }, hi: { q: 'क्रिकेट', hl: 'hi', ceid: 'IN:hi' }, te: { q: 'క్రికెట్', hl: 'te', ceid: 'IN:te' } };
 const decode = x => String(x || '').replace(/<!\[CDATA\[|\]\]>/g, '').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").trim();
-routes['GET /api/news'] = async () => {
-  if (newsC.data && Date.now() - newsC.t < 6e5) return [200, newsC.data];
+routes['GET /api/news'] = async (req, body) => {
+  const lang = NEWS_LANG[body && body.lang] ? body.lang : 'en', L = NEWS_LANG[lang], c = newsC[lang] || (newsC[lang] = { t: 0, data: null });
+  if (c.data && Date.now() - c.t < 6e5) return [200, c.data];
   try {
-    const r = await fetch(`${NEWS_BASE}?q=${encodeURIComponent(NEWS_QUERY)}&hl=en-IN&gl=IN&ceid=IN:en`);
+    const r = await fetch(`${NEWS_BASE}?q=${encodeURIComponent(L.q)}&hl=${L.hl}&gl=IN&ceid=${L.ceid}`);
     const xml = await r.text();
     const items = xml.split('<item>').slice(1, 15).map(it => {
       const g = re => { const m = re.exec(it); return m ? decode(m[1]) : ''; };
@@ -1568,9 +1570,9 @@ routes['GET /api/news'] = async () => {
       if (source && title.endsWith(' - ' + source)) title = title.slice(0, -(source.length + 3));
       return { title, link: g(/<link>([\s\S]*?)<\/link>/), source, date: g(/<pubDate>([\s\S]*?)<\/pubDate>/) };
     }).filter(x => x.title);
-    newsC = { t: Date.now(), data: { ok: true, items } };
-    return [200, newsC.data];
-  } catch (e) { return newsC.data ? [200, newsC.data] : [502, { ok: false, error: 'News unavailable' }]; }
+    c.t = Date.now(); c.data = { ok: true, lang, items };
+    return [200, c.data];
+  } catch (e) { return c.data ? [200, c.data] : [502, { ok: false, error: 'News unavailable' }]; }
 };
 
 

@@ -10766,6 +10766,35 @@ document.addEventListener('input',e=>{const el=e.target;if(!el||!/^qt-n-[ab]$/.t
  const gid=new URLSearchParams(location.search).get('ground');
  if(gid){let done=0;const f0=render;render=function(){if(!done&&S.user&&UI.stage==='app'){done=1;setTimeout(async()=>{try{const r=await fetch(((typeof apiBase==='function'&&apiBase())||'')+'/api/grounds/detail?id='+encodeURIComponent(gid)),j=await r.json();if(j.ok){UI.gg=UI.gg||{items:[],pos:null,msg:'',busy:false,rec:null,edit:''};UI.gg.items=[j.item];UI.gd=UI.gd||{open:'',data:{},stars:0};UI.gd.open=gid;UI.gd.data[gid]=j;UI.view='gground';render()}else toast('This ground was not found',3500)}catch(e){toast('Could not open the ground link',3500)}},250)}return f0.apply(this,arguments)}}
 }
+
+/* ---------------- 79 ePaper: language editions (English / Hindi / Telugu labels, dates and result lines) + archive of past days ---------------- */
+{
+ const PK={
+  hi:{loc:'hi-IN',L:{'Live now':'अभी लाइव','Results':'नतीजे','Fixtures':'आगामी मैच','Our sponsors':'हमारे प्रायोजक','Top run-scorers':'शीर्ष रन बनाने वाले','Match reports':'मैच रिपोर्ट','Print / Save PDF':'प्रिंट / PDF सेव करें','Share':'शेयर','Global edition':'ग्लोबल संस्करण','Local edition':'लोकल संस्करण','Grounds and academy':'मैदान और अकादमी','Free':'मुफ़्त','Make poster':'पोस्टर बनाएँ','Past editions':'पुराने संस्करण','Your matches, grounds and academy':'आपके मैच, मैदान और अकादमी','No completed matches yet.':'अभी कोई पूरा मैच नहीं।','No fixtures scheduled.':'कोई मैच तय नहीं।','No fixtures listed.':'कोई मैच सूचीबद्ध नहीं।','No recent results yet.':'अभी कोई नतीजा नहीं।'},daily:'दैनिक',local:'लोकल',ed:'संस्करण',
+   runs:(t,n)=>`${t} ${n} रन से जीता`,wk:(t,n)=>`${t} ${n} विकेट से जीता`},
+  te:{loc:'te-IN',L:{'Live now':'ఇప్పుడు లైవ్','Results':'ఫలితాలు','Fixtures':'రాబోయే మ్యాచ్‌లు','Our sponsors':'మా స్పాన్సర్లు','Top run-scorers':'అత్యధిక పరుగులు','Match reports':'మ్యాచ్ రిపోర్టులు','Print / Save PDF':'ప్రింట్ / PDF సేవ్','Share':'షేర్','Global edition':'గ్లోబల్ ఎడిషన్','Local edition':'లోకల్ ఎడిషన్','Grounds and academy':'గ్రౌండ్లు, అకాడమీ','Free':'ఉచితం','Make poster':'పోస్టర్ చేయి','Past editions':'పాత ఎడిషన్లు','Your matches, grounds and academy':'మీ మ్యాచ్‌లు, గ్రౌండ్లు, అకాడమీ','No completed matches yet.':'ఇంకా పూర్తైన మ్యాచ్‌లు లేవు.','No fixtures scheduled.':'మ్యాచ్‌లు ఏవీ నిర్ణయించలేదు.','No fixtures listed.':'మ్యాచ్‌ల జాబితా లేదు.','No recent results yet.':'ఇటీవలి ఫలితాలు లేవు.'},daily:'దినపత్రిక',local:'లోకల్',ed:'ఎడిషన్',
+   runs:(t,n)=>`${t} ${n} పరుగుల తేడాతో గెలిచింది`,wk:(t,n)=>`${t} ${n} వికెట్ల తేడాతో గెలిచింది`}};
+ const U=()=>(UI.ep2=UI.ep2||{ed:'global'});
+ const loc=h=>{const l=U().lang,k=PK[l];if(!k)return h;
+  for(const [a,b] of Object.entries(k.L))h=h.split('>'+a+'<').join('>'+b+'<');
+  h=h.replace(/<h1>([^<]*?) Daily<\/h1>/,(m,x)=>`<h1>${x} ${k.daily}</h1>`).replace(/<h1>([^<]*?) Local<\/h1>/,(m,x)=>`<h1>${x} ${k.local}</h1>`).replace(/<span>Edition (\d+)<\/span>/,(m,n)=>`<span>${k.ed} ${n}</span>`);
+  h=h.replace(/(<span>)([A-Za-z]+day, \d+ [A-Za-z]+ \d{4})(<\/span>)/,(m,a,d,c)=>a+new Date().toLocaleDateString(k.loc,{weekday:'long',day:'numeric',month:'long',year:'numeric'})+c);
+  h=h.replace(/([^<>]*?) won by (\d+) (runs?|wickets?)/g,(m,t,n,u)=>/^runs?$/.test(u)?k.runs(t.trim(),n):k.wk(t.trim(),n));
+  return h};
+ const e0=XV.epaper;
+ XV.epaper=function(){
+  const d=U(),L=d.lang||'en',chips=`<div class="aucseg noprint">${[['en','English'],['hi','हिन्दी'],['te','తెలుగు']].map(([k,l])=>`<button class="${L===k?'on':''}" data-a="ep3Lang" data-v="${k}">${l}</button>`).join('')}</div>`;
+  let h=loc(e0.apply(this,arguments));const k=PK[d.lang];
+  const days=(UI.epSrv&&UI.epSrv.days)||[],ar=d.arch||{};
+  const arch=`<div class="box noprint" style="margin-top:12px"><h3>${k?k.L['Past editions']:'Past editions'}</h3>${days.length?`<div style="display:flex;gap:6px;flex-wrap:wrap">${days.slice().reverse().map(x=>`<button type="button" class="btn sm ${ar.day===x?'':'ghost'}" data-a="ep3Day" data-v="${x}">${esc(new Date(x+'T00:00:00').toLocaleDateString(k?k.loc:'en-IN',{day:'numeric',month:'short'}))}</button>`).join('')}</div>`:'<div class="src">No saved editions yet. The server saves one every day.</div>'}
+   ${ar.day?(ar.busy?'<div class="src">Loading…</div>':ar.err?`<div class="need">${esc(ar.err)}</div>`:`<div style="margin-top:8px">${(ar.news||[]).map(a=>`<div><h3>${esc(a.h)}</h3><span class="src">${esc(a.sub||'')}</span></div>`).join('')}${(ar.world||[]).map(m=>`<div class="r"><span>${esc(m.name||'')}</span></div><div class="src" style="margin:-2px 0 4px">${esc(loc('<x>'+(m.status||'')+'</x>').replace(/<\/?x>/g,''))}</div>`).join('')}${!(ar.news||[]).length&&!(ar.world||[]).length?'<div class="src">Nothing was saved for this day.</div>':''}</div>`):''}</div>`;
+  return chips+h+arch};
+ A.ep3Lang=function(d){U().lang=d.v==='en'?'':d.v;render()};
+ A.ep3Day=async function(d){const a=U().arch=U().arch||{};if(a.day===d.v){a.day='';render();return}a.day=d.v;a.busy=1;a.err='';a.news=[];a.world=[];render();
+  try{const r=await fetch((typeof apiBase==='function'&&apiBase()||'')+'/paper?date='+encodeURIComponent(d.v)),j=await r.json();if(j&&j.ok){a.news=(j.news||[]).concat(j.sh||[]);a.world=j.world||[]}else a.err='Could not load this edition'}catch(e){a.err='Could not load this edition'}a.busy=0;render()};
+ /* make sure the list of saved days is loaded */
+ const rf=render;render=function(){if(UI.view==='epaper'&&!UI.epSrv&&!UI.epSrvTry&&typeof apiBase==='function'&&apiBase()){UI.epSrvTry=1;fetch(apiBase()+'/paper').then(r=>r.json()).then(j=>{UI.epSrv=j;render()}).catch(()=>{})}return rf.apply(this,arguments)};
+}
 </script>
 </body>
 </html>
