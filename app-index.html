@@ -11018,6 +11018,33 @@ document.addEventListener('input',e=>{const el=e.target;if(!el||!/^qt-n-[ab]$/.t
   p.self=p.self||[];if(p.self.length>=40)return toast('Up to 40 entries');p.self.push({id:uid(),k:v('sd-k')||'other',y,x:x.slice(0,120),by:String(S.user.name||'').slice(0,30),t:Date.now()});commit();toast('Added as self-declared')},
   selfDel(d){const p=P(d.p);if(!p||!mayEdit(p))return;p.self=(p.self||[]).filter(e=>e.id!==d.id);commit()}});
 }
+/* ---------------- 87 PLAYER MEDIA PORTFOLIO + PUBLISHING DASHBOARD (R39): items with per-destination status, withdraw, republish; external platforms stay "not connected" and are never reported as posted; only real counts are shown ---------------- */
+{
+ const TY={photo:'Photo',video:'Video',press:'Press or article'};
+ const EXT=[['yt','YouTube',/(^|\.)youtube\.com$|(^|\.)youtu\.be$/],['ig','Instagram',/(^|\.)instagram\.com$/],['fb','Facebook',/(^|\.)facebook\.com$|(^|\.)fb\.watch$/],['x','X',/(^|\.)x\.com$|(^|\.)twitter\.com$/]];
+ const own=p=>!!(isAdmin()||(S.user&&!S.user.guest&&S.user.pid===p.id));
+ const M=p=>(p.media=p.media||[]);
+ const pillS=t=>`<span class="pill" style="font-size:10px">${t}</span>`;
+ const host=u=>{try{const U=new URL(u);return U.protocol==='https:'?U.hostname.toLowerCase():''}catch(e){return ''}};
+ const stat=m=>m.sh==='on'?pillS('PUBLISHED ON SH'):m.sh==='withdrawn'?pillS('WITHDRAWN'):pillS('DRAFT');
+ const x0=XV.pp;XV.pp=function(){let h=x0.apply(this,arguments);const id=UI.pp&&UI.pp.id,p=id&&P(id);if(!p||(UI.pp.tab||'matches')!=='profile'||typeof h!=='string')return h;
+  const ed=own(p),L=M(p),vis=ed?L:L.filter(m=>m.sh==='on');if(!vis.length&&!ed)return h;
+  const c={on:L.filter(m=>m.sh==='on').length,wd:L.filter(m=>m.sh==='withdrawn').length,dr:L.filter(m=>m.sh!=='on'&&m.sh!=='withdrawn').length,ext:L.filter(m=>m.ext&&m.ext.length).length};
+  const row=m=>`<div class="cd" style="margin:8px 0"><div class="row" style="justify-content:space-between;gap:8px"><b>${esc(m.title)}</b>${ed?stat(m):''}</div><div class="mu2">${esc(TY[m.type]||'Media')} · ${esc(m.date||'')}</div>
+   <div style="word-break:break-all"><a href="${esc(m.url)}" target="_blank" rel="noopener" style="color:#7fb0ff">${esc(m.url)}</a></div>${m.note?`<div class="mu2">${esc(m.note)}</div>`:''}
+   ${ed?`<div class="mu2" style="margin-top:6px">Destinations</div><div class="row" style="gap:6px;flex-wrap:wrap;margin-top:2px"><span class="mu2">Scoring Heroes profile: ${m.sh==='on'?'live':m.sh==='withdrawn'?'withdrawn (not visible)':'not published'}</span>${(m.ext||[]).map(k=>`<span class="mu2">${esc((EXT.find(e=>e[0]===k)||[0,k])[1])}: link recorded, not posted by SH</span>`).join('')}</div>
+   <div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap">${m.sh==='on'?`<button type="button" class="btn sm ghost" data-a="mdWd" data-p="${esc(p.id)}" data-id="${esc(m.id)}">Withdraw</button>`:`<button type="button" class="btn sm" data-a="mdPub" data-p="${esc(p.id)}" data-id="${esc(m.id)}">${m.sh==='withdrawn'?'Publish again':'Publish on my profile'}</button>`}<button type="button" class="btn sm ghost" data-a="mdDel" data-p="${esc(p.id)}" data-id="${esc(m.id)}">Delete</button></div>`:''}</div>`;
+  const card=`<h2 style="margin:18px 0 8px">Media</h2>${ed?`<div class="cd"><b>Publishing dashboard</b><div class="tl" style="margin-top:8px"><div><b>${c.on}</b><span>Published</span></div><div><b>${c.dr}</b><span>Drafts</span></div><div><b>${c.wd}</b><span>Withdrawn</span></div><div><b>${c.ext}</b><span>With outside links</span></div></div><div class="mu2" style="margin-top:8px">YouTube, Instagram, Facebook and X are not connected, so Scoring Heroes cannot post there or read their numbers. You can record a link to something you posted yourself. Views and likes are not shown because no real count is available.</div></div>`:''}
+   ${vis.length?vis.map(row).join(''):'<div class="cd mu2">No media yet.</div>'}
+   ${ed?`<div class="cd"><b>Add media</b><div class="row" style="gap:8px;margin-top:6px"><select id="md-t" style="flex:1">${Object.entries(TY).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select></div><input id="md-n" maxlength="80" placeholder="Title" style="margin-top:6px"><input id="md-u" maxlength="300" placeholder="https:// link to the photo, video or article" style="margin-top:6px"><input id="md-o" maxlength="140" placeholder="Note (optional)" style="margin-top:6px"><button type="button" class="btn sm" style="margin-top:6px" data-a="mdAdd" data-p="${esc(p.id)}">Save as draft</button></div>`:''}`;
+  return h.replace(/<\/div><\/div>$/,card+'</div></div>')};
+ Object.assign(A,{mdAdd(d){const p=P(d.p);if(!p||!own(p))return;const v=id=>String((document.getElementById(id)||{}).value||'').trim(),t=v('md-n'),u=v('md-u'),h=host(u);
+  if(t.length<2)return toast('Give it a title');if(!h)return toast('Link must be a full https:// address',3000);if(M(p).length>=60)return toast('Up to 60 items');if(M(p).some(m=>m.url===u))return toast('Already added');
+  const ext=EXT.filter(e=>e[2].test(h)).map(e=>e[0]);M(p).unshift({id:uid(),type:v('md-t')||'photo',title:t.slice(0,80),url:u.slice(0,300),note:v('md-o').slice(0,140),date:new Date().toISOString().slice(0,10),sh:'draft',ext});commit();toast('Saved as draft')},
+  mdPub(d){const p=P(d.p),m=p&&own(p)&&M(p).find(x=>x.id===d.id);if(!m)return;m.sh='on';m.pubAt=Date.now();commit();toast('Now visible on your profile')},
+  mdWd(d){const p=P(d.p),m=p&&own(p)&&M(p).find(x=>x.id===d.id);if(!m)return;m.sh='withdrawn';m.wdAt=Date.now();commit();toast('Withdrawn. It is no longer visible to others.')},
+  mdDel(d){const p=P(d.p);if(!p||!own(p))return;p.media=M(p).filter(x=>x.id!==d.id);commit()}});
+}
 </script>
 </body>
 </html>

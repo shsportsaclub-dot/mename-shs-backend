@@ -1,0 +1,21 @@
+const {chromium}=require('playwright');
+(async()=>{const b=await chromium.launch(),p=await b.newPage({viewport:{width:390,height:800}}),errs=[];p.on('pageerror',e=>errs.push(e.message));
+const ok=(c,m)=>{if(!c){console.log('FAIL',m);process.exitCode=1}};
+await p.goto('file://'+require('path').resolve(__dirname,'../app-index.html'));await p.waitForTimeout(400);
+const r=await p.evaluate(()=>{UI.stage='app';S.user={name:'Me',role:'viewer',pid:'p0'};S.prefs={...S.prefs,asked:1,welcomed:1};
+S.players=Array.from({length:3},(_,i)=>({id:'p'+i,name:'Player '+i,role:'BAT'}));S.teams=[];
+A.ppOpen({id:'p0'});UI.pp.tab='profile';render();const o={};let t=document.body.innerText;o.dash=/Publishing dashboard/.test(t)&&/not connected/i.test(t);
+const add=(ti,u)=>{document.getElementById('md-n').value=ti;document.getElementById('md-u').value=u;A.mdAdd({p:'p0'});render()};
+add('Century clip','http://bad.example/x');o.rejectHttp=!(S.players[0].media||[]).length;
+add('Century clip','https://youtu.be/abc');o.draft=S.players[0].media.length===1&&S.players[0].media[0].sh==='draft'&&S.players[0].media[0].ext[0]==='yt';
+add('Century clip','https://youtu.be/abc');o.dup=S.players[0].media.length===1;
+const id=S.players[0].media[0].id;
+UI.pp.id='p0';S.user={name:'Viewer',role:'viewer'};render();o.hiddenDraft=!/Century clip/.test(document.body.innerText);
+S.user={name:'Me',role:'viewer',pid:'p0'};A.mdPub({p:'p0',id});render();o.pub=/PUBLISHED ON SH/.test(document.body.innerText)&&/link recorded, not posted by SH/.test(document.body.innerText);
+S.user={name:'Viewer',role:'viewer'};render();o.viewerSees=/Century clip/.test(document.body.innerText)&&!/Publishing dashboard/.test(document.body.innerText);
+S.user={name:'Other',role:'viewer',pid:'p1'};A.mdWd({p:'p0',id});o.noForeignEdit=S.players[0].media[0].sh==='on';
+S.user={name:'Me',role:'viewer',pid:'p0'};A.mdWd({p:'p0',id});render();o.wd=S.players[0].media[0].sh==='withdrawn';
+S.user={name:'Viewer',role:'viewer'};render();o.viewerHidden=!/Century clip/.test(document.body.innerText);
+S.user={name:'Me',role:'viewer',pid:'p0'};A.mdPub({p:'p0',id});o.again=S.players[0].media[0].sh==='on';A.mdDel({p:'p0',id});o.del=!S.players[0].media.length;
+o.fit=document.documentElement.scrollWidth<=innerWidth;return o});
+console.log(JSON.stringify(r));for(const k of Object.keys(r))ok(r[k],k);ok(!errs.length,'errors '+errs);console.log(process.exitCode?'FAILED':'PASS player media');await b.close()})()
