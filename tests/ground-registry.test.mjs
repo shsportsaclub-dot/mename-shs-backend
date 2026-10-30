@@ -16,7 +16,7 @@ test('ground registry: GPS register, 200 m rule, owner claim/rename, records onl
     let st, j;
     [st] = await call('POST', '/api/grounds', null, { name: 'Sky Ground', lat: 17.385, lng: 78.4867 }); assert.equal(st, 401);
     [st] = await call('POST', '/api/grounds', T.o, { name: 'Sky Ground' }); assert.equal(st, 400);                       // needs GPS
-    [st, j] = await call('POST', '/api/grounds', T.o, { name: 'Sky Ground', lat: 17.385, lng: 78.4867, owner: true }); assert.equal(st, 200); const id = j.item.id; assert.ok(j.item.owned);
+    [st, j] = await call('POST', '/api/grounds', T.o, { name: 'Sky Ground', lat: 17.385, lng: 78.4867, owner: true, city: 'Hyderabad', pitch: 'Turf', fac: 'Nets, lights' }); assert.equal(st, 200); assert.equal(j.item.city, 'Hyderabad'); assert.equal(j.item.pitch, 'Turf'); const id = j.item.id; assert.ok(j.item.owned);
     // 100 m away (0.0009 deg lat ~ 100 m) -> refused, even with a different name
     [st, j] = await call('POST', '/api/grounds', T.x, { name: 'Totally Different', lat: 17.3859, lng: 78.4867 }); assert.equal(st, 409); assert.equal(j.existing.id, id);
     // ~400 m away -> allowed
@@ -24,7 +24,7 @@ test('ground registry: GPS register, 200 m rule, owner claim/rename, records onl
     [st, j] = await call('GET', '/api/grounds?lat=17.385&lng=78.4867&r=5000'); assert.equal(j.items.length, 2); assert.equal(j.items[0].id, id); assert.equal(j.within, 1);
     [st] = await call('POST', '/api/grounds/claim', T.x, { id }); assert.equal(st, 409);                                  // already owned
     [st] = await call('PUT', '/api/grounds', T.x, { id, name: 'Hijack' }); assert.equal(st, 403);
-    [st, j] = await call('PUT', '/api/grounds', T.o, { id, name: 'Sky Cricket Ground' }); assert.equal(st, 200); assert.equal(j.item.name, 'Sky Cricket Ground');
+    [st, j] = await call('PUT', '/api/grounds', T.o, { id, name: 'Sky Cricket Ground', city: 'Secunderabad', pitch: 'Matting' }); assert.equal(st, 200); assert.equal(j.item.name, 'Sky Cricket Ground'); assert.equal(j.item.city, 'Secunderabad'); assert.equal(j.item.pitch, 'Matting'); assert.equal(j.item.fac, 'Nets, lights');
     [st] = await call('POST', '/api/grounds/record', T.s, { id, rec: { mid: 'm1', a: 'A', b: 'B', overs: 20, date: '2026-10-30', status: 'live' } }); assert.equal(st, 200);
     [st] = await call('POST', '/api/grounds/record', T.s, { id, rec: { mid: 'm1', a: 'A', b: 'B', overs: 20, date: '2026-10-30', status: 'done', result: 'A won', score: '150/5 & 120/9' } }); assert.equal(st, 200);
     [st, j] = await call('GET', '/api/grounds/records?id=' + id, T.o); assert.equal(st, 200); assert.equal(j.items.length, 1); assert.equal(j.items[0].status, 'done');
