@@ -266,12 +266,15 @@ async function hybridLive(base) {
   if (hy.data && hy.src === base && Date.now() - hy.t < 15e3) return hy.data;
   let sm = []; try { sm = ((await smLive()).matches) || []; } catch {}
   const idx = new Map(); sm.forEach(m => { const k = pairKey(m); if (!idx.has(k)) idx.set(k, []); idx.get(k).push(m); });
+  // A fixture the main provider never lists (e.g. India's own matches) is added from the second provider automatically.
+  const used = new Set(); const baseKeys = new Set(base.matches.map(m => pairKey(m)));
   const out = base.matches.map(m => {
     const c = (idx.get(pairKey(m)) || []).find(x => Math.abs(dayOf(x.date) - dayOf(m.date)) <= 864e5);
     if (!c) return m;
     smBy.set(m.id, String(c.id).replace(/^sm/, ''));
     return { ...m, smId: c.id };
   });
+  for (const c of sm) { if (!c || !c.id || !(c.teams && c.teams.length >= 2) || c.ended && Date.now() - Date.parse(c.time || c.date || 0) > 3 * 864e5) continue; const k = pairKey(c); const near = base.matches.some(m => pairKey(m) === k && Math.abs(dayOf(m.date) - dayOf(c.date)) <= 864e5); if (!near && !used.has(c.id)) { used.add(c.id); out.push({ ...c, smId: c.id, extra: 'sportmonks' }); } }
   await Promise.all(out.filter(m => m.smId && m.started && !m.ended).slice(0, 12).map(async m => { const b = await smBalls(m.smId.slice(2), 90e3); if (b.length) { m.bbb = true; m.bbbSrc = 'sportmonks'; } }));
   hy = { t: Date.now(), src: base, data: { ...base, matches: out } };
   return hy.data;
