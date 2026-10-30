@@ -1734,6 +1734,8 @@ http.createServer(async (req, res) => {
     if (!isFinite(runs) || runs < 0 || runs > 12 || !isFinite(bat) || bat < 0 || bat > 7 || !isFinite(over) || over < 0 || over > 999 || !isFinite(ball) || ball < 1 || ball > 6) return out(400, { ok: false, error: 'Bad ball' });
     if (list.length >= 4000) return out(409, { ok: false, error: 'Too many balls for one match' });
     const rec = { n: list.length + 1, inning: str(x.inning, 80), over, ball, runs, bat, kind, wicket: !!x.wicket, out: str(x.out, 60), batsman: str(x.batsman, 60), ns: str(x.ns, 60), ex: ['b', 'lb'].includes(x.ex) ? x.ex : '', bowler: str(x.bowler, 60), at: Date.now(), by: u.name || phone.slice(-4) };
+    if (x.ang && isFinite(+x.ang.a) && isFinite(+x.ang.d) && Math.abs(+x.ang.a) <= 7 && +x.ang.d >= 0 && +x.ang.d <= 1.1) rec.ang = { a: +(+x.ang.a).toFixed(3), d: +(+x.ang.d).toFixed(2) };
+    if (['Drive','Cut','Pull','Sweep','Flick','Defence','Glance','Hook','Upper cut','Other'].includes(x.shot)) rec.shot = x.shot;
     list.push(rec); saveDb();
     return out(200, { ok: true, balls: list, n: list.length });
   }

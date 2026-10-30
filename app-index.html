@@ -573,16 +573,16 @@ function engText(n,st){
   else if(n.x==='b')t=`${head}, ${engPl(n.tot,'bye')}.`;
   else if(n.x==='lb')t=`${head}, ${engPl(n.tot,'leg bye')}.`;
   else if(n.tot===0)t=`${head}, no run.`;
-  else if(n.brun===4)t=`${head}, FOUR.`;
-  else if(n.brun===6)t=`${head}, SIX.`;
-  else t=`${head}, ${engPl(n.tot,'run')}.`;
+  else if(n.brun===4)t=`${head}, FOUR${n.sd?', '+n.sd:''}.`;
+  else if(n.brun===6)t=`${head}, SIX${n.sd?', '+n.sd:''}.`;
+  else t=`${head}, ${engPl(n.tot,'run')}${n.sd&&n.brun>0?', '+n.sd:''}.`;
   if(st){
     if(n.x!=='wd'&&n.x!=='b'&&n.x!=='lb'&&n.brun>0){t+=` ${n.bat} ${B.r} (${engPl(B.b,'ball')}).`;
       for(const th of [50,100,150,200,250,300])if(pre<th&&B.r>=th)t+=` ${n.bat} reaches ${th===50?'a fifty':th===100?'a hundred':th}!`}
     if(n.tot===0){st.dots++;if(st.dots>=3)t+=` ${st.dots} dot balls in a row.`}else st.dots=0;
     t+=engVoice(n,st,B,pre,dots0)}
   return t}
-function cNorm(e){return {bat:sh(e.bt),bowl:sh(e.bl),brun:(!e.x||e.x==='nb')?e.r:0,tot:e.r+(e.x==='wd'?1:e.x==='nb'?NBP:0),x:e.x||'',wk:e.w?{out:sh(e.out),kind:e.w,fld:e.fld}:null}}
+function cNorm(e){return {bat:sh(e.bt),bowl:sh(e.bl),sd:(window.shLine&&(!e.x||e.x==='nb')&&e.r>0&&(e.ang||e.shot))?window.shLine(e.ang,e.shot,(typeof P==='function'&&P(e.bt)||{}).bat,e.r):'',brun:(!e.x||e.x==='nb')?e.r:0,tot:e.r+(e.x==='wd'?1:e.x==='nb'?NBP:0),x:e.x||'',wk:e.w?{out:sh(e.out),kind:e.w,fld:e.fld}:null}}
 function cText(e){return engText(cNorm(e),null)}
 function commentary(m,i){
   const inn=m.innings[i];if(!inn)return[];const out=[],est=engNew();let lg=0,rr=0,wk=0;
@@ -8685,7 +8685,7 @@ const card=m=>`<div class="ig-sq fbc" data-a="fbOpen" data-id="${esc(m.id)}" sty
  shAvailableBalls=function(W){
   const r=f0(W);if(r.length)return r;
   const L=sbbOf(W);if(!L.length)return r;
-  return L.map(x=>({inning:x.inning,over:x.over,ball:x.ball,runs:x.runs,bruns:x.bat,batRuns:x.bat,wicket:!!x.wicket,wide:x.kind==='wd',noball:x.kind==='nb',batsman:x.batsman,bowler:x.bowler,out:x.out,ts:x.at,ex:x.ex,sh:1}));
+  return L.map(x=>({inning:x.inning,over:x.over,ball:x.ball,runs:x.runs,bruns:x.bat,batRuns:x.bat,wicket:!!x.wicket,wide:x.kind==='wd',noball:x.kind==='nb',batsman:x.batsman,bowler:x.bowler,out:x.out,ts:x.at,ex:x.ex,ang:x.ang,shot:x.shot,sh:1}));
  };
  const canScore=()=>!!(S.user&&['admin','scorer'].includes(S.user.role)&&S.tok);
  const load=async W=>{
@@ -8737,8 +8737,9 @@ const card=m=>`<div class="ig-sq fbc" data-a="fbOpen" data-id="${esc(m.id)}" sty
   const own=d==null||d===W.bb||(Array.isArray(d)&&!d.length)||(typeof d==='object'&&!Array.isArray(d)&&!(Array.isArray(d.bbb)&&d.bbb.length)&&!(Array.isArray(d.balls)&&d.balls.length));
   if(!own)return r;
   const rows=shAvailableBalls(W);if(!rows.length)return r;
-  const say=x=>x.wicket?'OUT! Wicket':x.wide?'Wide'+(x.runs>1?', '+x.runs+' runs':''):x.noball?'No ball'+(+x.bruns>0?', '+(+x.bruns===4?'FOUR':+x.bruns===6?'SIX':x.bruns+' off the bat'):''):x.ex==='b'?x.runs+' bye'+(+x.runs===1?'':'s'):x.ex==='lb'?x.runs+' leg bye'+(+x.runs===1?'':'s'):+x.runs===4?'FOUR runs':+x.runs===6?'SIX runs':+x.runs===0?'No run':x.runs+' run'+(+x.runs===1?'':'s');
-  return bl0({bbb:rows.map(x=>Object.assign({},x,{derived:1})),tracked:1}).map((x,i,a)=>{const s=a.length===rows.length?rows[rows.length-1-i]:null;if(s&&!x.txt)x.txt=say(s);else if(s&&s.wide&&!/wide/i.test(x.txt))x.txt='Wide · '+x.txt;else if(s&&s.noball&&!/no.?ball/i.test(x.txt))x.txt='No ball · '+x.txt;return x});
+  const say0=x=>x.wicket?'OUT! Wicket':x.wide?'Wide'+(x.runs>1?', '+x.runs+' runs':''):x.noball?'No ball'+(+x.bruns>0?', '+(+x.bruns===4?'FOUR':+x.bruns===6?'SIX':x.bruns+' off the bat'):''):x.ex==='b'?x.runs+' bye'+(+x.runs===1?'':'s'):x.ex==='lb'?x.runs+' leg bye'+(+x.runs===1?'':'s'):+x.runs===4?'FOUR runs':+x.runs===6?'SIX runs':+x.runs===0?'No run':x.runs+' run'+(+x.runs===1?'':'s');
+  const say=x=>{const t=say0(x),hd=x.bowler&&x.batsman?x.bowler+' to '+x.batsman+', ':'',dr=(!x.wicket&&!x.wide&&!x.ex&&(+x.bruns>0)&&window.shLine&&(x.ang||x.shot))?window.shLine(x.ang,x.shot,'',+x.bruns):'';return hd+t+(dr?', '+dr:'')+'.'};
+  return bl0({bbb:rows.map(x=>Object.assign({},x,{derived:1})),tracked:1}).map((x,i,a)=>{const s=a.length===rows.length?rows[rows.length-1-i]:null;if(s&&!x.txt)x.txt=say(s);else if(s&&!s.wicket&&!s.wide&&!s.ex&&+s.bruns>0&&window.shLine&&(s.ang||s.shot)&&x.txt&&!/driven|pulled|cut\b|swept|flicked|glanced|hooked|defended|played/i.test(x.txt))x.txt=x.txt.replace(/\.?\s*$/,', '+window.shLine(s.ang,s.shot,'',+s.bruns)+'.');else if(s&&s.wide&&!/wide/i.test(x.txt))x.txt='Wide · '+x.txt;else if(s&&s.noball&&!/no.?ball/i.test(x.txt))x.txt='No ball · '+x.txt;return x});
  };
  const lo=load;window.shSbbLoad=async W=>{await lo(W);pscore(W)};
  const ad=A.sbbAdd;A.sbbAdd=async function(){await ad.apply(this,arguments);pscore(UI.wm);render()};
@@ -10072,7 +10073,7 @@ try{if(S.settings&&S.settings.mskin==='ca'){S.settings.mskin='cb';try{save()}cat
   const tools=ext?rb('ext:','Back','ghost'):rb('ext:w','W','danger')+rb('ext:wd','Wd')+rb('ext:nb','Nb')+rb('ext:b','Bye')+rb('ext:lb','LB');
   return `<div class="card sbbpad" style="margin:8px 4px"><b>Score this match ball by ball</b><div class="mu sm">Next: over ${n.over}.${n.ball} · visible to everyone as "scored by SH scorer"</div>
   <div class="sbb-wrap">${who('s','STRIKER',pd.s)}${who('n','NON-STRIKER',pd.n)}<button type="button" class="sbb-sw" data-a="sbbSwap" title="Swap strike">⇅</button>${who('bw','BOWLER',pd.bw)}</div>${pick}
-  ${hint?`<div class="mu sm" style="margin-top:6px">${hint}</div>`:''}<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">${runs.join('')}</div>
+  ${hint?`<div class="mu sm" style="margin-top:6px">${hint}</div>`:''}${(!ext||ext==='nb')&&window.shPadMap?window.shPadMap(W,pd):''}<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">${runs.join('')}</div>
   <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px">${tools}${rb('undo','Undo','ghost')}</div></div>`};
  const pscore=W=>{if(!W||!W.practice)return;const L=sbbOf(W);let r=0,w=0,lg=0;L.forEach(x=>{r+=x.runs;if(x.wicket)w++;if(x.kind==='legal')lg++});W.m.score=[{inning:'Practice XI A Inning 1',r,w,o:Math.floor(lg/6)+(lg%6)/10}]};
  const post=async(W,body)=>{const r=await fetch(apiBase()+'/api/wbb/'+encodeURIComponent(W.m.id),{method:'POST',headers:{Authorization:'Bearer '+S.tok,'Content-Type':'application/json'},body:JSON.stringify(body)});return r.json()};
@@ -10095,12 +10096,39 @@ try{if(S.settings&&S.settings.mskin==='ca'){S.settings.mskin='cb';try{save()}cat
    else if(a==='out'){wk=true;out=b==='s'?pd.s:pd.n}
    else return;
    UI.sbbBusy=1;
-   try{const j=await post(W,{inning:inn,over:nx.over,ball:nx.ball,runs,bat,kind,wicket:wk,out,ex,batsman:pd.s,ns:pd.n,bowler:pd.bw});
+   try{const j=await post(W,{inning:inn,over:nx.over,ball:nx.ball,runs,bat,kind,wicket:wk,out,ex,batsman:pd.s,ns:pd.n,bowler:pd.bw,ang:bat>0&&W.padAng?{a:+W.padAng.a.toFixed(3),d:+W.padAng.d.toFixed(2)}:undefined,shot:bat>0?(W.padShot||''):''});if(j.ok){W.padAng=null;W.padShot=''}
     if(!j.ok)toast(j.error||'Could not save the ball');else{W.sbb=j.balls;const st=fromRec(j.balls[j.balls.length-1]);W.pad=fillNulls(W,{s:st.s,n:st.n,bw:st.bw||(kind==='legal'&&nx.ball===6?null:pd.bw)});W.padExt='';if(wk&&!W.pad.s&&!W.pad.n)toast('Choose the new batter')}}
    catch(e){toast('No connection')}
    UI.sbbBusy=0;pscore(W);render()}
  });
  const st=document.createElement('style');st.textContent='.sbb-wrap{display:grid;grid-template-columns:1fr 1fr auto;gap:6px;margin-top:8px}.sbb-wrap .sbb-who{display:flex;flex-direction:column;align-items:flex-start;text-align:left;padding:6px 8px;border-radius:10px;border:1px solid var(--bd,#ccd);background:transparent;color:inherit;min-width:0}.sbb-who small{font:700 9px system-ui;letter-spacing:.6px;opacity:.7}.sbb-who b{font:700 12px system-ui;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}.sbb-who.need{border-color:#e11d2e}.sbb-wrap .sbb-who:last-child{grid-column:1/-1}.sbb-sw{border:1px solid var(--bd,#ccd);border-radius:10px;background:transparent;color:inherit;font-size:18px;padding:0 10px}.sbb-pick{margin-top:8px;padding:8px;border:1px solid var(--bd,#ccd);border-radius:10px;max-height:40vh;overflow:auto}.sbb-names{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.sbbpad{max-height:62vh;overflow:auto;background:#0c1d4a!important;color:#e8eefc!important;border:1px solid #2a4cb0!important}.sbbpad .btn.ghost{color:#e8eefc!important}';document.head.appendChild(st);
+}
+/* ---------------- 62 GROUND MAP + shot-aware commentary (both scorers) ---------------- */
+{
+ const SH=['Drive','Cut','Pull','Sweep','Flick','Defence','Glance','Hook','Upper cut','Other'];
+ const VERB={'Drive':'driven','Cut':'cut','Pull':'pulled','Sweep':'swept','Flick':'flicked','Defence':'defended','Glance':'glanced','Hook':'hooked','Upper cut':'upper cut'};
+ const AREA={0:'down the ground',1:'through cover',2:'past point',3:'down to third man',4:'behind the keeper','-3':'down to fine leg','-2':'to square leg','-1':'through midwicket'};
+ const SIXA={0:'over the bowler\'s head',1:'over cover',2:'over point',3:'over third man',4:'over the keeper','-3':'over fine leg','-2':'over square leg','-1':'over midwicket'};
+ const dirK=(ang,hand)=>{const x=Math.cos(ang.a),y=Math.sin(ang.a);let th=Math.atan2(x,-y)*180/Math.PI;if(hand==='Left-hand')th=-th;let k=Math.round(th/45);if(k<-3)k+=8;if(k>4)k-=8;return k};
+ window.shLine=function(ang,shot,hand,runs){
+  const v=VERB[shot]||'',has=ang&&isFinite(ang.a),k=has?dirK(ang,hand):null;let t='';
+  if(has){const six=runs>=6;t=(v?v+' ':'played ')+(six?SIXA[k]:AREA[k]);
+   if(!six&&runs<4&&ang.d>.72)t+=' in the deep';else if(runs<4&&ang.d<.3)t+=' close in';}
+  else if(v)t=v;
+  return t};
+ window.shPadMap=function(W,pd){
+  const R=88,c=100,a=W.padAng,rows=(W.sbb||[]).filter(x=>x.ang&&x.batsman===pd.s&&x.bat>0).slice(-30),COL={1:'#f5b335',2:'#22a559',3:'#f08a24',4:'#3b82f6',6:'#e11d2e'};
+  let g=`<circle cx="${c}" cy="${c}" r="${R}" fill="#1b6b3a" stroke="#6fe19a" stroke-width="1.5"/><circle cx="${c}" cy="${c}" r="${R*.5}" fill="none" stroke="#6fe19a" stroke-dasharray="3 3" opacity=".7"/><rect x="${c-4}" y="${c-14}" width="8" height="28" fill="#d9c28a"/><text x="${c}" y="12" text-anchor="middle" font-size="8" fill="#cfe">STRAIGHT</text>`;
+  rows.forEach(x=>{const d=Math.min(1.05,x.ang.d)*R,px=c+Math.cos(x.ang.a)*d,py=c+Math.sin(x.ang.a)*d,col=COL[Math.min(x.bat,6)]||COL[1];g+=`<line x1="${c}" y1="${c}" x2="${px.toFixed(1)}" y2="${py.toFixed(1)}" stroke="${col}" stroke-width="${x.bat>=4?2:1.2}" opacity=".55"/><circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="2.2" fill="${col}" opacity=".8"/>`});
+  if(a){const d=Math.min(1.05,a.d)*R,px=c+Math.cos(a.a)*d,py=c+Math.sin(a.a)*d;g+=`<line x1="${c}" y1="${c}" x2="${px.toFixed(1)}" y2="${py.toFixed(1)}" stroke="#fff" stroke-width="2.5"/><circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="5" fill="#ffd43b" stroke="#000"/>`}
+  const pv=a?window.shLine(a,W.padShot||'','',1):'';
+  const chips=SH.map(v=>`<button type="button" class="sbb-chip ${W.padShot===v?'on':''}" data-a="sbbShot" data-v="${v}">${v}</button>`).join('');
+  return `<div class="sbb-map"><div class="mu sm" style="margin-top:8px">Ground map: tap where the ball went, then tap the runs${rows.length?' (lines = earlier shots)':''}</div><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><svg viewBox="0 0 200 200" data-a="sbbWag" style="width:170px;max-width:46%;touch-action:manipulation;flex:none">${g}</svg><div style="flex:1;min-width:140px"><div class="sbb-chips">${chips}</div><div class="sm" style="margin-top:6px"><b>${a?esc(pv||'Direction marked'):'No direction marked (optional)'}</b></div>${a?'<button type="button" class="btn sm ghost" data-a="sbbWag" data-v="clr" style="margin-top:4px">Clear mark</button>':''}</div></div></div>`};
+ A.sbbWag=function(d,el,e){const W=UI.wm;if(!W)return;if(d&&d.v==='clr'){W.padAng=null;render();return}
+  if(!el||!el.getBoundingClientRect||!e)return;const r=el.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*200-100,y=(e.clientY-r.top)/r.height*200-100;
+  W.padAng={a:Math.atan2(y,x),d:Math.min(1.05,Math.hypot(x,y)/88)};render()};
+ A.sbbShot=function(d){const W=UI.wm;if(!W)return;W.padShot=W.padShot===d.v?'':d.v;render()};
+ const st=document.createElement('style');st.textContent='.sbbpad{background:#0b1a45!important;color:#eef2ff!important;border:1px solid #2a4cb0!important;max-height:72vh;overflow-y:auto}.sbbpad .mu{color:#a9b8e6!important}.sbbpad .btn.ghost{color:#eef2ff!important;border-color:#4a68c8!important;background:transparent!important}.sbbpad input{background:#fff!important;color:#111!important;border-radius:8px;padding:8px}.sbbpad .sbb-who,.sbbpad .sbb-sw{color:#eef2ff!important;border-color:#4a68c8!important}.sbbpad b{color:#fff}.sbb-chips{display:flex;flex-wrap:wrap;gap:4px}.sbb-chip{padding:4px 8px;border:1px solid #4a68c8;border-radius:14px;background:transparent;color:#eef2ff;font-size:11px}.sbb-chip.on{background:#ff3b50;border-color:#ff3b50;color:#fff}';document.head.appendChild(st);
 }
 </script>
 </body>
