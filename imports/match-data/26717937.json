@@ -1,0 +1,366 @@
+{
+ "meta": {
+  "match_id": "26717937",
+  "tournament": "CineCric Premier League Season - 3",
+  "stage": "Final",
+  "date": "21-Aug-26",
+  "venue": "SCG CRICKET GROUND, Hyderabad (Telangana)",
+  "overs": 20,
+  "team_a": "COMMITTEE KURROLLU",
+  "team_a_score": "154/10",
+  "team_a_overs": "19.4",
+  "team_b": "Tolly Strivers XI",
+  "team_b_score": "155/6",
+  "team_b_overs": "17.4",
+  "result": "Tolly Strivers XI won by 4 wickets",
+  "data_source": "CricHeroes match screens (screenshots supplied by the player)",
+  "completeness": "partial"
+ },
+ "src": "CricHeroes match screens (screenshots supplied by the player)",
+ "inn": [
+  {
+   "team": "Tolly Strivers XI",
+   "score": "155/6",
+   "ov": "17.4",
+   "bat": [
+    [
+     "Sivakoti Reddy Myla",
+     45,
+     38,
+     5,
+     1,
+     118,
+     95,
+     "c Yadhu Vamsee b Diwa just Diwa"
+    ],
+    [
+     "Pavan Pk",
+     34,
+     16,
+     5,
+     1,
+     212,
+     25,
+     "c Chandra Shekar Rathod b Eswar GVR"
+    ],
+    [
+     "Ashwin Babu",
+     14,
+     14,
+     1,
+     0,
+     100,
+     29,
+     "lbw b Vamsikanth Rekhana"
+    ],
+    [
+     "Mr Cool",
+     10,
+     4,
+     2,
+     0,
+     250,
+     9,
+     "run out Vamsi Kotu / Arjun"
+    ],
+    [
+     "Samba",
+     4,
+     7,
+     0,
+     0,
+     57,
+     21,
+     "c †Yadhu Vamsee b Bhavaniprasad"
+    ],
+    [
+     "Praveen G (c)",
+     10,
+     12,
+     1,
+     0,
+     83,
+     23,
+     "b Arjun"
+    ],
+    [
+     "RO-HIT (wk)*",
+     9,
+     11,
+     0,
+     0,
+     82,
+     21,
+     "not out"
+    ],
+    [
+     "Suman StarOne*",
+     10,
+     5,
+     2,
+     0,
+     200,
+     6,
+     "not out"
+    ]
+   ],
+   "extras": "19 (wd 7, lb 7, nb 1, b 4)",
+   "crr": "8.77",
+   "ytb": "Thaman, Pardhunaidu, Vardhan Chilukuri, Surya Enty"
+  },
+  {
+   "team": "COMMITTEE KURROLLU",
+   "score": "154/10",
+   "ov": "19.4",
+   "bat": null
+  }
+ ],
+ "phases": {
+  "tabs": "1-6 Ov",
+  "A": "COMMITTEE KURROLLU",
+  "B": "Tolly Strivers XI",
+  "rows": [
+   [
+    "Runs scored",
+    44,
+    60
+   ],
+   [
+    "Wickets lost",
+    3,
+    1
+   ],
+   [
+    "Dots played",
+    13,
+    8
+   ],
+   [
+    "Runs in 4s/6s",
+    20,
+    30
+   ],
+   [
+    "Run rate",
+    "7.33",
+    "10.00"
+   ]
+  ],
+  "won": [
+   1,
+   0,
+   3
+  ]
+ },
+ "turning": {
+  "team": "COMMITTEE KURROLLU (batting)",
+  "list": [
+   {
+    "ov": 17,
+    "runs": 19,
+    "sc": "140/6",
+    "balls": [
+     "6",
+     "6",
+     "1",
+     "1",
+     "4",
+     "1"
+    ],
+    "from": 16,
+    "bat": "Chandra Shekar Rathod, Vamsikanth Rekhana",
+    "bowl": "Praveen G"
+   },
+   {
+    "ov": 1,
+    "runs": 15,
+    "sc": "15/0",
+    "balls": [
+     "2",
+     "0",
+     "4",
+     "4",
+     "4",
+     "1"
+    ],
+    "from": 0,
+    "bat": "Eswar Gvr",
+    "bowl": "Surya Enty"
+   },
+   {
+    "ov": 4,
+    "runs": 14,
+    "sc": "37/1",
+    "balls": [
+     "4",
+     "2",
+     "4",
+     "1",
+     "2",
+     "1"
+    ],
+    "from": 3,
+    "bat": "Eswar Gvr, Yadhu Vamsee",
+    "bowl": "Mr Cool"
+   }
+  ]
+ },
+ "overs": {
+  "team": "Tolly Strivers XI (batting)",
+  "list": [
+   [
+    18,
+    "155-6",
+    "Vamsikanth Rekhana to Suman StarOne, RO-HIT",
+    [
+     "1",
+     "4",
+     "4",
+     "4"
+    ],
+    13
+   ],
+   [
+    17,
+    "142-6",
+    "Arjun to RO-HIT, Suman StarOne, Praveen G",
+    [
+     "W",
+     "1",
+     "1",
+     "1",
+     "•",
+     "1"
+    ],
+    4
+   ],
+   [
+    16,
+    "138-5",
+    "Diwa just Diwa to Praveen G, RO-HIT",
+    [
+     "NB",
+     "•",
+     "1",
+     "WD",
+     "4",
+     "1"
+    ],
+    11
+   ],
+   [
+    15,
+    "127-5",
+    "Bhavaniprasad to Praveen G, RO-HIT",
+    [
+     "•",
+     "LB",
+     "1",
+     "•",
+     "•",
+     "1"
+    ],
+    3
+   ],
+   [
+    14,
+    "124-5",
+    "Diwa just Diwa to Praveen G, RO-HIT, Sivakoti Reddy Myla",
+    [
+     "•",
+     "W",
+     "•",
+     "2",
+     "1",
+     "1"
+    ],
+    4
+   ],
+   [
+    13,
+    "120-4",
+    "Bhavaniprasad to Sivakoti Reddy Myla, Praveen G, Samba",
+    [
+     "•",
+     "1",
+     "1",
+     "W",
+     "1",
+     "1"
+    ],
+    4
+   ]
+  ]
+ },
+ "squads": {
+  "A": "COMMITTEE KURROLLU",
+  "B": "Tolly Strivers XI",
+  "rows": [
+   [
+    "Yadhu Vamsee (c, wk)",
+    "Praveen G (c)"
+   ],
+   [
+    "Abhishek Yannam",
+    "Ashwin Babu"
+   ],
+   [
+    "Arjun",
+    "Mr Cool"
+   ],
+   [
+    "Bhavaniprasad",
+    "Pardhunaidu"
+   ],
+   [
+    "Chandra Shekar Rathod",
+    "Pavan Pk"
+   ],
+   [
+    "Dare Devil (abhiteja)",
+    "Rohit (wk)"
+   ],
+   [
+    "Diwa Just Diwa",
+    "Samba"
+   ]
+  ]
+ },
+ "mvp": [
+  [
+   "Sivakoti Reddy Myla",
+   "Tolly Strivers XI",
+   "7.598"
+  ],
+  [
+   "Chandra Shekar Rathod",
+   "COMMITTEE KURROLLU",
+   "6.588"
+  ],
+  [
+   "Ashwin Babu",
+   "Tolly Strivers XI",
+   "6.301"
+  ],
+  [
+   "Eswar Gvr",
+   "COMMITTEE KURROLLU",
+   "4.983"
+  ],
+  [
+   "Samba",
+   "Tolly Strivers XI",
+   "4.659"
+  ],
+  [
+   "Vamsikanth Rekhana",
+   "COMMITTEE KURROLLU",
+   "4.543"
+  ],
+  [
+   "Surya Enty",
+   "Tolly Strivers XI",
+   "3.814"
+  ]
+ ]
+}
