@@ -5042,7 +5042,7 @@ function shWorldRunProgress(W){const data=shWorldOverData(W),groups=new Map();fo
  return `<div class="cbp-lb">Runs progression · recorded overs</div><div class="cbp-cd" style="padding:10px"><svg viewBox="0 0 350 185" role="img" aria-label="Cumulative recorded runs by innings; circles mark wickets" style="width:100%;display:block"><path d="M36 20V154H325" fill="none" stroke="currentColor" opacity=".5"/><text x="4" y="27" fill="#1a1a1a" font-size="10">${maxY}</text><text x="20" y="157" fill="#1a1a1a" font-size="10">0</text><text x="280" y="177" fill="#1a1a1a" font-size="10">${maxX} overs</text>${series.map((s,i)=>`<polyline points="36,154 ${s.rows.map(p=>X(p.x)+','+Y(p.r)).join(' ')}" fill="none" stroke="${colors[i%4]}" stroke-width="2.5"/>${s.rows.filter(p=>p.w).map(p=>`<circle cx="${X(p.x)}" cy="${Y(p.r)}" r="4" fill="${colors[i%4]}"><title>${esc(name(s.id))}: ${p.r} runs, ${p.w} wicket(s) in this over</title></circle>`).join('')}`).join('')}</svg><div class="mu sm">${series.map((s,i)=>`<span style="display:inline-block;margin:4px 12px 4px 0;color:${colors[i%4]}">● ${esc(name(s.id))}</span>`).join('')}<br>Wicket markers use recorded deliveries. ${data.skipped?'Incomplete deliveries were excluded.':''}${W.bb?.source?'<br>Source: '+esc(W.bb.source):''}</div></div>`;
 }
 async function shRefreshWorldDetails(W,force=false){
- if(!W||UI.wm!==W||UI.view!=='wmatch'||W.detailBusy||(!force&&(document.hidden||!W.m.started||W.m.ended||Date.now()-(W.detailTry||0)<20000)))return;
+ if(!W||UI.wm!==W||UI.view!=='wmatch'||W.detailBusy||(!force&&(document.hidden||!W.m.started||W.m.ended||Date.now()-(W.detailTry||0)<10000)))return;
  W.detailBusy=true;W.detailTry=Date.now();W.bbBusy=1;const id=W.m.id;let cardScore=null;
  const active=()=>UI.wm===W&&UI.view==='wmatch';
  const applyScore=(score,info=false)=>{if(!Array.isArray(score)||!score.length)return;
@@ -9946,6 +9946,24 @@ try{if(S.settings&&S.settings.mskin==='ca'){S.settings.mskin='cb';try{save()}cat
    off:{u1:q.u1,u2:q.u2,u3:'',ref:'',sc:q.sc||(S.user&&(S.user.nick||S.user.name))||'Scorer',co:''}});
   S.wiz=w;S.prefs=S.prefs||{};S.prefs.qs={overs:String(q.overs),ball:q.ball,gender:q.gender,venue:q.venue,dec:q.dec};
   A.wzStart();if(S.wiz){S.wiz=null;toast('Could not start. Check the details.')}}
+}
+
+/* LIVE VIEW: batters / bowler first, and tolerant of provider scorecards that mark the crease loosely or lag behind the score. */
+{
+ window.shFixSc=function(W){try{
+  const L=W&&W.sc&&W.sc.scorecard;if(!Array.isArray(L)||!L.length||!W.m||!W.m.started||W.m.ended)return;
+  const dt=r=>String(r['dismissal-text']??r.dismissal??'').trim().toLowerCase(),lag=(W.m.score||[]).length>L.length;
+  L.forEach((inn,i)=>{const cur=i===L.length-1,B=(inn.batting||[]).filter(r=>r&&r.batsman&&r.batsman.name);
+   if(cur&&lag){B.forEach(r=>{if(/^(batting|not out)\W*$/.test(dt(r))){r._o=r._o||r['dismissal-text']||r.dismissal||'not out';r['dismissal-text']='not out · innings complete'}});return}   // the new innings is not in the scorecard yet: never show the old innings' not-out batters as "at the crease"
+   if(!cur)return;
+   B.forEach(r=>{const t=dt(r);if(/^batting\b/.test(t)||/^not out\W*\*$/.test(t))r['dismissal-text']='batting'});
+   if(B.some(r=>dt(r)==='batting'))return;
+   const open=B.filter(r=>!dt(r)&&(+r.b>0||+r.r>0));if(open.length)open.slice(-2).forEach(r=>{r['dismissal-text']='batting'})});
+ }catch(e){}};
+ const w0=XV.wmatch;XV.wmatch=function(){if(UI.wm)window.shFixSc(UI.wm);return w0.apply(this,arguments)};
+ const a0=ar9Panel;ar9Panel=function(W){let h=a0.apply(this,arguments);if(typeof h!=='string'||!W||!W.m||!W.m.started||W.m.ended||h.indexOf('class="bats"')>=0||h.indexOf('class="ar6')>=0)return h;
+  const i=h.indexOf('</section>');if(i<0)return h;
+  return h.slice(0,i+10)+'<div class="sh-wait" style="margin:8px;padding:12px;border:1px solid #2a4cb0;border-radius:14px;background:#0c1d4a;color:#c6cfea;font:600 13px system-ui">Batters and bowler show here as soon as the data provider’s scorecard has this innings. Checking every few seconds.</div>'+h.slice(i+10)};
 }
 </script>
 </body>
