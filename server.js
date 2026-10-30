@@ -1063,7 +1063,8 @@ routes['GET /api/admin/users-count'] = async (req) => {   // admin only: how man
   promote(u, phone);
   if (u.role !== 'admin') return [403, { ok: false, error: 'Only an admin can see this' }];
   const all = Object.values(db.users), day = Date.now() - 864e5;
-  return [200, { ok: true, total: all.length, today: all.filter(x => (x.created || 0) > day).length }];
+  viewPrune(); const watching = new Set(); for (const m of viewMap.values()) for (const v of m.keys()) watching.add(v);
+  return [200, { ok: true, total: all.length, today: all.filter(x => (x.created || 0) > day).length, live: watching.size }];
 };
 routes['GET /api/admin/scorers'] = async (req) => {   // who can score matches: admins see and manage the Scorer list from the app
   const phone = readSession((req.headers.authorization || '').replace(/^Bearer /, '')), u = phone && db.users[phone];
