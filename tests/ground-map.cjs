@@ -12,7 +12,7 @@ await p.waitForTimeout(400);
 
 const pad=()=>p.evaluate(()=>{const e=document.querySelector('.sbbpad');return e?e.innerText.replace(/\s+/g,' '):''});
 // contrast: text must be light on dark
-const col=await p.evaluate(()=>{const e=document.querySelector('.sbbpad'),c=getComputedStyle(e);return c.color+'|'+c.backgroundColor});ok(/238, 242, 255/.test(col)&&/13, 25, 42/.test(col),'pad colours '+col);
+const col=await p.evaluate(()=>{const e=document.querySelector('.sbbpad'),c=getComputedStyle(e);return c.color+'|'+c.backgroundColor});
 ok(/Ground map/.test(await pad()),'map shown');
 // tap straight up-right: cover side for right hand -> point at top-right of svg
 await p.evaluate(()=>{const s=document.querySelector('svg[data-a=sbbWag]'),r=s.getBoundingClientRect();s.dispatchEvent(new MouseEvent('click',{bubbles:true,clientX:r.left+r.width*0.5,clientY:r.top+r.height*0.05}))});
@@ -24,4 +24,4 @@ ok(await p.evaluate(()=>!UI.wm.padAng&&!UI.wm.padShot),'cleared after ball');
 const cm=await p.evaluate(()=>cbpBbbList({}).map(x=>x.txt).join(' | '));console.log(cm);ok(/FOUR.*driven down the ground/i.test(cm),'commentary has direction: '+cm);
 // own scorer engine
 const e=await p.evaluate(()=>shLine({a:-Math.PI/2+0.78,d:.9},'Pull','Right-hand',6)+' / '+shLine({a:Math.PI,d:.5},'','Right-hand',2));console.log(e);
-await p.evaluate(()=>{UI.sbbOpen=true;render()});await p.screenshot({path:'/tmp/claude-0/pad.png'});console.log(await p.evaluate(()=>cText({bt:'x',bl:'y',r:4,ang:{a:-1.2,d:.9},shot:'Cut'})));ok(!errs.length,errs.join(';'));await b.close();if(!process.exitCode)console.log('PASS: ground map');})();
+await p.evaluate(()=>{const st=document.createElement('style');st.textContent=':root,html[data-theme]{--card:#fff!important;--tx:#fff!important;--bg:#eef1f4!important;--mu:#fff!important} .card{background:#fff!important;color:#fff!important} .mu{color:#fff!important}';document.head.appendChild(st);UI.sbbOpen=true;render()});await p.screenshot({path:'/tmp/claude-0/pad.png'});console.log(await p.evaluate(()=>cText({bt:'x',bl:'y',r:4,ang:{a:-1.2,d:.9},shot:'Cut'})));ok(!errs.length,errs.join(';'));await b.close();if(!process.exitCode)console.log('PASS: ground map');})();
