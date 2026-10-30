@@ -1,0 +1,18 @@
+const {chromium}=require('playwright');
+(async()=>{const b=await chromium.launch(),p=await b.newPage({viewport:{width:412,height:900}}),errs=[];p.on('pageerror',e=>errs.push(e.message));
+const ok=(c,m)=>{if(!c){console.log('FAIL',m);process.exitCode=1}};
+await p.goto('file://'+require('path').resolve(__dirname,'../app-index.html'));await p.waitForTimeout(400);
+await p.evaluate(()=>{UI.stage='app';S.user={id:'u1',name:'T',phone:'9999999999',role:'admin'};S.tok='tok';S.prefs=Object.assign({},S.prefs,{asked:1,welcomed:1});S.settings.voice=false;render();A.demo()});await p.waitForTimeout(300);
+const r=await p.evaluate(()=>{const m=S.matches.find(x=>x.status==='live')||S.matches[0],inn=m.innings[m.cur],out={};
+ const ev={r:4,x:'',w:'',bt:inn.ev[0].bt,bl:inn.ev[0].bl,shot:'Pull',ang:{a:Math.PI,d:.9},fldr:inn.ev[0].bl};
+ ['en',...Object.keys(SH_COMM_LANGS)].forEach(l=>{out[l]=cLine(ev,l)});
+ S.settings.cmode='simple';out.simple=cLine(ev,'ta');S.settings.cmode='pro';
+ S.settings.vlang='ta';const L=commentary(m,m.cur).find(c=>c.t==='b').txt;out.comm=L;
+ out.last=cLine(m.innings[m.cur].ev.at(-1),'ta');out.w=cLine({r:0,w:'Bowled',out:ev.bt,bt:ev.bt,bl:ev.bl,x:''},'ar');out.wd=cLine({r:0,x:'wd',bt:ev.bt,bl:ev.bl},'fr');
+ out.ex=vExtra(m,ev,'kn');return out});
+console.log(JSON.stringify(r,null,1));
+const LK=['en','te','hi','ta','kn','ml','bn','mr','gu','pa','ur','or','ar','fr','es'];ok(LK.every(k=>typeof r[k]==='string'),'15 languages');
+ok(Object.entries(r).filter(([k,v])=>LK.includes(k)&&k!=='en').every(([k,v])=>/[^\x00-\x7f]|fr|es/.test(v)&&v.length>12),'every language produced text');
+ok(!/ధ|க/.test(r.simple)||r.simple.length<r.ta.length,'simple shorter');
+ok(r.comm===r.last,'Comms tab uses the language');
+ok(!errs.length,errs.join(';'));await b.close();if(!process.exitCode)console.log('PASS: comm langs');})();
