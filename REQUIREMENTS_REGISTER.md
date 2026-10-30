@@ -29,11 +29,11 @@ Requirements are kept separate from implementation status. Conflicts: latest exp
 | R20 | Live-telecast viewing passes (separate from stadium tickets) | Rem. 3 | Watch | payment + entitlement | Server-side | - | NOT BUILT (payment gateway + stream source required) |
 | R21 | Subscriptions, entitlements, expiry never deletes records | Rem. 4 | Plans | - | Server-side | - | NOT BUILT (SOURCE: plan/settlement rules required) |
 | R22 | Formulas: ranking, auction category, MVP, Team 11, Best Team (each separate) | Rem. 5 | - | - | - | - | SOURCE/DEFINITION REQUIRED |
-| R23 | Tournament leaders, caps, awards, certificates | Rem. 6 | Tournament | - | - | Existing basic leaders only | PARTIAL |
+| R23 | Tournament leaders, caps, awards, certificates | Rem. 6 | Tournament | - | - | Leaders, caps, awards + printable certificates (block 83, tests/certificates.cjs) | BUILT |
 | R24 | Venue local time + viewer local time; neutral weather if missing | Rem. 7 | Match | - | - | Playwright venue-time | PARTIAL: match start time is saved with the venue time zone (the scorer's phone zone at the ground) and viewers in another zone see both times. Weather NOT built (needs a weather provider); provider/world matches carry no venue zone |
 | R25 | Support/dispute flows (7 types) with audit | Rem. 8 | Support > Report a problem | /api/cases | User files; admin decides | 2-user Playwright: validation, case number, admin needs reason, user cannot decide (403), history shown | PARTIAL: request, decision and audit built; evidence is text/link only; a decision does NOT auto-correct scores/stats/rankings (admin edits the record separately); no notifications; Privacy/Terms/Refund text SOURCE REQUIRED |
 | R26 | Canonical share links/QR and notification deep links | Rem. 9 | Share | ?player= ?match= | - | Playwright: both links open the record | PARTIAL: links built; player records are not on the server so ?player= opens only where the record exists on that device; match links need the match shared to the server; QR and notification deep links NOT BUILT |
-| R27 | Accessibility, reduced motion, sessions/devices, account closure | Rem. 10 | Settings | - | - | - | NOT BUILT |
+| R27 | Accessibility, reduced motion, sessions/devices, account closure | Rem. 10 | Settings | - | - | Block 80: text size, contrast, reduced motion, sign-out-all, account closure | BUILT (real-phone check pending) |
 | R28 | Email optional | User | Register | cleanProfile | - | Tested | BUILT-TESTED |
 | R29 | Voice AI integration | Rem. 11 | - | - | - | - | SOURCE/DEFINITION REQUIRED (source code + contract) |
 | R30 | Approved logo/icon/background assets | Rem. 11 | - | - | - | - | SOURCE/DEFINITION REQUIRED |
