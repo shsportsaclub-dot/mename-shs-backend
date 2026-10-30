@@ -1097,6 +1097,87 @@ routes['GET /api/grounds/records'] = async (req, body) => {
   if (g.owner !== s.phone && s.u.role !== 'admin') return [403, { ok: false, error: 'Only the ground owner can read the records' }];
   return [200, { ok: true, name: g.name, items: (g.recs || []).slice().reverse().map(x => ({ mid: x.mid, a: x.a, b: x.b, overs: x.overs, date: x.date, status: x.status, result: x.result, score: x.score })) }];
 };
+// ---------- Teams and players registry (like CricHeroes / CrickPro): unique team names, players found by name or mobile, no duplicate players, creator/admin rights, verification by a registered account with the same mobile ----------
+const RG_ROLES = ['BAT', 'BOWL', 'AR', 'WK'], RG_BAT = ['Right-hand', 'Left-hand'], RG_BOWL = ['', 'Right-arm fast', 'Right-arm medium', 'Off spin', 'Left-arm fast', 'Left-arm spin', 'Leg spin'], RG_LEVELS = ['national', 'state', 'district', 'club', 'academy', 'corporate', 'school', 'college'], RG_MAX = 30;
+const rgTeams = () => (db.shared.rgTeams = db.shared.rgTeams || {}), rgPlayers = () => (db.shared.rgPlayers = db.shared.rgPlayers || {});
+const rgStr = (v, n) => String(v == null ? '' : v).replace(/[<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, n);
+const rgKey = n => String(n || '').toLowerCase().replace(/[^a-z0-9ऀ-෿]/g, '');   // "Hyderabad  Hawks!" and "hyderabadhawks" are the same team
+const rgDigits = v => String(v || '').replace(/\D/g, '');
+const rgPhone = v => { const d = rgDigits(v); return d.length >= 7 && d.length <= 15 ? d.slice(-10) : ''; };   // compare on the last 10 digits
+const rgMask = ph => ph ? '••••••' + ph.slice(-4) : '';
+const rgLinked = p => !!p.acct || !!p.ph && Object.entries(db.users || {}).some(([k, u]) => rgPhone(u.e164 || k) === p.ph);   // verified = a registered account uses this mobile
+const rgUser = req => { const phone = readSession((req.headers.authorization || '').replace(/^Bearer /, '')), u = phone && db.users[phone]; if (u) promote(u, phone); return u ? { phone, u } : null; };
+const rgCan = (t, s) => t.creator === s.phone || (t.admins || []).includes(s.phone) || s.u.role === 'admin';
+const rgCode = p => 'SH' + String(p.id).slice(1, 9).toUpperCase();
+const rgPubP = (p, extra) => ({ id: p.id, code: rgCode(p), name: p.name, role: p.role, bat: p.bat, bowl: p.bowl, jersey: p.jersey, verified: rgLinked(p), mobile: rgMask(p.ph), teams: Object.values(rgTeams()).filter(t => t.members.includes(p.id)).map(t => t.name).slice(0, 5), ...(extra || {}) });
+const rgPubT = (t, full) => ({ id: t.id, name: t.name, short: t.short, city: t.city, level: t.level, country: t.country, state: t.state, color: t.color, preset: t.preset, logo: t.logo || null, captain: t.captain || '', n: t.members.length, ...(full ? { players: t.members.map(id => rgPlayers()[id]).filter(Boolean).map(p => rgPubP(p)) } : {}) });
+const rgTeamFields = (t, b) => {
+  if ('city' in b) t.city = rgStr(b.city, 40); if ('state' in b) t.state = rgStr(b.state, 40); if ('country' in b) t.country = rgStr(b.country, 40);
+  if ('level' in b) t.level = RG_LEVELS.includes(b.level) ? b.level : 'club'; if ('short' in b) t.short = rgStr(b.short, 4).toUpperCase().replace(/[^A-Z0-9]/g, '') || t.short;
+  if ('color' in b && /^#[0-9a-f]{6}$/i.test(b.color)) t.color = b.color; if ('preset' in b && Number.isInteger(+b.preset) && +b.preset >= 0 && +b.preset <= 5) t.preset = +b.preset;
+  if ('logo' in b) t.logo = typeof b.logo === 'string' && /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(b.logo) && b.logo.length <= 90000 ? b.logo : null;
+};
+routes['GET /api/reg/teams'] = async (req, body) => {
+  const q = rgKey(body.q); const all = Object.values(rgTeams());
+  const items = (q ? all.filter(t => rgKey(t.name).includes(q) || (t.short || '').toLowerCase() === String(body.q || '').toLowerCase()) : all.slice(-20).reverse()).slice(0, 20).map(t => rgPubT(t));
+  return [200, { ok: true, items }];
+};
+routes['GET /api/reg/team'] = async (req, body) => { const t = rgTeams()[String(body.id || '')]; return t ? [200, { ok: true, team: rgPubT(t, true) }] : [404, { ok: false, error: 'Team not found' }]; };
+routes['POST /api/reg/teams'] = async (req, body) => {
+  const s = rgUser(req); if (!s) return [401, { ok: false, error: 'Please sign in first' }];
+  if (limited('rgt:' + s.phone, 30, 36e5)) return [429, { ok: false, error: 'Too many requests, slow down' }];
+  const name = rgStr(body.name, 30); if (name.length < 2) return [400, { ok: false, error: 'Enter the team name' }];
+  const ex = Object.values(rgTeams()).find(t => rgKey(t.name) === rgKey(name));
+  if (ex) return [409, { ok: false, error: 'A team named "' + ex.name + '" already exists. Team names are unique.', existing: rgPubT(ex), mine: rgCan(ex, s) }];
+  const id = 't' + crypto.randomBytes(5).toString('hex'), t = { id, name, short: rgStr(body.short, 4).toUpperCase().replace(/[^A-Z0-9]/g, '') || name.replace(/[^A-Za-z]/g, '').slice(0, 3).toUpperCase() || 'TM', city: '', state: '', country: '', level: 'club', color: '#2563eb', preset: 0, logo: null, creator: s.phone, admins: [], captain: '', members: [], t: Date.now() };
+  rgTeamFields(t, body); rgTeams()[id] = t; saveDb(); return [200, { ok: true, team: rgPubT(t, true) }];
+};
+routes['PUT /api/reg/teams'] = async (req, body) => {   // only the creator, a team admin or an app admin can change team details or the logo
+  const s = rgUser(req); if (!s) return [401, { ok: false, error: 'Please sign in first' }];
+  const t = rgTeams()[String(body.id || '')]; if (!t) return [404, { ok: false, error: 'Team not found' }];
+  if (!rgCan(t, s)) return [403, { ok: false, error: 'Only the team creator or an admin can change this team' }];
+  if ('name' in body) { const n = rgStr(body.name, 30); if (n.length < 2) return [400, { ok: false, error: 'Enter the team name' }]; if (Object.values(rgTeams()).some(o => o.id !== t.id && rgKey(o.name) === rgKey(n))) return [409, { ok: false, error: 'That team name is taken' }]; t.name = n; }
+  rgTeamFields(t, body); saveDb(); return [200, { ok: true, team: rgPubT(t, true) }];
+};
+routes['GET /api/reg/players'] = async (req, body) => {   // search by name, or exact mobile number; mobile numbers are never returned (only masked)
+  const raw = rgStr(body.q, 40), ph = /^[\d\s+()-]{7,}$/.test(raw) ? rgPhone(raw) : '', k = rgKey(raw), idq = /^(sh[0-9a-f]{8}|p[0-9a-f]{10})$/i.test(raw.replace(/[\s-]/g, '')) ? raw.replace(/[\s-]/g, '').toLowerCase() : ''; if (!ph && !idq && k.length < 2) return [200, { ok: true, items: [] }];
+  const items = Object.values(rgPlayers()).filter(p => idq ? (rgCode(p).toLowerCase() === idq || p.id === idq) : ph ? p.ph === ph : rgKey(p.name).includes(k)).slice(0, 20).map(p => rgPubP(p));   // search by ID, mobile number or name
+  return [200, { ok: true, items }];
+};
+routes['GET /api/reg/player'] = async (req, body) => {   // public profile card (opened by the player's QR code)
+  const q = String(body.id || '').replace(/[\s-]/g, '').toLowerCase(), p = Object.values(rgPlayers()).find(x => x.id === q || rgCode(x).toLowerCase() === q);
+  return p ? [200, { ok: true, player: rgPubP(p) }] : [404, { ok: false, error: 'Player not found' }];
+};
+routes['GET /api/reg/me'] = async (req) => {   // my own player ID card (created once, linked to my account)
+  const s = rgUser(req); if (!s) return [401, { ok: false, error: 'Please sign in first' }];
+  const ph = rgPhone(s.u.e164 || s.phone);
+  let p = Object.values(rgPlayers()).find(x => x.acct === s.phone || (ph && x.ph === ph));
+  if (!p) { const id = 'p' + crypto.randomBytes(5).toString('hex'); p = { id, name: rgStr(s.u.nick || s.u.name || 'Player', 40), ph, acct: s.phone, role: 'BAT', bat: 'Right-hand', bowl: '', jersey: 0, by: s.phone, t: Date.now() }; rgPlayers()[id] = p; saveDb(); }
+  else if (!p.acct) { p.acct = s.phone; saveDb(); }
+  return [200, { ok: true, player: rgPubP(p) }];
+};
+routes['POST /api/reg/players'] = async (req, body) => {   // create a player (or return the existing one for the same mobile) and optionally add to a team
+  const s = rgUser(req); if (!s) return [401, { ok: false, error: 'Please sign in first' }];
+  if (limited('rgp:' + s.phone, 120, 36e5)) return [429, { ok: false, error: 'Too many requests, slow down' }];
+  const name = rgStr(body.name, 40); if (name.length < 2) return [400, { ok: false, error: 'Enter the player name' }];
+  const ph = rgPhone(body.phone); if (body.phone && !ph) return [400, { ok: false, error: 'Enter a valid mobile number' }];
+  let t = null; if (body.team) { t = rgTeams()[String(body.team)]; if (!t) return [404, { ok: false, error: 'Team not found' }]; if (!rgCan(t, s)) return [403, { ok: false, error: 'Only the team creator or an admin can add players' }]; if (t.members.length >= RG_MAX) return [409, { ok: false, error: 'A team can have at most ' + RG_MAX + ' players' }]; }
+  let p = ph ? Object.values(rgPlayers()).find(x => x.ph === ph) : null, existing = !!p;
+  if (!p) { const id = 'p' + crypto.randomBytes(5).toString('hex'); p = { id, name, ph, role: RG_ROLES.includes(body.role) ? body.role : 'BAT', bat: RG_BAT.includes(body.bat) ? body.bat : 'Right-hand', bowl: RG_BOWL.includes(body.bowl) ? body.bowl : '', jersey: Math.max(0, Math.min(999, Math.floor(+body.jersey) || 0)), by: s.phone, t: Date.now() }; rgPlayers()[id] = p; }
+  if (t && !t.members.includes(p.id)) t.members.push(p.id);
+  saveDb(); return [200, { ok: true, existing, player: rgPubP(p), team: t ? rgPubT(t, true) : undefined }];
+};
+routes['POST /api/reg/members'] = async (req, body) => {   // add / remove a player in a team, or set the captain
+  const s = rgUser(req); if (!s) return [401, { ok: false, error: 'Please sign in first' }];
+  const t = rgTeams()[String(body.team || '')], p = rgPlayers()[String(body.player || '')]; if (!t || !p) return [404, { ok: false, error: 'Team or player not found' }];
+  if (!rgCan(t, s)) return [403, { ok: false, error: 'Only the team creator or an admin can change the squad' }];
+  const act = String(body.act || 'add');
+  if (act === 'add') { if (!t.members.includes(p.id)) { if (t.members.length >= RG_MAX) return [409, { ok: false, error: 'A team can have at most ' + RG_MAX + ' players' }]; t.members.push(p.id); } }
+  else if (act === 'remove') { t.members = t.members.filter(x => x !== p.id); if (t.captain === p.id) t.captain = ''; }   // the player and his history stay
+  else if (act === 'captain') { if (!t.members.includes(p.id)) return [409, { ok: false, error: 'Add the player to the team first' }]; t.captain = p.id; }
+  else return [400, { ok: false, error: 'Bad action' }];
+  saveDb(); return [200, { ok: true, team: rgPubT(t, true) }];
+};
 routes['GET /api/find-match'] = async (req) => {   // what does the provider actually list? e.g. /api/find-match?q=india
   const q = String(new URL(req.url, 'http://x').searchParams.get('q') || '').toLowerCase().slice(0, 40);
   let d = null; try { d = await cdLive(); } catch (e) { return [200, { ok: false, error: e.message }]; }
