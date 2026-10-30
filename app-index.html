@@ -9965,6 +9965,37 @@ try{if(S.settings&&S.settings.mskin==='ca'){S.settings.mskin='cb';try{save()}cat
   const i=h.indexOf('</section>');if(i<0)return h;
   return h.slice(0,i+10)+'<div class="sh-wait" style="margin:8px;padding:12px;border:1px solid #2a4cb0;border-radius:14px;background:#0c1d4a;color:#c6cfea;font:600 13px system-ui">Batters and bowler show here as soon as the data provider’s scorecard has this innings. Checking every few seconds.</div>'+h.slice(i+10)};
 }
+
+/* SCORER CONSOLE: clear labels for extras (NB+4, Wd+2), who faced every ball, tap the bowler or a batter to change them. */
+{
+ const base=scoreConsole;
+ const cur=()=>{const m=S.matches.find(x=>x.id===UI.sid)||(typeof curM==='function'?curM():null);return m&&!m.rm&&can()&&m.innings&&m.innings[m.cur]?m:null};
+ const lab=(m,e)=>{const pen=e.x==='wd'?1:e.x==='nb'?(+m.nbp||1):0;return e.w?('Wicket'+(e.r?' +'+e.r:'')):e.x==='wd'?('Wide'+(e.r?' +'+e.r:'')):e.x==='nb'?('No ball'+(e.r?' +'+e.r:'')):e.x==='b'?(e.r+' bye'+(e.r===1?'':'s')):e.x==='lb'?(e.r+' leg bye'+(e.r===1?'':'s')):(e.r===0?'Dot':e.r===4?'FOUR':e.r===6?'SIX':e.r+' run'+(e.r===1?'':'s'))};
+ scoreConsole=function(m){let h=base.apply(this,arguments);if(!m||m.rm||!can()||!m.innings[m.cur]||h.indexOf('sc2-bowl')<0)return h;
+  const inn=m.innings[m.cur],x=UI.ex;
+  h=h.replace('<div class="sc2-bowl">','<div class="sc2-bowl" data-a="shPickBowl" role="button" tabindex="0" title="Tap to change the bowler">');
+  h=h.replace('<div class="sc2-bat on">','<div class="sc2-bat on" data-a="shPickBat" data-w="s" role="button" tabindex="0" title="Tap to change batter or strike">').replace(/<div class="sc2-bat ">/,'<div class="sc2-bat" data-a="shPickBat" data-w="n" role="button" tabindex="0" title="Tap to change batter or strike">');
+  if(x){h=h.replace('<div class="runs">','<div class="runs xl">');const pre={nb:'NB+',wd:'Wd+',b:'Bye ',lb:'LB '}[x]||'';h=h.replace(/(<button[^>]*data-a="run" data-v="(\d+)"[^>]*>)(\d+)(<\/button>)/g,(a,o,v,t,c)=>o+(+v===0&&(x==='nb'||x==='wd')?(x==='nb'?'NB':'Wd'):pre+v)+c);
+   const nbp=+m.nbp||1,tip={nb:'No ball: '+nbp+' run added. Now tap the runs scored off the bat (NB+4 = no ball and a four).',wd:'Wide: 1 run added. Tap extra runs if they ran more (Wd+2 = wide and 2 more).',b:'Byes: tap how many byes were run.',lb:'Leg byes: tap how many were run.'}[x];
+   if(tip)h=h.replace(/Extra selected \(\w+\): tap the runs completed/,esc(tip))}
+  // who faced each ball of the current over
+  let lg=0;const rows=[];inn.ev.forEach(e=>{const ov=Math.floor(lg/BPO),bn=lg%BPO+1;rows.push({ov,bn,e,leg:e.x!=='wd'&&e.x!=='nb'});if(e.x!=='wd'&&e.x!=='nb')lg++});
+  const lastOv=rows.length?rows[rows.length-1].ov:0,cl=inn.lg%BPO===0&&inn.lg?(rows.length?rows[rows.length-1].ov:0):lastOv,L=rows.filter(r=>r.ov===cl).slice(-8);
+  if(L.length){const html='<div class="sc2-bl">'+L.map(r=>`<div><span class="o">${r.ov}.${r.bn}</span><span class="t"><b>${esc(nm(r.e.bt))}</b> faced ${esc(nm(r.e.bl))}</span><span class="r ${r.e.w?'w':(!r.e.x&&(r.e.r===4||r.e.r===6))?'b':r.e.x?'x':''}">${esc(lab(m,r.e))}</span></div>`).join('')+'</div>';
+   h=h.replace(/(<div class="sc2-over">[\s\S]*?<\/div>)/,'$1'+html)}
+  return h};
+ Object.assign(A,{
+  shPickBowl(){const m=cur();if(!m||m.status!=='live'||m.paused)return;const inn=m.innings[m.cur],mid=inn.lg%BPO!==0,ids=mid?(m.xi[inn.bowl]||[]).filter(id=>id!==inn.cur.bl):bowlOpts(m);
+   UI.modal={t:'html',html:`<h3>Change bowler</h3><div class="mu sm" style="margin-bottom:8px">${mid?'Mid-over change (injury or similar). The new bowler finishes the over.':'Bowlers who can bowl the next over (not the last over, within the over limit).'}</div>${ids.length?ids.map(id=>`<button type="button" class="btn ghost" style="display:block;width:100%;text-align:left;margin:4px 0" data-a="shSetBowl" data-id="${esc(id)}">${esc(nm(id))}</button>`).join(''):'<div class="need">No bowler is free. Check the over limit.</div>'}`};renderModal()},
+  shSetBowl(d){const m=cur();if(!m)return;F.shBowler({get:k=>({id:d.id})[k]});UI.modal=null;renderModal()},
+  shPickBat(d){const m=cur();if(!m||m.status!=='live'||m.paused)return;const inn=m.innings[m.cur],w=d.w==='n'?'n':'s',id=inn.cur[w],av=avail(m);
+   UI.modal={t:'html',html:`<h3>${esc(nm(id))}</h3>${w==='n'?`<button type="button" class="btn wide" data-a="shMakeStrike">Put ${esc(nm(id))} on strike</button>`:`<button type="button" class="btn wide" data-a="shMakeStrike">Swap strike (non-striker faces)</button>`}
+    <div class="b" style="margin:10px 0 4px">Replace with another batter</div>${av.length?av.map(b=>`<button type="button" class="btn ghost" style="display:block;width:100%;text-align:left;margin:4px 0" data-a="shSetBat" data-w="${w}" data-id="${esc(b)}">${esc(nm(b))}</button>`).join(''):'<div class="mu sm">No other batter is available.</div>'}`};renderModal()},
+  shMakeStrike(){const m=cur();if(!m)return;UI.modal=null;renderModal();A.swap()},
+  shSetBat(d){const m=cur();if(!m)return;F.shBatter({get:k=>({w:d.w,id:d.id})[k]});UI.modal=null;renderModal()}
+ });
+ const st=document.createElement('style');st.textContent='.runs.xl button{font-size:15px!important;padding-left:2px!important;padding-right:2px!important;white-space:nowrap}.sc2-bowl[data-a],.sc2-bat[data-a]{cursor:pointer}.sc2-bowl[data-a]:after{content:"Change ▾";font:700 10px system-ui;opacity:.75;margin-left:8px;padding:2px 7px;border:1px solid currentColor;border-radius:999px}.sc2-bat[data-a] small:after{content:" · tap to change";opacity:.7}.sc2-bl{display:grid;gap:2px;margin-top:6px;font:500 12px system-ui}.sc2-bl>div{display:grid;grid-template-columns:34px 1fr auto;gap:8px;align-items:center;padding:4px 8px;border-radius:8px;background:var(--card);border:1px solid var(--bd)}.sc2-bl .o{font-variant-numeric:tabular-nums;color:var(--mu)}.sc2-bl .r{font-weight:800}.sc2-bl .r.w{color:#e11d2e}.sc2-bl .r.b{color:#d99a00}.sc2-bl .r.x{color:#3f7bff}';document.head.appendChild(st);
+}
 </script>
 </body>
 </html>
