@@ -326,10 +326,16 @@ const uid=()=>Math.random().toString(36).slice(2,9);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const hash=s=>[...String(s)].reduce((a,c)=>a+c.charCodeAt(0),0);
 let S=load();
+/* Sign-in survives even when the big app state cannot be stored (iPhone Safari quota/private limits): a tiny separate record keeps user + token. */
+const SESS_KEY='sh.sess.v1',slimU=u=>{try{return JSON.parse(JSON.stringify(u,(k,v)=>typeof v==='string'&&v.length>3000&&/^data:/.test(v)?undefined:v))}catch(e){return u}};
+function sessSave(){try{if(S.user&&!S.user.guest&&S.user.phone)localStorage.setItem(SESS_KEY,JSON.stringify({user:slimU(S.user),tok:S.tok||''}));else if(!S.user)localStorage.removeItem(SESS_KEY)}catch(e){}}
+function sessRestore(){try{const j=JSON.parse(localStorage.getItem(SESS_KEY)||'null');if(j&&j.user&&j.user.phone){if(!S.user){S.user=j.user;S.tok=j.tok||S.tok||'';return true}if(!S.tok&&j.tok&&S.user.phone===j.user.phone)S.tok=j.tok}}catch(e){}return false}
+try{if(sessRestore()&&typeof UI!=='undefined'){}}catch(e){}
+try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
 const UI={stage:'welcome',view:'home',tab:'live',mid:null,sid:null,gi:2,ex:'',ang:null,modal:null,draft:null,q:'',cim:null,login:{step:1},rmid:null,ci:0};
 function load(){try{const j=localStorage.getItem(LS);if(j)return JSON.parse(j)}catch(e){}return seed()}
 let syncT=null;
-function save(){try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}
+function save(){sessSave();try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){try{localStorage.setItem(LS,JSON.stringify(S,(k,v)=>typeof v==='string'&&v.length>3000&&/^data:/.test(v)?undefined:v))}catch(e2){}}
   clearTimeout(syncT);syncT=setTimeout(syncPush,400)}
 /* Optional backend hook: paste a Firebase Realtime-DB JSON URL (https://xxx.firebaseio.com/cric.json) in Settings.
    Scorer device PUTs state, OBS overlay device GETs it. Works when you host this file yourself. */
