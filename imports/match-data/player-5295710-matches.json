@@ -1,0 +1,1808 @@
+{
+ "player_id": "5295710",
+ "source": "Match list screenshots supplied by the player",
+ "as_of": "2026-10-30",
+ "count": 90,
+ "matches": [
+  {
+   "tournament": "",
+   "venue": "Hyderabad, Kakinada",
+   "date": "2026-10-28",
+   "overs": 20,
+   "stage": "",
+   "a": {
+    "name": "SPARTAN HURRICANES",
+    "score": "19/0",
+    "ov": "0.5"
+   },
+   "b": {
+    "name": "Basic 11 Hapur",
+    "score": "0/0",
+    "ov": "0.0"
+   },
+   "result": "Abandoned (zen)",
+   "status": "Abandoned",
+   "n": 1
+  },
+  {
+   "tournament": "",
+   "venue": "Sh Sports Mini Stadium, Hapur",
+   "date": "2026-06-07",
+   "overs": 20,
+   "stage": "",
+   "a": {
+    "name": "NS TURFF",
+    "score": "153/9",
+    "ov": "20.0"
+   },
+   "b": {
+    "name": "WOLVES WARRIOR",
+    "score": "133/10",
+    "ov": "16.4"
+   },
+   "result": "NS TURFF won by 20 runs",
+   "status": "Past",
+   "n": 2
+  },
+  {
+   "tournament": "",
+   "venue": "Sh Sports Mini Stadium, Hapur",
+   "date": "2026-03-01",
+   "overs": 20,
+   "stage": "",
+   "a": {
+    "name": "B.M.C.C X1",
+    "score": "146/5",
+    "ov": "20.0"
+   },
+   "b": {
+    "name": "SH SPORTS CLUB ACADEMY",
+    "score": "149/1",
+    "ov": "12.4"
+   },
+   "result": "SH SPORTS CLUB ACADEMY won by 6 wickets",
+   "status": "Past",
+   "n": 3
+  },
+  {
+   "tournament": "Anchal Pace Foundation Corporate Cricket League",
+   "venue": "Anchal Pace Foundation & Cricket Academy, Hapur",
+   "date": "2026-02-13",
+   "overs": 25,
+   "stage": "Semi Final",
+   "a": {
+    "name": "SPARTAN HURRICANES",
+    "score": "215/10",
+    "ov": "24.3"
+   },
+   "b": {
+    "name": "Rajpura Royals",
+    "score": "215/6",
+    "ov": "25.0"
+   },
+   "result": "Match Tied (Rajpura Royals won the super over)",
+   "status": "Past",
+   "n": 4
+  },
+  {
+   "tournament": "Anchal Pace Foundation Corporate Cricket League",
+   "venue": "Anchal Pace Foundation & Cricket Academy, Hapur",
+   "date": "2026-01-03",
+   "overs": 25,
+   "stage": "League Matches",
+   "a": {
+    "name": "SPARTAN HURRICANES",
+    "score": "270/2",
+    "ov": "25.0"
+   },
+   "b": {
+    "name": "Mahadev Cricket Club (MCC)",
+    "score": "237/8",
+    "ov": "25.0"
+   },
+   "result": "SPARTAN HURRICANES won by 33 runs",
+   "status": "Past",
+   "n": 5
+  },
+  {
+   "tournament": "Anchal Pace Foundation Corporate Cricket League",
+   "venue": "Anchal Pace Foundation & Cricket Academy, Hapur",
+   "date": "2025-12-19",
+   "overs": 25,
+   "stage": "League Matches",
+   "a": {
+    "name": "Spartan 11",
+    "score": "114/10",
+    "ov": "22.4"
+   },
+   "b": {
+    "name": "SPARTAN HURRICANES",
+    "score": "115/4",
+    "ov": "12.0"
+   },
+   "result": "SPARTAN HURRICANES won by 6 wickets",
+   "status": "Past",
+   "n": 6
+  },
+  {
+   "tournament": "Anchal Pace Foundation Corporate Cricket League",
+   "venue": "Anchal Pace Foundation & Cricket Academy, Hapur",
+   "date": "2025-11-28",
+   "overs": 25,
+   "stage": "League Matches",
+   "a": {
+    "name": "Strikers Noida",
+    "score": "156/10",
+    "ov": "24.3"
+   },
+   "b": {
+    "name": "SPARTAN HURRICANES",
+    "score": "158/3",
+    "ov": "18.4"
+   },
+   "result": "SPARTAN HURRICANES won by 7 wickets",
+   "status": "Past",
+   "n": 7
+  },
+  {
+   "tournament": "",
+   "venue": "Sh Sports Mini Stadium, Hapur",
+   "date": "2025-11-16",
+   "overs": 20,
+   "stage": "",
+   "a": {
+    "name": "SH SPORTS CLUB ACADEMY",
+    "score": "171/7",
+    "ov": "19.5"
+   },
+   "b": {
+    "name": "Dadri Riders",
+    "score": "172/9",
+    "ov": "19.5"
+   },
+   "result": "Dadri Riders won by 1 wicket",
+   "status": "Past",
+   "n": 8
+  },
+  {
+   "tournament": "Anchal Pace Foundation Corporate Cricket League",
+   "venue": "Anchal Pace Foundation & Cricket Academy, Hapur",
+   "date": "2025-11-15",
+   "overs": 25,
+   "stage": "League Matches",
+   "a": {
+    "name": "Meerutya Lions 2.0",
+    "score": "167/10",
+    "ov": "18.4"
+   },
+   "b": {
+    "name": "SPARTAN HURRICANES",
+    "score": "140/10",
+    "ov": "19.0"
+   },
+   "result": "Meerutya Lions 2.0 won by 27 runs",
+   "status": "Past",
+   "n": 9
+  },
+  {
+   "tournament": "",
+   "venue": "Sh Sports Mini Stadium, Hapur",
+   "date": "2025-05-18",
+   "overs": 20,
+   "stage": "",
+   "a": {
+    "name": "SH STRIKERS",
+    "score": "171/9",
+    "ov": "19.2"
+   },
+   "b": {
+    "name": "vivek eleven 11",
+    "score": "172/3",
+    "ov": "14.5"
+   },
+   "result": "vivek eleven 11 won by 7 wickets",
+   "status": "Past",
+   "n": 10
+  },
+  {
+   "tournament": "SH SPORTS CHALLENGE TROPHY",
+   "venue": "Sh Sports Mini Stadium, Hapur",
+   "date": "2025-02-27",
+   "overs": 20,
+   "stage": "Semi Final",
+   "a": {
+    "name": "TFC XI HAPUR",
+    "score": "200/8",
+    "ov": "20.0"
+   },
+   "b": {
+    "name": "H TITANS UNITY OF SH SPORTS",
+    "score": "147/9",
+    "ov": "20.0"
+   },
+   "result": "TFC XI HAPUR won by 53 runs",
+   "status": "Past",
+   "n": 11
+  },
+  {
+   "tournament": "SH SPORTS CHALLENGE TROPHY",
+   "venue": "Sh Sports Mini Stadium, Hapur",
+   "date": "2025-02-25",
+   "overs": 20,
+   "stage": "League Matches",
+   "a": {
+    "name": "Modinagar Strikers",
+    "score": "197/6",
+    "ov": "20.0"
+   },
+   "b": {
+    "name": "H TITANS UNITY OF SH SPORTS",
+    "score": "201/4",
+    "ov": "18.0"
+   },
+   "result": "H TITANS UNITY OF SH SPORTS won by 6 wickets",
+   "status": "Past",
+   "n": 12
+  },
+  {
+   "tournament": "SH SPORTS CHALLENGE TROPHY",
+   "venue": "Sh Sports Mini Stadium, Hapur",
+   "date": "2025-02-20",
+   "overs": 20,
+   "stage": "League Matches",
+   "a": {
+    "name": "Hero Hurricanes",
+    "score": "199/7",
+    "ov": "20.0"
+   },
+   "b": {
+    "name": "H TITANS UNITY OF SH SPORTS",
+    "score": "200/0",
+    "ov": "15.3"
+   },
+   "result": "H TITANS UNITY OF SH SPORTS won by 10 wickets",
+   "status": "Past",
+   "n": 13
+  },
+  {
+   "tournament": "",
+   "venue": "Sh Sports Mini Stadium, Hapur",
+   "date": "2025-02-19",
+   "overs": 15,
+   "stage": "",
+   "a": {
+    "name": "H TITANS UNITY OF SH SPORTS",
+    "score": "126/6",
+    "ov": "15.0"
+   },
+   "b": {
+    "name": "Avengers Panther Hapur",
+    "score": "130/3",
+    "ov": "10.5"
+   },
+   "result": "Avengers Panther Hapur won by 15 wickets",
+   "status": "Past",
+   "n": 14
+  },
+  {
+   "tournament": "HAPUR CHAMPIONS LEAGUE",
+   "venue": "K9 Cricket Academy, Hapur",
+   "date": "2025-01-26",
+   "overs": 20,
+   "stage": "League Matches",
+   "a": {
+    "name": "Pilakhuwa Warriors",
+    "score": "168/6",
+    "ov": "20.0"
+   },
+   "b": {
+    "name": "HAPUR TITANS FOR SH SPORTS",
+    "score": "170/2",
+    "ov": "18.2"
+   },
+   "result": "HAPUR TITANS FOR SH SPORTS won by 8 wickets",
+   "status": "Past",
+   "n": 15
+  },
+  {
+   "tournament": "HAPUR CHAMPIONS LEAGUE",
+   "venue": "K9 Cricket Academy, Hapur",
+   "date": "2025-01-25",
+   "overs": 20,
+   "stage": "League Matches",
+   "a": {
+    "name": "Hapur Strikers",
+    "score": "217/3",
+    "ov": "20.0"
+   },
+   "b": {
+    "name": "HAPUR TITANS FOR SH SPORTS",
+    "score": "193/7",
+    "ov": "20.0"
+   },
+   "result": "Hapur Strikers won by 24 runs",
+   "status": "Past",
+   "n": 16
+  },
+  {
+   "tournament": "",
+   "venue": "Sh Sports Mini Stadium, Hapur",
+   "date": "2025-01-08",
+   "overs": 20,
+   "stage": "",
+   "a": {
+    "name": "HAPUR TITANS FOR SH SPORTSC",
+    "score": "214/4",
+    "ov": "20.0"
+   },
+   "b": {
+    "name": "Hapur PANKSHI blasters hcl",
+    "score": "159/8",
+    "ov": "20.0"
+   },
+   "result": "HAPUR TITANS FOR SH SPORTSC won by 55 runs",
+   "status": "Past",
+   "n": 17
+  },
+  {
+   "tournament": "",
+   "venue": "Sh Sports Mini Stadium, Hapur",
+   "date": "2024-12-25",
+   "overs": 20,
+   "stage": "",
+   "a": {
+    "name": "Bhagwanpur Wolves",
+    "score": "176/7",
+    "ov": "20.0"
+   },
+   "b": {
+    "name": "SH SPORTS CLUB 2.O",
+    "score": "160/9",
+    "ov": "20.0"
+   },
+   "result": "Bhagwanpur Wolves won by 16 runs",
+   "status": "Past",
+   "n": 18
+  },
+  {
+   "tournament": "SH SPORTS CLUB ACADEMIC MATCHES",
+   "venue": "Sh Sports Mini Stadium, Hapur",
+   "date": "2024-12-24",
+   "overs": 40,
+   "stage": "League Matches",
+   "a": {
+    "name": "HM Cricket Academy B",
+    "score": "183/7",
+    "ov": "40.0"
+   },
+   "b": {
+    "name": "SH SPORTS CLUB ACADEMY",
+    "score": "187/3",
+    "ov": "28.2"
+   },
+   "result": "SH SPORTS CLUB ACADEMY won by 7 wickets",
+   "status": "Past",
+   "n": 19
+  },
+  {
+   "tournament": "SH SPORTS CLUB ACADEMIC MATCHES",
+   "venue": "K9 Cricket Academy, Hapur",
+   "date": "2024-12-11",
+   "overs": 40,
+   "stage": "League Matches",
+   "a": {
+    "name": "K9 CRICKET ACADEMY",
+    "score": "286/9",
+    "ov": "40.0"
+   },
+   "b": {
+    "name": "SH SPORTS CLUB ACADEMY",
+    "score": "171/9",
+    "ov": "40.0"
+   },
+   "result": "K9 CRICKET ACADEMY won by 115 runs",
+   "status": "Past",
+   "n": 20
+  },
+  {
+   "tournament": "SH SPORTS CLUB ACADEMIC MATCHES",
+   "venue": "Sh Sports Mini Stadium, Hapur",
+   "date": "2024-11-29",
+   "overs": 40,
+   "stage": "League Matches",
+   "a": {
+    "name": "HM Cricket Academy B",
+    "score": "122/10",
+    "ov": "28.5"
+   },
+   "b": {
+    "name": "SH SPORTS CLUB ACADEMY",
+    "score": "123/8",
+    "ov": "19.4"
+   },
+   "result": "SH SPORTS CLUB ACADEMY won by 2 wickets",
+   "status": "Past",
+   "n": 21
+  },
+  {
+   "tournament": "SH SPORTS CLUB ACADEMIC MATCHES",
+   "venue": "Sh Sports Mini Stadium, Hapur",
+   "date": "2024-11-25",
+   "overs": 40,
+   "stage": "League Matches",
+   "a": {
+    "name": "SH SPORTS CLUB ACADEMY",
+    "score": "251/9",
+    "ov": "40.0"
+   },
+   "b": {
+    "name": "K9 CRICKET ACADEMY",
+    "score": "133/10",
+    "ov": "24.4"
+   },
+   "result": "SH SPORTS CLUB ACADEMY won by 118 runs",
+   "status": "Past",
+   "n": 22
+  },
+  {
+   "tournament": "",
+   "venue": "Sh Sports Mini Stadium, Hapur",
+   "date": "2024-11-13",
+   "overs": 6,
+   "stage": "",
+   "a": {
+    "name": "SH BLASTERS",
+    "score": "85/2",
+    "ov": "6.0"
+   },
+   "b": {
+    "name": "SH STRIKERS",
+    "score": "49/3",
+    "ov": "6.0"
+   },
+   "result": "SH BLASTERS won by 36 runs",
+   "status": "Past",
+   "n": 23
+  },
+  {
+   "tournament": "",
+   "venue": "K9 Cricket Academy, Hapur",
+   "date": "2024-08-10",
+   "overs": 20,
+   "stage": "",
+   "a": {
+    "name": "The Scoring Willow",
+    "score": "163/10",
+    "ov": "20.0"
+   },
+   "b": {
+    "name": "SH SPORTS CLUB 2.O",
+    "score": "165/2",
+    "ov": "13.0"
+   },
+   "result": "SH SPORTS CLUB 2.O won by 8 wickets",
+   "status": "Past",
+   "n": 24
+  },
+  {
+   "tournament": "",
+   "venue": "K9 Cricket Academy, Hapur",
+   "date": "2024-08-08",
+   "overs": 20,
+   "stage": "",
+   "a": {
+    "name": "SH STRIKERS",
+    "score": "156/10",
+    "ov": "20.0"
+   },
+   "b": {
+    "name": "SH BLASTERS",
+    "score": "157/8",
+    "ov": "19.0"
+   },
+   "result": "SH BLASTERS won by 2 wickets",
+   "status": "Past",
+   "n": 25
+  },
+  {
+   "tournament": "",
+   "venue": "K9 Cricket Academy, Hapur",
+   "date": "2024-08-03",
+   "overs": 20,
+   "stage": "",
+   "a": {
+    "name": "HM CRICKET ACADEMY",
+    "score": "99/7",
+    "ov": "20.0"
+   },
+   "b": {
+    "name": "SH SPORTS CLUB 2.O",
+    "score": "100/5",
+    "ov": "14.1"
+   },
+   "result": "SH SPORTS CLUB 2.O won by 5 wickets",
+   "status": "Past",
+   "n": 26
+  },
+  {
+   "tournament": "",
+   "venue": "K9 Cricket Academy, Hapur",
+   "date": "2024-07-31",
+   "overs": 20,
+   "stage": "",
+   "a": {
+    "name": "SH SPORTS CLUB 2.O",
+    "score": "124/10",
+    "ov": "17.3"
+   },
+   "b": {
+    "name": "PANKSHI INFRATECH",
+    "score": "5/3",
+    "ov": "1.5"
+   },
+   "result": "Abandoned (Game stop due to heavy rain pankshi infratech after 1.5 over 5 runs 3 wicket)",
+   "status": "Abandoned",
+   "n": 27
+  },
+  {
+   "tournament": "",
+   "venue": "K9 Cricket Academy, Hapur",
+   "date": "2024-07-27",
+   "overs": 20,
+   "stage": "",
+   "a": {
+    "name": "SH SPORTS CLUB 2.O",
+    "score": "208/5",
+    "ov": "20.0"
+   },
+   "b": {
+    "name": "Basic 11 Hapur",
+    "score": "88/10",
+    "ov": "18.5"
+   },
+   "result": "SH SPORTS CLUB 2.O won by 120 runs",
+   "status": "Past",
+   "n": 28
+  },
+  {
+   "tournament": "HAPUR CHAMPIONS CRICKET LEAGUE",
+   "venue": "KSCC, Hapur",
+   "date": "2024-07-14",
+   "overs": 20,
+   "stage": "Semi Final",
+   "a": {
+    "name": "SH SPORTS CLUB 2.O",
+    "score": "191/8",
+    "ov": "20.0"
+   },
+   "b": {
+    "name": "IMIT ROYALS HAPUR",
+    "score": "192/6",
+    "ov": "19.2"
+   },
+   "result": "IMIT ROYALS HAPUR won by 4 wickets",
+   "status": "Past",
+   "n": 29
+  },
+  {
+   "tournament": "HAPUR CHAMPIONS CRICKET LEAGUE",
+   "venue": "KSCC, Hapur",
+   "date": "2024-07-12",
+   "overs": 20,
+   "stage": "League Matches",
+   "a": {
+    "name": "SH SPORTS CLUB 2.O",
+    "score": "",
+    "ov": ""
+   },
+   "b": {
+    "name": "Pilkhuwa Super Giants",
+    "score": "",
+    "ov": ""
+   },
+   "result": "SH SPORTS CLUB 2.O won by (resulted)",
+   "status": "Past",
+   "n": 30
+  },
+  {
+   "tournament": "HAPUR CHAMPIONS CRICKET LEAGUE",
+   "venue": "KSCC, Hapur",
+   "date": "2024-07-08",
+   "overs": 20,
+   "stage": "League Matches",
+   "a": {
+    "name": "SH SPORTS CLUB 2.O",
+    "score": "221/2",
+    "ov": "20.0"
+   },
+   "b": {
+    "name": "SAKET WARRIORS",
+    "score": "89/10",
+    "ov": "14.2"
+   },
+   "result": "SH SPORTS CLUB 2.O won by 132 runs",
+   "status": "Past",
+   "n": 31
+  },
+  {
+   "tournament": "",
+   "venue": "KSCC, Hapur",
+   "date": "2024-07-04",
+   "overs": 15,
+   "stage": "",
+   "a": {
+    "name": "IMIT ROYALS HAPUR",
+    "score": "152/7",
+    "ov": "15.0"
+   },
+   "b": {
+    "name": "HEMANTH TITANS TPI",
+    "score": "86/10",
+    "ov": "13.0"
+   },
+   "result": "IMIT ROYALS HAPUR won by 66 runs",
+   "status": "Past",
+   "n": 32
+  },
+  {
+   "tournament": "HAPUR CHAMPIONS CRICKET LEAGUE",
+   "venue": "KSCC, Hapur",
+   "date": "2024-06-26",
+   "overs": 20,
+   "stage": "League Matches",
+   "a": {
+    "name": "Parker Cricket Academy",
+    "score": "168/10",
+    "ov": "19.1"
+   },
+   "b": {
+    "name": "SH SPORTS CLUB 2.O",
+    "score": "170/2",
+    "ov": "16.0"
+   },
+   "result": "SH SPORTS CLUB 2.O won by 8 wickets",
+   "status": "Past",
+   "n": 33
+  },
+  {
+   "tournament": "1st UK CORPORATE LEAGUE KNOCKOUT T...",
+   "venue": "UK CRICKET ACADEMY, Hapur",
+   "date": "2024-06-25",
+   "overs": 20,
+   "stage": "League Matches",
+   "a": {
+    "name": "SH SPORTS CLUB 2.O",
+    "score": "125/10",
+    "ov": "18.4"
+   },
+   "b": {
+    "name": "Team Empire",
+    "score": "127/6",
+    "ov": "11.1"
+   },
+   "result": "Team Empire won by 4 wickets",
+   "status": "Past",
+   "n": 34
+  },
+  {
+   "tournament": "",
+   "venue": "KSCC, Hapur",
+   "date": "2024-06-16",
+   "overs": 20,
+   "stage": "",
+   "a": {
+    "name": "CRICLOVERS X1",
+    "score": "170/7",
+    "ov": "20.0"
+   },
+   "b": {
+    "name": "vivek eleven 11",
+    "score": "171/1",
+    "ov": "12.4"
+   },
+   "result": "vivek eleven 11 won by 9 wickets",
+   "status": "Past",
+   "n": 35
+  },
+  {
+   "tournament": "1st UK CORPORATE LEAGUE KNOCKOUT T...",
+   "venue": "UK CRICKET ACADEMY, Hapur",
+   "date": "2024-06-14",
+   "overs": 20,
+   "stage": "League Matches",
+   "a": {
+    "name": "Spartan Warriors Hapur",
+    "score": "215/8",
+    "ov": "20.0"
+   },
+   "b": {
+    "name": "SH SPORTS CLUB 2.O",
+    "score": "199/6",
+    "ov": "19.4"
+   },
+   "result": "Spartan Warriors Hapur won by 16 runs",
+   "status": "Past",
+   "n": 36
+  },
+  {
+   "tournament": "",
+   "venue": "UK CRICKET ACADEMY, Hapur",
+   "date": "2024-06-09",
+   "overs": 20,
+   "stage": "",
+   "a": {
+    "name": "Eagles Hapur Warrior",
+    "score": "142/10",
+    "ov": "19.4"
+   },
+   "b": {
+    "name": "SH SPORTS CLUB 2.O",
+    "score": "145/4",
+    "ov": "12.5"
+   },
+   "result": "SH SPORTS CLUB 2.O won by 6 wickets",
+   "status": "Past",
+   "n": 37
+  },
+  {
+   "tournament": "",
+   "venue": "K9 Cricket Academy, Hapur",
+   "date": "2024-06-01",
+   "overs": 20,
+   "stage": "",
+   "a": {
+    "name": "Pro Cricket Club",
+    "score": "193/5",
+    "ov": "20.0"
+   },
+   "b": {
+    "name": "SH SPORTS CLUB 2.O",
+    "score": "191/8",
+    "ov": "20.0"
+   },
+   "result": "Pro Cricket Club won by 2 runs",
+   "status": "Past",
+   "n": 38
+  },
+  {
+   "tournament": "",
+   "venue": "K9 Cricket Academy, Hapur",
+   "date": "2024-05-25",
+   "overs": 20,
+   "stage": "",
+   "a": {
+    "name": "Pro Cricket Club",
+    "score": "201/5",
+    "ov": "20.0"
+   },
+   "b": {
+    "name": "SH SPORTS CLUB 2.O",
+    "score": "168/3",
+    "ov": "16.0"
+   },
+   "result": "SH SPORTS CLUB 2.O won by 14 runs (DLS - Match reduced to 16.0 overs, target 154 runs)",
+   "status": "Past",
+   "n": 39
+  },
+  {
+   "tournament": "",
+   "venue": "Anchal Pace Foundation & Cricket Academy, Hapur",
+   "date": "2024-05-18",
+   "overs": 20,
+   "stage": "",
+   "a": {
+    "name": "Pro Cricket Club",
+    "score": "168/5",
+    "ov": "20.0"
+   },
+   "b": {
+    "name": "SH SPORTS CLUB 2.O",
+    "score": "169/5",
+    "ov": "15.3"
+   },
+   "result": "SH SPORTS CLUB 2.O won by 5 wickets",
+   "status": "Past",
+   "n": 40
+  },
+  {
+   "tournament": "",
+   "venue": "K9 Cricket Academy, Hapur",
+   "date": "2024-05-11",
+   "overs": 20,
+   "stage": "",
+   "a": {
+    "name": "The Scoring Willow",
+    "score": "165/10",
+    "ov": "19.2"
+   },
+   "b": {
+    "name": "SH SPORTS CLUB 2.O",
+    "score": "147/8",
+    "ov": "20.0"
+   },
+   "result": "The Scoring Willow won by 18 runs",
+   "status": "Past",
+   "n": 41
+  },
+  {
+   "tournament": "",
+   "venue": "K9 Cricket Academy, Hapur",
+   "date": "2024-05-04",
+   "overs": 20,
+   "stage": "",
+   "a": {
+    "name": "SH SPORTS CLUB 2.O",
+    "score": "206/6",
+    "ov": "20.0"
+   },
+   "b": {
+    "name": "Pro Cricket Club",
+    "score": "129/10",
+    "ov": "17.3"
+   },
+   "result": "SH SPORTS CLUB 2.O won by 77 runs",
+   "status": "Past",
+   "n": 42
+  },
+  {
+   "tournament": "JN Cricket Tournament",
+   "venue": "GAME CITY ARENA, Meerut",
+   "date": "2024-04-14",
+   "overs": 20,
+   "stage": "Super League",
+   "a": {
+    "name": "SH SPORTS CLUB",
+    "score": "309/4",
+    "ov": "20.0"
+   },
+   "b": {
+    "name": "Aarvee Avengers",
+    "score": "95/10",
+    "ov": "16.0"
+   },
+   "result": "SH SPORTS CLUB won by 214 runs",
+   "status": "Past",
+   "n": 43
+  },
+  {
+   "tournament": "",
+   "venue": "K9 Cricket Academy, Hapur",
+   "date": "2024-04-13",
+   "overs": 20,
+   "stage": "",
+   "a": {
+    "name": "SH SPORTS CLUB",
+    "score": "194/3",
+    "ov": "20.0"
+   },
+   "b": {
+    "name": "Pro Cricket Club",
+    "score": "189/5",
+    "ov": "20.0"
+   },
+   "result": "SH SPORTS CLUB won by 5 runs",
+   "status": "Past",
+   "n": 44
+  },
+  {
+   "tournament": "JN Cricket Tournament",
+   "venue": "GAME CITY ARENA, Meerut",
+   "date": "2024-04-08",
+   "overs": 20,
+   "stage": "Super League",
+   "a": {
+    "name": "MAVERICKS",
+    "score": "176/8",
+    "ov": "20.0"
+   },
+   "b": {
+    "name": "SH SPORTS CLUB",
+    "score": "171/5",
+    "ov": "20.0"
+   },
+   "result": "MAVERICKS won by 5 runs",
+   "status": "Past",
+   "n": 45
+  },
+  {
+   "tournament": "",
+   "venue": "K9 Cricket Academy, Hapur",
+   "date": "2024-04-06",
+   "overs": 20,
+   "stage": "",
+   "a": {
+    "name": "SH SPORTS CLUB",
+    "score": "246/7",
+    "ov": "20.0"
+   },
+   "b": {
+    "name": "Pro Cricket Club",
+    "score": "250/3",
+    "ov": "19.4"
+   },
+   "result": "Pro Cricket Club won by 7 wickets",
+   "status": "Past",
+   "n": 46
+  },
+  {
+   "tournament": "",
+   "venue": "K9 Cricket Academy, Hapur",
+   "date": "2024-04-04",
+   "overs": 20,
+   "stage": "",
+   "a": {
+    "name": "SH SPORTS CLUB",
+    "score": "174/8",
+    "ov": "20.0"
+   },
+   "b": {
+    "name": "FCI Hapur Hurricanes",
+    "score": "152/6",
+    "ov": "20.0"
+   },
+   "result": "SH SPORTS CLUB won by 22 runs",
+   "status": "Past",
+   "n": 47
+  },
+  {
+   "tournament": "",
+   "venue": "k9 cricket acedemy, Meerut",
+   "date": "2024-04-03",
+   "overs": 20,
+   "stage": "",
+   "a": {
+    "name": "SH SPORTS CLUB",
+    "score": "157/8",
+    "ov": "20.0"
+   },
+   "b": {
+    "name": "JN MAVERICKS",
+    "score": "158/6",
+    "ov": "15.2"
+   },
+   "result": "JN MAVERICKS won by 4 wickets",
+   "status": "Past",
+   "n": 48
+  },
+  {
+   "tournament": "",
+   "venue": "K9 Cricket Academy, Hapur",
+   "date": "2024-04-01",
+   "overs": 20,
+   "stage": "",
+   "a": {
+    "name": "SH SPORTS CLUB",
+    "score": "172/4",
+    "ov": "20.0"
+   },
+   "b": {
+    "name": "MADRAS KINGS",
+    "score": "69/10",
+    "ov": "11.5"
+   },
+   "result": "SH SPORTS CLUB won by 103 runs",
+   "status": "Past",
+   "n": 49
+  },
+  {
+   "tournament": "",
+   "venue": "K9 Cricket Academy, Kakinada",
+   "date": "2024-03-30",
+   "overs": 20,
+   "stage": "",
+   "a": {
+    "name": "SH SPORTS CLUB",
+    "score": "362/2",
+    "ov": "20.0"
+   },
+   "b": {
+    "name": "SEENA BHAI KINGS",
+    "score": "135/10",
+    "ov": "14.0"
+   },
+   "result": "SH SPORTS CLUB won by 227 runs",
+   "status": "Past",
+   "n": 50
+  },
+  {
+   "tournament": "",
+   "venue": "UK CRICKET ACADEMY, Hapur",
+   "date": "2024-03-29",
+   "overs": 20,
+   "stage": "",
+   "a": {
+    "name": "Team TRD ADEE",
+    "score": "215/7",
+    "ov": "20.0"
+   },
+   "b": {
+    "name": "SH SPORTS CLUB",
+    "score": "202/7",
+    "ov": "20.0"
+   },
+   "result": "Team TRD ADEE won by 13 runs",
+   "status": "Past",
+   "n": 51
+  },
+  {
+   "tournament": "",
+   "venue": "K9 Cricket Academy, Hapur",
+   "date": "2024-03-27",
+   "overs": 20,
+   "stage": "",
+   "a": {
+    "name": "SH SPORTS CLUB",
+    "score": "187/4",
+    "ov": "20.0"
+   },
+   "b": {
+    "name": "Pro Cricket Club",
+    "score": "151/10",
+    "ov": "18.0"
+   },
+   "result": "SH SPORTS CLUB won by 36 runs",
+   "status": "Past",
+   "n": 52
+  },
+  {
+   "tournament": "",
+   "venue": "K9 Cricket Academy, Hapur",
+   "date": "2024-03-23",
+   "overs": 20,
+   "stage": "",
+   "a": {
+    "name": "SH SPORTS CLUB",
+    "score": "227/7",
+    "ov": "20.0"
+   },
+   "b": {
+    "name": "Basic 11 Hapur",
+    "score": "211/7",
+    "ov": "20.0"
+   },
+   "result": "SH SPORTS CLUB won by 16 runs",
+   "status": "Past",
+   "n": 53
+  },
+  {
+   "tournament": "JN Cricket Tournament",
+   "venue": "GAME CITY ARENA, Meerut",
+   "date": "2024-03-21",
+   "overs": 20,
+   "stage": "Super League",
+   "a": {
+    "name": "SH SPORTS CLUB",
+    "score": "126/10",
+    "ov": "18.4"
+   },
+   "b": {
+    "name": "MAVERICKS",
+    "score": "119/10",
+    "ov": "19.4"
+   },
+   "result": "SH SPORTS CLUB won by 7 runs",
+   "status": "Past",
+   "n": 54
+  },
+  {
+   "tournament": "",
+   "venue": "K9 Cricket Academy, Hapur",
+   "date": "2024-03-20",
+   "overs": 20,
+   "stage": "",
+   "a": {
+    "name": "SH SPORTS CLUB",
+    "score": "204/7",
+    "ov": "20.0"
+   },
+   "b": {
+    "name": "FCI Hapur Hurricanes",
+    "score": "158/8",
+    "ov": "20.0"
+   },
+   "result": "SH SPORTS CLUB won by 46 runs",
+   "status": "Past",
+   "n": 55
+  },
+  {
+   "tournament": "",
+   "venue": "UK CRICKET ACADEMY, Hapur",
+   "date": "2024-03-17",
+   "overs": 20,
+   "stage": "",
+   "a": {
+    "name": "SH SPORTS CLUB",
+    "score": "236/5",
+    "ov": "20.0"
+   },
+   "b": {
+    "name": "Sarvodya United",
+    "score": "239/2",
+    "ov": "18.0"
+   },
+   "result": "Sarvodya United won by 9 wickets",
+   "status": "Past",
+   "n": 56
+  },
+  {
+   "tournament": "",
+   "venue": "KSCC, Hapur",
+   "date": "2024-03-12",
+   "overs": 20,
+   "stage": "",
+   "a": {
+    "name": "SH SPORTS CLUB",
+    "score": "237/5",
+    "ov": "20.0"
+   },
+   "b": {
+    "name": "FCI Hapur Hurricanes",
+    "score": "149/10",
+    "ov": "19.5"
+   },
+   "result": "SH SPORTS CLUB won by 88 runs",
+   "status": "Past",
+   "n": 57
+  },
+  {
+   "tournament": "JN Cricket Tournament",
+   "venue": "GAME CITY ARENA, Meerut",
+   "date": "2024-03-10",
+   "overs": 20,
+   "stage": "Super League",
+   "a": {
+    "name": "SH SPORTS CLUB",
+    "score": "134/10",
+    "ov": "15.4"
+   },
+   "b": {
+    "name": "HETVI HURRICANES",
+    "score": "137/5",
+    "ov": "15.4"
+   },
+   "result": "HETVI HURRICANES won by 5 wickets",
+   "status": "Past",
+   "n": 58
+  },
+  {
+   "tournament": "",
+   "venue": "Anchal Pace Foundation & Cricket Academy, Hapur",
+   "date": "2024-03-08",
+   "overs": 20,
+   "stage": "",
+   "a": {
+    "name": "SH SPORTS CLUB",
+    "score": "146/8",
+    "ov": "20.0"
+   },
+   "b": {
+    "name": "Pankshi Infratech",
+    "score": "152/5",
+    "ov": "18.0"
+   },
+   "result": "Pankshi Infratech won by 5 wickets",
+   "status": "Past",
+   "n": 59
+  },
+  {
+   "tournament": "",
+   "venue": "K9 Cricket Academy, Hapur",
+   "date": "2024-03-06",
+   "overs": 20,
+   "stage": "",
+   "a": {
+    "name": "JN MAVERICKS",
+    "score": "203/4",
+    "ov": "20.0"
+   },
+   "b": {
+    "name": "SH SPORTS CLUB",
+    "score": "178/9",
+    "ov": "20.0"
+   },
+   "result": "JN MAVERICKS won by 25 runs",
+   "status": "Past",
+   "n": 60
+  },
+  {
+   "tournament": "",
+   "venue": "K9 Cricket Academy, Hapur",
+   "date": "2024-03-02",
+   "overs": 20,
+   "stage": "",
+   "a": {
+    "name": "Pro Cricket Club",
+    "score": "178/7",
+    "ov": "20.0"
+   },
+   "b": {
+    "name": "SH SPORTS CLUB",
+    "score": "166/8",
+    "ov": "20.0"
+   },
+   "result": "Pro Cricket Club won by 12 runs",
+   "status": "Past",
+   "n": 61
+  },
+  {
+   "tournament": "",
+   "venue": "K9 Cricket Academy, Hapur",
+   "date": "2024-02-22",
+   "overs": 20,
+   "stage": "",
+   "a": {
+    "name": "FCI Hapur Hurricanes",
+    "score": "116/7",
+    "ov": "20.0"
+   },
+   "b": {
+    "name": "HEMANTH TITANS TPI",
+    "score": "117/5",
+    "ov": "12.5"
+   },
+   "result": "HEMANTH TITANS TPI won by 5 wickets",
+   "status": "Past",
+   "n": 62
+  },
+  {
+   "tournament": "",
+   "venue": "K9 Cricket Academy, Hapur",
+   "date": "2024-02-19",
+   "overs": 20,
+   "stage": "",
+   "a": {
+    "name": "SH SPORTS CLUB",
+    "score": "222/7",
+    "ov": "20.0"
+   },
+   "b": {
+    "name": "FCI Hapur Hurricanes",
+    "score": "103/10",
+    "ov": "18.1"
+   },
+   "result": "SH SPORTS CLUB won by 119 runs",
+   "status": "Past",
+   "n": 63
+  },
+  {
+   "tournament": "",
+   "venue": "K9 Cricket Academy, Hapur",
+   "date": "2024-02-15",
+   "overs": 20,
+   "stage": "",
+   "a": {
+    "name": "SH SPORTS CLUB",
+    "score": "130/9",
+    "ov": "20.0"
+   },
+   "b": {
+    "name": "JN MAVERICKS",
+    "score": "132/5",
+    "ov": "14.4"
+   },
+   "result": "JN MAVERICKS won by 5 wickets",
+   "status": "Past",
+   "n": 64
+  },
+  {
+   "tournament": "",
+   "venue": "JMS WORLD SCHOOL CRICKET GROUND, Hapur",
+   "date": "2024-02-14",
+   "overs": 25,
+   "stage": "",
+   "a": {
+    "name": "Basic 11 Hapur",
+    "score": "182/10",
+    "ov": "22.3"
+   },
+   "b": {
+    "name": "SH SPORTS CLUB",
+    "score": "188/0",
+    "ov": "12.5"
+   },
+   "result": "SH SPORTS CLUB won by 9 wickets",
+   "status": "Past",
+   "n": 65
+  },
+  {
+   "tournament": "",
+   "venue": "SUDHA CRICKET GROUND, Hapur",
+   "date": "2024-02-10",
+   "overs": 20,
+   "stage": "",
+   "a": {
+    "name": "PWD HAPUR XI",
+    "score": "138/8",
+    "ov": "20.0"
+   },
+   "b": {
+    "name": "Upsrtc Hapur Depot",
+    "score": "95/9",
+    "ov": "15.4"
+   },
+   "result": "PWD HAPUR XI won by 43 runs",
+   "status": "Past",
+   "n": 66
+  },
+  {
+   "tournament": "",
+   "venue": "GAME CITY ARENA, Meerut",
+   "date": "2024-02-05",
+   "overs": 20,
+   "stage": "",
+   "a": {
+    "name": "SH SPORTS CLUB",
+    "score": "146/9",
+    "ov": "20.0"
+   },
+   "b": {
+    "name": "JN MAVERICKS",
+    "score": "148/5",
+    "ov": "18.0"
+   },
+   "result": "JN MAVERICKS won by 5 wickets",
+   "status": "Past",
+   "n": 67
+  },
+  {
+   "tournament": "",
+   "venue": "K9 Cricket Academy, Hapur",
+   "date": "2024-01-08",
+   "overs": 25,
+   "stage": "",
+   "a": {
+    "name": "Harsinghpur",
+    "score": "185/7",
+    "ov": "25.0"
+   },
+   "b": {
+    "name": "SH SPORTS CLUB",
+    "score": "147/6",
+    "ov": "16.1"
+   },
+   "result": "SH SPORTS CLUB won by 5 wickets",
+   "status": "Past",
+   "n": 68
+  },
+  {
+   "tournament": "",
+   "venue": "K9 Cricket Academy, Hapur",
+   "date": "2024-01-05",
+   "overs": 20,
+   "stage": "",
+   "a": {
+    "name": "SH SPORTS CLUB",
+    "score": "202/6",
+    "ov": "20.0"
+   },
+   "b": {
+    "name": "UPJN (Urban) Ghaziabad Zone",
+    "score": "124/10",
+    "ov": "20.0"
+   },
+   "result": "SH SPORTS CLUB won by 78 runs",
+   "status": "Past",
+   "n": 69
+  },
+  {
+   "tournament": "",
+   "venue": "GAME CITY ARENA, Meerut",
+   "date": "2024-01-03",
+   "overs": 20,
+   "stage": "",
+   "a": {
+    "name": "SH SPORTS CLUB",
+    "score": "165/9",
+    "ov": "20.0"
+   },
+   "b": {
+    "name": "JN MAVERICKS",
+    "score": "168/5",
+    "ov": "19.3"
+   },
+   "result": "JN MAVERICKS won by 5 wickets",
+   "status": "Past",
+   "n": 70
+  },
+  {
+   "tournament": "",
+   "venue": "K9 Cricket Academy, Hapur",
+   "date": "2024-01-02",
+   "overs": 20,
+   "stage": "",
+   "a": {
+    "name": "Upsrtc Hapur Depot",
+    "score": "88/10",
+    "ov": "12.4"
+   },
+   "b": {
+    "name": "Basic 11 Hapur",
+    "score": "89/0",
+    "ov": "9.3"
+   },
+   "result": "Basic 11 Hapur won by 10 wickets",
+   "status": "Past",
+   "n": 71
+  },
+  {
+   "tournament": "",
+   "venue": "K9 Cricket Academy, Hapur",
+   "date": "2023-12-28",
+   "overs": 20,
+   "stage": "",
+   "a": {
+    "name": "JN MAVERICKS",
+    "score": "109/3",
+    "ov": "11.0"
+   },
+   "b": {
+    "name": "SH SPORTS CLUB",
+    "score": "0/0",
+    "ov": "0.0"
+   },
+   "result": "Abandoned (Fog)",
+   "status": "Abandoned",
+   "n": 72
+  },
+  {
+   "tournament": "Tri series Tournament",
+   "venue": "GAME CITY ARENA, Meerut",
+   "date": "2023-12-27",
+   "overs": 20,
+   "stage": "Super Three",
+   "a": {
+    "name": "Aarvee Avengers",
+    "score": "115/9",
+    "ov": "20.0"
+   },
+   "b": {
+    "name": "Hetvi Meerut",
+    "score": "116/8",
+    "ov": "14.4"
+   },
+   "result": "Hetvi Meerut won by 2 wickets",
+   "status": "Past",
+   "n": 73
+  },
+  {
+   "tournament": "",
+   "venue": "K9 Cricket Academy, Hapur",
+   "date": "2023-12-27",
+   "overs": 20,
+   "stage": "",
+   "a": {
+    "name": "UPJN (Urban) Ghaziabad Zone",
+    "score": "116/2",
+    "ov": "13.5"
+   },
+   "b": {
+    "name": "SH SPORTS CLUB",
+    "score": "0/0",
+    "ov": "0.0"
+   },
+   "result": "Abandoned (Match abounded due factor )",
+   "status": "Abandoned",
+   "n": 74
+  },
+  {
+   "tournament": "Tri series Tournament",
+   "venue": "GAME CITY ARENA, Meerut",
+   "date": "2023-12-21",
+   "overs": 20,
+   "stage": "Super Three",
+   "a": {
+    "name": "Aarvee Avengers",
+    "score": "75/10",
+    "ov": "13.1"
+   },
+   "b": {
+    "name": "JN MAVERICKS",
+    "score": "78/2",
+    "ov": "9.4"
+   },
+   "result": "JN MAVERICKS won by 8 wickets",
+   "status": "Past",
+   "n": 75
+  },
+  {
+   "tournament": "",
+   "venue": "SUDHA CRICKET GROUND, Hapur",
+   "date": "2023-12-16",
+   "overs": 20,
+   "stage": "",
+   "a": {
+    "name": "Sudha Cricket Academy",
+    "score": "194/6",
+    "ov": "20.0"
+   },
+   "b": {
+    "name": "FUKREY 11",
+    "score": "198/2",
+    "ov": "18.2"
+   },
+   "result": "FUKREY 11 won by 8 wickets",
+   "status": "Past",
+   "n": 76
+  },
+  {
+   "tournament": "",
+   "venue": "K9 Cricket Academy, Hapur",
+   "date": "2023-12-09",
+   "overs": 20,
+   "stage": "",
+   "a": {
+    "name": "SH SPORTS CLUB",
+    "score": "187/6",
+    "ov": "20.0"
+   },
+   "b": {
+    "name": "JN MAVERICKS",
+    "score": "144/10",
+    "ov": "18.2"
+   },
+   "result": "SH SPORTS CLUB won by 43 runs",
+   "status": "Past",
+   "n": 77
+  },
+  {
+   "tournament": "",
+   "venue": "Diwan Cricket Grounds (Ghaziabad), Ghaziabad",
+   "date": "2023-12-04",
+   "overs": 20,
+   "stage": "",
+   "a": {
+    "name": "JN MAVERICKS",
+    "score": "234/6",
+    "ov": "20.0"
+   },
+   "b": {
+    "name": "HEMANTH TITANS TPI",
+    "score": "183/10",
+    "ov": "19.2"
+   },
+   "result": "JN MAVERICKS won by 51 runs",
+   "status": "Past",
+   "n": 78
+  },
+  {
+   "tournament": "",
+   "venue": "UK CRICKET ACADEMY, Hapur",
+   "date": "2023-11-08",
+   "overs": 20,
+   "stage": "",
+   "a": {
+    "name": "FCI Hapur Hurricanes",
+    "score": "139/6",
+    "ov": "20.0"
+   },
+   "b": {
+    "name": "HEMANTH TITANS TPI",
+    "score": "141/4",
+    "ov": "15.4"
+   },
+   "result": "HEMANTH TITANS TPI won by 6 wickets",
+   "status": "Past",
+   "n": 79
+  },
+  {
+   "tournament": "",
+   "venue": "Lakshay Cricket Ground B, Ghaziabad",
+   "date": "2023-11-03",
+   "overs": 20,
+   "stage": "",
+   "a": {
+    "name": "HEMANTH TITANS TPI",
+    "score": "152/9",
+    "ov": "20.0"
+   },
+   "b": {
+    "name": "Adesh XI",
+    "score": "157/0",
+    "ov": "15.3"
+   },
+   "result": "Adesh XI won by 8 wickets",
+   "status": "Past",
+   "n": 80
+  },
+  {
+   "tournament": "",
+   "venue": "SUDHA CRICKET GROUND, Hapur",
+   "date": "2023-11-02",
+   "overs": 20,
+   "stage": "",
+   "a": {
+    "name": "HEMANTH TITANS TPI",
+    "score": "160/9",
+    "ov": "20.0"
+   },
+   "b": {
+    "name": "FCI Hapur Hurricanes",
+    "score": "162/6",
+    "ov": "18.3"
+   },
+   "result": "FCI Hapur Hurricanes won by 4 wickets",
+   "status": "Past",
+   "n": 81
+  },
+  {
+   "tournament": "",
+   "venue": "UK CRICKET ACADEMY, Hapur",
+   "date": "2023-10-28",
+   "overs": 18,
+   "stage": "",
+   "a": {
+    "name": "HEMANTH TITANS TPI",
+    "score": "162/7",
+    "ov": "18.0"
+   },
+   "b": {
+    "name": "Aarvee Avengers",
+    "score": "149/9",
+    "ov": "18.0"
+   },
+   "result": "HEMANTH TITANS TPI won by 13 runs",
+   "status": "Past",
+   "n": 82
+  },
+  {
+   "tournament": "",
+   "venue": "UK CRICKET ACADEMY, Hapur",
+   "date": "2023-10-21",
+   "overs": 20,
+   "stage": "",
+   "a": {
+    "name": "HEMANTH TITANS TPI",
+    "score": "179/9",
+    "ov": "20.0"
+   },
+   "b": {
+    "name": "Upsrtc Hapur Depot",
+    "score": "127/10",
+    "ov": "17.0"
+   },
+   "result": "HEMANTH TITANS TPI won by 52 runs",
+   "status": "Past",
+   "n": 83
+  },
+  {
+   "tournament": "",
+   "venue": "K9 Cricket Academy, Hapur",
+   "date": "2023-10-07",
+   "overs": 20,
+   "stage": "",
+   "a": {
+    "name": "HEMANTH TITANS TPI",
+    "score": "141/8",
+    "ov": "20.0"
+   },
+   "b": {
+    "name": "Upsrtc Hapur Depot",
+    "score": "143/3",
+    "ov": "18.1"
+   },
+   "result": "Upsrtc Hapur Depot won by 7 wickets",
+   "status": "Past",
+   "n": 84
+  },
+  {
+   "tournament": "",
+   "venue": "Y. S. R., Visakhapatnam",
+   "date": "2023-10-05",
+   "overs": 20,
+   "stage": "",
+   "a": {
+    "name": "HEMANTH TITANS TPI",
+    "score": "186/5",
+    "ov": "20.0"
+   },
+   "b": {
+    "name": "SEENA BHAI KINGS",
+    "score": "157/10",
+    "ov": "17.1"
+   },
+   "result": "HEMANTH TITANS TPI won by 29 runs",
+   "status": "Past",
+   "n": 85
+  },
+  {
+   "tournament": "",
+   "venue": "K9 Cricket Academy, Hapur",
+   "date": "2023-10-04",
+   "overs": 20,
+   "stage": "",
+   "a": {
+    "name": "Upsrtc Hapur Depot",
+    "score": "166/6",
+    "ov": "20.0"
+   },
+   "b": {
+    "name": "HEMANTH TITANS",
+    "score": "128/10",
+    "ov": "19.1"
+   },
+   "result": "Upsrtc Hapur Depot won by 38 runs",
+   "status": "Past",
+   "n": 86
+  },
+  {
+   "tournament": "",
+   "venue": "UK CRICKET ACADEMY, Hapur",
+   "date": "2023-09-27",
+   "overs": 20,
+   "stage": "",
+   "a": {
+    "name": "UK Cricket Academy",
+    "score": "160/4",
+    "ov": "20.0"
+   },
+   "b": {
+    "name": "HEMANTH TITANS",
+    "score": "125/10",
+    "ov": "18.0"
+   },
+   "result": "UK Cricket Academy won by 35 runs",
+   "status": "Past",
+   "n": 87
+  },
+  {
+   "tournament": "",
+   "venue": "K9 Cricket Academy, Hapur",
+   "date": "2023-09-22",
+   "overs": 16,
+   "stage": "",
+   "a": {
+    "name": "Upsrtc Hapur Depot",
+    "score": "132/4",
+    "ov": "16.0"
+   },
+   "b": {
+    "name": "HEMANTH TITANS",
+    "score": "108/6",
+    "ov": "16.0"
+   },
+   "result": "Upsrtc Hapur Depot won by 24 runs",
+   "status": "Past",
+   "n": 88
+  },
+  {
+   "tournament": "",
+   "venue": "ysr cricket stadium, Anantapur",
+   "date": "2023-09-14",
+   "overs": 5,
+   "stage": "",
+   "a": {
+    "name": "MANIKANTA VADDIREDDY WARRIOR",
+    "score": "60/0",
+    "ov": "5.0"
+   },
+   "b": {
+    "name": "SEENA BHAI KINGS",
+    "score": "62/0",
+    "ov": "4.3"
+   },
+   "result": "SEENA BHAI KINGS won by 10 wickets",
+   "status": "Past",
+   "n": 89
+  },
+  {
+   "tournament": "",
+   "venue": "UK CRICKET ACADEMY, Hapur",
+   "date": "2023-09-06",
+   "overs": 20,
+   "stage": "",
+   "a": {
+    "name": "HEMANTH TITANS",
+    "score": "160/11",
+    "ov": "19.4"
+   },
+   "b": {
+    "name": "Aarvee Avengers",
+    "score": "138/11",
+    "ov": "18.1"
+   },
+   "result": "HEMANTH TITANS won by 22 runs",
+   "status": "Past",
+   "n": 90
+  }
+ ]
+}

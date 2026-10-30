@@ -1,0 +1,91 @@
+# tournament | venue | date | overs | stage | team A | score A | ov A | team B | score B | ov B | result
+Individual Match|Hyderabad, Kakinada|28-Oct-26|20||SPARTAN HURRICANES|19/0|0.5|Basic 11 Hapur|0/0|0.0|Abandoned (zen)
+Individual Match|Sh Sports Mini Stadium, Hapur|07-Jun-26|20||NS TURFF|153/9|20.0|WOLVES WARRIOR|133/10|16.4|NS TURFF won by 20 runs
+Individual Match|Sh Sports Mini Stadium, Hapur|01-Mar-26|20||B.M.C.C X1|146/5|20.0|SH SPORTS CLUB ACADEMY|149/1|12.4|SH SPORTS CLUB ACADEMY won by 6 wickets
+Anchal Pace Foundation Corporate Cricket League|Anchal Pace Foundation & Cricket Academy, Hapur|13-Feb-26|25|Semi Final|SPARTAN HURRICANES|215/10|24.3|Rajpura Royals|215/6|25.0|Match Tied (Rajpura Royals won the super over)
+Anchal Pace Foundation Corporate Cricket League|Anchal Pace Foundation & Cricket Academy, Hapur|03-Jan-26|25|League Matches|SPARTAN HURRICANES|270/2|25.0|Mahadev Cricket Club (MCC)|237/8|25.0|SPARTAN HURRICANES won by 33 runs
+Anchal Pace Foundation Corporate Cricket League|Anchal Pace Foundation & Cricket Academy, Hapur|19-Dec-25|25|League Matches|Spartan 11|114/10|22.4|SPARTAN HURRICANES|115/4|12.0|SPARTAN HURRICANES won by 6 wickets
+Anchal Pace Foundation Corporate Cricket League|Anchal Pace Foundation & Cricket Academy, Hapur|28-Nov-25|25|League Matches|Strikers Noida|156/10|24.3|SPARTAN HURRICANES|158/3|18.4|SPARTAN HURRICANES won by 7 wickets
+Individual Match|Sh Sports Mini Stadium, Hapur|16-Nov-25|20||SH SPORTS CLUB ACADEMY|171/7|19.5|Dadri Riders|172/9|19.5|Dadri Riders won by 1 wicket
+Anchal Pace Foundation Corporate Cricket League|Anchal Pace Foundation & Cricket Academy, Hapur|15-Nov-25|25|League Matches|Meerutya Lions 2.0|167/10|18.4|SPARTAN HURRICANES|140/10|19.0|Meerutya Lions 2.0 won by 27 runs
+Individual Match|Sh Sports Mini Stadium, Hapur|18-May-25|20||SH STRIKERS|171/9|19.2|vivek eleven 11|172/3|14.5|vivek eleven 11 won by 7 wickets
+SH SPORTS CHALLENGE TROPHY|Sh Sports Mini Stadium, Hapur|27-Feb-25|20|Semi Final|TFC XI HAPUR|200/8|20.0|H TITANS UNITY OF SH SPORTS|147/9|20.0|TFC XI HAPUR won by 53 runs
+SH SPORTS CHALLENGE TROPHY|Sh Sports Mini Stadium, Hapur|25-Feb-25|20|League Matches|Modinagar Strikers|197/6|20.0|H TITANS UNITY OF SH SPORTS|201/4|18.0|H TITANS UNITY OF SH SPORTS won by 6 wickets
+SH SPORTS CHALLENGE TROPHY|Sh Sports Mini Stadium, Hapur|20-Feb-25|20|League Matches|Hero Hurricanes|199/7|20.0|H TITANS UNITY OF SH SPORTS|200/0|15.3|H TITANS UNITY OF SH SPORTS won by 10 wickets
+Individual Match|Sh Sports Mini Stadium, Hapur|19-Feb-25|15||H TITANS UNITY OF SH SPORTS|126/6|15.0|Avengers Panther Hapur|130/3|10.5|Avengers Panther Hapur won by 15 wickets
+HAPUR CHAMPIONS LEAGUE|K9 Cricket Academy, Hapur|26-Jan-25|20|League Matches|Pilakhuwa Warriors|168/6|20.0|HAPUR TITANS FOR SH SPORTS|170/2|18.2|HAPUR TITANS FOR SH SPORTS won by 8 wickets
+HAPUR CHAMPIONS LEAGUE|K9 Cricket Academy, Hapur|25-Jan-25|20|League Matches|Hapur Strikers|217/3|20.0|HAPUR TITANS FOR SH SPORTS|193/7|20.0|Hapur Strikers won by 24 runs
+Individual Match|Sh Sports Mini Stadium, Hapur|08-Jan-25|20||HAPUR TITANS FOR SH SPORTSC|214/4|20.0|Hapur PANKSHI blasters hcl|159/8|20.0|HAPUR TITANS FOR SH SPORTSC won by 55 runs
+Individual Match|Sh Sports Mini Stadium, Hapur|25-Dec-24|20||Bhagwanpur Wolves|176/7|20.0|SH SPORTS CLUB 2.O|160/9|20.0|Bhagwanpur Wolves won by 16 runs
+SH SPORTS CLUB ACADEMIC MATCHES|Sh Sports Mini Stadium, Hapur|24-Dec-24|40|League Matches|HM Cricket Academy B|183/7|40.0|SH SPORTS CLUB ACADEMY|187/3|28.2|SH SPORTS CLUB ACADEMY won by 7 wickets
+SH SPORTS CLUB ACADEMIC MATCHES|K9 Cricket Academy, Hapur|11-Dec-24|40|League Matches|K9 CRICKET ACADEMY|286/9|40.0|SH SPORTS CLUB ACADEMY|171/9|40.0|K9 CRICKET ACADEMY won by 115 runs
+SH SPORTS CLUB ACADEMIC MATCHES|Sh Sports Mini Stadium, Hapur|29-Nov-24|40|League Matches|HM Cricket Academy B|122/10|28.5|SH SPORTS CLUB ACADEMY|123/8|19.4|SH SPORTS CLUB ACADEMY won by 2 wickets
+SH SPORTS CLUB ACADEMIC MATCHES|Sh Sports Mini Stadium, Hapur|25-Nov-24|40|League Matches|SH SPORTS CLUB ACADEMY|251/9|40.0|K9 CRICKET ACADEMY|133/10|24.4|SH SPORTS CLUB ACADEMY won by 118 runs
+Individual Match|Sh Sports Mini Stadium, Hapur|13-Nov-24|6||SH BLASTERS|85/2|6.0|SH STRIKERS|49/3|6.0|SH BLASTERS won by 36 runs
+Individual Match|K9 Cricket Academy, Hapur|10-Aug-24|20||The Scoring Willow|163/10|20.0|SH SPORTS CLUB 2.O|165/2|13.0|SH SPORTS CLUB 2.O won by 8 wickets
+Individual Match|K9 Cricket Academy, Hapur|08-Aug-24|20||SH STRIKERS|156/10|20.0|SH BLASTERS|157/8|19.0|SH BLASTERS won by 2 wickets
+Individual Match|K9 Cricket Academy, Hapur|03-Aug-24|20||HM CRICKET ACADEMY|99/7|20.0|SH SPORTS CLUB 2.O|100/5|14.1|SH SPORTS CLUB 2.O won by 5 wickets
+Individual Match|K9 Cricket Academy, Hapur|31-Jul-24|20||SH SPORTS CLUB 2.O|124/10|17.3|PANKSHI INFRATECH|5/3|1.5|Abandoned (Game stop due to heavy rain pankshi infratech after 1.5 over 5 runs 3 wicket)
+Individual Match|K9 Cricket Academy, Hapur|27-Jul-24|20||SH SPORTS CLUB 2.O|208/5|20.0|Basic 11 Hapur|88/10|18.5|SH SPORTS CLUB 2.O won by 120 runs
+HAPUR CHAMPIONS CRICKET LEAGUE|KSCC, Hapur|14-Jul-24|20|Semi Final|SH SPORTS CLUB 2.O|191/8|20.0|IMIT ROYALS HAPUR|192/6|19.2|IMIT ROYALS HAPUR won by 4 wickets
+HAPUR CHAMPIONS CRICKET LEAGUE|KSCC, Hapur|12-Jul-24|20|League Matches|SH SPORTS CLUB 2.O|||Pilkhuwa Super Giants|||SH SPORTS CLUB 2.O won by (resulted)
+HAPUR CHAMPIONS CRICKET LEAGUE|KSCC, Hapur|08-Jul-24|20|League Matches|SH SPORTS CLUB 2.O|221/2|20.0|SAKET WARRIORS|89/10|14.2|SH SPORTS CLUB 2.O won by 132 runs
+Individual Match|KSCC, Hapur|04-Jul-24|15||IMIT ROYALS HAPUR|152/7|15.0|HEMANTH TITANS TPI|86/10|13.0|IMIT ROYALS HAPUR won by 66 runs
+HAPUR CHAMPIONS CRICKET LEAGUE|KSCC, Hapur|26-Jun-24|20|League Matches|Parker Cricket Academy|168/10|19.1|SH SPORTS CLUB 2.O|170/2|16.0|SH SPORTS CLUB 2.O won by 8 wickets
+1st UK CORPORATE LEAGUE KNOCKOUT T...|UK CRICKET ACADEMY, Hapur|25-Jun-24|20|League Matches|SH SPORTS CLUB 2.O|125/10|18.4|Team Empire|127/6|11.1|Team Empire won by 4 wickets
+1st UK CORPORATE LEAGUE KNOCKOUT T...|UK CRICKET ACADEMY, Hapur|14-Jun-24|20|League Matches|Spartan Warriors Hapur|215/8|20.0|SH SPORTS CLUB 2.O|199/6|19.4|Spartan Warriors Hapur won by 16 runs
+Individual Match|KSCC, Hapur|16-Jun-24|20||CRICLOVERS X1|170/7|20.0|vivek eleven 11|171/1|12.4|vivek eleven 11 won by 9 wickets
+Individual Match|UK CRICKET ACADEMY, Hapur|09-Jun-24|20||Eagles Hapur Warrior|142/10|19.4|SH SPORTS CLUB 2.O|145/4|12.5|SH SPORTS CLUB 2.O won by 6 wickets
+Individual Match|K9 Cricket Academy, Hapur|01-Jun-24|20||Pro Cricket Club|193/5|20.0|SH SPORTS CLUB 2.O|191/8|20.0|Pro Cricket Club won by 2 runs
+Individual Match|K9 Cricket Academy, Hapur|25-May-24|20||Pro Cricket Club|201/5|20.0|SH SPORTS CLUB 2.O|168/3|16.0|SH SPORTS CLUB 2.O won by 14 runs (DLS - Match reduced to 16.0 overs, target 154 runs)
+Individual Match|Anchal Pace Foundation & Cricket Academy, Hapur|18-May-24|20||Pro Cricket Club|168/5|20.0|SH SPORTS CLUB 2.O|169/5|15.3|SH SPORTS CLUB 2.O won by 5 wickets
+Individual Match|K9 Cricket Academy, Hapur|11-May-24|20||The Scoring Willow|165/10|19.2|SH SPORTS CLUB 2.O|147/8|20.0|The Scoring Willow won by 18 runs
+Individual Match|K9 Cricket Academy, Hapur|04-May-24|20||SH SPORTS CLUB 2.O|206/6|20.0|Pro Cricket Club|129/10|17.3|SH SPORTS CLUB 2.O won by 77 runs
+JN Cricket Tournament|GAME CITY ARENA, Meerut|14-Apr-24|20|Super League|SH SPORTS CLUB|309/4|20.0|Aarvee Avengers|95/10|16.0|SH SPORTS CLUB won by 214 runs
+Individual Match|K9 Cricket Academy, Hapur|13-Apr-24|20||SH SPORTS CLUB|194/3|20.0|Pro Cricket Club|189/5|20.0|SH SPORTS CLUB won by 5 runs
+JN Cricket Tournament|GAME CITY ARENA, Meerut|08-Apr-24|20|Super League|MAVERICKS|176/8|20.0|SH SPORTS CLUB|171/5|20.0|MAVERICKS won by 5 runs
+Individual Match|K9 Cricket Academy, Hapur|06-Apr-24|20||SH SPORTS CLUB|246/7|20.0|Pro Cricket Club|250/3|19.4|Pro Cricket Club won by 7 wickets
+Individual Match|K9 Cricket Academy, Hapur|04-Apr-24|20||SH SPORTS CLUB|174/8|20.0|FCI Hapur Hurricanes|152/6|20.0|SH SPORTS CLUB won by 22 runs
+Individual Match|k9 cricket acedemy, Meerut|03-Apr-24|20||SH SPORTS CLUB|157/8|20.0|JN MAVERICKS|158/6|15.2|JN MAVERICKS won by 4 wickets
+Individual Match|K9 Cricket Academy, Hapur|01-Apr-24|20||SH SPORTS CLUB|172/4|20.0|MADRAS KINGS|69/10|11.5|SH SPORTS CLUB won by 103 runs
+Individual Match|K9 Cricket Academy, Kakinada|30-Mar-24|20||SH SPORTS CLUB|362/2|20.0|SEENA BHAI KINGS|135/10|14.0|SH SPORTS CLUB won by 227 runs
+Individual Match|UK CRICKET ACADEMY, Hapur|29-Mar-24|20||Team TRD ADEE|215/7|20.0|SH SPORTS CLUB|202/7|20.0|Team TRD ADEE won by 13 runs
+Individual Match|K9 Cricket Academy, Hapur|27-Mar-24|20||SH SPORTS CLUB|187/4|20.0|Pro Cricket Club|151/10|18.0|SH SPORTS CLUB won by 36 runs
+Individual Match|K9 Cricket Academy, Hapur|23-Mar-24|20||SH SPORTS CLUB|227/7|20.0|Basic 11 Hapur|211/7|20.0|SH SPORTS CLUB won by 16 runs
+JN Cricket Tournament|GAME CITY ARENA, Meerut|21-Mar-24|20|Super League|SH SPORTS CLUB|126/10|18.4|MAVERICKS|119/10|19.4|SH SPORTS CLUB won by 7 runs
+Individual Match|K9 Cricket Academy, Hapur|20-Mar-24|20||SH SPORTS CLUB|204/7|20.0|FCI Hapur Hurricanes|158/8|20.0|SH SPORTS CLUB won by 46 runs
+Individual Match|UK CRICKET ACADEMY, Hapur|17-Mar-24|20||SH SPORTS CLUB|236/5|20.0|Sarvodya United|239/2|18.0|Sarvodya United won by 9 wickets
+Individual Match|KSCC, Hapur|12-Mar-24|20||SH SPORTS CLUB|237/5|20.0|FCI Hapur Hurricanes|149/10|19.5|SH SPORTS CLUB won by 88 runs
+JN Cricket Tournament|GAME CITY ARENA, Meerut|10-Mar-24|20|Super League|SH SPORTS CLUB|134/10|15.4|HETVI HURRICANES|137/5|15.4|HETVI HURRICANES won by 5 wickets
+Individual Match|Anchal Pace Foundation & Cricket Academy, Hapur|08-Mar-24|20||SH SPORTS CLUB|146/8|20.0|Pankshi Infratech|152/5|18.0|Pankshi Infratech won by 5 wickets
+Individual Match|K9 Cricket Academy, Hapur|06-Mar-24|20||JN MAVERICKS|203/4|20.0|SH SPORTS CLUB|178/9|20.0|JN MAVERICKS won by 25 runs
+Individual Match|K9 Cricket Academy, Hapur|02-Mar-24|20||Pro Cricket Club|178/7|20.0|SH SPORTS CLUB|166/8|20.0|Pro Cricket Club won by 12 runs
+Individual Match|K9 Cricket Academy, Hapur|22-Feb-24|20||FCI Hapur Hurricanes|116/7|20.0|HEMANTH TITANS TPI|117/5|12.5|HEMANTH TITANS TPI won by 5 wickets
+Individual Match|K9 Cricket Academy, Hapur|19-Feb-24|20||SH SPORTS CLUB|222/7|20.0|FCI Hapur Hurricanes|103/10|18.1|SH SPORTS CLUB won by 119 runs
+Individual Match|K9 Cricket Academy, Hapur|15-Feb-24|20||SH SPORTS CLUB|130/9|20.0|JN MAVERICKS|132/5|14.4|JN MAVERICKS won by 5 wickets
+Individual Match|JMS WORLD SCHOOL CRICKET GROUND, Hapur|14-Feb-24|25||Basic 11 Hapur|182/10|22.3|SH SPORTS CLUB|188/0|12.5|SH SPORTS CLUB won by 9 wickets
+Individual Match|SUDHA CRICKET GROUND, Hapur|10-Feb-24|20||PWD HAPUR XI|138/8|20.0|Upsrtc Hapur Depot|95/9|15.4|PWD HAPUR XI won by 43 runs
+Individual Match|GAME CITY ARENA, Meerut|05-Feb-24|20||SH SPORTS CLUB|146/9|20.0|JN MAVERICKS|148/5|18.0|JN MAVERICKS won by 5 wickets
+Individual Match|K9 Cricket Academy, Hapur|08-Jan-24|25||Harsinghpur|185/7|25.0|SH SPORTS CLUB|147/6|16.1|SH SPORTS CLUB won by 5 wickets
+Individual Match|K9 Cricket Academy, Hapur|05-Jan-24|20||SH SPORTS CLUB|202/6|20.0|UPJN (Urban) Ghaziabad Zone|124/10|20.0|SH SPORTS CLUB won by 78 runs
+Individual Match|GAME CITY ARENA, Meerut|03-Jan-24|20||SH SPORTS CLUB|165/9|20.0|JN MAVERICKS|168/5|19.3|JN MAVERICKS won by 5 wickets
+Individual Match|K9 Cricket Academy, Hapur|02-Jan-24|20||Upsrtc Hapur Depot|88/10|12.4|Basic 11 Hapur|89/0|9.3|Basic 11 Hapur won by 10 wickets
+Individual Match|K9 Cricket Academy, Hapur|28-Dec-23|20||JN MAVERICKS|109/3|11.0|SH SPORTS CLUB|0/0|0.0|Abandoned (Fog)
+Tri series Tournament|GAME CITY ARENA, Meerut|27-Dec-23|20|Super Three|Aarvee Avengers|115/9|20.0|Hetvi Meerut|116/8|14.4|Hetvi Meerut won by 2 wickets
+Individual Match|K9 Cricket Academy, Hapur|27-Dec-23|20||UPJN (Urban) Ghaziabad Zone|116/2|13.5|SH SPORTS CLUB|0/0|0.0|Abandoned (Match abounded due factor )
+Tri series Tournament|GAME CITY ARENA, Meerut|21-Dec-23|20|Super Three|Aarvee Avengers|75/10|13.1|JN MAVERICKS|78/2|9.4|JN MAVERICKS won by 8 wickets
+Individual Match|SUDHA CRICKET GROUND, Hapur|16-Dec-23|20||Sudha Cricket Academy|194/6|20.0|FUKREY 11|198/2|18.2|FUKREY 11 won by 8 wickets
+Individual Match|K9 Cricket Academy, Hapur|09-Dec-23|20||SH SPORTS CLUB|187/6|20.0|JN MAVERICKS|144/10|18.2|SH SPORTS CLUB won by 43 runs
+Individual Match|Diwan Cricket Grounds (Ghaziabad), Ghaziabad|04-Dec-23|20||JN MAVERICKS|234/6|20.0|HEMANTH TITANS TPI|183/10|19.2|JN MAVERICKS won by 51 runs
+Individual Match|Lakshay Cricket Ground B, Ghaziabad|03-Nov-23|20||HEMANTH TITANS TPI|152/9|20.0|Adesh XI|157/0|15.3|Adesh XI won by 8 wickets
+Individual Match|UK CRICKET ACADEMY, Hapur|08-Nov-23|20||FCI Hapur Hurricanes|139/6|20.0|HEMANTH TITANS TPI|141/4|15.4|HEMANTH TITANS TPI won by 6 wickets
+Individual Match|SUDHA CRICKET GROUND, Hapur|02-Nov-23|20||HEMANTH TITANS TPI|160/9|20.0|FCI Hapur Hurricanes|162/6|18.3|FCI Hapur Hurricanes won by 4 wickets
+Individual Match|UK CRICKET ACADEMY, Hapur|28-Oct-23|18||HEMANTH TITANS TPI|162/7|18.0|Aarvee Avengers|149/9|18.0|HEMANTH TITANS TPI won by 13 runs
+Individual Match|UK CRICKET ACADEMY, Hapur|21-Oct-23|20||HEMANTH TITANS TPI|179/9|20.0|Upsrtc Hapur Depot|127/10|17.0|HEMANTH TITANS TPI won by 52 runs
+Individual Match|K9 Cricket Academy, Hapur|07-Oct-23|20||HEMANTH TITANS TPI|141/8|20.0|Upsrtc Hapur Depot|143/3|18.1|Upsrtc Hapur Depot won by 7 wickets
+Individual Match|Y. S. R., Visakhapatnam|05-Oct-23|20||HEMANTH TITANS TPI|186/5|20.0|SEENA BHAI KINGS|157/10|17.1|HEMANTH TITANS TPI won by 29 runs
+Individual Match|K9 Cricket Academy, Hapur|04-Oct-23|20||Upsrtc Hapur Depot|166/6|20.0|HEMANTH TITANS|128/10|19.1|Upsrtc Hapur Depot won by 38 runs
+Individual Match|UK CRICKET ACADEMY, Hapur|27-Sep-23|20||UK Cricket Academy|160/4|20.0|HEMANTH TITANS|125/10|18.0|UK Cricket Academy won by 35 runs
+Individual Match|K9 Cricket Academy, Hapur|22-Sep-23|16||Upsrtc Hapur Depot|132/4|16.0|HEMANTH TITANS|108/6|16.0|Upsrtc Hapur Depot won by 24 runs
+Individual Match|ysr cricket stadium, Anantapur|14-Sep-23|5||MANIKANTA VADDIREDDY WARRIOR|60/0|5.0|SEENA BHAI KINGS|62/0|4.3|SEENA BHAI KINGS won by 10 wickets
+Individual Match|UK CRICKET ACADEMY, Hapur|06-Sep-23|20||HEMANTH TITANS|160/11|19.4|Aarvee Avengers|138/11|18.1|HEMANTH TITANS won by 22 runs

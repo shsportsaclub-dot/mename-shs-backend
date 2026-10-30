@@ -545,6 +545,13 @@ routes['GET /api/match-data'] = async () => {
   catch { return [200, { ok: true, matches: {} }]; }
   return [200, { ok: true, matches: out }];
 };
+// The player's own match list (captured from screenshots the player supplied), served from imports/match-data.
+routes['GET /api/player-matches'] = async (req, body) => {
+  const id = String(body.id || '').trim();
+  if (!/^\d+$/.test(id)) return [404, { ok: false, error: 'Not found' }];
+  try { const d = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'imports', 'match-data', `player-${id}-matches.json`), 'utf8')); return [200, { ok: true, count: d.count, matches: d.matches }]; }
+  catch { return [404, { ok: false, error: 'No match list for this player' }]; }
+};
 // Public, read-only legacy profile bridge. Captures are partial and never alter career totals.
 routes['GET /api/legacy-player-profile'] = async (req, body) => {
   const id = String(body.id || '').trim();

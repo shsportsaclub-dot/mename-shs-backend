@@ -3,7 +3,7 @@ import json,csv,glob,os
 from openpyxl import Workbook
 out='imports/match-data';wb=Workbook();wb.remove(wb.active);T={}
 def add(n,h,rows):T.setdefault(n,[h,[]])[1].extend(rows)
-for f in sorted(glob.glob(out+'/*.json')):
+for f in sorted(glob.glob(out+'/[0-9]*.json')):
     d=json.load(open(f));m=d['meta'];mid=m['match_id']
     add('match',list(m.keys()),[list(m.values())])
     for i,inn in enumerate(d['inn']):
@@ -15,6 +15,10 @@ for f in sorted(glob.glob(out+'/*.json')):
     for o in d['overs']['list']:add('overs',['match_id','batting_team','over','score','bowler_to_batters','balls','runs'],[[mid,d['overs']['team'],o[0],o[1],o[2],' '.join(o[3]),o[4]]])
     for k,r in enumerate(d['squads']['rows']):add('squads',['match_id','row',d['squads']['A'],d['squads']['B']],[[mid,k+1,r[0],r[1]]])
     for k,r in enumerate(d['mvp']):add('mvp',['match_id','rank','player','team','mvp_points'],[[mid,k+1,r[0],r[1],r[2]]])
+pm=out+'/player-5295710-matches.json'
+if os.path.exists(pm):
+    d=json.load(open(pm))
+    for r in d['matches']:add('player_matches',['n','date','tournament','stage','venue','overs','team_a','score_a','overs_a','team_b','score_b','overs_b','result','status'],[[r['n'],r['date'],r['tournament'] or 'Individual Match',r['stage'],r['venue'],r['overs'],r['a']['name'],r['a']['score'],r['a']['ov'],r['b']['name'],r['b']['score'],r['b']['ov'],r['result'],r['status']]])
 for n,(h,rows) in T.items():
     with open(f'{out}/{n}.csv','w',newline='',encoding='utf-8-sig') as fh:w=csv.writer(fh);w.writerow(h);w.writerows(rows)
     ws=wb.create_sheet(n);ws.append(h);[ws.append(r) for r in rows]
