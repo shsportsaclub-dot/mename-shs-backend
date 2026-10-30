@@ -9897,7 +9897,7 @@ try{if(S.settings&&S.settings.mskin==='ca'){S.settings.mskin='cb';try{save()}cat
 /* QUICK START MATCH: one screen, sensible defaults, remembered choices (CricHeroes / MyCricket / Stumps style: teams, overs, ball, toss, go).
    The long nine-step wizard stays available as "Advanced setup". Everything optional (officials, category, name) is collapsed and can be set later in Scorer tools. */
 {
- const QO=[['5','5'],['6','6'],['10','T10'],['15','15'],['20','T20'],['30','30'],['40','40'],['50','ODI 50'],['20.5','Hundred']];
+ const QO=[['5','5'],['6','6'],['10','T10'],['15','15'],['20','T20'],['30','30'],['40','40'],['50','ODI 50'],['20.5','Hundred'],['905','Test 5d'],['904','Test 4d'],['903','3 day'],['902','2 day'],['901','1 day']];
  const lastQ=()=>(S.prefs&&S.prefs.qs)||{};
  const qnew=()=>{const L=lastQ(),a=S.teams[0],b=S.teams[1]||S.teams[0];return{a:a?a.id:'',b:b?b.id:'',overs:L.overs||'20',ball:L.ball||'leather',gender:L.gender||'men',venue:L.venue||'',dec:L.dec||'bat',toss:a?a.id:'',name:'',u1:'',u2:'',sc:S.user?(S.user.nick||S.user.name||''):'',xi:{},more:false,pl:{}}};
  const xiOf=(q,tid)=>{if(!q.xi[tid])q.xi[tid]=(T(tid)?T(tid).players:[]).slice(0,11);return q.xi[tid]};
@@ -9915,6 +9915,7 @@ try{if(S.settings&&S.settings.mskin==='ca'){S.settings.mskin='cb';try{save()}cat
    `${window.shQsTeams?window.shQsTeams():''}`,
    ok2?pl(q.a)+pl(q.b):'<div class="need">Pick both teams first.</div>',
    `<div class="b" style="margin:8px 0 4px">Overs</div><div class="row" style="flex-wrap:wrap;gap:6px">${QO.map(([v,l])=>chip('overs',v,l,String(q.overs)===v)).join('')}</div>
+  <div class="row" style="margin-top:10px;gap:8px"><label style="flex:1">Match date<input type="date" id="qs-date" value="${esc(q.date||new Date().toISOString().slice(0,10))}"></label><label style="flex:1">Start time<input type="time" id="qs-time" value="${esc(q.time||'')}"></label></div><label style="margin-top:6px">Other overs per side<input id="qs-ov" inputmode="numeric" maxlength="3" placeholder="e.g. 12, 25, 35 (1-100)" value="${QO.some(x=>x[0]===String(q.overs))?'':esc(q.overs)}"></label>
   <div class="b" style="margin:10px 0 4px">Ball</div><div class="row" style="gap:6px">${chip('ball','leather','Leather',q.ball==='leather')}${chip('ball','tennis','Tennis ball',q.ball==='tennis')}</div>
   <div class="b" style="margin:10px 0 4px">Pitch (optional)</div><div class="row" style="flex-wrap:wrap;gap:6px">${['Turf','Matting','Cement','Astro turf'].map(x=>chip('pitchType',x,x,q.pitchType===x)).join('')}</div>
   <label style="margin-top:10px">Ground / venue<input name="venue" id="qs-venue" list="qs-vl" value="${esc(q.venue)}" placeholder="Ground name" maxlength="60" autocomplete="off"><datalist id="qs-vl">${rec.map(n=>`<option value="${esc(n)}">`).join('')}</datalist></label>${window.shQsGround?window.shQsGround():''}`,
@@ -9929,7 +9930,7 @@ try{if(S.settings&&S.settings.mskin==='ca'){S.settings.mskin='cb';try{save()}cat
  const qsShow=()=>{UI.modal={t:'html',html:qsHTML()};renderModal()};
  window.shQsShow=qsShow;window.shQsT=()=>UI.qs;
  const qsRead=()=>{const q=UI.qs,g=id=>{const e=document.getElementById(id);return e?String(e.value||'').replace(/\s+/g,' ').trim():null};
-  const v=g('qs-venue');if(v!=null)q.venue=v;const n=g('qs-name');if(n!=null)q.name=n;['sc','u1','u2'].forEach(k=>{const x=g('qs-'+k);if(x!=null)q[k]=x});const d=document.querySelector('[data-qsm]');if(d)q.more=d.open};
+  const v=g('qs-venue');if(v!=null)q.venue=v;const dd=g('qs-date');if(dd!=null)q.date=dd;const tt=g('qs-time');if(tt!=null)q.time=tt;const oo=g('qs-ov');if(oo){const n=Math.round(+oo);if(n>=1&&n<=100)q.overs=String(n)};const n=g('qs-name');if(n!=null)q.name=n;['sc','u1','u2'].forEach(k=>{const x=g('qs-'+k);if(x!=null)q[k]=x});const d=document.querySelector('[data-qsm]');if(d)q.more=d.open};
  window.shQsRead=()=>{qsRead();const q=UI.qs,g=UI.qg;if(q&&q.gid&&g&&g.sel&&q.venue!==g.sel.name){q.gid='';g.sel=null}};
  const A0=A.newMatch;A.newMatchAdv=function(d,el,e){if(e&&e.preventDefault)e.preventDefault();return A0.apply(this,arguments)};
  A.newMatch=function(){if(!can())return toast('Only Admin or Scorer accounts can start matches');UI.qs=qnew();UI.qs.step=0;if(UI.qs.a&&UI.qs.toss!==UI.qs.a&&UI.qs.toss!==UI.qs.b)UI.qs.toss=UI.qs.a;qsShow()};
@@ -9955,7 +9956,9 @@ try{if(S.settings&&S.settings.mskin==='ca'){S.settings.mskin='cb';try{save()}cat
   const w=wzFresh();Object.assign(w,{mode:'friendly',a:q.a,b:q.b,overs:+q.overs,name:q.name,xi:{[q.a]:xa.slice(),[q.b]:xb.slice()},subs:{},venueId:v.id,areaId:ar.id,pitchId:'',ball:q.ball,gender:q.gender,age:'',level:'',toss:q.toss,dec:q.dec,bc:'sh',bcUrl:'',
    off:{u1:q.u1,u2:q.u2,u3:'',ref:'',sc:q.sc||(S.user&&(S.user.nick||S.user.name))||'Scorer',co:''}});
   S.wiz=w;S.prefs=S.prefs||{};S.prefs.qs={overs:String(q.overs),ball:q.ball,gender:q.gender,venue:q.venue,dec:q.dec};
-  A.wzStart();if(S.wiz){S.wiz=null;toast('Could not start. Check the details.')}}
+  if(q.date)w.date=q.date;const n0=S.matches.length;
+  A.wzStart();if(S.wiz){S.wiz=null;toast('Could not start. Check the details.')}
+  else if(S.matches.length>n0){const m=S.matches[S.matches.length-1];if(q.date)m.date=q.date;if(q.time&&q.date){const t=new Date(q.date+'T'+q.time);if(!isNaN(t))m.time=t.toISOString();m.startTime=q.time}save&&save()}}
 }
 
 /* LIVE VIEW: batters / bowler first, and tolerant of provider scorecards that mark the crease loosely or lag behind the score. */
