@@ -52,6 +52,15 @@ ok(await p.evaluate(()=>{const x=document.querySelector('.pp .body').innerText;r
 await p.evaluate(()=>document.querySelector('.pp th[data-a=ppToTour]').click());await p.waitForTimeout(1500);ok(await p.evaluate(()=>!!document.getElementById('pptours')&&Math.abs(document.getElementById('pptours').getBoundingClientRect().top)<250),'tapping the Tournaments header scrolls to the section');
 await p.evaluate(()=>A.ppLtour({v:'CineCric Premier League Season - 3'}));await p.waitForTimeout(100);
 ok(await p.evaluate(()=>/Tolly Strivers XI won by 4 wickets/.test(document.querySelector('.pp .body').innerText)),'tapping a tournament shows its matches');
+await p.evaluate(()=>A.tpPick({v:''}));await p.waitForTimeout(100);
+await p.click('.pp #pptours [data-a=tpOpen]');await p.waitForTimeout(150);
+ok(await p.evaluate(()=>!!document.querySelector('.tpl')&&document.querySelectorAll('.tpl .sgl button').length===3&&/All tournaments \(Total\)/.test(document.querySelector('.tpl').innerText)),'tournament picker opens like the game picker: All (Total) first, then every tournament');
+await p.fill('#tpq','cine');await p.waitForTimeout(100);
+ok(await p.evaluate(()=>[...document.querySelectorAll('.tpl .sgl button')].filter(b=>b.style.display!=='none').length===1),'picker search filters');
+await p.screenshot({path:'/tmp/tp_picker.png'});
+await p.click('.tpl .sgl button:not([style*=none])');await p.waitForTimeout(200);
+ok(await p.evaluate(()=>!document.querySelector('.tpl')&&/Tolly Strivers XI won by 4 wickets/.test(document.querySelector('.pp .body').innerText)&&/CineCric Premier League Season - 3/.test(document.querySelector('#pptours [data-a=tpOpen]').innerText)),'picking a tournament closes the picker and shows only its matches');
+await p.evaluate(()=>A.tpPick({v:''}));
 await p.evaluate(()=>{A.ppSt({v:'info'})});await p.waitForTimeout(100);ok(await p.evaluate(()=>{const x=document.querySelector('.pp .body').innerText;return /Batting Form/.test(x)&&/Batting Career Summary/.test(x)&&/Bowling Career Summary/.test(x)}),'Summary: batting form and both career summaries');ok(await cell('Ducks','Overall')==='12'&&await cell('Ducks','T20')==='11'&&await cell('Ducks','ODI')==='1','ducks split: 12 = 11 + 1');
 await p.evaluate(()=>{A.ppSt({v:'bowl'})});await p.waitForTimeout(100);
 ok(await cell('Wickets','Overall')==='61'&&await cell('Wickets','T20')==='57'&&await cell('Wickets','ODI')==='4'&&await cell('Runs','T20')==='1414'&&await cell('Best Bowling','ODI')==='2/9','bowling: Overall 61 wkts = T20 57 + ODI 4');
