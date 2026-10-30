@@ -550,6 +550,28 @@ routes['GET /api/legacy-player-profile'] = async (req, body) => {
   const matches = [...new Map((capture.records || []).flatMap(r => r.linked_records || [])
     .filter(r => r.kind === 'scorecard' && /^\d+$/.test(String(r.source_id || '')))
     .map(r => [String(r.source_id), { id: String(r.source_id), title: r.label, sourceUrl: r.url }])).values()];
+  // Group captured scorecard references for browsing only; a linked match does not prove participation.
+  const matchGroups = { tournaments: [], series: [], individualMatches: [], t20: [], otherFormats: [] };
+  const tournamentMap = new Map();
+  for (const match of matches) {
+    const label = String(match.title || '');
+    const firstLine = label.split(/\\r?\\n/)[0].trim();
+    const isIndividual = /individual match/i.test(firstLine);
+    const isSeries = /\\bseries\\b/i.test(firstLine);
+    const isT20 = /\\b20\\s*(?:ov\\.?|overs?)\\b/i.test(label);
+    const item = { ...match, competition: firstLine || null, participationVerified: false };
+    if (isIndividual) matchGroups.individualMatches.push(item);
+    else if (isSeries) matchGroups.series.push(item);
+    else {
+      const competition = firstLine || 'Unclassified tournament';
+      if (!tournamentMap.has(competition)) tournamentMap.set(competition, []);
+      tournamentMap.get(competition).push(item);
+    }
+    (isT20 ? matchGroups.t20 : matchGroups.otherFormats).push(item);
+  }
+  matchGroups.tournaments = [...tournamentMap].map(([name, entries]) => ({
+    name, matches: entries, count: entries.length, participationVerified: false
+  }));
   return [200, { ok: true, player: { name: player.name, sourceId: id, sport: 'cricket',
     source: 'CricHeroes', sourceUrl: player.source_url || 'https://cricheroes.com/player-profile/' + id,
     completeness: capture.completeness, identityVerified: capture.identity_verified === true },
@@ -571,7 +593,7 @@ routes['GET /api/legacy-player-profile'] = async (req, body) => {
       sourceSeparation: 'Outside records are never merged into verified Scoring Heroes totals',
       missingValue: null
     },
-    matches, careerStats: null, note: 'Partial source capture; totals not independently verified' }];
+    matches, matchGroups, careerStats: null, note: 'Captured match links are browsing references only; player participation and totals are not independently verified' }];
 };
 routes['GET /api/scoreboard-market'] = async (req, body) => {
   const id = String(body.id || '').trim();
