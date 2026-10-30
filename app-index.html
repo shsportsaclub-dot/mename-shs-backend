@@ -9418,11 +9418,11 @@ window.shXIOf=(mine)=>{const c=mine.filter(p=>p.confirmed);if(c.length)return {x
     list.forEach(e=>{const b=e.bat||{},w=e.bowl||{};['mat','inn','no','runs','balls','f4','f6','f50','f100','dk'].forEach(s=>add('bat',s,b[s]));if(b.hs!=null&&b.hs!==''){const x=num(b.hs);if(hs==null||x>num(hs)||(x===num(hs)&&/\*/.test(String(b.hs))))hs=b.hs}
      ['mat','inn','runs','wkts','w5'].forEach(s=>add('bowl',s,w[s]));const bs=ballsOf(w.overs);if(bs!=null)bl+=bs;const m=/^(\d+)\/(\d+)$/.exec(String(w.bbi||''));if(m&&(!bb||+m[1]>bb.w||(+m[1]===bb.w&&+m[2]<bb.r)))bb={w:+m[1],r:+m[2]}});
     if(hs!=null)o.bat.hs=hs;if(bl)o.bowl.overs=Math.floor(bl/6)+'.'+(bl%6);if(bb)o.bowl.bbi=bb.w+'/'+bb.r;return o};
-   const col=(name,ents,shL,cnt)=>{const has=ents.length&&ents.every(x=>x);const R=careerRows({earlier:has?(ents.length===1?ents[0]:sumE(ents)):undefined},st,shL),v=R.map(r=>r[3]);if(cnt&&v[0]===D)v[0]=String(cnt);
-    let est=false;if(!has&&cnt){const tm=+base[0][3];if(tm>0){const k=cnt/tm,rd=x=>{const n=parseFloat(x);return isNaN(n)?D:'\u2248'+Math.round(n*k)};
+   const col=(name,ents,shL,cnt,noEst)=>{const has=ents.length&&ents.every(x=>x);const R=careerRows({earlier:has?(ents.length===1?ents[0]:sumE(ents)):undefined},st,shL),v=R.map(r=>r[3]);if(cnt&&v[0]===D)v[0]=String(cnt);
+    let est=false;if(!has&&cnt&&!noEst){const tm=+base[0][3];if(tm>0){const k=cnt/tm,rd=x=>{const n=parseFloat(x);return isNaN(n)?D:'\u2248'+Math.round(n*k)};
      v.forEach((x,i)=>{const L=base[i][0];if(i===0)return;if(['Innings','Runs','Not Out','Fours','Sixes','Ducks','Wickets'].includes(L))v[i]=rd(base[i][3]);else if(L==='Overs'){const m=/^(\d+)(?:\.(\d))?$/.exec(base[i][3]);if(m){const bl=Math.round((+m[1]*6+(+m[2]||0))*k);v[i]='\u2248'+Math.floor(bl/6)+'.'+(bl%6)}}else if(['Average','Strike Rate','Economy'].includes(L)&&base[i][3]!==D)v[i]='\u2248'+base[i][3];else v[i]=D});est=true}}
     return {h:name,v,est}};
-   if(sel){cols.push(Object.assign(col(sel.name,[ET[sel.name]],SHL(sel.name),sel.matches.length),{h:sel.name,tour:1}))}
+   if(sel){cols.push(Object.assign(col(sel.name,[ET[sel.name]],SHL(sel.name),sel.matches.length,1),{h:sel.name,tour:1}))}
    else if(named.length){const ents=named.map(t=>ET[t.name]);const c=col('Tournaments',ents,G.filter(x=>x.key!=='ind').flatMap(x=>x.L),named.reduce((n,t)=>n+t.matches.length,0));cols.push(Object.assign(c,{tour:1}))}
    else{const TL=G.filter(x=>x.key!=='ind').flatMap(x=>x.L);if(TL.length)cols.push({h:'Tournaments',tour:1,v:careerRows({},st,TL).map(r=>r[2])})}}
   if(hasE&&all.length)cols.push({h:'Past career',v:base.map(r=>r[1])},{h:'Scoring Heroes',v:base.map(r=>r[2])});
