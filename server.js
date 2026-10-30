@@ -1181,6 +1181,66 @@ routes['POST /api/tours/decide'] = async (req, body) => {
   return [200, { ok: true, item: { id: r.id, name: r.name, short: r.short, city: r.city, status: r.status } }];
 };
 
+// Boards and leagues: any signed-in user can found a board (association, league or club group). The founder and added admins approve or reject affiliation requests from tournaments and teams, and can revoke them later. Every decision keeps who decided and when.
+const bdBag = () => (db.shared.boards = db.shared.boards || {});
+const bdLevels = ['league', 'district', 'state', 'national', 'school', 'club'];
+const bdIsAdmin = (b, s) => b.owner === s.phone || (b.admins || []).includes(s.phone) || s.u.role === 'admin';
+const bdPub = b => ({ id: b.id, name: b.name, city: b.city, level: b.level, owner: b.ownerName, admins: (b.admins || []).length + 1, members: (b.members || []).filter(m => m.status === 'approved').length });
+routes['GET /api/boards'] = async (req, body) => {
+  const q = trNm(body.q, 40).toLowerCase();
+  return [200, { ok: true, items: Object.values(bdBag()).filter(b => !q || (b.name + ' ' + b.city).toLowerCase().includes(q)).slice(-100).reverse().map(bdPub) }];
+};
+routes['GET /api/boards/detail'] = async (req, body) => {
+  const b = bdBag()[String(body.id || '')]; if (!b) return [404, { ok: false, error: 'Board not found' }];
+  const s = grUser(req), boss = !!(s && bdIsAdmin(b, s)), mem = m => ({ id: m.id, kind: m.kind, name: m.name, ref: m.ref, by: m.byName, status: m.status, reason: m.reason, note: m.note, t: m.t });
+  const L = b.members || [];
+  return [200, { ok: true, board: bdPub(b), admin: boss, owner: !!(s && b.owner === s.phone), members: L.filter(m => m.status === 'approved').map(mem), pending: boss ? L.filter(m => m.status === 'pending').map(mem) : [], mine: s ? L.filter(m => m.by === s.phone && m.status !== 'approved').map(mem) : [], adminNames: boss ? (b.admins || []).map(ph => ({ phone: ph.slice(0, 3) + '*****' + ph.slice(-2), ph, name: String(((db.users || {})[ph] || {}).nick || '') })) : [] }];
+};
+routes['POST /api/boards/create'] = async (req, body) => {
+  const s = grUser(req); if (!s) return [401, { ok: false, error: 'Please sign in first' }];
+  if (limited('bdc:' + s.phone, 10, 36e5)) return [429, { ok: false, error: 'Too many requests, slow down' }];
+  const name = trNm(body.name, 60); if (name.length < 3) return [400, { ok: false, error: 'Enter the board name' }];
+  if (Object.values(bdBag()).filter(b => b.owner === s.phone).length >= 3) return [400, { ok: false, error: 'You can found up to 3 boards' }];
+  if (Object.values(bdBag()).some(b => b.name.toLowerCase() === name.toLowerCase())) return [409, { ok: false, error: 'A board with this name already exists' }];
+  const b = { id: 'bd' + crypto.randomBytes(4).toString('hex'), name, city: trNm(body.city, 40), level: bdLevels.includes(body.level) ? body.level : 'league', owner: s.phone, ownerName: String(s.u.nick || s.u.name || '').slice(0, 30), admins: [], members: [], t: Date.now() };
+  bdBag()[b.id] = b; saveDb(); return [200, { ok: true, id: b.id }];
+};
+routes['POST /api/boards/admin'] = async (req, body) => {
+  const s = grUser(req); if (!s) return [401, { ok: false, error: 'Please sign in first' }];
+  const b = bdBag()[String(body.id || '')]; if (!b) return [404, { ok: false, error: 'Board not found' }];
+  if (b.owner !== s.phone && s.u.role !== 'admin') return [403, { ok: false, error: 'Only the founder can change board admins' }];
+  const ph = String(body.phone || '').replace(/[^\d+]/g, '');
+  if (body.remove) { b.admins = (b.admins || []).filter(x => x !== ph); saveDb(); return [200, { ok: true }]; }
+  if (!(db.users || {})[ph]) return [404, { ok: false, error: 'No Scoring Heroes account with this number' }];
+  if (ph === b.owner || (b.admins || []).includes(ph)) return [409, { ok: false, error: 'Already an admin' }];
+  if ((b.admins || []).length >= 10) return [400, { ok: false, error: 'Up to 10 admins' }];
+  b.admins = (b.admins || []).concat(ph); saveDb(); return [200, { ok: true }];
+};
+routes['POST /api/boards/affiliate'] = async (req, body) => {
+  const s = grUser(req); if (!s) return [401, { ok: false, error: 'Please sign in first' }];
+  if (limited('bda:' + s.phone, 20, 36e5)) return [429, { ok: false, error: 'Too many requests, slow down' }];
+  const b = bdBag()[String(body.id || '')]; if (!b) return [404, { ok: false, error: 'Board not found' }];
+  const kind = body.kind === 'tour' ? 'tour' : 'team', name = trNm(body.name, 60); if (name.length < 2) return [400, { ok: false, error: 'Enter the ' + (kind === 'tour' ? 'tournament' : 'team') + ' name' }];
+  const L = b.members = b.members || [], low = name.toLowerCase();
+  const dup = L.find(m => m.kind === kind && m.name.toLowerCase() === low && m.status !== 'rejected' && m.status !== 'revoked');
+  if (dup) return [409, { ok: false, error: dup.status === 'approved' ? 'Already affiliated' : 'A request for this name is already waiting' }];
+  if (L.filter(m => m.status === 'pending').length >= 100) return [429, { ok: false, error: 'Too many pending requests' }];
+  const m = { id: 'bm' + crypto.randomBytes(4).toString('hex'), kind, name, ref: trNm(body.ref, 40), note: trNm(body.note, 160), by: s.phone, byName: String(s.u.nick || s.u.name || '').slice(0, 30), status: 'pending', reason: '', t: Date.now() };
+  L.push(m); saveDb(); return [200, { ok: true, id: m.id }];
+};
+routes['POST /api/boards/decide'] = async (req, body) => {
+  const s = grUser(req); if (!s) return [401, { ok: false, error: 'Please sign in first' }];
+  const b = bdBag()[String(body.id || '')]; if (!b) return [404, { ok: false, error: 'Board not found' }];
+  if (!bdIsAdmin(b, s)) return [403, { ok: false, error: 'Only board admins can decide' }];
+  const m = (b.members || []).find(x => x.id === body.rid); if (!m) return [404, { ok: false, error: 'Request not found' }];
+  const st = ['approved', 'rejected', 'revoked'].includes(body.status) ? body.status : ''; if (!st) return [400, { ok: false, error: 'Choose approve, reject or revoke' }];
+  if (st === 'approved' && m.status !== 'pending') return [400, { ok: false, error: 'Only waiting requests can be approved' }];
+  if (st === 'revoked' && m.status !== 'approved') return [400, { ok: false, error: 'Only approved members can be revoked' }];
+  const reason = trNm(body.reason, 160); if (st !== 'approved' && reason.length < 3) return [400, { ok: false, error: 'Give a short reason' }];
+  m.status = st; m.reason = st === 'approved' ? '' : reason; m.decidedBy = s.phone; m.decidedAt = Date.now(); saveDb();
+  return [200, { ok: true }];
+};
+
 // Sessions and account closure. Tokens carry their issue time; "sign out everywhere" invalidates every older token. Closing an account stops sign-in at once; matches, tournaments and other records stay (they are never deleted); signing in again within 30 days reopens it.
 routes['POST /api/me/signout-all'] = async (req) => {
   const s = grUser(req); if (!s) return [401, { ok: false, error: 'Please sign in again' }];
