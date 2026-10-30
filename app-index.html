@@ -9636,6 +9636,60 @@ function shMatchWorkspace(m,mode){
  const style=document.createElement('style');style.textContent='.sh-match-workspace{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;margin:0 0 12px}.sh-match-workspace small{color:var(--mu);font-size:10px;letter-spacing:.8px}.sh-match-workspace h2{font-size:19px;margin:4px 0}.sh-match-workspace p{font-size:11px;margin:0;color:var(--mu)}.sh-match-workspace nav{display:flex;gap:6px;flex-wrap:wrap}.sh-match-workspace nav .btn{font-size:11px;padding:7px 8px;min-height:32px}.sh-match-workspace.is-viewer{padding:8px 10px;gap:5px}.sh-match-workspace.is-viewer small,.sh-match-workspace.is-viewer p{display:none}.sh-match-workspace.is-viewer h2{font-size:13px;margin:0}.sh-match-workspace.is-viewer nav{flex-wrap:nowrap;gap:4px;width:100%}.sh-match-workspace.is-viewer nav .btn{font-size:10px;padding:6px;flex:1;white-space:nowrap}.sh-previous-over{flex-basis:100%;display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:7px}.sh-previous-over small{width:100%;color:var(--mu)}.sh-fx-runner{position:absolute;left:20%;top:45px;font-size:24px;opacity:0}.sh-fx-runs .sh-fx-runner{opacity:1;animation:shRunner 1050ms ease-in-out 2 alternate;animation-delay:var(--sh-fx-delay)}.sh-fx-runs .sh-fx-runner.second{top:72px;animation-direction:alternate-reverse}@keyframes shRunner{from{left:20%;transform:scaleX(1)}to{left:74%;transform:scaleX(-1)}}@media(prefers-reduced-motion:reduce){.sh-fx-runs .sh-fx-runner{animation:none;opacity:0}}';document.head.appendChild(style);
 }
 /* END SH SCORER ACCEPTANCE */
+/* SH SCORER TOOLS: status strip, 7+ runs, dead ball, short run, redo, pause/resume, replace bowler, change batter, end match, approve scorecard.
+   Workflows follow MyCricket (undo in reverse order, 5+ extra-runs menu, tap batter/bowler to change), Play-Cricket Pro (retirements under wicket) and CrickPro (undo rewinds everything).
+   Rules: Laws of Cricket 18 (a short run is not scored; re-enter the runs actually completed) and 20 (a dead ball counts nothing). Every action is appended to the match audit trail, never overwritten. */
+{
+ const who=()=>S.user?.nick||S.user?.name||'Scorer';
+ const log=(m,type,x)=>{m.audit=m.audit||[];m.audit.push(Object.assign({type,t:Date.now(),by:who(),inning:m.cur},x||{}))};
+ UI.redo=UI.redo||{};
+ const sv0=save;save=function(){sv0.apply(this,arguments);UI.savedAt=Date.now()};
+ const b0=ball;ball=function(m,s){
+  if(m&&m.paused){toast('Match is paused. Resume to score.');return false}
+  const inn=m&&m.innings&&m.innings[m.cur],n=inn?inn.ev.length:0,r=b0.apply(this,arguments);
+  if(inn&&inn.ev.length>n&&!UI._redoing)UI.redo[m.id]=[];
+  return r};
+ const u0=undo;undo=function(m){
+  const inn=m&&m.innings&&m.innings[m.cur],e=inn&&inn.ev.length?inn.ev[inn.ev.length-1]:null,r=u0.apply(this,arguments);
+  if(r&&e&&!UI._shortRun)(UI.redo[m.id]=UI.redo[m.id]||[]).push({r:e.r,x:e.x,w:e.w,out:e.out,fld:e.fld,ang:e.ang});
+  return r};
+ const cur=()=>{const m=S.matches.find(x=>x.id===UI.sid)||(typeof curM==='function'?curM():null);return m&&!m.rm&&can()?m:null};
+ Object.assign(A,{
+  shRedo(){const m=cur();if(!m||m.status!=='live')return;const e=(UI.redo[m.id]||[]).pop();if(!e)return toast('Nothing to redo');UI._redoing=1;try{ball(m,e)}finally{UI._redoing=0}log(m,'scorer_redo');commit()},
+  shPause(){const m=cur();if(!m||m.status!=='live')return;m.paused=true;log(m,'pause');commit();toast('Match paused')},
+  shResume(){const m=cur();if(!m)return;m.paused=false;log(m,'resume');commit();toast('Match resumed')},
+  shDead(){const m=cur();if(!m||m.status!=='live'||m.paused)return;log(m,'dead_ball');commit();toast('Dead ball logged. Nothing is counted; bowl it again.',3500)},
+  shShort(){const m=cur();if(!m||m.status!=='live'||m.paused)return;if(!confirm('Short run signalled? The last ball is removed so you can enter the runs actually completed.'))return;UI._shortRun=1;let ok=false;try{ok=undo(m)}finally{UI._shortRun=0}if(!ok)return toast('Nothing to correct');log(m,'short_run');commit();toast('Last ball removed. Enter the correct runs.',3500)},
+  shApprove(){const m=S.matches.find(x=>x.id===UI.sid);if(!m||m.rm||!can()||m.status!=='done')return;m.approved={by:who(),at:Date.now()};log(m,'scorecard_approved');commit();toast('Scorecard approved')}
+ });
+ Object.assign(F,{
+  shSeven(fd){const m=cur();if(!m||m.status!=='live'||m.paused)return;const r=Math.max(7,Math.min(36,Math.floor(+fd.get('r'))||7));A.run({v:r})},
+  shBowler(fd){const m=cur();if(!m||m.status!=='live')return;const id=fd.get('id'),inn=m.innings[m.cur];if(!id||!(m.xi[inn.bowl]||[]).includes(id))return toast('Pick a bowler from the fielding XI');const old=inn.cur.bl;inn.cur.bl=id;log(m,'bowler_replaced',{from:old,to:id});commit();toast('Bowler: '+nm(id))},
+  shBatter(fd){const m=cur();if(!m||m.status!=='live')return;const id=fd.get('id'),w=fd.get('w')==='n'?'n':'s',inn=m.innings[m.cur];if(!id||!avail(m).includes(id))return toast('Pick an available batter');const old=inn.cur[w];inn.cur[w]=id;if(!inn.used.includes(id))inn.used.push(id);log(m,'batter_replaced',{role:w,from:old,to:id});commit();toast('Batter changed: '+nm(id))},
+  shEnd(fd){const m=cur();if(!m||m.status==='done'||m.status==='setup')return;const why=fd.get('why')||'Match ended by scorer';if(!confirm('End the match now: '+why+'?'))return;const inn=m.innings[m.cur];if(inn)inn.done=true;m.status='done';m.result=why;m.win=null;m.paused=false;log(m,'match_ended',{why});commit();toast(why,3500)}
+ });
+ const css=document.createElement('style');css.textContent='.sh-sst{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}.sh-sst span{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;background:var(--card);border:1px solid var(--bd);font:600 12px system-ui}.sh-sst .on i{background:#16a34a}.sh-sst .off i{background:#dc2626}.sh-sst i{width:8px;height:8px;border-radius:50%;display:inline-block;background:#9ca3af}.sh-sst .warn{background:#f59e0b22;border-color:#f59e0b;color:#b45309}.sh-sst .fh{background:#dc262622;border-color:#dc2626;color:#dc2626}.sh-tools summary{cursor:pointer;font-weight:800}.sh-tools .tg{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin:10px 0}.sh-tools form{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:8px 0}.sh-tools form select,.sh-tools form input{flex:1;min-width:110px}';document.head.appendChild(css);
+ const strip=m=>{const s=st(m);if(!s)return '';const k=s.k,on=navigator.onLine,t=UI.savedAt?new Date(UI.savedAt).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'',lw=k.fow.length?k.fow[k.fow.length-1]:null;
+  const P=[`<span class="${on?'on':'off'}"><i></i>${on?'Online':'Offline'}${t?' · saved '+t:''}</span>`];
+  if(m.paused)P.push('<span class="warn">PAUSED</span>');
+  if(typeof shFreeHitPending==='function'&&shFreeHitPending(m))P.push('<span class="fh">FREE HIT</span>');
+  if(s.i===1&&s.need!=null)P.push(`<span>Need ${Math.max(0,s.need)} off ${Math.max(0,s.left)} balls${s.rrr!=null?' · RRR '+s.rrr.toFixed(2):''}</span>`);
+  P.push(`<span>Partnership ${k.part.r} (${k.part.b})</span>`);
+  if(lw)P.push(`<span>Last wkt ${esc(nm(lw.id))} · ${lw.r}/${lw.w} (${lw.ov})</span>`);
+  return `<div class="sh-sst">${P.join('')}</div>`};
+ const tools=m=>{const inn=m.innings[m.cur],redo=(UI.redo[m.id]||[]).length,bowlers=(m.xi[inn.bowl]||[]).filter(id=>id!==inn.cur.bl).map(id=>[id,nm(id)]),bats=avail(m).map(id=>[id,nm(id)]);
+  return `<details class="card sh-tools"><summary>Scorer tools</summary><div class="tg"><button class="btn ghost sm" data-a="shRedo" ${redo?'':'disabled'}>Redo${redo?' ('+redo+')':''}</button><button class="btn ghost sm" data-a="shDead">Dead ball</button><button class="btn ghost sm" data-a="shShort">Short run</button>${m.paused?'<button class="btn sm" data-a="shResume">Resume match</button>':'<button class="btn ghost sm" data-a="shPause">Pause match</button>'}</div>
+  <form data-f="shSeven"><label style="flex:1">Runs off the bat, 7 or more<input name="r" type="number" min="7" max="36" value="7" inputmode="numeric"></label><button class="btn sm">Add runs</button></form>
+  ${bowlers.length?`<form data-f="shBowler"><label style="flex:1">Replace bowler<select name="id">${opt(bowlers,'')}</select></label><button class="btn sm ghost">Replace</button></form>`:''}
+  ${bats.length?`<form data-f="shBatter"><label style="flex:1">Change batter<select name="w"><option value="s">Striker</option><option value="n">Non-striker</option></select></label><label style="flex:1">New batter<select name="id">${opt(bats,'')}</select></label><button class="btn sm ghost">Change</button></form>`:''}
+  <form data-f="shEnd"><label style="flex:1">End match<select name="why">${opt(['Match abandoned','No result','Match tied','Match drawn','Ended by organiser'].map(x=>[x,x]),'Match abandoned')}</select></label><button class="btn sm ghost">End match</button></form>
+  <div class="mu sm">Dead ball counts nothing. Short run removes the last ball so you re-enter the runs completed (Law 18). Every action goes in the audit log.</div></details>`};
+ const c0=scoreConsole;scoreConsole=function(m){const h=c0.apply(this,arguments);if(m.rm||!can()||!m.innings[m.cur])return h;setFmt(m);return strip(m)+h+tools(m)};
+ const v0=vScore;vScore=function(){const h=v0.apply(this,arguments),m=S.matches.find(x=>x.id===UI.sid);
+  if(!m||m.rm||!can()||m.status!=='done')return h;
+  return h+`<div class="card"><b>Scorecard approval</b><div class="mu sm" style="margin:6px 0">${m.approved?'Approved by '+esc(m.approved.by)+' on '+new Date(m.approved.at).toLocaleString():'Check the scorecard, then approve it as final.'}</div>${m.approved?'':'<button class="btn sm" data-a="shApprove">Approve scorecard</button>'}</div>`};
+}
+
 
 // ICC Men's ODI/T20I Playing Conditions, effective October 2026, clause 28.7.
 function createSHCricketFielding(){
