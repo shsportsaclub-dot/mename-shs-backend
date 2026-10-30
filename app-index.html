@@ -9410,7 +9410,7 @@ window.shXIOf=(mine)=>{const c=mine.filter(p=>p.confirmed);if(c.length)return {x
  const fmtOfM=m=>m.fmt&&FMTS.includes(m.fmt)?m.fmt:((t=>t&&/academ/i.test(t.name||''))(m.tid&&trObj(m.tid)))?'Academic':(m.overs>=900?'Test':m.overs<=6?'Super 6':m.overs<=10?'T10':m.overs<=20?'T20':'ODI');
  function careerTable(p,st,all,ttl){const bat=st==='bat',base=careerRows(p,st,all),hasE=!!p.earlier,G=all.length?ppRecords(p):[];
   const cols=[];
-  FMTS.forEach(f=>{const L=all.filter(e=>fmtOfM(e.m)===f),ef=(p.earlierF||{})[f];if(L.length||ef)cols.push({h:f,v:careerRows({earlier:ef},st,L).map(r=>r[3])})});
+  FMTS.forEach(f=>{const L=all.filter(e=>fmtOfM(e.m)===f),ef=(p.earlierF||{})[f];cols.push({h:f,fmt:1,v:careerRows({earlier:ef},st,L).map(r=>r[3])})});
   // One Tournaments column: the total of every tournament by default; pick one tournament (picker below) to see just that one.
   {const id=LEGID(p),E=id&&(UI.legacy||{})[id],g=E&&E.data&&E.data.matchGroups,named=g?(g.tournaments||[]):[],sel=named.find(t=>t.name===UI.pp.ltour),ET=p.earlierT||{};
    const SHL=n=>G.filter(x=>x.name===n).flatMap(x=>x.L);
@@ -9423,7 +9423,7 @@ window.shXIOf=(mine)=>{const c=mine.filter(p=>p.confirmed);if(c.length)return {x
    else if(named.length){const ents=named.map(t=>ET[t.name]);const c=col('Tournaments',ents,G.filter(x=>x.key!=='ind').flatMap(x=>x.L),named.reduce((n,t)=>n+t.matches.length,0));cols.push(Object.assign(c,{tour:1}))}
    else{const TL=G.filter(x=>x.key!=='ind').flatMap(x=>x.L);if(TL.length)cols.push({h:'Tournaments',tour:1,v:careerRows({},st,TL).map(r=>r[2])})}}
   if(hasE&&all.length)cols.push({h:'Past career',v:base.map(r=>r[1])},{h:'Scoring Heroes',v:base.map(r=>r[2])});
-  for(let i=cols.length-1;i>=0;i--)if(!cols[i].tour&&!cols[i].v.some(x=>x!==D&&x!=='0'&&x!==0&&x!=='0.00'))cols.splice(i,1);
+  for(let i=cols.length-1;i>=0;i--)if(!cols[i].tour&&!cols[i].fmt&&!cols[i].v.some(x=>x!==D&&x!=='0'&&x!==0&&x!=='0.00'))cols.splice(i,1);
   cols.push({h:'Total',v:base.map(r=>r[3])});
   const sc='position:sticky;left:0;z-index:1';
   return `<style>.cr td:first-child,.cr th:first-child{position:sticky;left:0;background:#17181d}html[data-theme=mday] .cr td:first-child,html[data-theme=mday] .cr th:first-child{background:#fff!important;color:#0f1a33!important}</style><div class="cd" style="padding:0;overflow-x:auto"><div style="padding:14px 16px 4px;font-weight:800;font-size:17px">${ttl||((bat?'Batting':'Bowling')+' career')}</div><table class="ct cr"><tr><th style="text-align:left;${sc}">${bat?'Batting':'Bowling'}</th>${cols.map(c=>c.tour?`<th data-a="ppToTour" style="min-width:84px;cursor:pointer;text-decoration:underline">${esc(c.h)} &#9662;</th>`:`<th style="min-width:84px">${esc(c.h)}</th>`).join('')}</tr>${base.map((r,i)=>`<tr><td style="${sc}">${r[0]}</td>${cols.map(c=>`<td>${esc(c.v[i])}</td>`).join('')}</tr>`).join('')}</table><div class="mu2" style="padding:10px 16px 14px">Formats: Academic = academy matches; otherwise by match length (Test unlimited, ODI 21-50 overs, T20 11-20, T10 7-10, Super 6 up to 6 overs). Tournaments are listed one by one in the Tournaments section below. Past career numbers you typed (Edit &rarr; Past career, per format) are added to matches scored in Scoring Heroes.</div></div>`}
