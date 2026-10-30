@@ -10389,6 +10389,116 @@ document.addEventListener('input',e=>{const el=e.target;if(!el||!/^qt-n-[ab]$/.t
  document.addEventListener('input',e=>{const el=e.target;if(!el||!/^qt-n-[ab]$/.test(el.id||''))return;const card=el.closest('.qt'),lg=card&&card.querySelector('.qt-logo');if(!lg)return;
   const f=find(el.value);if(f)lg.innerHTML='<img class="logo" src="'+f+'" width="44" height="44" alt="" style="object-fit:contain;border-radius:0;background:none">'},true);
 }
+
+/* ---------------- 69 BALL FLOW (own scorer): 1 Shot (pictures) -> 2 Ground (named fielding positions, 30-yard circle) -> 3 Fielder -> 4 Runs; commentary from the recorded shot / place / fielder / player records, spoken ---------------- */
+{
+ let CM=null;
+ const ZN={0:['Behind the bowler','Straight','Straight boundary'],1:['Silly mid-off','Mid-off','Long-off'],'-1':['Silly mid-on','Mid-on','Long-on'],2:['Short cover','Cover','Deep cover'],'-2':['Short midwicket','Midwicket','Deep midwicket'],3:['Silly point','Point','Deep point'],'-3':['Short square leg','Square leg','Deep square leg'],4:['Gully','Backward point','Deep backward point'],'-4':['Backward short leg','Backward square leg','Deep backward square leg'],5:['Slip','Short third man','Third man'],'-5':['Leg slip','Short fine leg','Fine leg'],6:['Wicketkeeper','Behind the keeper','Fine, behind the keeper']};
+ const RING=d=>d<.42?0:d<.75?1:2;
+ const handOf=id=>{try{return (P(id)||{}).bat||''}catch(e){return ''}};
+ const zoneOf=(ang,hand)=>{if(!ang||!isFinite(ang.a))return null;let th=Math.atan2(Math.cos(ang.a),-Math.sin(ang.a))*180/Math.PI;if(hand==='Left-hand')th=-th;let k=Math.round(th/30);if(k===-6)k=6;const r=RING(ang.d);return {k,r,name:ZN[k][r]}};
+ window.shZoneOf=zoneOf;
+ /* ---- shot pictures ---- */
+ const SHOT_ICON={'Drive':['M22 17L31 31','M31 31L35 9',1],'Cut':['M22 18L34 17','M34 17L39 14',1],'Pull':['M20 17L8 16','M8 16L3 9',1],'Sweep':['M20 27L8 34','M8 34L3 30',1],'Flick':['M21 18L12 28','M12 28L6 24',1],'Defence':['M22 17L22 34','',0],'Glance':['M21 18L14 30','M14 30L8 36',1],'Hook':['M21 15L10 8','M10 8L4 3',1],'Upper cut':['M22 15L33 7','M33 7L38 2',1],'Other':['M22 17L28 25','',0]};
+ const shotSvg=n=>{const [bat,arr,a]=SHOT_ICON[n]||SHOT_ICON.Other;const sw=n==='Sweep';return `<svg viewBox="0 0 40 40" width="38" height="38" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true"><circle cx="20" cy="8" r="3.2" fill="currentColor" stroke="none"/><path d="M20 11.5L20 ${sw?20:24}M20 ${sw?20:24}L${sw?13:15} ${sw?30:35}M20 ${sw?20:24}L${sw?27:26} ${sw?30:35}M20 14L22 17" stroke-width="2"/><path d="${bat}" stroke="var(--ac,#f5b335)" stroke-width="3.2"/>${a?`<path d="${arr}" stroke-width="1.4" stroke-dasharray="2 2" opacity=".85"/>`:''}</svg>`};
+ const SHOTS=['Drive','Cut','Pull','Sweep','Flick','Defence','Glance','Hook','Upper cut','Other'];
+ /* ---- ground ---- */
+ const polar=(r,th)=>{const t=th*Math.PI/180;return [120+110*r*Math.sin(t),120-110*r*Math.cos(t)]};
+ const wedge=(k,ring,hand)=>{let c=k*30;if(hand==='Left-hand')c=-c;const r0=[0,.42,.75][ring],r1=[.42,.75,1][ring],a0=c-15,a1=c+15,p=(r,t)=>polar(r,t).map(v=>v.toFixed(1)).join(' ');
+  return `M${p(r1,a0)} A${110*r1} ${110*r1} 0 0 1 ${p(r1,a1)} ${r0?`L${p(r0,a1)} A${110*r0} ${110*r0} 0 0 0 ${p(r0,a0)}`:'L120 120'} Z`};
+ const groundSvg=(m,hand)=>{const z=UI.ang?zoneOf(UI.ang,hand):null;let g=`<circle cx="120" cy="120" r="110" fill="#1b6b3a" stroke="#d8ffe6" stroke-width="2"/><circle cx="120" cy="120" r="${110*.75}" fill="none" stroke="#6fe19a" stroke-width=".8" opacity=".55"/>`;
+  for(let i=0;i<12;i++){const [x,y]=polar(1,i*30+15);g+=`<line x1="120" y1="120" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="#6fe19a" stroke-width=".7" opacity=".4"/>`}
+  if(z)g+=`<path d="${wedge(z.k,z.r,hand)}" fill="#ffd43b" opacity=".38" stroke="#ffd43b" stroke-width="1.2"/>`;
+  g+=`<circle cx="120" cy="120" r="${110*.42}" fill="none" stroke="#fff" stroke-width="1.4" stroke-dasharray="5 4"/><text x="120" y="${120-110*.42-3}" text-anchor="middle" font-size="7" fill="#fff" opacity=".9">30 YARDS</text><text x="120" y="10" text-anchor="middle" font-size="7.5" fill="#cfe">BOWLER'S END</text><text x="120" y="236" text-anchor="middle" font-size="7.5" fill="#cfe">BEHIND THE KEEPER</text><text x="${hand==='Left-hand'?9:231}" y="123" text-anchor="${hand==='Left-hand'?'start':'end'}" font-size="7.5" fill="#cfe">OFF</text><text x="${hand==='Left-hand'?231:9}" y="123" text-anchor="${hand==='Left-hand'?'end':'start'}" font-size="7.5" fill="#cfe">LEG</text><rect x="116" y="106" width="8" height="28" fill="#d9c28a" stroke="#00000055"/>`;
+  if(UI.ang){const [x,y]=[120+Math.cos(UI.ang.a)*Math.min(1.05,UI.ang.d)*110,120+Math.sin(UI.ang.a)*Math.min(1.05,UI.ang.d)*110];g+=`<line x1="120" y1="120" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="#fff" stroke-width="2.4"/><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="5" fill="#ffd43b" stroke="#000"/>`}
+  return `<svg id="wag" data-a="wag" viewBox="0 0 240 240" style="width:100%;max-width:340px;display:block;margin:0 auto;touch-action:manipulation">${g}</svg>`};
+ /* ---- records (earlier matches only, so a ball always reads the same) ---- */
+ let RC=null,RK='';
+ const recs=()=>{const key=S.matches.length+':'+S.matches.reduce((a,m)=>a+m.innings.reduce((b,i)=>b+i.ev.length,0),0)+':'+CM;if(RC&&RK===key)return RC;
+  const bat={},bowl={},h2h={};
+  S.matches.forEach(m=>{if(m.id===CM)return;m.innings.forEach((inn,ii)=>{const seen={};inn.ev.forEach(e=>{if(!e.bt)return;const bt=bat[e.bt]=bat[e.bt]||{r:0,b:0,i:0,m:{}};const kk=m.id+ii;if(!seen[e.bt]){seen[e.bt]=1;bt.i++}bt.m[m.id]=1;
+     const off=(!e.x||e.x==='nb')?e.r:0;if(e.x!=='wd')bt.b++;bt.r+=off;
+     const hk=e.bt+'|'+e.bl,h=h2h[hk]=h2h[hk]||{r:0,b:0,o:0};if(e.x!=='wd')h.b++;h.r+=off;
+     const bw=bowl[e.bl]=bowl[e.bl]||{w:0,m:{}};bw.m[m.id]=1;
+     if(e.w&&String(e.w).toLowerCase()!=='run out'){bw.w++;const who=e.out||e.bt;if(who===e.bt)h.o++}})})});
+  RC={bat,bowl,h2h};RK=key;return RC};
+ const ord=n=>n===1?'first':n===2?'second':n===3?'third':n+'th';
+ const hashOf=s=>{let h=0;for(const c of String(s))h=(h*31+c.charCodeAt(0))>>>0;return h};
+ const pick=(a,h)=>a[h%a.length];
+ const VERB={'Drive':'drives','Cut':'cuts','Pull':'pulls','Sweep':'sweeps','Flick':'flicks','Defence':'defends','Glance':'glances','Hook':'hooks','Upper cut':'upper-cuts'};
+ const f1=n=>{const head=n.bat?n.bowl+' to '+n.bat:n.bowl;
+  if(n.x==='wd')return `${head}, wide${n.tot>1?', '+engPl(n.tot,'run')+' in all':''}.`;
+  if(n.x==='nb')return `${head}, no ball${n.brun?', '+engPl(n.brun,'run')+' off the bat':''}.`;
+  if(n.x==='b')return `${head}, ${engPl(n.tot,'bye')}.`;
+  if(n.x==='lb')return `${head}, ${engPl(n.tot,'leg bye')}.`;
+  if(n.tot===0)return `${head}, no run.`;
+  if(n.brun===4)return `${head}, FOUR.`;
+  if(n.brun===6)return `${head}, SIX.`;
+  return `${head}, ${engPl(n.tot,'run')}.`};
+ const mode=()=>S.settings.cmode==='simple'?'simple':'pro',style=()=>S.settings.cstyle==='energy'?'energy':'analyst';
+ const fancy=(n,h)=>{const v=VERB[n.shot]||'plays',z=n.zone,b=n.bat,w=n.bowl,f=n.fldr?' '+n.fldr+' is across to stop it.':'',en=style()==='energy',N=n.brun||n.tot;
+  const T=(a)=>pick(a,h).replace(/\{b\}/g,b).replace(/\{w\}/g,w).replace(/\{v\}/g,v).replace(/\{z\}/g,z).replace(/\{n\}/g,engPl(N,'run'));
+  if(n.brun===4)return en?T(['{w} to {b}, FOUR! {b} {v} it to {z} and it is racing away!','BOOM! {b} {v} through {z}, that is FOUR!','{b} {v}, {z} has no chance. FOUR!']):T(['{w} to {b}, FOUR. {b} {v} it through {z}, and it races away.','FOUR. {b} {v} towards {z}; the placement is spot on.','{w} to {b}, FOUR. {z} can only watch it go.']);
+  if(n.brun===6)return en?T(['SIX! {b} {v} it over {z}, that is out of here!','Up, up and gone! {b} {v} it beyond {z}. SIX!','{w} to {b}, SIX! Smashed over {z}!']):T(['{w} to {b}, SIX. {b} {v} it clean, and {z} is well beaten for distance.','SIX. {b} goes over {z}; a proper strike.','{w} to {b}, SIX, high over {z}.']);
+  if(n.tot===0)return (en?T(['{w} to {b}, no run. {b} {v} to {z}, great stop!','{w} to {b}, no run, and {z} is right there!']):T(['{w} to {b}, no run. {b} {v} to {z}.','{w} to {b}, no run; {b} {v} to {z} and the fielder is there.']))+f;
+  return (en?T(['{w} to {b}, {n}! {b} {v} to {z}, and they scamper.','{w} to {b}, {n}. {b} {v} it to {z}!']):T(['{w} to {b}, {n}. {b} {v} it to {z}.','{b} {v} to {z}, and they take {n}.']))+f};
+ const recLine=(n,st,boundary)=>{if(!n.btId||CM==null&&false)return '';const R=recs(),h=hashOf(n.btId)+(st?st.n||0:0),b=R.bat[n.btId],hh=R.h2h[n.btId+'|'+n.blId],bw=R.bowl[n.blId];const c=[];
+  if(b&&b.i>=2&&b.b>0)c.push(`${n.bat} has ${b.r} runs in ${b.i} earlier innings here, averaging ${(b.r/b.i).toFixed(1)}.`);
+  if(hh&&hh.b>=6)c.push(`Against ${n.bowl} before, ${n.bat} has ${hh.r} from ${hh.b} balls${hh.o?' and has fallen '+(hh.o===1?'once':hh.o+' times'):''}.`);
+  if(bw&&bw.w>=1)c.push(`${n.bowl} has ${bw.w} wicket${bw.w>1?'s':''} in ${Object.keys(bw.m).length} earlier match${Object.keys(bw.m).length>1?'es':''} here.`);
+  if(!c.length)return '';if(!boundary&&((st?st.n||0:0)%4!==0))return '';return ' '+pick(c,h)};
+ /* cNorm: carry shot, place, fielder and player ids; the place replaces the generic direction text */
+ const cn0=cNorm;
+ cNorm=function(e){const n=cn0.apply(this,arguments);n.btId=e.bt;n.blId=e.bl;n.shot=e.shot||'';
+  if(e.zone&&!e.x||e.zone&&e.x==='nb'){n.zone=e.zone;n.sd=''}
+  if(e.fldr)n.fldr=sh(e.fldr);
+  if(mode()==='simple')n.sd='';
+  return n};
+ const et0=engText;
+ engText=function(n,st){const base=et0.apply(this,arguments);if(!n||!n.bat&&!n.bowl)return base;
+  if(mode()==='simple'){if(n.wk)return `${n.bowl} to ${n.bat}, OUT! ${n.wk.out} ${engDism(String(n.wk.kind||'').toLowerCase().replace(/\s+/g,' '),n.bowl,n.wk.fld)}.`;return f1(Object.assign({},n,{sd:''}))}
+  if(n.wk){const k=String(n.wk.kind||'').toLowerCase();if(k==='run out'||!n.btId)return base;const R=recs(),hh=R.h2h[n.btId+'|'+n.blId];return base+(hh&&hh.o?` That is the ${ord(hh.o+1)} time ${n.bowl} has got ${n.wk.out}.`:'')}
+  if(!n.zone&&!n.shot)return base+recLine(n,st,n.brun>=4);
+  const first=f1(Object.assign({},n,{sd:''}));if(!n.zone||!base.startsWith(first))return base+recLine(n,st,n.brun>=4);
+  const h=hashOf(n.bat)+(st?st.n||0:0)*7;
+  return fancy(n,h)+base.slice(first.length)+recLine(n,st,n.brun>=4)};
+ const cm0=commentary;commentary=function(m){CM=m&&m.id;try{return cm0.apply(this,arguments)}finally{CM=null}};
+ /* ---- record place + fielder on the ball; speak the same line the screen shows ---- */
+ const vsp=(t,fl)=>{try{const ss=window.speechSynthesis;if(!ss||!t)return;if(fl)ss.cancel();const u=new SpeechSynthesisUtterance(t),tag=VL[vlang()].tag;u.lang=tag;const en=style()==='energy'&&vlang()==='en';u.rate=en?1.1:.97;u.pitch=en?1.12:.95;const vs=ss.getVoices?ss.getVoices():[],v=vs.find(x=>x.lang===tag)||vs.find(x=>x.lang&&x.lang.slice(0,2)===tag.slice(0,2));if(v)u.voice=v;ss.speak(u)}catch(e){}};
+ const b0=ball;
+ ball=function(m,s){const inn0=m&&m.innings&&m.innings[m.cur],n0=inn0?inn0.ev.length:0,fld=UI.fld,pq=UI.quiet;
+  if(s&&!s.x&&UI.ang&&!s.ang&&(s.r===0||s.w))s.ang={a:UI.ang.a,d:UI.ang.d};
+  if(!pq)UI.quiet=true;let r;try{r=b0.apply(this,arguments)}finally{UI.quiet=pq}
+  const inn=m&&m.innings&&m.innings[m.cur];
+  if(inn&&inn.ev.length>n0){const e=inn.ev[inn.ev.length-1];if(e.ang){const z=zoneOf(e.ang,handOf(e.bt));if(z)e.zone=z.name}if(fld&&!e.w&&e.x!=='wd')e.fldr=fld;UI.fld='';
+   if(!pq&&voiceOn()){try{const lg=vlang(),L=commentary(m,m.cur),ov=L[0]&&L[0].t==='o'?L[0]:null,bl=L.find(c=>c.t==='b');
+     if(lg==='en'){if(bl)vsp(bl.txt,false);if(ov)vsp(ov.txt,false)}else{vsp(cLine(e,lg),false);const x=vExtra(m,e,lg);if(x.ms)vsp(x.ms,false);if(x.ov)vsp(x.ov,false)}
+     if(m.status==='done')vsp(lg==='en'?m.result:vResult(m,lg),false);else if(m.status==='break')vsp(lg==='en'?'End of innings.':(lg==='te'?'ఇన్నింగ్స్ ముగిసింది.':'पारी समाप्त।'),false)}catch(x){}}}
+  return r};
+ /* ---- controls ---- */
+ Object.assign(A,{bfFld(d){UI.fld=UI.fld===d.v?'':d.v;render()},cmode(d){S.settings.cmode=d.v;commit()},cstyle(d){S.settings.cstyle=d.v;commit()},bfVoice(){A.voice()},bfClear(){UI.ang=null;render()}});
+ /* ---- rebuild the scorer console order after every render ---- */
+ const curMatch=()=>S.matches.find(x=>x.id===UI.sid)||(typeof curM==='function'?curM():null);
+ const build=()=>{const con=document.querySelector('.sh-scorer-console');if(!con||con.querySelector('.bf'))return;const exr=con.querySelector('.exr');if(!exr)return;const evCard=exr.closest('.card');if(!evCard)return;
+  const m=curMatch();if(!m||!m.innings||!m.innings[m.cur])return;const inn=m.innings[m.cur],c=inn.cur||{},hand=handOf(c.s),z=UI.ang?zoneOf(UI.ang,hand):null;
+  const fx=(m.xi&&m.xi[inn.bowl])||(T(inn.bowl)||{}).players||[];
+  const step=(n,t,done,sub)=>`<div class="bf-h"><span class="bf-n ${done?'ok':''}">${done?'✓':n}</span><b>${t}</b>${sub?`<span class="mu sm">${sub}</span>`:''}</div>`;
+  const next=!UI.shot&&!UI.ang?'Start: pick the shot, then tap the ground':!UI.ang?'Now tap on the ground where the ball went':'Now tap the runs';
+  const cm=mode(),stl=style();
+  const html=`<div class="bf-top"><b>BALL FLOW</b><span class="mu sm">${next}</span></div>
+  <div class="bf-cm"><span class="mu sm">Commentary</span><button type="button" class="${cm==='pro'?'on':''}" data-a="cmode" data-v="pro">Expert</button><button type="button" class="${cm==='simple'?'on':''}" data-a="cmode" data-v="simple">Simple</button>${cm==='pro'?`<button type="button" class="${stl==='analyst'?'on':''}" data-a="cstyle" data-v="analyst">Calm</button><button type="button" class="${stl==='energy'?'on':''}" data-a="cstyle" data-v="energy">Energy</button>`:''}<button type="button" class="${voiceOn()?'on':''}" data-a="bfVoice">${voiceOn()?'Voice ON':'Voice OFF'}</button></div>
+  ${step(1,'Shot',!!UI.shot,'optional')}<div class="bf-shots">${SHOTS.map(s=>`<button type="button" class="${UI.shot===s?'on':''}" data-a="shotSet" data-k="shot" data-v="${esc(s)}">${shotSvg(s)}<span>${esc(s)}</span></button>`).join('')}</div><div class="bf-foot"></div>
+  ${step(2,'Ground',!!UI.ang,hand==='Left-hand'?'left-hand batter: off side is on the left':'right-hand batter: off side is on the right')}${groundSvg(m,hand)}
+  <div class="bf-zone">${z?`<b>${esc(z.name)}</b> <span class="mu sm">${['inside the 30-yard circle','mid distance','deep, near the boundary'][z.r]}</span> <button type="button" class="btn sm ghost" data-a="bfClear">Clear</button>`:'<span class="mu sm">Tap a spot. Each place has its own name (cover, midwicket, third man...).</span>'}</div>
+  ${step(3,'Fielder',!!UI.fld,'who fielded it (optional)')}<div class="bf-fl">${fx.length?fx.map(id=>`<button type="button" class="${UI.fld===id?'on':''}" data-a="bfFld" data-v="${esc(id)}">${esc(sh(id))}</button>`).join(''):'<span class="mu sm">No fielding squad set.</span>'}</div>`;
+  const card=document.createElement('div');card.className='card bf';card.innerHTML=html;evCard.parentNode.insertBefore(card,evCard);
+  const shotBox=evCard.querySelector('.sc2-shot');if(shotBox&&/Shot type/i.test(shotBox.textContent)){const ch=shotBox.querySelectorAll('.sc2-chips'),hs=shotBox.querySelectorAll('.sc2-h');if(ch[0])ch[0].remove();if(hs[0])hs[0].remove();card.querySelector('.bf-foot').appendChild(shotBox)}
+  const old=con.querySelector('.sh-shot-marking');if(old)old.remove();
+  evCard.querySelectorAll('.sc2-h').forEach(h=>{if(/^runs$/i.test(h.textContent.trim()))h.textContent='4 · Runs'});
+  const hint=[...evCard.querySelectorAll('.mu.sm')].find(x=>/Tap runs scored/.test(x.textContent));if(hint)hint.remove()};
+ const r0=render;render=function(){const o=r0.apply(this,arguments);try{build()}catch(e){console.error(e)}return o};
+ const sty=document.createElement('style');sty.textContent='.bf{border:1px solid var(--ac)}.bf-top{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:6px;flex-wrap:wrap}.bf-h{display:flex;align-items:center;gap:8px;margin:12px 0 6px}.bf-n{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:var(--ac);color:#000;font-size:12px;font-weight:700}.bf-n.ok{background:#22a559;color:#fff}.bf-shots{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}.bf-shots button{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border:1px solid var(--bd);border-radius:10px;background:var(--card);color:var(--fg);font-size:10px;min-width:0}.bf-shots button.on{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 22%,transparent)}.bf-shots span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.bf-zone{text-align:center;margin-top:6px;min-height:28px}.bf-fl{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px}.bf-fl button,.bf-cm button{flex:none;padding:6px 10px;border:1px solid var(--bd);border-radius:18px;background:var(--card);color:var(--fg);font-size:11px}.bf-fl button.on,.bf-cm button.on{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 25%,transparent)}.bf-cm{display:flex;flex-wrap:wrap;gap:6px;align-items:center}';document.head.appendChild(sty);
+}
 </script>
 </body>
 </html>
