@@ -556,6 +556,7 @@ routes['GET /api/legacy-player-profile'] = async (req, body) => {
       const linked = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'imports', 'staging', 'cricheroes-thaman-216859.json'), 'utf8'));
       linkedExternalProfile = {
         sourceId: '216859', sourceName: linked.player?.name || 'Thaman',
+        displayName: 'Hemanth',
         assignedTo: '5295710', source: 'CricHeroes',
         identityVerified: linked.identity_verified === true,
         completeness: linked.completeness,
