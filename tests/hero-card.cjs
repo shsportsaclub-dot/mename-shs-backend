@@ -9,7 +9,7 @@ ok(await p.evaluate(()=>/Make my Hero Card/.test(document.getElementById('app').
 // a fake person photo: head + shoulders on a green wall
 const png=await p.evaluate(()=>{const c=document.createElement('canvas');c.width=600;c.height=800;const x=c.getContext('2d');x.fillStyle='#2e8b57';x.fillRect(0,0,600,800);x.fillStyle='#f1c27d';x.beginPath();x.arc(300,260,110,0,7);x.fill();x.fillStyle='#d6242f';x.beginPath();x.ellipse(300,640,230,230,0,Math.PI,0);x.fill();x.fillRect(70,640,460,160);return c.toDataURL('image/png').split(',')[1]});
 await p.evaluate(()=>{window.shSegmentMask=async src=>{const m=document.createElement('canvas');m.width=src.width;m.height=src.height;const x=m.getContext('2d');x.fillStyle='#000';x.fillRect(0,0,m.width,m.height);x.fillStyle='#fff';const k=m.width/600;x.beginPath();x.arc(300*k,260*k,110*k,0,7);x.fill();x.beginPath();x.ellipse(300*k,640*k,230*k,230*k,0,Math.PI,0);x.fill();x.fillRect(70*k,640*k,460*k,160*k);return m}});
-await p.evaluate(()=>window.shHeroCardOpen());
+await p.evaluate(()=>window.shHeroCardOpen());await p.screenshot({path:'/tmp/hc0.png'});
 await p.setInputFiles('#hcf2',{name:'me.png',mimeType:'image/png',buffer:Buffer.from(png,'base64')});
 await p.waitForFunction(()=>!document.getElementById('hcsave').disabled,{timeout:8000});
 const r=await p.evaluate(async()=>{const cut=window.__c;return {msg:document.getElementById('hcs').textContent}});
