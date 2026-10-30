@@ -10517,6 +10517,44 @@ document.addEventListener('input',e=>{const el=e.target;if(!el||!/^qt-n-[ab]$/.t
   try{if(inn&&inn.ev.length>n0){const ev=createBroadcastEvent(Object.assign({},inn.ev[inn.ev.length-1],{matchId:m.id}));window.SH_BC_LOG.push(ev);if(window.SH_BC_LOG.length>200)window.SH_BC_LOG.shift();window.dispatchEvent(new CustomEvent('sh:ball-confirmed',{detail:ev}))}}catch(e){}
   return r};
 }
+
+/* ---------------- 71 SH_DLS: evidence-gated DLS state per match. No target is shown as official until an official figure is recorded; the app never calculates the official target here ---------------- */
+{
+ const SH_DLS={
+  references:{icc:'https://www.icc-cricket.com/about/cricket/rules-and-regulations/playing-conditions',methodology:'https://www.iccchampionstrophy.com/about/cricket/rules-and-regulations/duckworth-lewis-stern',calculator:'https://play.cricket.com.au/dls-calculator',bcci:'https://documents.bcci.tv/smart-images/1772193553050_2025-26_BCCI_Men_T20_PC.pdf'},
+  competition:{name:'',format:'T20',playingConditionsVersion:'',dlsEdition:'PROFESSIONAL',minimumOversSecondInnings:null,authorizedCalculator:null},
+  status:'NOT_REQUIRED',interruptions:[],approvedCalculation:null,
+  addInterruption(data){const {innings,ballsBowled,score,wickets,startedAt,resumedAt=null,revisedOvers=null}=data;
+   if(![1,2].includes(innings))throw new Error('Invalid innings');
+   if(!Number.isInteger(ballsBowled)||ballsBowled<0)throw new Error('Invalid legal ball count');
+   if(!Number.isInteger(score)||score<0)throw new Error('Invalid score');
+   if(!Number.isInteger(wickets)||wickets<0||wickets>10)throw new Error('Invalid wickets');
+   const record={id:(crypto.randomUUID?crypto.randomUUID():String(Date.now())),innings,ballsBowled,score,wickets,startedAt,resumedAt,revisedOvers,recordedAt:new Date().toISOString()};
+   this.interruptions.push(record);this.status='AWAITING_OFFICIAL_DLS';this.approvedCalculation=null;return record},
+  approveCalculation(data){const {target,parScore,revisedOvers,official,source,calculationVersion}=data;
+   if(!official||!source||!calculationVersion)throw new Error('Official DLS evidence required');
+   if(!Number.isInteger(target)||target<1)throw new Error('Invalid revised target');
+   if(!Number.isInteger(revisedOvers)||revisedOvers<1)throw new Error('Invalid revised overs');
+   if(parScore!==null&&parScore!==undefined&&(!Number.isInteger(parScore)||parScore<0))throw new Error('Invalid par score');
+   this.approvedCalculation={target,parScore:parScore??null,revisedOvers,official,source,calculationVersion,approvedAt:new Date().toISOString()};this.status='OFFICIALLY_APPROVED';return this.approvedCalculation},
+  getBroadcastGraphics(){if(this.status!=='OFFICIALLY_APPROVED')return {showTarget:false,headline:'DLS REVIEW IN PROGRESS',subtitle:'Awaiting official confirmation'};
+   const d=this.approvedCalculation;return {showTarget:true,headline:'DLS REVISED TARGET',target:d.target,revisedOvers:d.revisedOvers,parScore:d.parScore,source:d.source,approved:true}}};
+ window.SH_DLS=SH_DLS;
+ /* one DLS state per match, saved inside the match */
+ window.shDls=m=>{if(!m)return null;const o=Object.create(SH_DLS);const s=m.dls||{};o.interruptions=s.interruptions||[];o.status=s.status||'NOT_REQUIRED';o.approvedCalculation=s.approvedCalculation||null;o.competition=Object.assign({},SH_DLS.competition);
+  const save=()=>{m.dls={interruptions:o.interruptions,status:o.status,approvedCalculation:o.approvedCalculation}};
+  ['addInterruption','approveCalculation'].forEach(k=>{const f=SH_DLS[k];o[k]=function(){const r=f.apply(o,arguments);save();return r}});return o};
+ /* a rain / bad-light stop that is resumed becomes an interruption record */
+ const ir=A.intResume;
+ A.intResume=function(d){const m=S.matches.find(x=>x.id===d.id),p=m&&m.paused,inn=m&&m.innings[m.cur];const r=ir.apply(this,arguments);
+  try{if(m&&p&&inn&&/rain|light/i.test(p.reason)&&m.innings.length){const k=calc(m,m.cur);shDls(m).addInterruption({innings:Math.min(2,m.cur+1),ballsBowled:inn.lg||0,score:k.runs,wickets:k.wk,startedAt:new Date(p.at).toISOString(),resumedAt:new Date().toISOString()})}}catch(e){}return r};
+ /* the official figure the scorer records is the evidence that unlocks the target */
+ const dr=F.dlsRec;
+ F.dlsRec=function(fd){const m=curM(),r=dr.apply(this,arguments);
+  try{const t=+fd.get('target'),o=+fd.get('overs');if(m&&Number.isInteger(t)&&Number.isInteger(o)){const x=shDls(m);if(x.status==='NOT_REQUIRED'||x.status==='AWAITING_OFFICIAL_DLS'){x.approveCalculation({target:t,parScore:null,revisedOvers:o,official:true,source:'Official figure entered by the scorer',calculationVersion:'as supplied by match officials'});commit()}}}catch(e){}return r};
+ const td=tDLS;tDLS=function(m){const o=td.apply(this,arguments);try{const g=shDls(m).getBroadcastGraphics(),st=(m.dls&&m.dls.status)||'NOT_REQUIRED';if(st==='NOT_REQUIRED')return o;
+   return `<div class="card"><b>${esc(g.headline)}</b>${g.showTarget?`<div>Target ${g.target} from ${g.revisedOvers} overs</div><div class="mu sm">${esc(g.source)}</div>`:`<div class="mu sm">${esc(g.subtitle)}. Record the official figure below.</div>`}</div>`+o}catch(e){return o}};
+}
 </script>
 </body>
 </html>
