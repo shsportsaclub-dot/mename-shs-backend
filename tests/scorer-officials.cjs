@@ -1,0 +1,15 @@
+const {chromium}=require('playwright');
+(async()=>{const b=await chromium.launch(),p=await b.newPage({viewport:{width:430,height:900}}),errs=[];p.on('pageerror',e=>errs.push(e.message));
+const ok=(c,m)=>{if(!c){console.log('FAIL',m);process.exitCode=1}};
+await p.addInitScript(()=>{window.fetch=()=>new Promise(()=>{});window.confirm=()=>true});
+await p.goto('file://'+require('path').resolve(__dirname,'../app-index.html'));await p.waitForTimeout(500);
+const r=await p.evaluate(()=>{UI.stage='app';S.prefs=Object.assign({},S.prefs,{asked:1,welcomed:1,avDone:1,avSkip:1});
+ S.players=Array.from({length:22},(_,i)=>({id:'p'+i,name:'Player '+i,role:'BAT',team:i<11?'a':'b'}));
+ S.teams=[{id:'a',name:'Home XI',short:'HOME',players:S.players.slice(0,11).map(p=>p.id)},{id:'b',name:'Away XI',short:'AWAY',players:S.players.slice(11).map(p=>p.id)}];
+ S.user={id:'u',name:'QA',role:'admin',phone:'+910000000000'};S.matches=[];S.officials=[{id:'o1',name:'Ravi Kumar',role:'umpire'}];
+ const m=newMatch({a:'a',b:'b',overs:20,toss:'a',dec:'bat',xiA:S.players.slice(0,11).map(p=>p.id),xiB:S.players.slice(11).map(p=>p.id)});startInnings(m,0,'p0','p1','p11');UI.sid=m.id;UI.mid=m.id;UI.view='score';render();
+ const has=!!document.querySelector('form[data-f=shOfficials]')&&!!document.querySelector('#shoff option');
+ const v={u1:'Ravi Kumar',u2:'  Suresh   Rao ',tv:'Anil',ref:'Mohan',sc:'QA',co:'Lata'};F.shOfficials({get:k=>v[k]});
+ return {has,um:m.umpires,off:m.officials,audit:(m.audit||[]).map(a=>a.type)}});
+ok(r.has,'form + suggestions');ok(r.um==='Ravi Kumar, Suresh Rao','umpires string '+r.um);ok(r.off.tv==='Anil'&&r.off.ref==='Mohan','officials saved');ok(r.audit.includes('officials_set'),'audited');
+ok(!errs.length,errs.join(';'));await b.close();if(!process.exitCode)console.log('PASS: officials');})();
