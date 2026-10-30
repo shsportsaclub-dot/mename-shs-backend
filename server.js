@@ -88,6 +88,7 @@ const journalStorage={databaseConnected:!!neonOk,localSavedAt:0,remoteSavedAt:0,
 try{journalState=JSON.parse(fs.readFileSync(JOURNAL_FILE,'utf8'));journalStorage.localSavedAt=fs.statSync(JOURNAL_FILE).mtimeMs}catch{}
 if(neonOk){try{const r=await neon('select v from kv where k=$1',['match-journal-v1']);if(r.rows?.[0])journalState=JSON.parse(r.rows[0].v)}catch{journalStorage.error='Could not restore database journal'}}
 const journalArchivePending=new Map();
+function shTeamCode(name,given){name=String(name||'').trim();const w=name.split(/\s+/),q=w.length>1?w[w.length-1].replace(/['\u2019]s$/i,''):'';const isQ=/^(A|B|C|XI|U-?\d{2}|Women|Emerging|Academy|Development|Juniors?|Select)$/i.test(q);let base=String(given||'').trim().toUpperCase();if(!base)base=(isQ?w.slice(0,-1).join(' '):name).replace(/[^A-Za-z ]/g,'').slice(0,3).toUpperCase();if(!isQ)return base;const tag=({women:'W',emerging:'EM',academy:'ACA',development:'DEV',junior:'JR',juniors:'JR',select:'SEL'})[q.toLowerCase()]||q.toUpperCase().replace('-','');return new RegExp('\\b'+tag+'$').test(base)?base:base+' '+tag}
 function saveMatchJournal(state){
  for(const [id,match] of Object.entries(state.matches||{}))journalArchivePending.set(id,JSON.stringify({match,engine:state.engine?.[id]}));
  clearTimeout(journalTimer);journalTimer=setTimeout(()=>{const raw=JSON.stringify(state),rows=[...journalArchivePending];journalArchivePending.clear();
@@ -316,8 +317,8 @@ async function fetchLiveMatches() {
     const matches = rows.map(m => ({
       id: m.id, name: m.name, type: m.matchType, seriesId: m.series_id || m.seriesId || '', seriesName: m.seriesName || m.series_name || '', status: m.status, venue: m.venue, date: m.date, time: m.dateTimeGMT || '',
       started: !!m.matchStarted, ended: !!m.matchEnded,
-      teams: (m.teamInfo && m.teamInfo.length ? m.teamInfo : (m.teams || []).map(n => ({ name: n, shortname: String(n).slice(0, 3).toUpperCase() })))
-        .map(t => ({ name: t.name, short: t.shortname, img: t.img || '' })),
+      teams: (m.teamInfo && m.teamInfo.length ? m.teamInfo : (m.teams || []).map(n => ({ name: n, shortname: '' })))
+        .map(t => ({ name: t.name, short: shTeamCode(t.name, t.shortname), img: t.img || '' })),
       score: (m.score || []).map(s => ({ inning: s.inning, r: s.r, w: s.w, o: s.o })),
       bbb: typeof m.bbbEnabled === 'boolean' ? m.bbbEnabled : undefined, fantasy: typeof m.fantasyEnabled === 'boolean' ? m.fantasyEnabled : undefined
     }));

@@ -1306,7 +1306,7 @@ async function pullLive(){
     else{UI.liveDirectT=Date.now();const K=encodeURIComponent(S.settings.cricKey),get=async ep=>{const r=await fetch('https://api.cricapi.com/v1/'+ep+'?offset=0&apikey='+K);return r.json()};
       const [j,j2]=await Promise.all([get('currentMatches'),get('matches').catch(()=>null)]);
       if(j.status!=='success')throw new Error(j.reason||'Cricket API error');
-      const mp=m=>({id:m.id,name:m.name,type:m.matchType,status:m.status,venue:m.venue,date:m.date,time:m.dateTimeGMT||'',started:!!m.matchStarted,ended:!!m.matchEnded,teams:(m.teamInfo&&m.teamInfo.length?m.teamInfo:(m.teams||[]).map(n=>({name:n,shortname:String(n).slice(0,3).toUpperCase()}))).map(t=>({name:t.name,short:t.shortname,img:t.img||''})),score:(m.score||[]).map(x=>({inning:x.inning,r:x.r,w:x.w,o:x.o}))});
+      const mp=m=>({id:m.id,name:m.name,type:m.matchType,status:m.status,venue:m.venue,date:m.date,time:m.dateTimeGMT||'',started:!!m.matchStarted,ended:!!m.matchEnded,teams:(m.teamInfo&&m.teamInfo.length?m.teamInfo:(m.teams||[]).map(n=>({name:n,shortname:''}))).map(t=>({name:t.name,short:shTeamCode(t.name,t.shortname),img:t.img||''})),score:(m.score||[]).map(x=>({inning:x.inning,r:x.r,w:x.w,o:x.o}))});
       const seen={},all=[];(j.data||[]).concat(j2&&j2.status==='success'?(j2.data||[]):[]).forEach(m=>{if(m&&m.id&&!seen[m.id]){seen[m.id]=1;all.push(mp(m))}});
       UI.live={ok:true,matches:all,updated:new Date().toISOString()}}
     if(UI.live&&UI.live.ok)wNorm();
@@ -1749,6 +1749,7 @@ function attachHls(){document.querySelectorAll('video[data-hls]:not([data-on])')
 {const m0=vMatch;vMatch=function(){const o=m0(),m=curM();if(!m)return o;const live=m.status==='live'||m.status==='break',c=streamCard('m'+m.id,live);return c?o.replace('<div class="tabs">',c+'<div class="tabs">'):o}}
 
 /* ---------------- APP LOOKS (themes). Names can be changed in Settings. ---------------- */
+window.shTeamCode=function shTeamCode(name,given){name=String(name||'').trim();const w=name.split(/\s+/),q=w.length>1?w[w.length-1].replace(/['\u2019]s$/i,''):'';const isQ=/^(A|B|C|XI|U-?\d{2}|Women|Emerging|Academy|Development|Juniors?|Select)$/i.test(q);let base=String(given||'').trim().toUpperCase();if(!base)base=(isQ?w.slice(0,-1).join(' '):name).replace(/[^A-Za-z ]/g,'').slice(0,3).toUpperCase();if(!isQ)return base;const tag=({women:'W',emerging:'EM',academy:'ACA',development:'DEV',junior:'JR',juniors:'JR',select:'SEL'})[q.toLowerCase()]||q.toUpperCase().replace('-','');return new RegExp('\\b'+tag+'$').test(base)?base:base+' '+tag}
 const LOOKS=[['mday','Light']];
 window.shTheme=()=>{let t=S.settings.appTheme;if(t!=='hero'&&t!=='mday')t=null;return t||(S.user?'hero':'mday')};
 const lookName=k=>(LOOKS.find(x=>x[0]===k)||[0,k])[1];
