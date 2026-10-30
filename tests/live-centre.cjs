@@ -34,7 +34,7 @@ const { chromium } = require('playwright');
   });
   ok(r.state === 'LIVE' && /India/.test(r.head) && /CRR/.test(r.head), 'header ' + r.head); ok(/POWERPLAY/.test(r.phase) && /2 fielders/.test(r.phase), 'T20 PP chip: ' + r.phase);
   ok(/Player 0/.test(r.bat) && /\*/.test(r.bat), 'batters ' + r.bat); ok(/Over 1/.test(r.over), 'this over');
-  ok(!r.burst0, 'no burst on first view'); ok(r.six && r.sixTxt === 'SIX!', 'six burst'); ok(r.four, 'four burst'); ok(r.wkt && r.lastW, 'wicket burst + last wicket'); ok(r.gone, 'burst ends');
+  ok(!r.burst0 && !r.six && !r.four && !r.wkt, 'ball-flow burst card stays removed (owner request)'); ok(r.lastW, 'last wicket line'); ok(r.gone, 'no burst left');
   ok(/POWERPLAY 1/.test(r.odi1) && /2 fielders/.test(r.odi1), 'ODI PP1 ' + r.odi1); ok(/POWERPLAY 2/.test(r.odi2) && /4 fielders/.test(r.odi2), 'ODI PP2 ' + r.odi2); ok(/phases/i.test(r.phaseTable || ''), 'phase table');
   ok(r.brk === 'break' && /Australia need 7/.test(r.brkHead), 'break head: ' + r.brkHead); ok(r.endStatus === 'done' && r.won && r.res && /won/i.test(r.endHead), 'result headline: ' + r.endHead + ' / ' + r.result); ok(r.fit, 'no overflow');
   ok(!errs.length, errs.join(';')); await b.close(); if (!process.exitCode) console.log('PASS: live centre');

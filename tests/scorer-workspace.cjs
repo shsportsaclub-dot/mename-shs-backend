@@ -23,19 +23,19 @@ const fs=require('node:fs'),http=require('node:http'),assert=require('node:asser
    assert.equal(await p.locator('.sh-scorer-console').count(),1);
    const fresh=await p.evaluate(()=>{const m=S.matches[0];const f=new FormData();f.set('mid',m.id);f.set('i','0');f.set('s','p0');f.set('n','p1');f.set('bl','p11');F.startInn(f);return m.innings.length});
    assert.equal(fresh,1,'duplicate innings submission cannot reset events');
-   await p.locator('[data-a="ex"][data-v="nb"]').click();await p.locator('[data-a="run"][data-v="0"]').click();
-   await p.locator('[data-a="ex"][data-v="wd"]').click();await p.locator('[data-a="run"][data-v="0"]').click();
+   await p.locator('[data-a="ex"][data-v="nb"]').click();await p.locator('[data-a="run"][data-v="0"]').click();await p.evaluate(()=>{if(document.querySelector('.bf')&&UI.pr!=null)A.bfConfirm()});
+   await p.locator('[data-a="ex"][data-v="wd"]').click();await p.locator('[data-a="run"][data-v="0"]').click();await p.evaluate(()=>{if(document.querySelector('.bf')&&UI.pr!=null)A.bfConfirm()});
    assert.match(await p.locator('.sh-scorer-console .chips').first().innerText(),/Nb[\s\S]*Wd/,'extras visible before first legal ball');
    assert.match(await p.locator('.sh-scorer-console').innerText(),/FREE HIT/);
    const free=await p.evaluate(()=>{const m=S.matches[0];ball(m,{w:'Caught',r:0});return {w:calc(m,0).wk,balls:calc(m,0).lg,pending:shFreeHitPending(m)}});
    assert.deepEqual(free,{w:0,balls:1,pending:false});
    await p.evaluate(()=>{const m=S.matches[0];const e=m.innings[0].ev.at(-1);window.undoEventId=e.id;undo(m);commit()});
    assert.ok(await p.evaluate(()=>{const m=S.matches[0];return shFreeHitPending(m)&&m.audit.at(-1).event.id===window.undoEventId}));
-   await p.locator('[data-a="run"][data-v="1"]').click();
+   await p.locator('[data-a="run"][data-v="1"]').click();await p.evaluate(()=>{if(document.querySelector('.bf')&&UI.pr!=null)A.bfConfirm()});
    await p.locator('.sh-match-workspace [data-a="shScorerWatch"]').click();
    assert.equal(await p.locator('.sh-live-window').count(),1);assert.match(await p.locator('.sh-live-window').innerText(),/1nb/);assert.match(await p.locator('.sh-live-window').innerText(),/1wd/);assert.equal(await p.locator('.sh-scorer-console').count(),0);
    await p.locator('.sh-match-workspace [data-a="scoreIt"]').click();
-   for(const r of [4,6]){await p.locator('[data-a="run"][data-v="'+r+'"]').click();}
+   for(const r of [4,6]){await p.locator('[data-a="run"][data-v="'+r+'"]').click();await p.evaluate(()=>{if(document.querySelector('.bf')&&UI.pr!=null)A.bfConfirm()});}
    await p.locator('.sh-match-workspace [data-a="shScorerWatch"]').click();
    assert.match(await p.locator('.sh-live-window').innerText(),/SIX|6/);
    for(const tab of ['card','comm','xi','squads','ovr','graphs','info']){await p.locator('.cbp-tabs [data-a="tab"][data-v="'+tab+'"]').click();assert.equal(await p.evaluate(()=>UI.tab),tab)}
@@ -44,7 +44,7 @@ const fs=require('node:fs'),http=require('node:http'),assert=require('node:asser
    assert.match(await p.locator('.sh-scorer-console').innerText(),/New batter in/);
    await p.locator('[data-a="pickBat"]').first().click();
    await p.locator('.sh-match-workspace [data-a="shScorerWatch"]').click();
-   assert.equal(await p.locator('.sh-delivery-effect').getAttribute('data-effect'),'wicket');
+   assert.equal(await p.locator('.sh-delivery-effect').count(),0);
    await p.locator('.sh-match-workspace [data-a="scoreIt"]').click();await p.locator('[data-a="undoBall"]').click();
    assert.equal(await p.evaluate(()=>calc(S.matches[0],0).wk),0);
    await p.evaluate(()=>{const m=S.matches[0];while(m.innings[0].lg<6)ball(m,{r:0});commit()});
