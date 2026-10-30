@@ -1027,6 +1027,22 @@ routes['GET /api/geo'] = async (req) => {   // viewer's country from the edge he
   const iso = String(req.headers['cf-ipcountry'] || req.headers['x-vercel-ip-country'] || '').toUpperCase();
   return [200, { ok: true, iso: /^[A-Z]{2}$/.test(iso) && iso !== 'XX' && iso !== 'T1' ? iso : '' }];
 };
+// Match desk: when the data provider sends no batters/bowler, an admin or scorer can enter them for everyone. The app uses them only while the provider scorecard has none, so provider data takes over automatically.
+routes['GET /api/desk'] = async (req, body) => {
+  const id = String(body.id || '').slice(0, 64); if (!/^[\w-]{1,64}$/.test(id)) return [400, { ok: false, error: 'Bad id' }];
+  const d = (db.shared.desk || {})[id]; return [200, { ok: true, item: d && Date.now() - d.t < 12 * 3600e3 ? d : null }];
+};
+routes['PUT /api/desk'] = async (req, body) => {
+  const phone = readSession((req.headers.authorization || '').replace(/^Bearer /, '')), u = phone && db.users[phone];
+  if (!u) return [401, { ok: false, error: 'Please sign in again' }];
+  promote(u, phone); if (!['admin', 'scorer'].includes(u.role)) return [403, { ok: false, error: 'Only an admin or scorer can set the batters and bowler' }];
+  const id = String(body.id || '').slice(0, 64); if (!/^[\w-]{1,64}$/.test(id)) return [400, { ok: false, error: 'Bad id' }];
+  const nm = v => String(v || '').replace(/\s+/g, ' ').trim().slice(0, 40), nn = v => { const x = Math.floor(+v); return Number.isFinite(x) && x >= 0 && x < 1000 ? x : 0; };
+  const bat = b => b && nm(b.n) ? { n: nm(b.n), r: nn(b.r), b: nn(b.b) } : null, bw = b => b && nm(b.n) ? { n: nm(b.n), o: String(b.o || '0').replace(/[^\d.]/g, '').slice(0, 5) || '0', m: nn(b.m), r: nn(b.r), w: nn(b.w) } : null;
+  const item = { id, t: Date.now(), by: String(u.nick || u.name || 'Desk').slice(0, 30), inn: nn(body.inn), w: nn(body.w), runs: nn(body.runs), s: bat(body.s), n: bat(body.n), bw: bw(body.bw) };
+  if (!item.s && !item.n && !item.bw) return [400, { ok: false, error: 'Enter at least one batter or the bowler' }];
+  (db.shared.desk = db.shared.desk || {})[id] = item; saveDb(); return [200, { ok: true, item }];
+};
 routes['GET /api/find-match'] = async (req) => {   // what does the provider actually list? e.g. /api/find-match?q=india
   const q = String(new URL(req.url, 'http://x').searchParams.get('q') || '').toLowerCase().slice(0, 40);
   let d = null; try { d = await cdLive(); } catch (e) { return [200, { ok: false, error: e.message }]; }

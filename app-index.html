@@ -9996,6 +9996,50 @@ try{if(S.settings&&S.settings.mskin==='ca'){S.settings.mskin='cb';try{save()}cat
  });
  const st=document.createElement('style');st.textContent='.runs.xl button{font-size:15px!important;padding-left:2px!important;padding-right:2px!important;white-space:nowrap}.sc2-bowl[data-a],.sc2-bat[data-a]{cursor:pointer}.sc2-bowl[data-a]:after{content:"Change ▾";font:700 10px system-ui;opacity:.75;margin-left:8px;padding:2px 7px;border:1px solid currentColor;border-radius:999px}.sc2-bat[data-a] small:after{content:" · tap to change";opacity:.7}.sc2-bl{display:grid;gap:2px;margin-top:6px;font:500 12px system-ui}.sc2-bl>div{display:grid;grid-template-columns:34px 1fr auto;gap:8px;align-items:center;padding:4px 8px;border-radius:8px;background:var(--card);border:1px solid var(--bd)}.sc2-bl .o{font-variant-numeric:tabular-nums;color:var(--mu)}.sc2-bl .r{font-weight:800}.sc2-bl .r.w{color:#e11d2e}.sc2-bl .r.b{color:#d99a00}.sc2-bl .r.x{color:#3f7bff}';document.head.appendChild(st);
 }
+
+/* MATCH DESK: when the provider sends no batters / bowler, an admin or scorer enters them and every viewer sees them.
+   They are used only while the provider scorecard has no one at the crease, so provider data takes over automatically when it arrives. */
+{
+ const dis=r=>String(r['dismissal-text']??r.dismissal??'').trim().toLowerCase();
+ const valid=(W,d)=>{if(!d||!W||!W.m)return false;const n=(W.m.score||[]).length;return n>0&&d.inn===n&&Date.now()-d.t<12*3600e3};
+ const curW=W=>{const x=(W.m.score||[]).slice(-1)[0];return x?+x.w||0:0};
+ window.shDeskState=function(W){const d=W&&W.desk;if(!valid(W,d))return null;return{d,stale:curW(W)>d.w}};
+ const inject=W=>{const L=W.sc&&W.sc.scorecard;if(!Array.isArray(L))return;
+  for(let i=L.length-1;i>=0;i--){if(L[i]._desk)L.splice(i,1);else if(L[i].batting)L[i].batting=L[i].batting.filter(r=>!r._desk);if(L[i]&&L[i].bowling)L[i].bowling=L[i].bowling.filter(r=>!r._desk)}
+  const st=window.shDeskState(W);if(!st||st.stale||!W.m.started||W.m.ended)return;
+  const d=st.d,sc=(W.m.score||[]).slice(-1)[0];if(!sc)return;
+  let inn=L[L.length-1];
+  if(inn&&(inn.batting||[]).some(r=>r&&r.batsman&&dis(r)==='batting'))return;   // provider has the crease: it wins
+  if(!inn||L.length<(W.m.score||[]).length){inn={inning:sc.inning,batting:[],bowling:[],_desk:1};L.push(inn)}
+  inn.batting=inn.batting||[];inn.bowling=inn.bowling||[];
+  [[d.s,true],[d.n,false]].forEach(([b,on])=>{if(!b)return;const ex=inn.batting.find(r=>r.batsman&&r.batsman.name===b.n);
+   if(ex){ex['dismissal-text']='batting';ex._desk=1;ex.on=on;return}
+   inn.batting.push({batsman:{id:'d:'+b.n,name:b.n},'dismissal-text':'batting',r:b.r,b:b.b,'4s':0,'6s':0,sr:b.b?(b.r*100/b.b).toFixed(2):'0',on,_desk:1})});
+  if(d.bw&&!inn.bowling.some(r=>r.bowler&&r.bowler.name===d.bw.n))inn.bowling.push({bowler:{id:'d:'+d.bw.n,name:d.bw.n},o:d.bw.o,m:d.bw.m,r:d.bw.r,w:d.bw.w,eco:'',_desk:1});
+  if(d.s||d.n)inn.striker=d.s?d.s.n:inn.striker};
+ const f0=window.shFixSc;window.shFixSc=function(W){f0.apply(this,arguments);try{inject(W)}catch(e){}};
+ const pull=async W=>{try{if(!W||!W.m||!W.m.started||W.m.ended||typeof apiBase!=='function'||!apiBase())return;const j=await (await fetch(apiBase()+'/api/desk?id='+encodeURIComponent(W.m.id))).json();if(UI.wm!==W)return;const old=JSON.stringify(W.desk||null);W.desk=j&&j.ok?j.item:null;if(JSON.stringify(W.desk||null)!==old&&UI.view==='wmatch')render()}catch(e){}};
+ setInterval(()=>{if(UI.view==='wmatch'&&UI.wm)pull(UI.wm)},8000);
+ const w0=A.wOpen;A.wOpen=function(){const r=w0.apply(this,arguments);setTimeout(()=>pull(UI.wm),300);return r};
+ // the entry form (admin / scorer only), shown under the score when the provider has no one at the crease
+ const roster=W=>{try{return shRoster(W).map(p=>p.name).filter(Boolean)}catch(e){return []}};
+ const field=(id,l,v,list)=>`<label style="flex:1 1 45%">${l}<input name="${id}" list="${list}" maxlength="40" value="${esc(v||'')}" autocomplete="off"></label>`;
+ const num=(id,l,v)=>`<label style="flex:1 1 20%">${l}<input name="${id}" type="number" min="0" inputmode="numeric" value="${v==null?'':esc(v)}"></label>`;
+ window.shDeskForm=function(W){const st=window.shDeskState(W),d=st&&st.d||{},names=[...new Set(roster(W))];
+  return `<details class="sh-desk" ${st&&st.stale?'open':''} style="margin:8px;border:1px solid #2a4cb0;border-radius:14px;background:#0c1d4a;color:#e8eefc;padding:10px"><summary style="font:700 13px system-ui;cursor:pointer">Scorer desk: enter batters and bowler for everyone${st&&st.stale?' · a wicket fell, please update':''}</summary>
+  <form data-f="shDesk" style="margin-top:8px"><datalist id="shdl">${names.map(n=>`<option value="${esc(n)}">`).join('')}</datalist>
+  <div class="row" style="flex-wrap:wrap;gap:6px">${field('s','Striker',d.s&&d.s.n,'shdl')}${num('sr','Runs',d.s&&d.s.r)}${num('sb','Balls',d.s&&d.s.b)}</div>
+  <div class="row" style="flex-wrap:wrap;gap:6px">${field('n','Non-striker',d.n&&d.n.n,'shdl')}${num('nr','Runs',d.n&&d.n.r)}${num('nb','Balls',d.n&&d.n.b)}</div>
+  <div class="row" style="flex-wrap:wrap;gap:6px">${field('bw','Bowler',d.bw&&d.bw.n,'shdl')}<label style="flex:1 1 18%">Overs<input name="bo" inputmode="decimal" value="${esc(d.bw?d.bw.o:'')}"></label>${num('bm','Mdns',d.bw&&d.bw.m)}${num('br','Runs',d.bw&&d.bw.r)}${num('bk','Wkts',d.bw&&d.bw.w)}</div>
+  <button class="btn sm" style="margin-top:8px">Save for everyone</button><div style="font:500 11px system-ui;opacity:.8;margin-top:6px">Shown only until the data provider sends its own batters and bowler, then they take over automatically.</div></form></details>`};
+ F.shDesk=async function(fd){const W=UI.wm;if(!W||!can())return;const g=k=>String(fd.get(k)||'').trim();
+  const body={id:W.m.id,inn:(W.m.score||[]).length,w:curW(W),runs:+((W.m.score||[]).slice(-1)[0]||{}).r||0,s:{n:g('s'),r:g('sr'),b:g('sb')},n:{n:g('n'),r:g('nr'),b:g('nb')},bw:{n:g('bw'),o:g('bo'),m:g('bm'),r:g('br'),w:g('bk')}};
+  try{const r=await fetch(apiBase()+'/api/desk',{method:'PUT',headers:{'Content-Type':'application/json',Authorization:'Bearer '+(S.tok||'')},body:JSON.stringify(body)}),j=await r.json();if(!j.ok)return toast(j.error||'Could not save',3500);W.desk=j.item;toast('Saved. Everyone sees it now.',2500);render()}catch(e){toast('No connection. Try again.',3000)}};
+ const a1=ar9Panel;ar9Panel=function(W){let h=a1.apply(this,arguments);if(typeof h!=='string'||!W||!W.m||!W.m.started||W.m.ended||!can())return h;
+  const i=h.indexOf('</section>');if(i<0)return h;const L0=(W.sc&&W.sc.scorecard)||[],used=L0.some(x=>x._desk||(x.batting||[]).some(r=>r._desk));
+  if(h.indexOf('class="sh-wait"')<0&&!used)return h;   // provider already shows players   // provider already shows players
+  return h.slice(0,i+10)+window.shDeskForm(W)+h.slice(i+10)};
+}
 </script>
 </body>
 </html>
