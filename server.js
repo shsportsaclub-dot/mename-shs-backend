@@ -574,10 +574,10 @@ routes['GET /api/legacy-player-profile'] = async (req, body) => {
   const tournamentMap = new Map();
   for (const match of matches) {
     const label = String(match.title || '');
-    const firstLine = label.split(/\\r?\\n/)[0].trim();
+    const firstLine = label.split(/\r?\n/)[0].trim();
     const isIndividual = /individual match/i.test(firstLine);
-    const isSeries = /\\bseries\\b/i.test(firstLine);
-    const isT20 = /\\b20\\s*(?:ov\\.?|overs?)\\b/i.test(label);
+    const isSeries = /\bseries\b/i.test(firstLine);
+    const isT20 = /\b20\s*(?:ov\.?|overs?)\b/i.test(label);
     const item = { ...match, competition: firstLine || null, participationVerified: false };
     if (isIndividual) matchGroups.individualMatches.push(item);
     else if (isSeries) matchGroups.series.push(item);
