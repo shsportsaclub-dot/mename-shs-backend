@@ -1048,7 +1048,8 @@ const GR_NEAR = 200;
 const grKm = (a, b, c, d) => { const R = 6371000, r = x => x * Math.PI / 180, dl = r(c - a), dg = r(d - b), h = Math.sin(dl / 2) ** 2 + Math.cos(r(a)) * Math.cos(r(c)) * Math.sin(dg / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(h)); };   // metres
 const grBag = () => (db.shared.grounds = db.shared.grounds || {});
 const GR_PITCH = ['Turf', 'Matting', 'Cement', 'Astro turf', 'Mixed'];
-const grPub = (g, d) => ({ id: g.id, name: g.name, city: g.city || '', pitch: g.pitch || '', fac: g.fac || '', lat: g.lat, lng: g.lng, owned: !!g.owner, owner: g.ownerName || '', by: g.byName || '', matches: (g.recs || []).length, dist: d == null ? undefined : Math.round(d) });
+const grPub = (g, d) => ({ id: g.id, name: g.name, city: g.city || '', pitch: g.pitch || '', fac: g.fac || '', lat: g.lat, lng: g.lng, owned: !!g.owner, owner: g.ownerName || '', by: g.byName || '', matches: (g.recs || []).length, photos: (g.photos || []).length, rating: grAvg(g), reviews: (g.revs || []).length, dist: d == null ? undefined : Math.round(d) });
+const grAvg = g => { const r = g.revs || []; return r.length ? Math.round(r.reduce((a, x) => a + x.stars, 0) / r.length * 10) / 10 : 0; };
 const grNm = v => String(v || '').replace(/[<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, 60);
 const grUser = req => { const phone = readSession((req.headers.authorization || '').replace(/^Bearer /, '')), u = phone && db.users[phone]; if (u) promote(u, phone); return u ? { phone, u } : null; };
 const grLL = b => { const lat = +b.lat, lng = +b.lng; return Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180 && !(lat === 0 && lng === 0) ? { lat: +lat.toFixed(6), lng: +lng.toFixed(6) } : null; };
@@ -1096,6 +1097,42 @@ routes['GET /api/grounds/records'] = async (req, body) => {
   const g = grBag()[String(body.id || '')]; if (!g) return [404, { ok: false, error: 'Ground not found' }];
   if (g.owner !== s.phone && s.u.role !== 'admin') return [403, { ok: false, error: 'Only the ground owner can read the records' }];
   return [200, { ok: true, name: g.name, items: (g.recs || []).slice().reverse().map(x => ({ mid: x.mid, a: x.a, b: x.b, overs: x.overs, date: x.date, status: x.status, result: x.result, score: x.score })) }];
+};
+
+// Ground photos (at least 2 are encouraged before a ground shows as 'complete') and ratings / reviews. One review per account; the owner cannot rate their own ground.
+const GR_PH_MAX = 8, GR_PH_BYTES = 260000;
+routes['POST /api/grounds/photo'] = async (req, body) => {
+  const s = grUser(req); if (!s) return [401, { ok: false, error: 'Please sign in first' }];
+  if (limited('grph:' + s.phone, 30, 36e5)) return [429, { ok: false, error: 'Too many uploads, slow down' }];
+  const g = grBag()[String(body.id || '')]; if (!g) return [404, { ok: false, error: 'Ground not found' }];
+  const img = String(body.img || ''); if (!/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+\/=]+$/.test(img)) return [400, { ok: false, error: 'Send a JPEG, PNG or WebP photo' }];
+  if (img.length > GR_PH_BYTES) return [413, { ok: false, error: 'Photo is too large, try a smaller one' }];
+  g.photos = g.photos || []; if (g.photos.length >= GR_PH_MAX) return [409, { ok: false, error: 'This ground already has ' + GR_PH_MAX + ' photos' }];
+  const id = 'ph' + crypto.randomBytes(4).toString('hex'); g.photos.push({ id, img, by: s.phone, byName: String(s.u.nick || s.u.name || '').slice(0, 30), t: Date.now() });
+  saveDb(); return [200, { ok: true, id, photos: g.photos.length }];
+};
+routes['GET /api/grounds/detail'] = async (req, body) => {
+  const g = grBag()[String(body.id || '')]; if (!g) return [404, { ok: false, error: 'Ground not found' }];
+  const me = grUser(req);
+  return [200, { ok: true, item: grPub(g), photos: (g.photos || []).map(x => ({ id: x.id, img: x.img, by: x.byName || '', mine: !!(me && me.phone === x.by) })), reviews: (g.revs || []).slice(-30).reverse().map(x => ({ stars: x.stars, text: x.text, by: x.byName, t: x.t, mine: !!(me && me.phone === x.by) })) }];
+};
+routes['POST /api/grounds/photo/delete'] = async (req, body) => {
+  const s = grUser(req); if (!s) return [401, { ok: false, error: 'Please sign in first' }];
+  const g = grBag()[String(body.id || '')]; if (!g) return [404, { ok: false, error: 'Ground not found' }];
+  const i = (g.photos || []).findIndex(x => x.id === body.pid); if (i < 0) return [404, { ok: false, error: 'Photo not found' }];
+  if (g.photos[i].by !== s.phone && g.owner !== s.phone && s.u.role !== 'admin') return [403, { ok: false, error: 'Only the uploader, ground owner or admin can remove it' }];
+  g.photos.splice(i, 1); saveDb(); return [200, { ok: true }];
+};
+routes['POST /api/grounds/review'] = async (req, body) => {
+  const s = grUser(req); if (!s) return [401, { ok: false, error: 'Please sign in first' }];
+  if (limited('grrv:' + s.phone, 20, 36e5)) return [429, { ok: false, error: 'Too many requests, slow down' }];
+  const g = grBag()[String(body.id || '')]; if (!g) return [404, { ok: false, error: 'Ground not found' }];
+  if (g.owner === s.phone) return [403, { ok: false, error: 'You cannot rate your own ground' }];
+  const stars = Math.round(+body.stars); if (!(stars >= 1 && stars <= 5)) return [400, { ok: false, error: 'Choose 1 to 5 stars' }];
+  const text = String(body.text || '').replace(/[<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, 300);
+  g.revs = g.revs || []; const i = g.revs.findIndex(x => x.by === s.phone), r = { stars, text, by: s.phone, byName: String(s.u.nick || s.u.name || '').slice(0, 30), t: Date.now() };
+  if (i >= 0) g.revs[i] = r; else g.revs.push(r);
+  saveDb(); return [200, { ok: true, rating: grAvg(g), reviews: g.revs.length }];
 };
 // ---------- Teams and players registry (like CricHeroes / CrickPro): unique team names, players found by name or mobile, no duplicate players, creator/admin rights, verification by a registered account with the same mobile ----------
 const RG_ROLES = ['BAT', 'BOWL', 'AR', 'WK'], RG_BAT = ['Right-hand', 'Left-hand'], RG_BOWL = ['', 'Right-arm fast', 'Right-arm medium', 'Off spin', 'Left-arm fast', 'Left-arm spin', 'Leg spin'], RG_LEVELS = ['national', 'state', 'district', 'club', 'academy', 'corporate', 'school', 'college'], RG_MAX = 30;
@@ -2032,7 +2069,7 @@ http.createServer(async (req, res) => {
   const h = routes[req.method + ' ' + pth];
   if (!h) return out(404, { ok: false, error: 'Not found' });
   let raw = '';
-  for await (const c of req) { raw += c; if (raw.length > (pth === '/api/paper' ? 300000 : pth === '/api/admin/home-config' ? 400000 : 20000)) return out(413, { ok: false, error: 'Too large' }); }
+  for await (const c of req) { raw += c; if (raw.length > (pth === '/api/paper' ? 300000 : pth === '/api/admin/home-config' ? 400000 : pth === '/api/grounds/photo' ? 330000 : 20000)) return out(413, { ok: false, error: 'Too large' }); }
   let body = {};
   try { body = raw ? (raw.trim().startsWith('{') ? JSON.parse(raw) : Object.fromEntries(new URLSearchParams(raw))) : {}; } catch { return out(400, { ok: false, error: 'Bad body' }); }
   if (req.method === 'GET') body = { ...Object.fromEntries(new URL(req.url, 'http://x').searchParams), ...body };
