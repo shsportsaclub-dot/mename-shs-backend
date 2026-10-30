@@ -547,7 +547,25 @@ routes['GET /api/legacy-player-profile'] = async (req, body) => {
   try { capture = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'imports', 'staging', filename), 'utf8')); }
   catch { return [503, { ok: false, error: 'Profile capture not available' }]; }
   const player = capture.player || {};
-  const matches = [...new Map((capture.records || []).flatMap(r => r.linked_records || [])
+  // The user requested that the external 216859 capture be accessible under Hemanth.
+  // Preserve its original identity and provenance; do not represent it as verified Hemanth performance.
+  let linkedExternalProfile = null;
+  let matchRecords = capture.records || [];
+  if (id === '5295710') {
+    try {
+      const linked = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'imports', 'staging', 'cricheroes-thaman-216859.json'), 'utf8'));
+      linkedExternalProfile = {
+        sourceId: '216859', sourceName: linked.player?.name || 'Thaman',
+        assignedTo: '5295710', source: 'CricHeroes',
+        identityVerified: linked.identity_verified === true,
+        completeness: linked.completeness,
+        relationship: 'user-requested external record attachment',
+        attribution: 'Records captured under CricHeroes profile 216859; not independently verified as Hemanth'
+      };
+      matchRecords = [...matchRecords, ...(linked.records || [])];
+    } catch { /* Hemanth's own profile remains available if linked capture is absent. */ }
+  }
+  const matches = [...new Map(matchRecords.flatMap(r => r.linked_records || [])
     .filter(r => r.kind === 'scorecard' && /^\d+$/.test(String(r.source_id || '')))
     .map(r => [String(r.source_id), { id: String(r.source_id), title: r.label, sourceUrl: r.url }])).values()];
   // Group captured scorecard references for browsing only; a linked match does not prove participation.
@@ -593,7 +611,7 @@ routes['GET /api/legacy-player-profile'] = async (req, body) => {
       sourceSeparation: 'Outside records are never merged into verified Scoring Heroes totals',
       missingValue: null
     },
-    matches, matchGroups, careerStats: null, note: 'Captured match links are browsing references only; player participation and totals are not independently verified' }];
+    matches, matchGroups, linkedExternalProfile, careerStats: null, note: 'Captured match links are browsing references only; player participation and totals are not independently verified' }];
 };
 routes['GET /api/scoreboard-market'] = async (req, body) => {
   const id = String(body.id || '').trim();
