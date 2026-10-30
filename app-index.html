@@ -9902,21 +9902,19 @@ try{if(S.settings&&S.settings.mskin==='ca'){S.settings.mskin='cb';try{save()}cat
  const qnew=()=>{const L=lastQ(),a=S.teams[0],b=S.teams[1]||S.teams[0];return{a:a?a.id:'',b:b?b.id:'',overs:L.overs||'20',ball:L.ball||'leather',gender:L.gender||'men',venue:L.venue||'',dec:L.dec||'bat',toss:a?a.id:'',name:'',u1:'',u2:'',sc:S.user?(S.user.nick||S.user.name||''):'',xi:{},more:false,pl:{}}};
  const xiOf=(q,tid)=>{if(!q.xi[tid])q.xi[tid]=(T(tid)?T(tid).players:[]).slice(0,11);return q.xi[tid]};
  const chip=(k,v,l,on)=>`<button type="button" class="btn sm ${on?'':'ghost'}" data-a="qsSet" data-k="${k}" data-v="${esc(v)}">${esc(l)}</button>`;
- function qsHTML(){const q=UI.qs,tm=S.teams.map(t=>[t.id,t.name]);if(!S.teams.length)return '<h3>Start a match</h3><div class="need">Create your two teams first. Tap Add team below.</div><div class="row"><input id="qs-tn" placeholder="Team name" style="flex:1"><button type="button" class="btn sm" data-a="qsTeam">Add team</button></div>';
+ function qsHTML(){const q=UI.qs,tm=S.teams.map(t=>[t.id,t.name]);if(false)return '<h3>Start a match</h3><div class="need">Create your two teams first. Tap Add team below.</div><div class="row"><input id="qs-tn" placeholder="Team name" style="flex:1"><button type="button" class="btn sm" data-a="qsTeam">Add team</button></div>';
   const rec=[...new Set(S.venues.map(v=>v.name))].slice(-8);
   const pl=tid=>{const t=T(tid),xi=xiOf(q,tid);return `<div class="card" style="margin:8px 0"><div class="row" style="justify-content:space-between;align-items:center"><b>${esc(t.name)}</b><span class="mu sm">XI ${xi.length}/11</span></div>
    <details ${q.pl[tid]||xi.length<2?'open':''} data-qsd="${tid}"><summary class="mu sm" style="cursor:pointer">${xi.length<2?'Add at least 2 players':'Change players'}</summary>
    ${t.players.map(id=>`<label class="ck"><input type="checkbox" data-c="qsxi" data-t="${tid}" value="${id}" ${xi.includes(id)?'checked':''}> ${esc(nm(id))}</label>`).join('')}
    <div class="row" style="margin-top:6px"><input id="qs-pn-${tid}" placeholder="New player name" style="flex:1" maxlength="30"><button type="button" class="btn sm" data-a="qsPlayer" data-t="${tid}">Add</button></div></details></div>`};
   return `<h3>Start a match</h3>
-  <div class="row"><label style="flex:1">Team A<select data-c="qs" name="a">${opt(tm,q.a)}</select></label><label style="flex:1">Team B<select data-c="qs" name="b">${opt(tm,q.b)}</select></label></div>
-  ${q.a===q.b?'<div class="need">Pick two different teams, or add a new one.</div>':''}
-  <div class="row" style="margin:4px 0 8px"><input id="qs-tn" placeholder="New team name" style="flex:1" maxlength="30"><button type="button" class="btn sm ghost" data-a="qsTeam">Add team</button></div>
+  ${window.shQsTeams?window.shQsTeams():''}
   <div class="b" style="margin:8px 0 4px">Overs</div><div class="row" style="flex-wrap:wrap;gap:6px">${QO.map(([v,l])=>chip('overs',v,l,String(q.overs)===v)).join('')}</div>
   <div class="b" style="margin:10px 0 4px">Ball</div><div class="row" style="gap:6px">${chip('ball','leather','Leather',q.ball==='leather')}${chip('ball','tennis','Tennis ball',q.ball==='tennis')}</div>
   <label style="margin-top:10px">Ground / venue<input name="venue" id="qs-venue" list="qs-vl" value="${esc(q.venue)}" placeholder="Ground name" maxlength="60" autocomplete="off"><datalist id="qs-vl">${rec.map(n=>`<option value="${esc(n)}">`).join('')}</datalist></label>${window.shQsGround?window.shQsGround():''}
-  ${q.a!==q.b?pl(q.a)+pl(q.b):''}
-  <div class="b" style="margin:8px 0 4px">Toss won by</div><div class="row" style="gap:6px">${chip('toss',q.a,T(q.a)?T(q.a).name:'',q.toss===q.a)}${chip('toss',q.b,T(q.b)?T(q.b).name:'',q.toss===q.b)}</div>
+  ${q.a&&q.b&&q.a!==q.b?pl(q.a)+pl(q.b):''}
+  <div class="b" style="margin:8px 0 4px">Toss won by</div>${q.a&&q.b&&q.a!==q.b?`<div class="row" style="gap:6px">${chip('toss',q.a,T(q.a)?T(q.a).name:'',q.toss===q.a)}${chip('toss',q.b,T(q.b)?T(q.b).name:'',q.toss===q.b)}</div>`:'<div class="mu sm">Choose both teams first</div>'}
   <div class="b" style="margin:8px 0 4px">Chose to</div><div class="row" style="gap:6px">${chip('dec','bat','Bat',q.dec==='bat')}${chip('dec','bowl','Bowl',q.dec==='bowl')}</div>
   <details ${q.more?'open':''} style="margin-top:10px" data-qsm="1"><summary class="mu sm" style="cursor:pointer">More options (optional)</summary>
    <label>Match name<input id="qs-name" value="${esc(q.name)}" placeholder="e.g. Sunday friendly" maxlength="50"></label>
@@ -9925,7 +9923,7 @@ try{if(S.settings&&S.settings.mskin==='ca'){S.settings.mskin='cb';try{save()}cat
    <div class="mu sm">Officials, broadcast and more can be changed later from Scorer tools. <a href="#" data-a="newMatchAdv">Advanced setup (all steps)</a></div></details>
   <button type="button" class="btn wide" style="margin-top:12px" data-a="qsStart">Start match</button>`}
  const qsShow=()=>{UI.modal={t:'html',html:qsHTML()};renderModal()};
- window.shQsShow=qsShow;
+ window.shQsShow=qsShow;window.shQsT=()=>UI.qs;
  const qsRead=()=>{const q=UI.qs,g=id=>{const e=document.getElementById(id);return e?String(e.value||'').replace(/\s+/g,' ').trim():null};
   const v=g('qs-venue');if(v!=null)q.venue=v;const n=g('qs-name');if(n!=null)q.name=n;['sc','u1','u2'].forEach(k=>{const x=g('qs-'+k);if(x!=null)q[k]=x});const d=document.querySelector('[data-qsm]');if(d)q.more=d.open};
  window.shQsRead=()=>{qsRead();const q=UI.qs,g=UI.qg;if(q&&q.gid&&g&&g.sel&&q.venue!==g.sel.name){q.gid='';g.sel=null}};
@@ -10222,6 +10220,39 @@ try{if(S.settings&&S.settings.mskin==='ca'){S.settings.mskin='cb';try{save()}cat
  A.ggRec=async function(d){const G=UI.gg;if(G.rec&&G.rec.id===d.v){G.rec=null;render();return}const j=await api('GET','/api/grounds/records?id='+encodeURIComponent(d.v));G.rec=j.ok?{id:d.v,items:j.items}:{id:d.v,items:[],err:j.error||'Not allowed'};render()};
  const m0=MENU2.find(x=>x[0]==='Community and business');if(m0&&!m0[1].some(x=>x[0]==='gground'))m0[1].splice(3,0,['gground','\u{1F4CD}','Grounds (GPS)']);
  const st=document.createElement('style');st.textContent='.qg .qg-ok{margin-top:6px;font-size:13px}.qg a{color:var(--ac2,#ffc83d)}';document.head.appendChild(st);
+}
+
+/* ---------------- 65 START A MATCH: type the two team names, create each team with a logo (upload or a crest made from the name) ---------------- */
+{
+ const q=()=>UI.qs,D=s=>{UI.qt=UI.qt||{};return UI.qt[s]=UI.qt[s]||{name:'',short:'',color:'#2563eb',preset:(S.settings&&S.settings.defLogo)||0,logo:null}};
+ const code=n=>{try{return String(typeof shTeamCode==='function'?shTeamCode(n,''):n.replace(/[^A-Za-z]/g,'').slice(0,3)).toUpperCase().slice(0,4)}catch(e){return String(n).slice(0,3).toUpperCase()}};
+ const val=id=>{const e=document.getElementById(id);return e?e.value:null};
+ const keep=s=>{const d=D(s),n=val('qt-n-'+s);if(n!=null)d.name=String(n).replace(/\s+/g,' ').trim().slice(0,30);const c=val('qt-c-'+s);if(c)d.color=c;const k=val('qt-s-'+s);if(k!=null)d.short=String(k).toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,4)};
+ const readAll=()=>{shQsRead();['a','b'].forEach(keep)};
+ const chips=(s,cur,col,txt,logo)=>`<div class="row" style="flex-wrap:wrap;gap:6px;margin-top:6px">${[0,1,2,3,4,5].map(i=>`<button type="button" class="btn sm ghost" style="padding:2px;${cur===i&&!logo?'border-color:var(--ac)':''}" data-a="qtPreset" data-s="${s}" data-v="${i}" aria-label="Logo style ${i+1}">${crest(i,col,txt,30)}</button>`).join('')}<label class="btn sm ghost" style="margin:0;cursor:pointer">Upload logo<input type="file" accept="image/*" data-c="qtLogo" data-s="${s}" style="display:none"></label></div>`;
+ window.shQsTeams=function(){const Q=q(),other=s=>s==='a'?Q.b:Q.a;
+  const slot=s=>{const id=Q[s],t=id&&T(id),L=s.toUpperCase();
+   if(t)return `<div class="card" style="margin:8px 0"><div class="row" style="align-items:center;gap:10px">${logo(t,46)}<div style="flex:1;min-width:0"><div class="mu sm">Team ${L}</div><b>${esc(t.name)}</b> <span class="mu sm">${esc(t.short||'')}</span></div><button type="button" class="btn sm ghost" data-a="qtClear" data-s="${s}">Change team</button></div>${chips(s,t.preset==null?((S.settings&&S.settings.defLogo)||0):t.preset,t.color,t.short,t.logo)}</div>`;
+   const d=D(s),sh=d.short||code(d.name||'T'),ex=S.teams.filter(x=>x.id!==other(s)).slice(-6);
+   return `<div class="card" style="margin:8px 0"><div class="mu sm">Team ${L}</div>
+    <input id="qt-n-${s}" data-c="qtName" data-s="${s}" list="qt-dl-${s}" value="${esc(d.name)}" placeholder="Type the team name" maxlength="30" autocomplete="off" style="width:100%"><datalist id="qt-dl-${s}">${S.teams.map(x=>`<option value="${esc(x.name)}">`).join('')}</datalist>
+    ${ex.length?`<div class="mu sm" style="margin-top:6px">Or pick a saved team:</div><div class="row" style="flex-wrap:wrap;gap:6px;margin-top:4px">${ex.map(x=>`<button type="button" class="btn sm ghost" data-a="qtUse" data-s="${s}" data-v="${x.id}">${esc(x.name)}</button>`).join('')}</div>`:''}
+    <div class="row" style="align-items:center;gap:10px;margin-top:8px">${d.logo?`<img class="logo" src="${d.logo}" width="46" height="46" alt="" style="object-fit:cover;border-radius:50%">`:crest(d.preset,d.color,sh,46)}<div style="flex:1;font-size:12px" class="mu">Logo: tap a style or upload your own. A logo made from the team name is used if you skip this.</div></div>
+    ${chips(s,d.preset,d.color,sh,d.logo)}
+    <div class="row" style="gap:8px;margin-top:8px"><label style="flex:1">Short code<input id="qt-s-${s}" value="${esc(d.short)}" placeholder="${esc(sh)}" maxlength="4"></label><label style="flex:1">Colour<input id="qt-c-${s}" type="color" value="${esc(d.color)}" style="padding:2px;height:40px"></label></div>
+    <button type="button" class="btn wide" style="margin-top:8px" data-a="qtCreate" data-s="${s}">Create team ${L}</button></div>`};
+  return `<div class="b" style="margin:6px 0 0">Teams</div>${Q.a&&Q.a===Q.b?'<div class="need">Pick two different teams.</div>':''}${slot('a')}${slot('b')}`};
+ const fixToss=()=>{const Q=q();if(Q.a&&Q.b&&Q.toss!==Q.a&&Q.toss!==Q.b)Q.toss=Q.a};
+ C.qtName=function(v,el){readAll();const s=el.dataset.s,n=String(v||'').replace(/\s+/g,' ').trim(),hit=S.teams.find(t=>t.name.toLowerCase()===n.toLowerCase());
+  if(hit){const o=s==='a'?q().b:q().a;if(hit.id===o)return toast('Pick two different teams');q()[s]=hit.id;UI.qt[s]=null;fixToss();shQsShow()}};
+ A.qtUse=function(d){readAll();const o=d.s==='a'?q().b:q().a;if(d.v===o)return toast('Pick two different teams');q()[d.s]=d.v;UI.qt[d.s]=null;fixToss();shQsShow()};
+ A.qtClear=function(d){readAll();q()[d.s]='';UI.qt=UI.qt||{};UI.qt[d.s]=null;shQsShow()};
+ A.qtPreset=function(d){readAll();const Q=q(),id=Q[d.s],t=id&&T(id);if(t){t.preset=+d.v;t.logo=null;save()}else{const x=D(d.s);x.preset=+d.v;x.logo=null}shQsShow()};
+ C.qtLogo=function(v,el){const f=el.files&&el.files[0];if(!f)return;readAll();const s=el.dataset.s;img(f,128,u=>{const id=q()[s],t=id&&T(id);if(t){t.logo=u;save()}else D(s).logo=u;shQsShow()})};
+ A.qtCreate=function(d){readAll();const s=d.s,x=D(s),n=x.name;if(n.length<2)return toast('Type the team name');
+  const dup=S.teams.find(t=>t.name.toLowerCase()===n.toLowerCase());if(dup){const o=s==='a'?q().b:q().a;if(dup.id===o)return toast('That team is already the other team');q()[s]=dup.id;UI.qt[s]=null;fixToss();shQsShow();return toast('That team already exists, selected it')}
+  const t={id:uid(),name:n,short:x.short||code(n),color:x.color||'#2563eb',preset:x.preset,logo:x.logo||null,players:[]};S.teams.push(t);q()[s]=t.id;UI.qt[s]=null;fixToss();save();shQsShow();toast('Team created. Add its players below.',3000)};
+ const st0=A.qsStart;A.qsStart=function(){readAll();const Q=q();if(!Q.a||!Q.b)return toast('Create or pick both teams first');return st0.apply(this,arguments)};
 }
 </script>
 </body>
