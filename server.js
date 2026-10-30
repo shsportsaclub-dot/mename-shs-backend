@@ -638,6 +638,48 @@ routes['GET /api/legacy-player-profile'] = async (req, body) => {
     },
     matches, matchGroups, linkedExternalProfile, careerStats: null, note: 'Captured match links are browsing references only; player participation and totals are not independently verified' }];
 };
+// Market-implied win chance. Odds come from The Odds API (ODDS_API_KEY). Only the derived percentage ever leaves the server, never a price.
+const ODDS_KEY = E.ODDS_API_KEY || '';
+let oddsC = { t: 0, ev: [], left: null, err: '' };
+async function refreshOdds() {
+  if (!ODDS_KEY) return oddsC;
+  const ttl = oddsC.left != null && oddsC.left < 25 ? 3600e3 : 5 * 60e3;
+  if (Date.now() - oddsC.t < ttl) return oddsC;
+  oddsC.t = Date.now();
+  try {
+    const sj = await (await fetch(`https://api.the-odds-api.com/v4/sports/?apiKey=${encodeURIComponent(ODDS_KEY)}`, { signal: AbortSignal.timeout(10000) })).json();
+    const keys = (Array.isArray(sj) ? sj : []).filter(x => x && /^cricket/.test(x.key) && x.active).map(x => x.key).slice(0, 6), ev = [];
+    for (const k of keys) {
+      const r = await fetch(`https://api.the-odds-api.com/v4/sports/${k}/odds/?regions=uk,eu&markets=h2h&oddsFormat=decimal&apiKey=${encodeURIComponent(ODDS_KEY)}`, { signal: AbortSignal.timeout(10000) });
+      const left = Number(r.headers.get('x-requests-remaining')); if (Number.isFinite(left)) oddsC.left = left;
+      const j = await r.json(); if (Array.isArray(j)) ev.push(...j);
+    }
+    oddsC.ev = ev; oddsC.err = '';
+  } catch (e) { oddsC.err = e.message; }
+  return oddsC;
+}
+function impliedProbs(e) {   // average of every bookmaker's margin-free 2-way probability
+  const acc = {}; let n = 0;
+  for (const b of e.bookmakers || []) {
+    const h = (b.markets || []).find(m => m.key === 'h2h'); if (!h) continue;
+    const o = (h.outcomes || []).filter(x => x && Number(x.price) > 1 && x.name !== 'Draw'); if (o.length !== 2) continue;
+    const inv = o.map(x => 1 / Number(x.price)), tot = inv[0] + inv[1];
+    o.forEach((x, i) => { acc[x.name] = (acc[x.name] || 0) + inv[i] / tot * 100; }); n++;
+  }
+  if (!n) return null;
+  const out = {}; for (const k of Object.keys(acc)) out[k] = Math.round(acc[k] / n * 10) / 10; return { probs: out, books: n };
+}
+routes['GET /api/win-odds'] = async (req, body) => {
+  const id = String(body.id || '').slice(0, 64);
+  if (!ODDS_KEY) return [200, { ok: true, available: false, reason: 'no-key' }];
+  const d = live.data || (await cdLive().catch(() => null)), m = d && (d.matches || []).find(x => String(x.id) === id);
+  if (!m) return [200, { ok: true, available: false, reason: 'unknown-match' }];
+  await refreshOdds();
+  const key = pairKey(m), e = oddsC.ev.find(x => [normT(x.home_team), normT(x.away_team)].sort().join('|') === key && Math.abs(dayOf(x.commence_time) - dayOf(m.time || m.date)) <= 864e5);
+  const ip = e && impliedProbs(e); if (!ip) return [200, { ok: true, available: false, reason: 'no-market' }];
+  const probs = {}; for (const t of m.teams || []) { const hit = Object.keys(ip.probs).find(n => normT(n) === normT(t.name)); if (hit) { probs[t.name] = ip.probs[hit]; if (t.short) probs[t.short] = ip.probs[hit]; } }
+  return Object.keys(probs).length < 2 ? [200, { ok: true, available: false, reason: 'team-names' }] : [200, { ok: true, available: true, probs, books: ip.books }];
+};
 routes['GET /api/scoreboard-market'] = async (req, body) => {
   const id = String(body.id || '').trim();
   const sport = String(body.sport || 'cricket').trim().toLowerCase();
