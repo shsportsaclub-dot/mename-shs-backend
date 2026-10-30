@@ -7,8 +7,8 @@ await p.waitForTimeout(300);
 ok(await p.evaluate(()=>!!document.getElementById('qt-n-a')&&!!document.getElementById('qt-n-b')),'two team name inputs');
 await p.fill('#qt-n-a','Hyderabad Hawks');await p.click('button[data-a=qtPreset][data-s=a][data-v="2"]');
 let t=await p.evaluate(()=>({n:document.getElementById('qt-n-a').value,pr:UI.qt.a.preset}));ok(t.n==='Hyderabad Hawks'&&t.pr===2,'name kept after logo style tap '+JSON.stringify(t));
-await p.fill('#qt-s-a','HYH');await p.click('button[data-a=qtCreate][data-s=a]');await p.waitForTimeout(200);
-ok(await p.evaluate(()=>S.teams.length===1&&S.teams[0].name==='Hyderabad Hawks'&&S.teams[0].preset===2&&S.teams[0].short==='HYH'),'team A created with chosen logo/code');
+await p.selectOption('#qt-k-a','India');await p.selectOption('#qt-l-a','state');await p.fill('#qt-s-a','HYH');await p.click('button[data-a=qtCreate][data-s=a]');await p.waitForTimeout(200);
+ok(await p.evaluate(()=>S.teams.length===1&&S.teams[0].name==='Hyderabad Hawks'&&S.teams[0].preset===2&&S.teams[0].short==='HYH'&&S.teams[0].country==='India'&&S.teams[0].level==='state'),'team A created with chosen logo/code');
 await p.fill('#qt-n-b','Vizag Vipers');
 // upload logo (tiny png)
 const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==','base64');require('fs').writeFileSync('/tmp/claude-0/l.png',png);
