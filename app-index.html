@@ -10795,6 +10795,29 @@ document.addEventListener('input',e=>{const el=e.target;if(!el||!/^qt-n-[ab]$/.t
  /* make sure the list of saved days is loaded */
  const rf=render;render=function(){if(UI.view==='epaper'&&!UI.epSrv&&!UI.epSrvTry&&typeof apiBase==='function'&&apiBase()){UI.epSrvTry=1;fetch(apiBase()+'/paper').then(r=>r.json()).then(j=>{UI.epSrv=j;render()}).catch(()=>{})}return rf.apply(this,arguments)};
 }
+
+/* ---------------- 80 ACCESSIBILITY + ACCOUNT: text size, high contrast, reduced motion, big touch targets; sign out of other devices; close account ---------------- */
+{
+ const AS=()=>(S.settings.a11y=S.settings.a11y||{size:0,hc:false,rm:'',tt:false});
+ const apply=()=>{const a=AS(),c=document.documentElement.classList;c.toggle('a11y-l',a.size===1);c.toggle('a11y-xl',a.size===2);c.toggle('a11y-hc',!!a.hc);c.toggle('a11y-rm',a.rm==='on');c.toggle('a11y-tt',!!a.tt)};
+ const st=document.createElement('style');st.textContent='html.a11y-l{-webkit-text-size-adjust:118%;text-size-adjust:118%}html.a11y-xl{-webkit-text-size-adjust:140%;text-size-adjust:140%}html.a11y-hc .mu,html.a11y-hc .sm,html.a11y-hc small{color:inherit!important;opacity:1!important}html.a11y-hc .card,html.a11y-hc .btn,html.a11y-hc input,html.a11y-hc select{border:1.5px solid currentColor!important}html.a11y-hc body{filter:contrast(1.2)}html.a11y-rm *,html.a11y-rm *::before,html.a11y-rm *::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}html.a11y-tt button,html.a11y-tt .btn,html.a11y-tt select,html.a11y-tt input:not([type=checkbox]):not([type=radio]){min-height:48px}.a11y-seg{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 10px}';document.head.appendChild(st);
+ try{apply()}catch(e){}
+ const base=()=>(typeof apiBase==='function'&&apiBase())||'';
+ const v0=vSettings;vSettings=function(){const o=v0.apply(this,arguments),a=AS(),sg=(k,v,l,on)=>`<button type="button" class="btn sm ${on?'':'ghost'}" data-a="a11y" data-k="${k}" data-v="${v}">${l}</button>`,reduced=!!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const signed=!!(S.tok&&S.user&&!S.user.guest);
+  const card=`<div class="card" id="a11y-card"><h3>Accessibility</h3>
+   <div class="mu sm">Text size</div><div class="a11y-seg">${sg('size',0,'Normal',a.size===0)}${sg('size',1,'Large',a.size===1)}${sg('size',2,'Extra large',a.size===2)}</div>
+   <div class="mu sm">Motion${reduced?' (your phone asks for reduced motion)':''}</div><div class="a11y-seg">${sg('rm','','Follow phone',!a.rm)}${sg('rm','on','Reduce animations',a.rm==='on')}</div>
+   <div class="a11y-seg">${sg('hc',a.hc?0:1,a.hc?'High contrast: ON':'High contrast: OFF',a.hc)}${sg('tt',a.tt?0:1,a.tt?'Big buttons: ON':'Big buttons: OFF',a.tt)}</div></div>
+  <div class="card" id="acct-card"><h3>Devices and account</h3>${signed?`<div class="mu sm">This phone stays signed in. If you lost a phone or used a shared one, sign out everywhere else.</div><button type="button" class="btn sm ghost" style="margin:6px 0" data-a="signoutAll">Sign out of all other devices</button>
+   <details style="margin-top:8px"><summary class="mu sm" style="cursor:pointer">Close my account</summary><div class="mu sm" style="margin:6px 0">Closing stops sign-in on every device. Your matches, tournaments and records are kept. Sign in again within 30 days to reopen the account.</div><input id="ac-pin" type="password" inputmode="numeric" maxlength="6" placeholder="Your PIN" style="width:100%"><input id="ac-cf" placeholder="Type CLOSE to confirm" maxlength="5" style="width:100%;margin-top:6px"><button type="button" class="btn sm red" style="margin-top:6px" data-a="closeAcct">Close account</button></details>`:'<div class="mu sm">Sign in to manage devices and your account.</div>'}</div>`;
+  return o+card};
+ A.a11y=function(d){const a=AS();if(d.k==='size')a.size=+d.v;else if(d.k==='rm')a.rm=d.v;else a[d.k]=!!+d.v;apply();commit()};
+ const call=async(path,body)=>{const r=await fetch(base()+path,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+(S.tok||'')},body:JSON.stringify(body||{})});let j={};try{j=await r.json()}catch(e){}return j};
+ A.signoutAll=async function(){try{const j=await call('/api/me/signout-all');if(j.ok){S.tok=j.token;save();toast('Signed out of every other device',3500)}else toast(j.error||'Could not sign out',3500)}catch(e){toast('No connection',3000)}};
+ A.closeAcct=async function(){const v=id=>String((document.getElementById(id)||{}).value||'').trim();if(v('ac-cf')!=='CLOSE')return toast('Type CLOSE to confirm');
+  try{const j=await call('/api/me/close',{confirm:'CLOSE',pin:v('ac-pin')});if(j.ok){toast('Account closed. Sign in within 30 days to reopen it.',5000);S.tok='';A.logout()}else toast(j.error||'Could not close',4000)}catch(e){toast('No connection',3000)}};
+}
 </script>
 </body>
 </html>

@@ -122,13 +122,18 @@ const smsOk = cc => SMS_REGIONS ? SMS_REGIONS.includes(cc) : (['msg91', 'textbee
 const hashCode = (code, salt) => crypto.createHash('sha256').update(salt + code).digest('hex');
 const safeEq = (a, b) => a.length === b.length && crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b));
 const b64 = o => Buffer.from(JSON.stringify(o)).toString('base64url');
-const sign = phone => { const body = b64({ p: phone, e: Date.now() + 3650 * 864e5 }); return body + '.' + crypto.createHmac('sha256', SECRET).update(body).digest('base64url'); };
+const sign = phone => { const body = b64({ p: phone, e: Date.now() + 3650 * 864e5, i: Date.now() }); return body + '.' + crypto.createHmac('sha256', SECRET).update(body).digest('base64url'); };
 function readSession(tok) {
   const [body, sig] = String(tok || '').split('.');
   if (!body || !sig) return null;
   const ok = crypto.createHmac('sha256', SECRET).update(body).digest('base64url');
   if (!safeEq(sig, ok)) return null;
-  try { const o = JSON.parse(Buffer.from(body, 'base64url').toString()); return o.e > Date.now() ? o.p : null; } catch { return null; }
+  try {
+    const o = JSON.parse(Buffer.from(body, 'base64url').toString()); if (!(o.e > Date.now())) return null;
+    const u = typeof db !== 'undefined' && db && db.users && db.users[o.p];
+    if (u && (u.closed || (u.revokeBefore && (o.i || 0) < u.revokeBefore))) return null;   // closed account, or signed out of all devices
+    return o.p;
+  } catch { return null; }
 }
 function limited(key, max, windowMs) {
   const now = Date.now(), arr = (sends.get(key) || []).filter(t => now - t < windowMs);
@@ -1175,6 +1180,21 @@ routes['POST /api/tours/decide'] = async (req, body) => {
   r.status = st; r.reason = st === 'rejected' ? reason : ''; r.decidedBy = s.phone; r.decidedAt = Date.now(); saveDb();
   return [200, { ok: true, item: { id: r.id, name: r.name, short: r.short, city: r.city, status: r.status } }];
 };
+
+// Sessions and account closure. Tokens carry their issue time; "sign out everywhere" invalidates every older token. Closing an account stops sign-in at once; matches, tournaments and other records stay (they are never deleted); signing in again within 30 days reopens it.
+routes['POST /api/me/signout-all'] = async (req) => {
+  const s = grUser(req); if (!s) return [401, { ok: false, error: 'Please sign in again' }];
+  s.u.revokeBefore = Date.now(); saveDb();
+  return [200, { ok: true, token: sign(s.phone) }];
+};
+routes['POST /api/me/close'] = async (req, body) => {
+  const s = grUser(req); if (!s) return [401, { ok: false, error: 'Please sign in again' }];
+  if (limited('close:' + s.phone, 5, 36e5)) return [429, { ok: false, error: 'Too many tries, wait a while' }];
+  if (String(body.confirm || '') !== 'CLOSE') return [400, { ok: false, error: 'Type CLOSE to confirm' }];
+  if (s.u.ph && !safeEq(pinHash(body.pin || '', s.u.salt), s.u.ph)) return [200, { ok: false, error: 'Wrong PIN' }];
+  s.u.closed = Date.now(); saveDb();
+  return [200, { ok: true, reopenDays: 30 }];
+};
 // ---------- Teams and players registry (like CricHeroes / CrickPro): unique team names, players found by name or mobile, no duplicate players, creator/admin rights, verification by a registered account with the same mobile ----------
 const RG_ROLES = ['BAT', 'BOWL', 'AR', 'WK'], RG_BAT = ['Right-hand', 'Left-hand'], RG_BOWL = ['', 'Right-arm fast', 'Right-arm medium', 'Off spin', 'Left-arm fast', 'Left-arm spin', 'Leg spin'], RG_LEVELS = ['national', 'state', 'district', 'club', 'academy', 'corporate', 'school', 'college'], RG_MAX = 30;
 const rgTeams = () => (db.shared.rgTeams = db.shared.rgTeams || {}), rgPlayers = () => (db.shared.rgPlayers = db.shared.rgPlayers || {});
@@ -1656,6 +1676,7 @@ const useProof = (proof, email, purpose) => { const p = mailProof.get(String(pro
 routes['POST /api/auth/email-login'] = async (req, body) => {   // new device: the emailed code is the login. The returned token keeps this device signed in.
   const email = String(body.email || '').trim().toLowerCase(), u = db.users['e:' + email];
   if (!u || !useProof(body.proof, email, 'login')) return [400, { ok: false, error: 'Verify your email with the code first' }];
+  if (u.closed) { if (Date.now() - u.closed > 30 * 864e5) return [400, { ok: false, error: 'This account was closed more than 30 days ago. Contact support to reopen it.' }]; delete u.closed; saveDb(); }
   return [200, { ok: true, profile: pub(u), token: sign('e:' + email) }];
 };
 routes['POST /api/auth/reset'] = async (req, body) => {   // forgot PIN for email accounts: the emailed code is the proof
@@ -1687,7 +1708,8 @@ routes['POST /api/auth/login'] = async (req, body) => {
   if (!u.ph) return [200, { ok: false, error: 'This account has no PIN yet. Ask the admin to reset it.' }];
   if (!safeEq(pinHash(body.pin || '', u.salt), u.ph)) { bad(phone); return [200, { ok: false, error: 'Wrong PIN' }]; }
   fails.delete(phone);
-  return [200, { ok: true, profile: pub(u), token: sign(phone) }];
+  if (u.closed) { if (Date.now() - u.closed > 30 * 864e5) return [200, { ok: false, error: 'This account was closed more than 30 days ago. Contact support to reopen it.' }]; delete u.closed; saveDb(); }
+  return [200, { ok: true, profile: pub(u), token: sign(phone), reopened: true }];
 };
 routes['POST /api/auth/pin'] = async (req, body) => {
   const phone = pk(body).key, u = db.users[phone];
