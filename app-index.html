@@ -8685,7 +8685,7 @@ const card=m=>`<div class="ig-sq fbc" data-a="fbOpen" data-id="${esc(m.id)}" sty
  shAvailableBalls=function(W){
   const r=f0(W);if(r.length)return r;
   const L=sbbOf(W);if(!L.length)return r;
-  return L.map(x=>({inning:x.inning,over:x.over,ball:x.ball,runs:x.runs,bruns:x.bat,batRuns:x.bat,wicket:!!x.wicket,wide:x.kind==='wd',noball:x.kind==='nb',batsman:x.batsman,bowler:x.bowler,out:x.out,ts:x.at,sh:1}));
+  return L.map(x=>({inning:x.inning,over:x.over,ball:x.ball,runs:x.runs,bruns:x.bat,batRuns:x.bat,wicket:!!x.wicket,wide:x.kind==='wd',noball:x.kind==='nb',batsman:x.batsman,bowler:x.bowler,out:x.out,ts:x.at,ex:x.ex,sh:1}));
  };
  const canScore=()=>!!(S.user&&['admin','scorer'].includes(S.user.role)&&S.tok);
  const load=async W=>{
@@ -8737,7 +8737,7 @@ const card=m=>`<div class="ig-sq fbc" data-a="fbOpen" data-id="${esc(m.id)}" sty
   const own=d==null||d===W.bb||(Array.isArray(d)&&!d.length)||(typeof d==='object'&&!Array.isArray(d)&&!(Array.isArray(d.bbb)&&d.bbb.length)&&!(Array.isArray(d.balls)&&d.balls.length));
   if(!own)return r;
   const rows=shAvailableBalls(W);if(!rows.length)return r;
-  const say=x=>x.wicket?'OUT! Wicket':x.wide?'Wide'+(x.runs>1?', '+x.runs+' runs':''):x.noball?'No ball'+(x.runs>1?', '+x.runs+' runs':''):+x.runs===4?'FOUR runs':+x.runs===6?'SIX runs':+x.runs===0?'No run':x.runs+' run'+(+x.runs===1?'':'s');
+  const say=x=>x.wicket?'OUT! Wicket':x.wide?'Wide'+(x.runs>1?', '+x.runs+' runs':''):x.noball?'No ball'+(+x.bruns>0?', '+(+x.bruns===4?'FOUR':+x.bruns===6?'SIX':x.bruns+' off the bat'):''):x.ex==='b'?x.runs+' bye'+(+x.runs===1?'':'s'):x.ex==='lb'?x.runs+' leg bye'+(+x.runs===1?'':'s'):+x.runs===4?'FOUR runs':+x.runs===6?'SIX runs':+x.runs===0?'No run':x.runs+' run'+(+x.runs===1?'':'s');
   return bl0({bbb:rows.map(x=>Object.assign({},x,{derived:1})),tracked:1}).map((x,i,a)=>{const s=a.length===rows.length?rows[rows.length-1-i]:null;if(s&&!x.txt)x.txt=say(s);else if(s&&s.wide&&!/wide/i.test(x.txt))x.txt='Wide · '+x.txt;else if(s&&s.noball&&!/no.?ball/i.test(x.txt))x.txt='No ball · '+x.txt;return x});
  };
  const lo=load;window.shSbbLoad=async W=>{await lo(W);pscore(W)};
@@ -10039,6 +10039,68 @@ try{if(S.settings&&S.settings.mskin==='ca'){S.settings.mskin='cb';try{save()}cat
   const i=h.indexOf('</section>');if(i<0)return h;const L0=(W.sc&&W.sc.scorecard)||[],used=L0.some(x=>x._desk||(x.batting||[]).some(r=>r._desk));
   if(h.indexOf('class="sh-wait"')<0&&!used)return h;   // provider already shows players   // provider already shows players
   return h.slice(0,i+10)+window.shDeskForm(W)+h.slice(i+10)};
+}
+
+/* SCORER PAD for provider matches: pick striker / non-striker / bowler, No ball and Wide with runs, byes, who is out, undo restores the state. */
+{
+ const sbbOf=W=>Array.isArray(W&&W.sbb)?W.sbb:[];
+ const disx=r=>String(r['dismissal-text']??r.dismissal??'').trim().toLowerCase();
+ const crease=W=>{const L=(W.sc&&W.sc.scorecard)||[],inn=L[L.length-1]||{},bs=(inn.batting||[]).filter(x=>x.batsman&&x.batsman.name&&/^(batting|not out)$/.test(disx(x))),bw=(inn.bowling||[]).filter(x=>x.bowler&&x.bowler.name);
+  const on=bs.find(x=>x.on||(inn.striker&&(inn.striker===x.batsman.id||inn.striker===x.batsman.name)));
+  const s=(on||bs[0]||{}).batsman,n=(bs.find(x=>x!==(on||bs[0]))||{}).batsman;return{names:bs.map(x=>x.batsman.name),s:s?s.name:null,n:n?n.name:null,bw:bw.length?bw[bw.length-1].bowler.name:null}};
+ const fromRec=r=>{let s=r.batsman||null,n=r.ns||null,bw=r.bowler||null;const odd=r.kind==='wd'?(r.runs-1)%2:r.kind==='nb'?r.bat%2:r.runs%2;
+  if(r.wicket){if(r.out===s)s=null;else if(r.out===n)n=null}if(odd)[s,n]=[n,s];if(r.kind==='legal'&&r.ball===6){[s,n]=[n,s];bw=null}return{s,n,bw}};
+ const outs=W=>new Set(sbbOf(W).filter(r=>r.wicket&&r.out).map(r=>r.out));
+ const fillNulls=(W,pd)=>{const c=crease(W),gone=outs(W);const free=c.names.filter(x=>x!==pd.s&&x!==pd.n&&!gone.has(x));if(!pd.s&&free.length)pd.s=free.shift();if(!pd.n&&free.length)pd.n=free.shift();if(!pd.bw&&c.bw&&!sbbOf(W).length)pd.bw=c.bw;return pd};
+ const getPad=W=>{if(W.pad)return W.pad;const L=sbbOf(W),c=crease(W);let pd;if(L.length)pd=fromRec(L[L.length-1]);else pd={s:c.s,n:c.n,bw:c.bw};if(!pd.bw&&c.bw)pd.bw=c.bw;if(L.length&&!pd.n&&L[L.length-1].ns==null)pd.n=c.n;W.pad=fillNulls(W,pd);return W.pad};
+ const teams=W=>{try{const sc=((W.m.score)||[]).slice(-1)[0],nm=String((sc&&sc.inning)||'').toLowerCase(),R=shRoster(W);const batT=[...new Set(R.map(p=>p.team))].find(t=>t&&nm.includes(String(t).toLowerCase()));return{bat:R.filter(p=>p.team===batT).map(p=>p.name),bowl:R.filter(p=>p.team!==batT).map(p=>p.name)}}catch(e){return{bat:[],bowl:[]}}};
+ const canScore=()=>!!(S.user&&['admin','scorer'].includes(S.user.role)&&S.tok);
+ const nm=v=>v?esc(v):'Select';
+ window.shSbbPad=function(W){
+  if(!W||!W.m||!W.m.started||W.m.ended||!canScore())return '';
+  const n=window.shSbbNext(W),pd=getPad(W),ext=W.padExt||'',T=teams(W);
+  const rb=(v,l,cl)=>`<button type="button" class="btn sm ${cl||''}" data-a="sbbAdd" data-v="${v}" style="min-width:44px">${l}</button>`;
+  const who=(k,l,v)=>`<button type="button" class="sbb-who ${v?'':'need'}" data-a="sbbPick" data-v="${k}"><small>${l}</small><b>${nm(v)} ▾</b></button>`;
+  let pick='';if(W.padPick){const list=(W.padPick==='bw'?T.bowl:T.bat).filter((x,i,a)=>a.indexOf(x)===i);
+   pick=`<div class="sbb-pick"><div class="mu sm">${W.padPick==='bw'?'Choose the bowler':W.padPick==='s'?'Choose the striker':'Choose the non-striker'}</div><div class="sbb-names">${list.map(x=>`<button type="button" class="btn sm ghost" data-a="sbbSet" data-v="${W.padPick}" data-n="${esc(x)}">${esc(x)}</button>`).join('')}</div><div class="row" style="gap:6px;margin-top:6px"><input id="sbb-free" placeholder="Other name" maxlength="40" style="flex:1"><button type="button" class="btn sm" data-a="sbbSetFree" data-v="${W.padPick}">Use</button><button type="button" class="btn sm ghost" data-a="sbbPick" data-v="">Close</button></div></div>`}
+  let runs,hint='';
+  if(ext==='nb'){hint='No ball: 1 run is added. Tap the runs scored off the bat.';runs=[0,1,2,3,4,6].map(v=>rb('nb:'+v,v?'Nb+'+v:'Nb'))}
+  else if(ext==='wd'){hint='Wide: 1 run is added. Tap extra runs if they ran more.';runs=[0,1,2,3,4].map(v=>rb('wd:'+v,v?'Wd+'+v:'Wd'))}
+  else if(ext==='b'||ext==='lb'){hint=(ext==='b'?'Byes':'Leg byes')+': tap how many were run.';runs=[1,2,3,4].map(v=>rb(ext+':'+v,(ext==='b'?'B':'LB')+v))}
+  else if(ext==='w'){hint='Who is out?';runs=[rb('out:s','Striker out','danger'),rb('out:n','Non-striker out (run out)','danger')]}
+  else runs=[0,1,2,3,4,6].map(v=>rb(v,v));
+  const tools=ext?rb('ext:','Back','ghost'):rb('ext:w','W','danger')+rb('ext:wd','Wd')+rb('ext:nb','Nb')+rb('ext:b','Bye')+rb('ext:lb','LB');
+  return `<div class="card sbbpad" style="margin:8px 4px"><b>Score this match ball by ball</b><div class="mu sm">Next: over ${n.over}.${n.ball} · visible to everyone as "scored by SH scorer"</div>
+  <div class="sbb-wrap">${who('s','STRIKER',pd.s)}${who('n','NON-STRIKER',pd.n)}<button type="button" class="sbb-sw" data-a="sbbSwap" title="Swap strike">⇅</button>${who('bw','BOWLER',pd.bw)}</div>${pick}
+  ${hint?`<div class="mu sm" style="margin-top:6px">${hint}</div>`:''}<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">${runs.join('')}</div>
+  <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px">${tools}${rb('undo','Undo','ghost')}</div></div>`};
+ const pscore=W=>{if(!W||!W.practice)return;const L=sbbOf(W);let r=0,w=0,lg=0;L.forEach(x=>{r+=x.runs;if(x.wicket)w++;if(x.kind==='legal')lg++});W.m.score=[{inning:'Practice XI A Inning 1',r,w,o:Math.floor(lg/6)+(lg%6)/10}]};
+ const post=async(W,body)=>{const r=await fetch(apiBase()+'/api/wbb/'+encodeURIComponent(W.m.id),{method:'POST',headers:{Authorization:'Bearer '+S.tok,'Content-Type':'application/json'},body:JSON.stringify(body)});return r.json()};
+ Object.assign(A,{
+  sbbPick(d){const W=UI.wm;if(!W)return;W.padPick=d.v||'';render()},
+  sbbSet(d){const W=UI.wm;if(!W)return;const pd=getPad(W);pd[d.v]=d.n;if(d.v==='s'&&pd.n===d.n)pd.n=null;if(d.v==='n'&&pd.s===d.n)pd.s=null;W.padPick='';render()},
+  sbbSetFree(d){const W=UI.wm,el=document.getElementById('sbb-free'),v=String((el&&el.value)||'').replace(/[<>]/g,'').replace(/\s+/g,' ').trim().slice(0,40);if(!W||v.length<2)return toast('Type the name');A.sbbSet({v:d.v,n:v})},
+  sbbSwap(){const W=UI.wm;if(!W)return;const pd=getPad(W);[pd.s,pd.n]=[pd.n,pd.s];render()},
+  async sbbAdd(dd){const v=String(dd&&dd.v==null?'':dd.v),W=UI.wm;if(!W||!canScore())return;
+   if(v.startsWith('ext:')){W.padExt=v.slice(4);W.padPick='';render();return}
+   if(UI.sbbBusy)return;
+   if(v==='undo'){UI.sbbBusy=1;try{const last=sbbOf(W).slice(-1)[0],j=await post(W,{undo:true});if(!j.ok)toast(j.error||'Could not undo');else{W.sbb=j.balls;if(last)W.pad={s:last.batsman||null,n:last.ns||null,bw:last.bowler||null};W.padExt=''}}catch(e){toast('No connection')}UI.sbbBusy=0;pscore(W);render();return}
+   const pd=getPad(W);if(!pd.s)return toast('Choose the striker first');if(!pd.n)return toast('Choose the non-striker first');if(!pd.bw)return toast('Choose the bowler first');
+   const nx=window.shSbbNext(W),inn=String(((W.sc&&W.sc.scorecard)||[]).length||1);let kind='legal',runs=0,bat=0,wk=false,out='',ex='';
+   const [a,b]=v.split(':'),k=+b;
+   if(/^\d+$/.test(v)){runs=bat=+v}
+   else if(a==='nb'){kind='nb';bat=k;runs=1+k}
+   else if(a==='wd'){kind='wd';runs=1+k}
+   else if(a==='b'||a==='lb'){ex=a;runs=k}
+   else if(a==='out'){wk=true;out=b==='s'?pd.s:pd.n}
+   else return;
+   UI.sbbBusy=1;
+   try{const j=await post(W,{inning:inn,over:nx.over,ball:nx.ball,runs,bat,kind,wicket:wk,out,ex,batsman:pd.s,ns:pd.n,bowler:pd.bw});
+    if(!j.ok)toast(j.error||'Could not save the ball');else{W.sbb=j.balls;const st=fromRec(j.balls[j.balls.length-1]);W.pad=fillNulls(W,{s:st.s,n:st.n,bw:st.bw||(kind==='legal'&&nx.ball===6?null:pd.bw)});W.padExt='';if(wk&&!W.pad.s&&!W.pad.n)toast('Choose the new batter')}}
+   catch(e){toast('No connection')}
+   UI.sbbBusy=0;pscore(W);render()}
+ });
+ const st=document.createElement('style');st.textContent='.sbb-wrap{display:grid;grid-template-columns:1fr 1fr auto;gap:6px;margin-top:8px}.sbb-wrap .sbb-who{display:flex;flex-direction:column;align-items:flex-start;text-align:left;padding:6px 8px;border-radius:10px;border:1px solid var(--bd,#ccd);background:transparent;color:inherit;min-width:0}.sbb-who small{font:700 9px system-ui;letter-spacing:.6px;opacity:.7}.sbb-who b{font:700 12px system-ui;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}.sbb-who.need{border-color:#e11d2e}.sbb-wrap .sbb-who:last-child{grid-column:1/-1}.sbb-sw{border:1px solid var(--bd,#ccd);border-radius:10px;background:transparent;color:inherit;font-size:18px;padding:0 10px}.sbb-pick{margin-top:8px;padding:8px;border:1px solid var(--bd,#ccd);border-radius:10px;max-height:40vh;overflow:auto}.sbb-names{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.sbbpad{max-height:62vh;overflow:auto;background:#0c1d4a!important;color:#e8eefc!important;border:1px solid #2a4cb0!important}.sbbpad .btn.ghost{color:#e8eefc!important}';document.head.appendChild(st);
 }
 </script>
 </body>

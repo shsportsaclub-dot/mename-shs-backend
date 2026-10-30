@@ -1733,7 +1733,7 @@ http.createServer(async (req, res) => {
     const runs = Math.round(+x.runs), bat = Math.round(+(x.bat ?? x.runs)), over = Math.round(+x.over), ball = Math.round(+x.ball), kind = ['legal', 'wd', 'nb'].includes(x.kind) ? x.kind : 'legal';
     if (!isFinite(runs) || runs < 0 || runs > 12 || !isFinite(bat) || bat < 0 || bat > 7 || !isFinite(over) || over < 0 || over > 999 || !isFinite(ball) || ball < 1 || ball > 6) return out(400, { ok: false, error: 'Bad ball' });
     if (list.length >= 4000) return out(409, { ok: false, error: 'Too many balls for one match' });
-    const rec = { n: list.length + 1, inning: str(x.inning, 80), over, ball, runs, bat, kind, wicket: !!x.wicket, out: str(x.out, 60), batsman: str(x.batsman, 60), bowler: str(x.bowler, 60), at: Date.now(), by: u.name || phone.slice(-4) };
+    const rec = { n: list.length + 1, inning: str(x.inning, 80), over, ball, runs, bat, kind, wicket: !!x.wicket, out: str(x.out, 60), batsman: str(x.batsman, 60), ns: str(x.ns, 60), ex: ['b', 'lb'].includes(x.ex) ? x.ex : '', bowler: str(x.bowler, 60), at: Date.now(), by: u.name || phone.slice(-4) };
     list.push(rec); saveDb();
     return out(200, { ok: true, balls: list, n: list.length });
   }

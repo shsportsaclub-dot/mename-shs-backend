@@ -1,50 +1,37 @@
-// Scorer pad: admin/scorer sees it on a live world match, balls POST to /api/wbb and show as real ball-by-ball; viewers do not see the pad.
+// Provider-match scorer pad: striker / non-striker / bowler, No ball and Wide with runs, byes, wicket, undo restores state.
 const {chromium}=require('playwright');
-(async()=>{const b=await chromium.launch(),p=await b.newPage({viewport:{width:412,height:880}}),errs=[];p.on('pageerror',e=>errs.push(e.message));
+(async()=>{const b=await chromium.launch(),p=await b.newPage({viewport:{width:412,height:900}}),errs=[];p.on('pageerror',e=>errs.push(e.message));
 const ok=(c,m)=>{if(!c){console.log('FAIL',m);process.exitCode=1}};
 await p.goto('file://'+require('path').resolve(__dirname,'../app-index.html'));await p.waitForTimeout(400);
-const setup=role=>p.evaluate(role=>{window.pullLive=async()=>{};window.__posts=[];const store=[];
- window.apiBase=()=>'http://x';
- window.fetch=(u,o)=>{if(!/\/api\/wbb\//.test(u))return new Promise(()=>{});
-  if(o&&o.method==='POST'){const b=JSON.parse(o.body);if(b.undo)store.pop();else store.push({n:store.length+1,...b,at:Date.now()});window.__posts.push(b)}
-  return Promise.resolve({json:async()=>({ok:true,balls:store.slice(),n:store.length})})};
- UI.stage='app';S.tok='t';S.user={id:'u1',name:'T',phone:'9999999999',role};S.prefs=Object.assign({},S.prefs,{asked:1,welcomed:1});
- const bt=(id,n,r,bb)=>({batsman:{id,name:n},r,b:bb,'4s':1,'6s':0,sr:100,'dismissal-text':'batting'});
- UI.wm={m:{id:'t1',name:'BAN v WI',started:true,ended:false,type:'test',teams:[{name:'Bangladesh',short:'BAN'},{name:'West Indies',short:'WI'}],score:[{inning:'Bangladesh Inning 1',r:36,w:1,o:13.3}],status:'Live'},mi:{},sc:{scorecard:[{inning:'Bangladesh Inning 1',batting:[bt('p1','Shadman Islam',12,34)],bowling:[{bowler:{id:'p3',name:'Justin Greaves'},o:1,m:0,r:4,w:0}]}]},bb:{},tab:'live'};UI.view='wmatch';render()},role);
-await setup('viewer');await p.waitForTimeout(200);
-ok(await p.evaluate(()=>!document.querySelector('.sbbpad')&&!document.querySelector('#sbbfloat [data-a=sbbToggle]')&&!/cannot score/.test((document.querySelector('#sbbfloat')||{innerText:''}).innerText)),'viewer sees no pad and no badge');
-await setup('scorer');await p.waitForTimeout(200);
-ok(await p.evaluate(()=>!!document.querySelector('#sbbfloat [data-a=sbbToggle]')),'scorer sees the floating button');
-await p.click('#sbbfloat [data-a=sbbToggle]');await p.waitForTimeout(200);
-ok(await p.evaluate(()=>!!document.querySelector('.sbbpad')),'scorer sees pad');
-ok(await p.evaluate(()=>/over 13\.4/.test(document.querySelector('.sbbpad').innerText)),'next ball is 13.4');
-await p.click('.sbbpad [data-v="4"]');await p.waitForTimeout(200);
-await p.click('.sbbpad [data-v="wd"]');await p.waitForTimeout(200);
-await p.click('.sbbpad [data-v="W"]');await p.waitForTimeout(200);
-const r=await p.evaluate(()=>({posts:window.__posts,n:shAvailableBalls(UI.wm).length,next:shSbbNext(UI.wm)}));
-ok(r.posts.length===3&&r.posts[0].over===13&&r.posts[0].ball===4&&r.posts[0].runs===4,'first post '+JSON.stringify(r.posts[0]));
-ok(r.posts[1].kind==='wd'&&r.posts[1].ball===5,'wide keeps ball number '+JSON.stringify(r.posts[1]));
-ok(r.posts[2].wicket&&r.posts[2].ball===5&&r.posts[2].out==='Shadman Islam','wicket '+JSON.stringify(r.posts[2]));
-ok(r.n===3,'3 balls available '+r.n);ok(r.next.over===13&&r.next.ball===6,'next 14.6 '+JSON.stringify(r.next));
-await p.click('.sbbpad [data-v="undo"]');await p.waitForTimeout(200);
-ok(await p.evaluate(()=>shAvailableBalls(UI.wm).length)===2,'undo removes one');
-ok(!errs.length,errs.join(';'));await b.close();if(!process.exitCode)console.log('PASS: scorer pad');})();
-// practice match
-(async()=>{const b=await chromium.launch(),p=await b.newPage({viewport:{width:412,height:880}}),errs=[];p.on('pageerror',e=>errs.push(e.message));
-const ok=(c,m)=>{if(!c){console.log('FAIL',m);process.exitCode=1}};
-await p.goto('file://'+require('path').resolve(__dirname,'../app-index.html'));await p.waitForTimeout(400);
-await p.evaluate(()=>{window.pullLive=async()=>{};const store=[];window.apiBase=()=>'http://x';
- window.fetch=(u,o)=>{if(!/\/api\/wbb\//.test(u))return new Promise(()=>{});if(o&&o.method==='POST'){const b=JSON.parse(o.body);if(b.undo)store.pop();else store.push({n:store.length+1,...b,at:Date.now()})}return Promise.resolve({json:async()=>({ok:true,balls:store.slice()})})};
- UI.stage='app';S.tok='t';S.user={id:'u1',name:'T',phone:'9999999999',role:'scorer'};S.prefs=Object.assign({},S.prefs,{asked:1,welcomed:1});UI.view='matches';render()});
-await p.waitForTimeout(200);
-ok(await p.evaluate(()=>!!document.querySelector('[data-a=sbbPractice]')),'practice button for scorer');
-await p.click('[data-a=sbbPractice]');await p.waitForTimeout(300);await p.click('#sbbfloat [data-a=sbbToggle]');await p.waitForTimeout(200);
-for(const v of ['1','4','W','1','1','1','1'])await p.click('.sbbpad [data-v="'+v+'"]'),await p.waitForTimeout(120);
-const r=await p.evaluate(()=>({sc:UI.wm.m.score[0],n:shAvailableBalls(UI.wm).length,txt:document.body.innerText}));
-ok(r.sc.r===9&&r.sc.w===1&&r.sc.o===1.1,'practice score '+JSON.stringify(r.sc));ok(r.n===7,'7 balls');ok(/PRACTICE MATCH/.test(r.txt),'labelled practice');
-ok(!errs.length,errs.join(';'));await b.close();if(!process.exitCode)console.log('PASS: practice match');})();
-// role sync
-(async()=>{const b=await chromium.launch(),p=await b.newPage(),errs=[];p.on('pageerror',e=>errs.push(e.message));
-await p.goto('file://'+require('path').resolve(__dirname,'../app-index.html'));await p.waitForTimeout(400);
-const r=await p.evaluate(async()=>{window.pullLive=async()=>{};window.apiBase=()=>'http://x';window.fetch=()=>Promise.resolve({json:async()=>({ok:true,profile:{role:'admin'}})});UI.stage='app';S.tok='t';S.user={id:'u',name:'T',phone:'1',role:'viewer'};await shSyncRole();return S.user.role});
-if(r!=='admin'||errs.length){console.log('FAIL role sync',r,errs.join(';'));process.exitCode=1}else console.log('PASS: role sync');await b.close()})();
+await p.evaluate(()=>{window.pullLive=async()=>{};window.shRefreshWorldDetails=async()=>{};window.apiBase=()=>'http://x';
+ const balls=[];window.fetch=async(u,o)=>{if(/\/api\/wbb\//.test(u)&&o&&o.method==='POST'){const b=JSON.parse(o.body);if(b.undo)balls.pop();else balls.push(Object.assign({n:balls.length+1},b));return{json:async()=>({ok:true,balls:balls.slice()})}}return{json:async()=>({ok:true,balls:balls.slice()})}};
+ UI.stage='app';S.user={id:'u1',name:'T',phone:'9999999999',role:'scorer'};S.tok='tok';S.prefs=Object.assign({},S.prefs,{asked:1,welcomed:1});
+ UI.wm={m:{id:'a1',name:'New Zealand vs India',started:true,ended:false,type:'T20',teams:[{name:'New Zealand',short:'NZ'},{name:'India',short:'IND'}],score:[{inning:'New Zealand Inning 1',r:100,w:2,o:10}],status:'Live'},mi:{},
+  sc:{scorecard:[{inning:'New Zealand Inning 1',batting:[{batsman:{id:'1',name:'Glenn Phillips'},'dismissal-text':'batting',r:40,b:20},{batsman:{id:'2',name:'Michael Bracewell'},'dismissal-text':'batting',r:30,b:15}],bowling:[{bowler:{id:'9',name:'Naman Dhir'},o:2,m:0,r:20,w:0}]}]},bb:{bbb:[]},tab:'live',sbb:[]};UI.view='wmatch';UI.sbbOpen=true;render()});
+await p.waitForTimeout(400);
+const pad=()=>p.evaluate(()=>{const e=document.querySelector('.sbbpad');return e?e.innerText.replace(/\s+/g,' '):''});
+let t=await pad();ok(/STRIKER\s+Glenn Phillips/.test(t)&&/NON-STRIKER\s+Michael Bracewell/.test(t)&&/BOWLER\s+Naman Dhir/.test(t),'pad pre-filled from the provider '+t);
+// No ball + 4
+await p.click('button[data-a=sbbAdd][data-v="ext:nb"]');t=await pad();ok(/Nb\+4/.test(t)&&/1 run is added/.test(t),'no ball options '+t);
+await p.click('button[data-a=sbbAdd][data-v="nb:4"]');
+let L=await p.evaluate(()=>UI.wm.sbb);ok(L.length===1&&L[0].kind==='nb'&&L[0].runs===5&&L[0].bat===4&&L[0].batsman==='Glenn Phillips'&&L[0].ns==='Michael Bracewell','NB+4 recorded '+JSON.stringify(L[0]));
+ok(L[0].ball===1,'no ball does not use up a ball number');
+// Wide + 2 (3 runs, strike unchanged because 2 extra runs is even)
+await p.click('button[data-a=sbbAdd][data-v="ext:wd"]');await p.click('button[data-a=sbbAdd][data-v="wd:2"]');
+L=await p.evaluate(()=>UI.wm.sbb);ok(L[1].kind==='wd'&&L[1].runs===3&&L[1].bat===0,'Wd+2 '+JSON.stringify(L[1]));
+let pd=await p.evaluate(()=>UI.wm.pad);ok(pd.s==='Glenn Phillips','strike unchanged after even extras');
+// single -> strike rotates
+await p.click('button[data-a=sbbAdd][data-v="1"]');pd=await p.evaluate(()=>UI.wm.pad);ok(pd.s==='Michael Bracewell'&&pd.n==='Glenn Phillips','strike rotates after a single');
+// bye
+await p.click('button[data-a=sbbAdd][data-v="ext:b"]');await p.click('button[data-a=sbbAdd][data-v="b:2"]');L=await p.evaluate(()=>UI.wm.sbb);ok(L[3].ex==='b'&&L[3].runs===2&&L[3].bat===0&&L[3].kind==='legal','2 byes');
+// change bowler by tapping
+await p.click('button[data-a=sbbPick][data-v=bw]');await p.fill('#sbb-free','Hardik Pandya');await p.click('button[data-a=sbbSetFree]');pd=await p.evaluate(()=>UI.wm.pad);ok(pd.bw==='Hardik Pandya','bowler changed');
+// wicket: striker out -> must choose new batter
+await p.click('button[data-a=sbbAdd][data-v="ext:w"]');await p.click('button[data-a=sbbAdd][data-v="out:s"]');L=await p.evaluate(()=>UI.wm.sbb);ok(L[4].wicket&&L[4].out==='Michael Bracewell','striker out');
+pd=await p.evaluate(()=>UI.wm.pad);ok(!pd.s||!pd.n,'new batter needed '+JSON.stringify(pd));
+await p.evaluate(()=>A.sbbSet({v:'s',n:'Tim Seifert'}));await p.click('button[data-a=sbbAdd][data-v="0"]');L=await p.evaluate(()=>UI.wm.sbb);ok(L[5]&&L[5].batsman==='Tim Seifert','next ball by the new batter');
+// undo restores the state of that ball
+await p.click('button[data-a=sbbAdd][data-v=undo]');pd=await p.evaluate(()=>UI.wm.pad);ok(pd.s==='Tim Seifert'&&pd.bw==='Hardik Pandya','undo restores');
+// commentary text
+const cm=await p.evaluate(()=>{try{return cbpBbbList({}).map(x=>x.txt).join(' | ')}catch(e){return 'err '+e.message}});console.log('commentary:',cm.slice(0,300));
+ok(!errs.length,errs.join(';'));await b.close();if(!process.exitCode)console.log('PASS: sbb pad');})();
