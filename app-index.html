@@ -10370,8 +10370,25 @@ try{if(S.settings&&S.settings.mskin==='ca'){S.settings.mskin='cb';try{save()}cat
 /* live logo preview + short-name placeholder while typing the team name */
 document.addEventListener('input',e=>{const el=e.target;if(!el||!/^qt-n-[ab]$/.test(el.id||''))return;const sl=el.id.slice(-1),card=el.closest('.qt');if(!card)return;
  const n=el.value.replace(/\s+/g,' ').trim(),code=(typeof shTeamCode==='function'?String(shTeamCode(n||'T','')):(n||'T').slice(0,3)).toUpperCase().slice(0,4)||'T',d=(UI.qt&&UI.qt[sl])||{preset:0,color:'#2563eb'};
- const lg=card.querySelector('.qt-logo');if(lg&&!d.logo)lg.innerHTML=crest(d.preset||0,(document.getElementById('qt-c-'+sl)||{}).value||d.color||'#2563eb',code,44);
+ const lg=card.querySelector('.qt-logo');if(lg&&!d.logo&&!(window.shLogoFor&&window.shLogoFor(n)))lg.innerHTML=crest(d.preset||0,(document.getElementById('qt-c-'+sl)||{}).value||d.color||'#2563eb',code,44);
  const col=(document.getElementById('qt-c-'+sl)||{}).value||d.color||'#2563eb';card.querySelectorAll('.qt-styles button[data-v]').forEach(bt=>{bt.innerHTML=crest(+bt.dataset.v,col,code,26)});const sn=document.getElementById('qt-s-'+sl);if(sn)sn.placeholder=code});
+
+/* ---------------- 68 TEAM LOGO LIBRARY: typed team name -> ready logo (public/logos/index.json) ---------------- */
+{
+ window.SH_LOGOS=window.SH_LOGOS||[];
+ const nk=x=>String(x||'').toLowerCase().replace(/[’']/g,'').replace(/[^a-z0-9]+/g,' ').trim();
+ let LB='';
+ const find=n=>{n=nk(n);if(n.length<2)return '';for(const L of window.SH_LOGOS){if((L.names||[]).some(a=>nk(a)===n))return LB+'/logos/'+L.file}return ''};
+ window.shLogoFor=find;
+ const e0=embOf;
+ embOf=function(t){const n=t&&(t.name||t.teamName);const f=n&&find(n);return f||e0(t)};
+ const get=o=>fetch(o+'/logos/index.json').then(r=>r.json()).then(j=>{if(!j||!Array.isArray(j.logos))throw 0;LB=o;window.SH_LOGOS=j.logos;try{render()}catch(e){}});
+ const load=()=>{const ab=(typeof apiBase==='function'&&apiBase())||'';(/^https?:/.test(location.protocol)?get(''):Promise.reject()).catch(()=>ab?get(ab):0).catch(()=>{})};
+ load();
+ /* live preview while typing the team name */
+ document.addEventListener('input',e=>{const el=e.target;if(!el||!/^qt-n-[ab]$/.test(el.id||''))return;const card=el.closest('.qt'),lg=card&&card.querySelector('.qt-logo');if(!lg)return;
+  const f=find(el.value);if(f)lg.innerHTML='<img class="logo" src="'+f+'" width="44" height="44" alt="" style="object-fit:contain;border-radius:0;background:none">'},true);
+}
 </script>
 </body>
 </html>

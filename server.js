@@ -1635,6 +1635,8 @@ http.createServer(async (req, res) => {
   }
   const STATIC = { '/manifest.webmanifest': 'application/manifest+json', '/sw.js': 'application/javascript', '/icon-192.png': 'image/png', '/icon-512.png': 'image/png', '/icon-maskable.png': 'image/png', '/apple-touch-icon.png': 'image/png' };
   const em = /^\/emblems\/[a-z-]+\.webp$/.exec(path);
+  const lg = /^\/logos\/[a-z0-9._-]+\.(webp|png|jpg|jpeg|svg|json)$/i.exec(path);
+  if (req.method === 'GET' && lg) { try { const f = fs.readFileSync(new URL('./public' + path, import.meta.url)); const x = lg[1].toLowerCase(); res.writeHead(200, { 'content-type': x === 'json' ? 'application/json' : x === 'svg' ? 'image/svg+xml' : x === 'jpg' ? 'image/jpeg' : 'image/' + x, 'cache-control': x === 'json' ? 'no-cache' : 'public, max-age=86400', 'access-control-allow-origin': '*' }); return res.end(f); } catch { /* fall through */ } }
   if (req.method === 'GET' && em) { try { const f = fs.readFileSync(new URL('./public' + path, import.meta.url)); res.writeHead(200, { 'content-type': 'image/webp', 'cache-control': 'public, max-age=604800' }); return res.end(f); } catch { /* fall through */ } }
   if (req.method === 'GET' && STATIC[path]) {   // installable-app files (PWA)
     try { const f = fs.readFileSync(new URL('./public' + path, import.meta.url)); res.writeHead(200, { 'content-type': STATIC[path], 'cache-control': path === '/sw.js' ? 'no-cache' : 'public, max-age=86400' }); return res.end(f); } catch { /* fall through */ }

@@ -1,0 +1,4 @@
+{
+  "note": "Team logo library. Add a file in public/logos and one entry here: file + names (lowercase aliases). Typing any of these names in Start match shows this logo automatically.",
+  "logos": []
+}

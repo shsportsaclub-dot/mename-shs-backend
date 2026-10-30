@@ -1,0 +1,14 @@
+const {chromium}=require('playwright');
+(async()=>{const b=await chromium.launch(),p=await b.newPage({viewport:{width:412,height:900}}),errs=[];p.on('pageerror',e=>errs.push(e.message));
+const ok=(c,m)=>{if(!c){console.log('FAIL',m);process.exitCode=1}};
+await p.goto(process.env.URL||'http://localhost:8791/');await p.waitForTimeout(600);
+await p.evaluate(()=>{UI.stage='app';S.user={id:'u1',name:'T',phone:'9999999999',role:'admin'};S.tok='tok';S.prefs=Object.assign({},S.prefs,{asked:1,welcomed:1});S.teams=[];S.players=[];UI.view='home';render();A.newMatch()});
+await p.waitForTimeout(500);
+ok(await p.evaluate(()=>window.SH_LOGOS.length>0),'library loaded');
+await p.fill('#qt-n-a','Hyderabad  Strikers');await p.waitForTimeout(200);
+ok(await p.evaluate(()=>/logos\/sample-test/.test((document.querySelector('#qt-n-a').closest('.qt').querySelector('.qt-logo img')||{}).src||'')),'preview shows library logo');
+await p.click('button[data-a=qtCreate][data-s=a]');await p.waitForTimeout(300);
+ok(await p.evaluate(()=>S.teams.length===1&&!S.teams[0].logo&&/logos\/sample-test/.test(logo(S.teams[0],40))),'team uses library logo');
+await p.fill('#qt-n-b','Other Team');await p.waitForTimeout(100);
+ok(await p.evaluate(()=>!/logos\//.test(document.querySelector('#qt-n-b').closest('.qt').querySelector('.qt-logo').innerHTML)),'unmatched keeps crest');
+ok(!errs.length,errs.join(';'));await b.close();if(!process.exitCode)console.log('PASS: logo library');})();
