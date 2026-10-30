@@ -380,7 +380,7 @@ function calc(m,i){
   if(!inn)return o;
   const gb=id=>o.bat[id]||(o.bat[id]={r:0,b:0,f4:0,f6:0,out:'',outw:''});
   const gw=id=>o.bowl[id]||(o.bowl[id]={b:0,r:0,w:0,m:0,wd:0,nb:0});
-  const applyDis=d=>{const O=gb(d.id);O.out=d.w==='Timed out'?'timed out':'retired out';O.outw=d.w;o.wk++;o.fow.push({r:o.runs,w:o.wk,id:d.id,ov:fmtOv(o.lg)});o.part={r:0,b:0}};
+  const applyDis=d=>{const O=gb(d.id);O.out=d.w==='Timed out'?'timed out':/^Run out/.test(d.w)?'run out'+(d.by&&typeof nm==='function'?' ('+nm(d.by)+')':''):'retired out';O.outw=d.w;o.wk++;o.fow.push({r:o.runs,w:o.wk,id:d.id,ov:fmtOv(o.lg)});o.part={r:0,b:0}};
   (inn.dis||[]).filter(d=>d.t<0).forEach(applyDis);
   inn.ev.forEach((e,idx)=>{
     const pen=e.x==='wd'?1:e.x==='nb'?NBP:0,tot=e.r+pen,legal=!pen,ov=Math.floor(o.lg/BPO);
@@ -959,6 +959,7 @@ function wicketModal(m){
   const c=m.innings[m.cur].cur;
   return `<h3>Wicket</h3><form data-f="wicket"><label>How out<select name="w">${opt(['Bowled','Caught','LBW','Run out','Stumped','Hit wicket','Obstructing the field','Hit the ball twice'].map(x=>[x,x]),'Caught')}</select></label><div class="mu sm" style="margin:-4px 0 6px">Run out, Obstructing the field (includes handling the ball) and Hit the ball twice give the bowler no credit. Obstructing: if it stopped a catch, enter 0 completed runs (Law 37.5.2).</div>
   <label>Batter out<select name="out">${opt([[c.s,nm(c.s)+' (striker)'],[c.n,nm(c.n)+' (non-striker)']],c.s)}</select></label>
+  <label class="ck"><input type="checkbox" name="pre"> Non-striker run out before the ball was bowled (Law 38.3): the ball does not count in the over, no runs, no bowler credit</label>
   <label>Fielder (catch, run out, stumping)<input name="fld" placeholder="Optional"></label><label>Runs completed before the wicket<select name="r">${opt([0,1,2,3].map(x=>[String(x),String(x)]),'0')}</select></label>
   <button class="btn red wide">Confirm wicket</button></form>`}
 function toast(t,ms){const el=document.getElementById('toast'),d=document.createElement('div');d.textContent=t;el.appendChild(d);setTimeout(()=>d.remove(),ms||2400)}
@@ -7030,6 +7031,7 @@ render=(o=>function(){try{ar17Norm(UI.wm)}catch(e){}return o.apply(this,argument
   <label>Fielder (optional)<select name="fld"><option value="">Select fielder</option>${xi.map(id=>`<option value="${esc(nm(id))}">${esc(nm(id))}</option>`).join('')}</select></label>
   <label>Runs completed before the wicket<select name="r">${opt([0,1,2,3].map(x=>[String(x),String(x)]),'0')}</select></label>
   <div class="mu sm">Run out, Obstructing the field and Hit the ball twice give the bowler no credit.</div>
+  <label class="ck"><input type="checkbox" name="pre"> Non-striker run out before the ball was bowled (Law 38.3): ball not counted, no runs</label>
   <div class="row"><button type="button" class="btn ghost" style="flex:1" data-a="closeModal">Cancel</button><button class="btn red" style="flex:1">Save wicket</button></div></form>`};
  A.wkType=d=>{document.getElementById('wk-w').value=d.v;document.querySelectorAll('.sc2-wt button').forEach(b=>b.classList.toggle('on',b.dataset.v===d.v))};
  if(!A.closeModal)A.closeModal=()=>{UI.modal=null;renderModal()};
@@ -10733,6 +10735,16 @@ document.addEventListener('input',e=>{const el=e.target;if(!el||!/^qt-n-[ab]$/.t
   const r=await call('POST','/api/tours/join',{tid:j.id,name:v('tj-n'),short:v('tj-s'),city:v('tj-c'),note:v('tj-o')});if(!r.ok)return toast(r.error||'Could not send',4000);j.msg='Request sent. The organiser will approve or reject it.';toast('Request sent');open(j.id)};
  const tid=new URLSearchParams(location.search).get('tour');
  if(tid){let done=0;const f0=render;render=function(){if(!done&&S.user&&UI.stage==='app'){done=1;setTimeout(()=>open(tid),200)}return f0.apply(this,arguments)}}
+}
+
+/* ---------------- 77 LAW 38.3: non-striker run out by the bowler before delivery (no ball counted, no runs, no bowler credit) ---------------- */
+{
+ const f0=F.wicket;
+ F.wicket=function(fd){
+  if(fd.get('pre')){const m=scM(),inn=m&&m.innings[m.cur],c=inn&&inn.cur;if(!m||!inn||m.status!=='live')return f0.apply(this,arguments);
+   if(fd.get('w')!=='Run out'||!c.n||fd.get('out')!==c.n){toast('Law 38.3 applies to a Run out of the non-striker. Choose Run out and the non-striker.',4500);return}
+   const id=c.n,bl=c.bl;disAdd(m,id,'Run out (non-striker, before delivery)');const d=inn.dis[inn.dis.length-1];d.by=bl;c.n=null;UI.modal=null;commit();toast(nm(id)+' run out at the non-striker\'s end. Ball not counted; no credit to the bowler (Law 38.3).',4500);return}
+  return f0.apply(this,arguments)};
 }
 </script>
 </body>
