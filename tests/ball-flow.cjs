@@ -33,7 +33,7 @@ ok(!/square leg/i.test(l2)&&/FOUR/.test(l2)&&l2.length<60,'simple line');
 await p.evaluate(()=>{S.settings.cmode='pro';S.settings.cstyle='energy'});
 console.log('energy:',await p.evaluate(()=>{const m=S.matches.find(x=>x.id===UI.sid);return commentary(m,m.cur).find(c=>c.t==='b').txt}));
 // dot ball with place only
-await p.evaluate(()=>{render()});await p.waitForTimeout(200);
+await p.evaluate(()=>{const b=document.querySelector('.sh-scorer-console .pick button');if(b)b.click()});await p.waitForTimeout(300);
 const bx=await p.evaluate(()=>{const r=document.getElementById('wag').getBoundingClientRect();return {x:r.x,y:r.y,w:r.width,h:r.height}});
 await p.mouse.click(bx.x+bx.w*0.8,bx.y+bx.h*0.5);await p.waitForTimeout(200);await p.click('.sh-scorer-console .runs button:nth-child(1)');await p.waitForTimeout(300);
 ok(await p.evaluate(()=>{const m=S.matches.find(x=>x.id===UI.sid);const e=m.innings[m.cur].ev.at(-1);return e.r===0&&!!e.zone}),'dot ball keeps its place');

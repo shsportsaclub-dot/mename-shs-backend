@@ -10656,6 +10656,15 @@ document.addEventListener('input',e=>{const el=e.target;if(!el||!/^qt-n-[ab]$/.t
  const cm1=commentary;commentary=function(m,i){const L=cm1.apply(this,arguments),lg=vlang();if(!PK[lg])return L;
   try{const inn=m.innings[i],bs=L.filter(c=>c.t==='b');inn.ev.slice().reverse().forEach((e,j)=>{if(bs[j])bs[j].txt=cLine(e,lg)})}catch(x){}return L};
 }
+
+/* ---------------- 74 SKY HIGH HOME: same top menu as Light (Live Scores, Schedule, Archives, News, Series, Teams, Videos, Rankings, ePaper, Social, Market) ---------------- */
+{
+ const NAV=[['home','Live Scores'],['matches','Schedule'],['reports','Archives'],['news','News'],['tours','Series'],['teams','Teams'],['reels','Videos'],['players','Rankings'],['epaper','ePaper'],['social','Social'],['market','Market']];
+ const h0=vHome;
+ vHome=function(){const o=h0.apply(this,arguments);if(typeof o!=='string'||window.shTheme()==='mday')return o;
+  return `<div class="cbnav shnav">${NAV.map(([k,l])=>`<button class="${k==='home'?'on':''}" data-a="${k==='news'?'cbNews':'go'}" data-v="${k}">${l}</button>`).join('')}</div>`+o};
+ const st=document.createElement('style');st.textContent='.shnav{margin:0 0 10px!important;border-radius:12px;background:linear-gradient(90deg,#0a1f5c,#6a1b54 60%,#e11d2e)!important}.shnav button{color:#fff!important}.shnav button.on{box-shadow:inset 0 -3px 0 #ffc83d}';document.head.appendChild(st);
+}
 </script>
 </body>
 </html>
