@@ -1116,7 +1116,7 @@ function vAuth(){
   return `<div class="auth"><div class="hero"><h2>Play. Score. Rise.</h2><div>Your sports career, tracked from academy to pro.</div></div>
   <div class="seg"><button class="${tab==='login'?'on':''}" data-a="authTab" data-v="login">Login</button><button class="${tab==='register'?'on':''}" data-a="authTab" data-v="register">Register</button></div><div class="card">`+
   (tab==='login'?`<form data-f="login"><label>Mobile number<input name="phone" inputmode="tel" required pattern="[0-9+ ()\-]{6,20}" placeholder="+91 98765 43210" value="${esc(L.phone||'')}"></label><button class="btn wide">Send OTP</button></form>`
-  :`<form data-f="register"><label>Nickname (public)<input name="nick" required minlength="3" maxlength="20" pattern="[A-Za-z0-9_.]+" title="Letters, numbers, dot and underscore" placeholder="Rohit_45"></label>
+  :`<form data-f="register"><label>Nickname (public)<input name="nick" required minlength="3" maxlength="20" title="Letters, numbers, spaces, dot, dash and underscore" placeholder="Rohit Sharma"></label>
   <label>Mobile number (private)<input name="phone" inputmode="tel" required pattern="[0-9+ ()\-]{6,20}" placeholder="+91 98765 43210" value="${esc(L.phone||'')}"></label>
   <label>Email (optional, private)<input type="email" name="email" placeholder="name@email.com"></label><div class="mu sm" style="margin:-4px 0 8px">Not needed to join. Add it if you want to connect social media later for posting posters.</div>
   <div class="row"><label style="flex:1">Date of birth<input type="date" name="dob" min="1930-01-01" max="${new Date(Date.now()-5*365.25*864e5).toISOString().slice(0,10)}" required></label><label style="flex:1">City<input name="loc" required></label></div>
@@ -1318,7 +1318,7 @@ Object.assign(F,{
   login(fd){const ph=digits(fd.get('phone')),u=S.users.find(x=>x.phone===ph);
     if(!u){UI.authTab='register';UI.login={step:1,phone:fd.get('phone')};render();return toast('No account for this number. Please register.',3200)}
     startOtp({mode:'login',phone:fd.get('phone'),uid:u.id})},
-  register(fd){const nick=fd.get('nick').trim(),ph=digits(fd.get('phone'));
+  register(fd){const nick=fd.get('nick').replace(/\s+/g,' ').trim(),ph=digits(fd.get('phone'));
     if(S.users.some(x=>x.nick.toLowerCase()===nick.toLowerCase()))return toast('That nickname is taken');
     if(S.users.some(x=>x.phone===ph))return toast('This mobile number is already registered. Please login.',3200);
     const pend={mode:'reg',phone:fd.get('phone'),data:{nick,email:fd.get('email').trim(),age:+fd.get('age'),loc:fd.get('loc').trim(),kind:fd.get('kind')}};
@@ -1692,7 +1692,7 @@ function enter(u){
   <div class="seg"><button class="${tab==='login'?'on':''}" data-a="authTab" data-v="login">Login</button><button class="${tab==='register'?'on':''}" data-a="authTab" data-v="register">Register</button></div><div class="card">`+
   (tab==='login'?`<form data-f="login"><label>Mobile number<input name="phone" inputmode="tel" required pattern="[0-9+ ()\-]{6,20}" placeholder="+91 98765 43210" value="${esc(L.phone||'')}" autocomplete="username"></label>
    <label>PIN<input name="pin" type="password" inputmode="numeric" required pattern="[0-9]{4,6}" maxlength="6" placeholder="4 to 6 digits" autocomplete="current-password"></label><button class="btn wide">Login</button></form><p class="mu sm" style="margin-top:10px">Forgot your PIN? Ask your organiser to reset it.</p>`
-  :`<form data-f="register"><label>Nickname (public)<input name="nick" required minlength="3" maxlength="20" pattern="[A-Za-z0-9_.]+" title="Letters, numbers, dot and underscore" placeholder="Rohit_45"></label>
+  :`<form data-f="register"><label>Nickname (public)<input name="nick" required minlength="3" maxlength="20" title="Letters, numbers, spaces, dot, dash and underscore" placeholder="Rohit Sharma"></label>
    <label>Mobile number (private)<input name="phone" inputmode="tel" required pattern="[0-9+ ()\-]{6,20}" placeholder="+91 98765 43210" value="${esc(L.phone||'')}" autocomplete="username"></label>
    <label>Email (optional, private)<input type="email" name="email" placeholder="name@email.com"></label><div class="mu sm" style="margin:-4px 0 8px">Not needed to join. Add it if you want to connect social media later for posting posters.</div>
    <div class="row"><label style="flex:1">Date of birth<input type="date" name="dob" min="1930-01-01" max="${new Date(Date.now()-5*365.25*864e5).toISOString().slice(0,10)}" required></label><label style="flex:1">City<input name="loc" required></label></div>
@@ -1714,7 +1714,7 @@ Object.assign(F,{
     enter(u)},
   async register(fd){
     if(!pinMode())return r0(fd);
-    const phone=fd.get('phone'),pin=String(fd.get('pin')||''),nick=fd.get('nick').trim();
+    const phone=fd.get('phone'),pin=String(fd.get('pin')||''),nick=fd.get('nick').replace(/\s+/g,' ').trim();
     if(!pinOk(pin))return toast('PIN must be 4 to 6 digits');
     if(pin!==String(fd.get('pin2')||''))return toast('The two PINs do not match');
     const prof={nick,email:fd.get('email').trim(),age:+fd.get('age'),loc:fd.get('loc').trim(),kind:fd.get('kind')};
