@@ -1,0 +1,26 @@
+const {chromium}=require('playwright');
+(async()=>{const b=await chromium.launch(),errs=[];const ok=(c,m)=>{if(!c){console.log('FAIL',m);process.exitCode=1}};const posts=[];
+const file='file://'+require('path').resolve(__dirname,'../app-index.html');
+const mk=async(url)=>{const ctx=await b.newContext({viewport:{width:390,height:800}}),p=await ctx.newPage();p.on('pageerror',e=>{if(!/writeText/.test(e.message))errs.push(e.message)});
+ await p.route('**/api/pay/**',async r=>{const u=r.request().url(),m=r.request().method();let j={ok:true};
+  if(/pay\/mine/.test(u))j={ok:true,items:[{id:'py1',title:'Summer Cup fee',amount:50000,upi:'org@okbank',open:true,confirmed:0,subs:[{id:'s1',byName:'Ravi',utr:'123456789012',status:'submitted'}]}]};
+  else if(/pay\/charge/.test(u)&&m==='GET')j={ok:true,charge:{id:'py1',title:'Summer Cup fee',amount:50000,payee:'Org Club',upi:'org@okbank',open:true,mine:[]}};
+  else if(m==='POST')posts.push([u,r.request().postData()]);
+  await r.fulfill({json:j})});
+ await p.goto(url);await p.waitForTimeout(500);return p};
+let p=await mk(file);
+let r=await p.evaluate(async()=>{UI.stage='app';S.user={name:'Org',role:'viewer'};S.tok='t';S.prefs={...S.prefs,asked:1,welcomed:1};window.apiBase=()=>'http://x';UI.view='collect';render();await new Promise(r=>setTimeout(r,600));
+ const t=document.body.innerText,o={};o.page=/Collect payments/.test(t)&&/Nothing is confirmed automatically/.test(t);o.row=/Summer Cup fee/.test(t)&&/₹500/.test(t)&&/Waiting for confirmation/.test(t);
+ await A.pyNo({id:'py1',s:'s1'});o.needReason=true;document.getElementById('py-why').value='Not in bank';await A.pyNo({id:'py1',s:'s1'});await A.pyYes({id:'py1',s:'s1'});
+ document.getElementById('py-t').value='Fee';document.getElementById('py-a').value='250.50';document.getElementById('py-u').value='me@upi';await A.pyMake();
+ o.fit=document.documentElement.scrollWidth<=innerWidth;return o});
+console.log(JSON.stringify(r));for(const k of Object.keys(r))ok(r[k],k);
+ok(posts.filter(x=>/decide/.test(x[0])).length===2&&posts.some(x=>/rejected/.test(x[1])&&/Not in bank/.test(x[1]))&&posts.some(x=>/confirmed/.test(x[1])),'decide posts');
+ok(posts.some(x=>/pay\/charge/.test(x[0])&&/"amount":25050/.test(x[1])),'paise amount');
+posts.length=0;
+p=await mk(file+'?pay=py1');
+r=await p.evaluate(async()=>{UI.stage='app';S.user={name:'Payer',role:'viewer'};S.tok='t';S.prefs={...S.prefs,asked:1,welcomed:1};window.apiBase=()=>'http://x';S.players=[];render();await new Promise(r=>setTimeout(r,1500));
+ const t=document.body.innerText,o={};o.view=UI.view==='pay'&&/Summer Cup fee/.test(t)&&/₹500/.test(t)&&/Org Club/.test(t);o.link=!!document.querySelector('a[href^="upi://pay?pa=org%40okbank"]')&&/am=500\.00/.test(document.querySelector('a[href^="upi://"]').href);o.qr=!!document.querySelector('img[alt="UPI QR"]');
+ document.getElementById('py-utr').value='123456789012';await A.pySend();o.fit=document.documentElement.scrollWidth<=innerWidth;return o});
+console.log(JSON.stringify(r));for(const k of Object.keys(r))ok(r[k],k);ok(posts.some(x=>/pay\/submit/.test(x[0])&&/123456789012/.test(x[1])),'submit post');
+ok(!errs.length,'errors '+errs);console.log(process.exitCode?'FAILED':'PASS upi collect ui');await b.close()})()

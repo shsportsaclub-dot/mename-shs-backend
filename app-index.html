@@ -2462,7 +2462,7 @@ IC.dots='<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circl
 const MENU2=[
  ['Cricket',[['home','\u{1F3CF}','Live scores and home'],['matches','\u{1F4C5}','Matches and schedule'],['match','\u{1F4FA}','Match centre'],['score','\u{1F3AF}','Scorer'],['@newMatch','➕','Start a match'],['tours','\u{1F3C6}','Tournaments and series'],['teams','\u{1F6E1}️','Teams'],['players','\u{1F464}','Players and rankings'],['dream','\u{1F451}','Team 11'],['auction','\u{1F528}','Auction']]],
  ['Media',[['epaper','\u{1F4F0}','ePaper and news'],['reels','\u{1F3AC}','Reels'],['social','\u{1F4F8}','Social studio'],['stream','\u{1F4E1}','Stream and OBS']]],
- ['Community and business',[['market','\u{1F6D2}','Marketplace and shops'],['academy','\u{1F393}','Academy'],['book','\u{1F3DF}️','Ground bookings'],['boards','\u{1F3DB}️','Boards and leagues'],['reports','\u{1F4CA}','Reports']]],
+ ['Community and business',[['market','\u{1F6D2}','Marketplace and shops'],['academy','\u{1F393}','Academy'],['book','\u{1F3DF}️','Ground bookings'],['boards','\u{1F3DB}️','Boards and leagues'],['collect','\u{1F4B0}','Collect payments (UPI)'],['reports','\u{1F4CA}','Reports']]],
  ['Account',[['profile','\u{1F9D1}','My profile'],['settings','⚙️','Settings'],['@pimport','\u{1F4E5}','Import players'],['@lookpick','\u{1F3A8}','App look']]]];
 drawer=function(){
   if(!UI.drawer)return'';
@@ -11191,6 +11191,47 @@ document.addEventListener('input',e=>{const el=e.target;if(!el||!/^qt-n-[ab]$/.t
  Object.assign(C,{wzTsel(v){if(S.wiz){S.wiz._tsel=v;save();wzShow()}}});
 }
 Object.assign(C,{ovAd(v){S.stream.adText=String(v||'').slice(0,140);save()}});
+/* ---------------- 95 DIRECT UPI COLLECTION: the organiser's own UPI ID, QR and link; the payer submits the UTR; the organiser confirms against the bank. No gateway, no money passes through this app, nothing is auto-confirmed ---------------- */
+{
+ const base=()=>(typeof apiBase==='function'&&apiBase())||'';
+ const tok=()=>!!(S.tok&&S.user&&!S.user.guest);
+ const call=async(m,path,body)=>{try{const r=await fetch(base()+path,{method:m,headers:{'Content-Type':'application/json',Authorization:'Bearer '+(S.tok||'')},body:m==='GET'?undefined:JSON.stringify(body||{})});return await r.json()}catch(e){return {ok:false,error:'No connection'}}};
+ const Y=()=>(UI.py=UI.py||{mine:null,id:'',ch:null});
+ const val=id=>String((document.getElementById(id)||{}).value||'').trim();
+ const rs=p=>'₹'+(p/100).toLocaleString('en-IN',{minimumFractionDigits:p%100?2:0,maximumFractionDigits:2});
+ const upiUrl=c=>'upi://pay?pa='+encodeURIComponent(c.upi)+'&pn='+encodeURIComponent(c.payee||'')+'&am='+(c.amount/100).toFixed(2)+'&cu=INR&tn='+encodeURIComponent(c.title.slice(0,40))+'&tr='+encodeURIComponent(c.id);
+ const link=id=>location.origin+location.pathname+'?pay='+encodeURIComponent(id);
+ window.shPayLink=link;
+ const pill=s=>`<span class="pill ${s==='confirmed'?'ok':s==='submitted'?'':'bad'}">${({confirmed:'Paid',submitted:'Waiting for confirmation',rejected:'Rejected'})[s]||s}</span>`;
+ const qr=u=>{try{const cv=qrCanvas(u,220);return cv?`<img src="${cv.toDataURL()}" alt="UPI QR" style="width:200px;max-width:100%;background:#fff;border-radius:8px;padding:6px">`:''}catch(e){return ''}};
+ const loadMine=async()=>{const y=Y(),r=await call('GET','/api/pay/mine');y.mine=r.ok?r.items:[];render()};
+ const openPay=async id=>{const y=Y();y.id=id;y.ch=null;UI.view='pay';render();const r=await call('GET','/api/pay/charge?id='+encodeURIComponent(id));if(r.ok)y.ch=r.charge;else{y.id='';UI.view='home';render();toast(r.error||'Payment link not found',4000);return}render()};
+ window.shPayOpen=openPay;
+ XV.collect=function(){const y=Y();if(!tok())return '<div class="bar"><h2>Collect payments (UPI)</h2></div><div class="card"><div class="mu sm">Sign in to collect payments.</div></div>';if(y.mine===null){y.mine=[];setTimeout(loadMine,0)}
+  const row=c=>`<div class="card"><div class="row" style="justify-content:space-between;gap:8px"><b>${esc(c.title)}</b><b>${rs(c.amount)}</b></div><div class="mu sm">${esc(c.upi)} · ${c.confirmed} paid${c.open?'':' · closed'}</div>
+   ${(c.subs||[]).map(x=>`<div class="item" style="display:block;padding:6px 0;border-top:1px solid var(--bd)"><div class="row" style="justify-content:space-between"><span>${esc(x.byName)} <span class="mu sm">UTR ${esc(x.utr)}</span></span>${pill(x.status)}</div>${x.why?`<div class="mu sm">Reason: ${esc(x.why)}</div>`:''}${x.status==='submitted'?`<div class="row" style="gap:6px;margin-top:4px"><button type="button" class="btn sm" data-a="pyYes" data-id="${esc(c.id)}" data-s="${esc(x.id)}">Mark paid</button><button type="button" class="btn sm ghost" data-a="pyNo" data-id="${esc(c.id)}" data-s="${esc(x.id)}">Reject</button></div>`:''}</div>`).join('')}
+   <div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap"><button type="button" class="btn sm ghost" data-a="pyShare" data-id="${esc(c.id)}">Copy pay link</button><button type="button" class="btn sm ghost" data-a="pyOpen" data-id="${esc(c.id)}">Open</button><button type="button" class="btn sm ghost" data-a="pyClose" data-id="${esc(c.id)}" data-v="${c.open?0:1}">${c.open?'Close charge':'Reopen'}</button></div></div>`;
+  return `<div class="bar"><h2>Collect payments (UPI)</h2></div>
+  <div class="card"><div class="mu sm">Money goes straight to your own UPI ID. The app only shows the QR and records the UTR the payer sends. You check your bank or UPI app and press Mark paid. Nothing is confirmed automatically.</div></div>
+  <div class="card"><h3>New charge</h3><label>Title<input id="py-t" maxlength="80" placeholder="e.g. Summer Cup entry fee"></label><div class="row" style="gap:8px"><label style="flex:1">Amount (₹)<input id="py-a" inputmode="decimal" placeholder="500"></label><label style="flex:1">Your UPI ID<input id="py-u" placeholder="name@bank" autocapitalize="off" value="${esc((S.settings&&S.settings.upi)||'')}"></label></div><label>Your name on the payment<input id="py-n" maxlength="40" value="${esc((S.user&&(S.user.name||S.user.nick))||'')}"></label><button type="button" class="btn sm" style="margin-top:6px" data-a="pyMake">Create charge</button></div>
+  ${y.mine.length?`<div class="card"><label>Reason (needed to reject a payment, the payer sees it)<input id="py-why" maxlength="120"></label></div>`+y.mine.map(row).join(''):'<div class="card"><div class="mu sm">No charges yet.</div></div>'}`};
+ XV.pay=function(){const y=Y(),c=y.ch;if(!c)return '<div class="card"><div class="mu">Loading…</div></div>';const mine=c.mine||[],paid=mine.find(x=>x.status==='confirmed'),wait=mine.find(x=>x.status==='submitted'),u=upiUrl(c);
+  return `<div class="card"><h3>${esc(c.title)}</h3><div style="font-size:28px;font-weight:800;margin:4px 0">${rs(c.amount)}</div><div class="mu sm">To ${esc(c.payee)} · ${esc(c.upi)}</div>
+   ${c.open?`<div style="margin-top:8px"><a class="btn" href="${esc(u)}" style="display:inline-block;text-decoration:none">Pay with a UPI app</a></div><div class="mu sm" style="margin:8px 0 4px">Or scan this QR with any UPI app</div>${qr(u)}`:'<div class="need" style="margin-top:8px">This charge is closed.</div>'}
+   <div class="mu sm" style="margin-top:8px">Pay exactly ${rs(c.amount)}. After paying, copy the 12-digit UTR from the payment details in your UPI app and submit it below.</div></div>
+  <div class="card"><h3>Your payment</h3>${paid?`<div>${pill('confirmed')}</div>`:wait?`<div>${pill('submitted')}</div><div class="mu sm" style="margin-top:4px">The organiser will check their bank and confirm.</div>`:tok()?`<label>UTR (12 digits)<input id="py-utr" inputmode="numeric" maxlength="12" placeholder="123456789012"></label><button type="button" class="btn sm" style="margin-top:6px" data-a="pySend" ${c.open?'':'disabled'}>I have paid, submit UTR</button>`:'<div class="mu sm">Sign in to submit your UTR.</div>'}
+   ${mine.filter(x=>x.status==='rejected').map(x=>`<div class="mu sm" style="margin-top:6px">Rejected (${esc(x.utr)}): ${esc(x.why||'')}</div>`).join('')}</div>`};
+ const copy=async t=>{try{await navigator.clipboard.writeText(t);return true}catch(e){return false}};
+ const ok=(r,m)=>{if(!r.ok){toast(r.error||'Could not do that',4500);return false}if(m)toast(m);return true};
+ Object.assign(A,{async pyMake(){const a=Math.round(parseFloat(val('py-a').replace(/,/g,''))*100);if(!(a>=100))return toast('Enter the amount in rupees');if(S.settings)S.settings.upi=val('py-u');const r=await call('POST','/api/pay/charge',{title:val('py-t'),amount:a,upi:val('py-u'),payee:val('py-n'),kind:'other'});if(ok(r,'Charge created')){save();loadMine()}},
+  async pyShare(d){const l=link(d.id);toast((await copy(l))?'Pay link copied':'Link: '+l,3500)},pyOpen(d){openPay(d.id)},
+  async pyClose(d){const r=await call('POST','/api/pay/close',{id:d.id,open:d.v==='1'});if(ok(r))loadMine()},
+  async pyYes(d){const r=await call('POST','/api/pay/decide',{id:d.id,sid:d.s,status:'confirmed'});if(ok(r,'Marked paid'))loadMine()},
+  async pyNo(d){const w=val('py-why');if(w.length<3)return toast('Type a short reason in the Reason box first',4000);const r=await call('POST','/api/pay/decide',{id:d.id,sid:d.s,status:'rejected',reason:w});if(ok(r,'Rejected'))loadMine()},
+  async pySend(){const y=Y(),r=await call('POST','/api/pay/submit',{id:y.id,utr:val('py-utr')});if(ok(r,'Submitted. The organiser will confirm.',4000))openPay(y.id)}});
+ const id=new URLSearchParams(location.search).get('pay');
+ if(id){let done=0;const r0=render;render=function(){const o=r0.apply(this,arguments);if(!done&&S.user&&UI.stage==='app'){done=1;setTimeout(()=>openPay(id),300)}return o}}
+}
 </script>
 </body>
 </html>

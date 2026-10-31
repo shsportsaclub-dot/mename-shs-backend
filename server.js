@@ -1345,6 +1345,57 @@ routes['POST /api/links/decide'] = async (req, body) => {
   r.status = st; r.reason = trNm(body.reason, 120); r.decidedBy = s.phone; r.decidedAt = Date.now(); saveDb(); return [200, { ok: true }];
 };
 
+// Direct UPI collection (no gateway, no money passes through this app). The organiser creates a charge with their own UPI ID; the payer pays from any UPI app and submits the 12-digit UTR; the organiser checks it against their bank and confirms or rejects. A UTR can be used once across all charges. Amounts are whole paise. Nothing is auto-confirmed: only the organiser's confirmation counts as paid.
+const pyBag = () => (db.shared.pay = db.shared.pay || {});
+const VPA = /^[A-Za-z0-9._-]{2,64}@[A-Za-z][A-Za-z0-9.-]{1,30}$/;
+const pyPub = (c, me) => ({ id: c.id, title: c.title, amount: c.amount, payee: c.payeeName, upi: c.upi, ref: c.ref, kind: c.kind, open: c.open !== false, owner: !!(me && me === c.owner), mine: me ? (c.subs || []).filter(x => x.by === me).map(x => ({ id: x.id, utr: x.utr.replace(/.(?=.{4})/g, '*'), status: x.status, why: x.why, t: x.t })) : [], subs: me && me === c.owner ? (c.subs || []).map(x => ({ id: x.id, byName: x.byName, utr: x.utr, status: x.status, why: x.why, t: x.t, note: x.note })) : undefined, confirmed: (c.subs || []).filter(x => x.status === 'confirmed').length });
+routes['POST /api/pay/charge'] = async (req, body) => {
+  const s = grUser(req); if (!s) return [401, { ok: false, error: 'Please sign in first' }];
+  if (limited('pyc:' + s.phone, 30, 36e5)) return [429, { ok: false, error: 'Too many requests, slow down' }];
+  const title = trNm(body.title, 80), upi = String(body.upi || '').trim(), amount = Math.round(+body.amount);
+  if (title.length < 3) return [400, { ok: false, error: 'Give the charge a title' }];
+  if (!VPA.test(upi)) return [400, { ok: false, error: 'Enter a valid UPI ID, like name@bank' }];
+  if (!(amount >= 100 && amount <= 5e7)) return [400, { ok: false, error: 'Amount must be between 1 and 500000 rupees' }];
+  const c = { id: 'py' + crypto.randomBytes(5).toString('hex'), owner: s.phone, title, upi, amount, payeeName: trNm(body.payee || s.u.nick || s.u.name, 40), kind: trNm(body.kind, 20) || 'other', ref: trNm(body.ref, 40), open: true, subs: [], t: Date.now() };
+  pyBag()[c.id] = c; saveDb(); return [200, { ok: true, id: c.id }];
+};
+routes['GET /api/pay/charge'] = async (req, body) => {
+  const c = pyBag()[String(body.id || '')]; if (!c) return [404, { ok: false, error: 'Charge not found' }];
+  const s = grUser(req); return [200, { ok: true, charge: pyPub(c, s && s.phone) }];
+};
+routes['GET /api/pay/mine'] = async (req) => {
+  const s = grUser(req); if (!s) return [401, { ok: false, error: 'Please sign in first' }];
+  return [200, { ok: true, items: Object.values(pyBag()).filter(c => c.owner === s.phone).slice(-50).reverse().map(c => pyPub(c, s.phone)) }];
+};
+routes['POST /api/pay/submit'] = async (req, body) => {
+  const s = grUser(req); if (!s) return [401, { ok: false, error: 'Please sign in first' }];
+  if (limited('pys:' + s.phone, 20, 36e5)) return [429, { ok: false, error: 'Too many tries, slow down' }];
+  const c = pyBag()[String(body.id || '')]; if (!c) return [404, { ok: false, error: 'Charge not found' }];
+  if (c.open === false) return [400, { ok: false, error: 'This charge is closed' }];
+  const utr = String(body.utr || '').replace(/\s/g, '');
+  if (!/^\d{12}$/.test(utr)) return [400, { ok: false, error: 'The UTR is 12 digits. Find it in your UPI app under the payment details' }];
+  if (Object.values(pyBag()).some(x => (x.subs || []).some(y => y.utr === utr && y.status !== 'rejected'))) return [409, { ok: false, error: 'This UTR was already submitted' }];
+  if ((c.subs || []).some(x => x.by === s.phone && (x.status === 'confirmed' || x.status === 'submitted'))) return [409, { ok: false, error: 'You already paid or are waiting for confirmation' }];
+  const x = { id: 'ps' + crypto.randomBytes(4).toString('hex'), by: s.phone, byName: String(s.u.nick || s.u.name || '').slice(0, 30), utr, note: trNm(body.note, 80), status: 'submitted', why: '', t: Date.now() };
+  c.subs = (c.subs || []).concat(x); saveDb(); return [200, { ok: true, id: x.id }];
+};
+routes['POST /api/pay/decide'] = async (req, body) => {
+  const s = grUser(req); if (!s) return [401, { ok: false, error: 'Please sign in first' }];
+  const c = pyBag()[String(body.id || '')]; if (!c) return [404, { ok: false, error: 'Charge not found' }];
+  if (c.owner !== s.phone) return [403, { ok: false, error: 'Only the person collecting this payment can decide' }];
+  const x = (c.subs || []).find(y => y.id === body.sid); if (!x) return [404, { ok: false, error: 'Payment not found' }];
+  const st = body.status === 'confirmed' ? 'confirmed' : body.status === 'rejected' ? 'rejected' : ''; if (!st) return [400, { ok: false, error: 'Choose confirm or reject' }];
+  if (x.status !== 'submitted') return [400, { ok: false, error: 'Already decided' }];
+  const why = trNm(body.reason, 120); if (st === 'rejected' && why.length < 3) return [400, { ok: false, error: 'Say why you are rejecting it' }];
+  x.status = st; x.why = st === 'rejected' ? why : ''; x.decidedAt = Date.now(); saveDb(); return [200, { ok: true }];
+};
+routes['POST /api/pay/close'] = async (req, body) => {
+  const s = grUser(req); if (!s) return [401, { ok: false, error: 'Please sign in first' }];
+  const c = pyBag()[String(body.id || '')]; if (!c) return [404, { ok: false, error: 'Charge not found' }];
+  if (c.owner !== s.phone) return [403, { ok: false, error: 'Only the person collecting this payment can do this' }];
+  c.open = body.open === true; saveDb(); return [200, { ok: true }];
+};
+
 // Sessions and account closure. Tokens carry their issue time; "sign out everywhere" invalidates every older token. Closing an account stops sign-in at once; matches, tournaments and other records stay (they are never deleted); signing in again within 30 days reopens it.
 routes['POST /api/me/signout-all'] = async (req) => {
   const s = grUser(req); if (!s) return [401, { ok: false, error: 'Please sign in again' }];
