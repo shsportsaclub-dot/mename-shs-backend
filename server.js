@@ -1434,6 +1434,29 @@ routes['POST /api/push/unsubscribe'] = async (req, body) => {
   const s = grUser(req); if (!s) return [401, { ok: false, error: 'Please sign in first' }];
   const ep = String(body.endpoint || ''); s.u.push = (s.u.push || []).filter(x => x.endpoint !== ep); saveDb(); return [200, { ok: true }];
 };
+routes['POST /api/push/follow'] = async (req, body) => {
+  const s = grUser(req); if (!s) return [401, { ok: false, error: 'Please sign in first' }];
+  if (limited('pushf:' + s.phone, 120, 36e5)) return [429, { ok: false, error: 'Too many tries, slow down' }];
+  const ids = a => [...new Set((Array.isArray(a) ? a : []).map(String).filter(x => /^[\w-]{1,40}$/.test(x)))].slice(0, 100);
+  s.u.follows = { teams: ids(body.teams), matches: ids(body.matches) }; saveDb(); return [200, { ok: true, teams: s.u.follows.teams.length, matches: s.u.follows.matches.length }];
+};
+// Match alerts: when a scorer's save changes a shared match, followers of either team (or the match) hear about the start, each wicket and the result.
+const wktCount = m => (m && Array.isArray(m.innings) ? m.innings.reduce((n, i) => n + ((i && Array.isArray(i.ev)) ? i.ev.filter(e => e && e.w).length : 0), 0) : 0);
+const lastWkt = new Map();
+function matchAlerts(id, old, nw, teams, owner) {
+  if (!nw || typeof nw !== 'object') return;
+  const nm = x => String((teams && teams[x] && (teams[x].name || teams[x].short)) || 'Team').slice(0, 40), title = nm(nw.a) + ' v ' + nm(nw.b);
+  let ev = null;
+  if (nw.status === 'done' && (!old || old.status !== 'done')) ev = { k: 'done', title: 'Result: ' + title, body: String(nw.result || 'Match finished').slice(0, 140) };
+  else if (nw.status === 'live' && (!old || !['live', 'break'].includes(old.status)) && !(old && old.status === 'done')) ev = { k: 'start', title: 'Match started', body: title };
+  else if (old && nw.status === 'live' && wktCount(nw) > wktCount(old)) { if (Date.now() - (lastWkt.get(id) || 0) < 20000) return; lastWkt.set(id, Date.now()); ev = { k: 'wkt', title: 'Wicket! ' + title, body: wktCount(nw) + ' wickets have fallen in this match' }; }
+  if (!ev) return;
+  for (const [ph, u] of Object.entries(db.users)) {
+    if (ph === owner || !(u.push || []).length || !u.follows) continue;
+    if (!(u.follows.matches || []).includes(id) && !(u.follows.teams || []).some(t => t === nw.a || t === nw.b)) continue;
+    pushTo(ph, { title: ev.title, body: ev.body, url: '/?match=' + id }).catch(() => {});
+  }
+}
 routes['POST /api/push/test'] = async (req) => {
   const s = grUser(req); if (!s) return [401, { ok: false, error: 'Please sign in first' }];
   if (limited('pusht:' + s.phone, 5, 36e5)) return [429, { ok: false, error: 'Too many tests, try later' }];
@@ -2210,6 +2233,7 @@ http.createServer(async (req, res) => {
     }
     if (limited('shw:' + phone, 600, 36e5)) return out(429, { ok: false, error: 'Too many saves, slow down' });
     bag[id] = { id, owner: cur ? cur.owner : phone, ownerName: u.nick || u.name || '', updated: Date.now(), data: b.data };
+    if (col === 'matches') { try { matchAlerts(id, cur && cur.data && cur.data.m, b.data && b.data.m, b.data && b.data.teams, bag[id].owner); } catch { /* alerts never block a save */ } }
     saveDb(); sseSend({ col, id, updated: bag[id].updated }); return out(200, { ok: true, updated: bag[id].updated });
   }
   if (path.startsWith('/api/teamreq/')) {   // join requests: a signed-in person asks to join a published team; only the team owner (or an admin) reads and answers them
