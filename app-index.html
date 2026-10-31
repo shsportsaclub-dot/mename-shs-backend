@@ -11297,8 +11297,8 @@ Object.assign(C,{ovAd(v){S.stream.adText=String(v||'').slice(0,140);save()}});
  const baseKey=k=>String(k).replace(/_s\d$/,'');
  const rupees=p=>'₹'+(p/100).toLocaleString('en-IN',{maximumFractionDigits:2});
  const loadCh=async id=>{const g=G();if(g.ch[id])return;g.ch[id]={loading:true};const r=await call('GET','/api/pay/charge?id='+encodeURIComponent(id));g.ch[id]=r.ok?r.charge:{error:true};render()};
- pullStreams=async function(){if(!base())return;try{const r=await fetch(base()+'/streams',{headers:S.tok?{Authorization:'Bearer '+S.tok}:{}}),j=await r.json();if(j&&j.ok){const g=G(),o=JSON.stringify([UI.streams||{},g.gates,g.locked]);UI.streams=j.streams||{};g.gates=j.gates||{};g.locked=j.locked||[];if(o!==JSON.stringify([UI.streams,g.gates,g.locked])&&S.user&&UI.stage!=='welcome'&&!document.querySelector('video,iframe'))render()}}catch(e){}};
- const sc0=streamCard;streamCard=function(key,live){const b=baseKey(key),g=G(),gid=g.gates[b],mayGate=S.user&&(S.user.role==='admin'||S.user.role==='scorer')&&S.tok;
+ pullStreams=async function(){if(!base())return;try{const r=await fetch(base()+'/streams',{headers:S.tok?{Authorization:'Bearer '+S.tok}:{}}),j=await r.json();if(j&&j.ok){const g=G(),o=JSON.stringify([UI.streams||{},g.gates,g.locked,g.by]);UI.streams=j.streams||{};g.gates=j.gates||{};g.locked=j.locked||[];g.by=j.lockedBy||{};if(o!==JSON.stringify([UI.streams,g.gates,g.locked,g.by])&&S.user&&UI.stage!=='welcome'&&!document.querySelector('video,iframe'))render()}}catch(e){}};
+ const sc0=streamCard;streamCard=function(key,live){const b=baseKey(key),g=G(),gid=(g.by&&g.by[b])||g.gates[b],mayGate=S.user&&(S.user.role==='admin'||S.user.role==='scorer')&&S.tok;
   if(gid&&g.locked.includes(b)){const c=g.ch[gid];if(!c)setTimeout(()=>loadCh(gid),0);
    return `<div class="card" id="pass-lock" style="margin:10px 0"><div class="row" style="justify-content:space-between"><b>Live stream</b><span class="pill">PAID</span></div><div class="mu sm" style="margin:8px 0">Watching the live video needs a pass${c&&c.amount?': '+rupees(c.amount)+(c.days?' for '+c.days+' day'+(c.days===1?'':'s'):'')+' to '+esc(c.payee||'the organiser'):''}. ${(c&&c.mine||[]).some(x=>x.expires&&x.expires<Date.now())?'Your earlier pass has expired, you can renew it. ':''} Pay by UPI, submit the UTR, and it unlocks when the organiser confirms. The score stays free.</div>
    <div class="row" style="gap:8px">${S.tok?`<button type="button" class="btn sm" data-a="gtPay" data-id="${esc(gid)}">Buy pass</button><button type="button" class="btn sm ghost" data-a="gtRefresh">I have paid, refresh</button>`:`<span class="mu sm">Sign in to buy a pass.</span>`}</div></div>`}
@@ -11381,6 +11381,24 @@ Object.assign(C,{ovAd(v){S.stream.adText=String(v||'').slice(0,140);save()}});
   return card+o};
  A.mineOpen=async function(d){if(!S.matches.some(x=>x.id===d.id)&&typeof shPull==='function'){try{await shPull({col:'matches',id:d.id})}catch(e){}}
   if(S.matches.some(x=>x.id===d.id)){UI.mid=d.id;UI.view='match';render()}else toast('This match is not available yet. Try again in a moment.',3500)};
+}
+
+/* ---------------- 103 TOURNAMENT VIEWING PASS: one pass unlocks every paid stream of the tournament's matches ---------------- */
+{
+ const base=()=>(typeof apiBase==='function'&&apiBase())||'';
+ const call=async(m,path,body)=>{try{const r=await fetch(base()+path,{method:m,headers:{'Content-Type':'application/json',Authorization:'Bearer '+(S.tok||'')},body:m==='GET'?undefined:JSON.stringify(body||{})});return await r.json()}catch(e){return {ok:false,error:'No connection'}}};
+ const val=id=>String((document.getElementById(id)||{}).value||'').trim();
+ const x0=XV.tour;XV.tour=function(){const o=x0.apply(this,arguments),t=trObj(UI.tid);if(!t||UI.ttab!=='info'||!can()||!(S.user&&(S.user.role==='admin'||S.user.role==='scorer')))return o;
+  const on=!!t.passCharge,card=on?`<div class="card" id="trpass"><h3>Viewing pass is on</h3><div class="mu sm">${t.passAmt?'₹'+esc(String(t.passAmt))+(t.passDays?' for '+esc(String(t.passDays))+' days':'')+'. ':''}Viewers need it for the live video of every match in this tournament. The score stays free.</div><div class="row" style="gap:8px;margin-top:6px"><button type="button" class="btn sm ghost" data-a="trPassOpen" data-id="${esc(t.passCharge)}">Review payments</button><button type="button" class="btn sm ghost" data-a="trPassOff">Make free</button></div></div>`
+   :`<div class="card" id="trpass"><h3>Sell a viewing pass (UPI)</h3><div class="mu sm">One pass for the live video of all matches in this tournament. Viewers pay you directly, you confirm each payment. The tournament must be shared first.</div><div class="row" style="gap:8px;margin-top:6px"><input id="tp-a" inputmode="decimal" placeholder="Pass price ₹" style="width:120px"><input id="tp-u" placeholder="Your UPI ID" style="flex:1"></div><input id="tp-d" inputmode="numeric" placeholder="Valid for how many days? (blank = whole tournament)" style="margin-top:6px"><button type="button" class="btn sm" style="margin-top:6px" data-a="trPassOn">Turn on</button></div>`;
+  return o.replace(/<\/div>\s*$/,card+'</div>')};
+ Object.assign(A,{
+  async trPassOn(){const t=trObj(UI.tid);if(!t)return;const a=parseFloat(val('tp-a').replace(/,/g,''));if(!(a>=1))return toast('Enter the pass price');const d=parseInt(val('tp-d'))||0;
+   const r=await call('POST','/api/pay/charge',{title:(t.name+' viewing pass').slice(0,80),amount:Math.round(a*100),upi:val('tp-u'),payee:(S.user&&(S.user.name||S.user.nick))||'',kind:'pass',ref:t.id,days:d});if(!r.ok)return toast(r.error||'Could not create the pass',4500);
+   const g=await call('POST','/api/streams/gate',{key:'T:'+t.id,charge:r.id});if(!g.ok)return toast(g.error||'Could not turn on',4500);
+   t.passCharge=r.id;t.passAmt=a;t.passDays=d;commit();toast('Viewing pass is on',3000);render()},
+  async trPassOff(){const t=trObj(UI.tid);if(!t)return;const g=await call('POST','/api/streams/gate',{key:'T:'+t.id,charge:null});if(!g.ok)return toast(g.error||'Could not change',4500);t.passCharge='';commit();render()},
+  trPassOpen(d){window.shPayOpen&&window.shPayOpen(d.id)}});
 }
 </script>
 </body>

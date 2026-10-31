@@ -789,15 +789,20 @@ routes['POST /api/wa/webhook'] = async (req, body) => {
 // ---- Live stream links: anyone can read, admins and scorers can set ----
 // Paid viewing (R20/R21): a stream key can be tied to a UPI charge. The link is withheld by the server from anyone without a confirmed payment, so it cannot be read from the network response.
 const streamBase = k => String(k).replace(/_s\d$/, '');
-const streamEntitled = (s, base) => { const g = (db.streamGate || {})[base]; if (!g) return true; const c = (db.shared.pay || {})[g]; if (!c) return true; if (!s) return false; return s.u.role === 'admin' || c.owner === s.phone || (c.subs || []).some(x => x.by === s.phone && payLive(c, x)); };
+const gatesFor = base => { const g = db.streamGate || {}, out = []; if (g[base]) out.push(g[base]); const mid = String(base).slice(1), tid = ((((db.shared.matches || {})[mid] || {}).data || {}).m || {}).tid; if (tid && g['T:' + tid]) out.push(g['T:' + tid]); return out; };
+const gateOk = (s, g) => { const c = (db.shared.pay || {})[g]; if (!c) return true; if (!s) return false; return s.u.role === 'admin' || c.owner === s.phone || (c.subs || []).some(x => x.by === s.phone && payLive(c, x)); };
+const streamEntitled = (s, base) => gatesFor(base).every(g => gateOk(s, g));
+const streamLockedBy = (s, base) => gatesFor(base).find(g => !gateOk(s, g));
 routes['GET /api/streams'] = async (req) => {
   const s = grUser(req), out = {}, locked = [];
-  for (const [k, v] of Object.entries(db.streams || {})) { if (streamEntitled(s, streamBase(k))) out[k] = v; else if (!locked.includes(streamBase(k))) locked.push(streamBase(k)); }
-  return [200, { ok: true, streams: out, gates: db.streamGate || {}, locked }];
+  const lockedBy = {};
+  for (const [k, v] of Object.entries(db.streams || {})) { const b = streamBase(k); if (streamEntitled(s, b)) out[k] = v; else if (!locked.includes(b)) { locked.push(b); lockedBy[b] = streamLockedBy(s, b); } }
+  return [200, { ok: true, streams: out, gates: db.streamGate || {}, locked, lockedBy }];
 };
 routes['POST /api/streams/gate'] = async (req, body) => {
   const s = grUser(req); if (!s || !['admin', 'scorer'].includes(s.u.role)) return [403, { ok: false, error: 'Only admins and scorers can make a stream paid' }];
-  const key = String(body.key || ''); if (!/^[mw][\w-]{1,80}$/.test(key) || /_s\d$/.test(key)) return [400, { ok: false, error: 'Bad match key' }];
+  const key = String(body.key || ''); if (!(/^[mw][\w-]{1,80}$/.test(key) || /^T:[\w-]{3,40}$/.test(key)) || /_s\d$/.test(key)) return [400, { ok: false, error: 'Bad match key' }];
+  if (key.startsWith('T:')) { const tr = (db.shared.tours || {})[key.slice(2)]; if (!tr) return [404, { ok: false, error: 'Share the tournament first (it must be synced)' }]; if (tr.owner !== s.phone && s.u.role !== 'admin') return [403, { ok: false, error: 'Only the tournament owner can sell its pass' }]; }
   db.streamGate = db.streamGate || {};
   if (!body.charge) { delete db.streamGate[key]; saveDb(); return [200, { ok: true }]; }
   const c = (db.shared.pay || {})[String(body.charge)]; if (!c) return [404, { ok: false, error: 'Charge not found' }];
