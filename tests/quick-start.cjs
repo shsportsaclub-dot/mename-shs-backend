@@ -15,7 +15,7 @@ await p.evaluate(()=>A.qsStart());ok(await p.evaluate(()=>S.matches.length===0),
 await p.click('button[data-a=qsStep][data-v="1"]');await p.waitForTimeout(150);
 await p.click('details[data-qsd=a] summary');await p.evaluate(()=>{document.querySelector('details[data-qsd=a] .qp details').open=true});await p.fill('#qp-n-a','Rahul Dev');await p.click('button[data-a=qpNew][data-t=a]');
 await p.click('button[data-a=qsStep][data-v="1"]');await p.waitForTimeout(150);
-await p.click('button[data-k=overs][data-v="10"]');await p.click('button[data-k=ball][data-v=tennis]');await p.fill('#qs-venue','Gandhi Ground');
+await p.click('button[data-a=qsFmt][data-v=t10]');await p.click('button[data-k=overs][data-v="10"]');await p.click('button[data-k=ball][data-v=tennis]');await p.fill('#qs-venue','Gandhi Ground');
 await p.click('button[data-a=qsStep][data-v="1"]');await p.waitForTimeout(150);
 await p.click('button[data-k=dec][data-v=bowl]');
 await p.click('button[data-a=qsStart]');await p.waitForTimeout(300);
