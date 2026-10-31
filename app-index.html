@@ -11155,6 +11155,22 @@ document.addEventListener('input',e=>{const el=e.target;if(!el||!/^qt-n-[ab]$/.t
  const id=new URLSearchParams(location.search).get('player');
  if(id){let done=0;const r0=render;render=function(){const o=r0.apply(this,arguments);if(!done&&S.user&&UI.stage==='app'){done=1;setTimeout(()=>{if(!P(id)&&base())window.shPcardOpen(id)},900)}return o}}
 }
+/* ---------------- 93 WELCOME ROLE + CLAIM MY PLAYER PROFILE (R31): the welcome screen asks how you will use the app (a choice that changes suggestions, never permissions); a signed-in player can claim the profile a scorer created for the same phone number ---------------- */
+{
+ const RO=[['fan','Fan'],['player','Player'],['scorer','Scorer'],['organiser','Organiser'],['coach','Coach or parent']];
+ const w0=vWelcome2;vWelcome2=function(){let h=w0.apply(this,arguments);const w=UI.wel||{},cur=w.r||(S.prefs&&S.prefs.role)||'';
+  const chips=`<div class="mu sm" style="margin-top:10px">How will you use the app?</div><div class="row" style="gap:6px;flex-wrap:wrap;margin-top:4px">${RO.map(([k,l])=>`<button type="button" class="btn sm ${cur===k?'':'ghost'}" data-a="welR" data-v="${k}">${l}</button>`).join('')}</div><div class="mu sm" style="margin-top:4px">This only tunes what you see first. Scoring and admin rights are given by an administrator, not chosen here.</div>`;
+  return h.replace('<button class="btn wide" style="margin-top:12px" data-a="welGo">',chips+'<button class="btn wide" style="margin-top:12px" data-a="welGo">')};
+ const g0=A.welGo;A.welGo=function(){const w=UI.wel||{};if(w.r)S.prefs.role=w.r;return g0.apply(this,arguments)};
+ A.welR=function(d){UI.wel=UI.wel||{};UI.wel.r=d.v;render()};
+ const last10=v=>String(v||'').replace(/\D/g,'').slice(-10);
+ const cands=()=>{const u=S.user;if(!u||u.guest||u.pid||!u.phone||String(u.phone).includes('@'))return [];const k=last10(u.phone);if(k.length<10)return [];
+  return S.players.filter(p=>p.phone&&last10(p.phone)===k&&!S.users.some(x=>x.pid===p.id&&x.id!==u.id))};
+ const v0=XV.profile||vProfile;XV.profile=function(){const o=v0.apply(this,arguments);const u=S.user;if(!u||u.guest||u.pid)return o;const L=cands();
+  const card=`<div class="card" id="claim-card"><h3>Your player profile</h3>${L.length?`<div class="mu sm">A scorer already created a profile with your phone number. Link it to this account to see your own matches and stats.</div>${L.map(p=>`<div class="item"><div style="flex:1"><b>${esc(p.name)}</b><div class="mu sm">${esc((T(p.team)||{}).name||'No team yet')}${p.role?' · '+esc(p.role):''}</div></div><button type="button" class="btn sm" data-a="claimPl" data-id="${esc(p.id)}">This is me</button></div>`).join('')}<div class="mu sm" style="margin-top:6px">Not you? Ask the scorer to correct the number, or create a new profile below.</div>`:'<div class="mu sm">No profile with your number was found.</div>'}<button type="button" class="btn sm ${L.length?'ghost':''}" style="margin-top:6px" data-a="mkProfile">Create a new player profile</button></div>`;
+  return o+card};
+ A.claimPl=function(d){const p=P(d.id);if(!p||!cands().some(x=>x.id===p.id))return toast('This profile cannot be linked');S.user.pid=p.id;const u=S.users.find(x=>x.id===S.user.id);if(u)u.pid=p.id;commit();toast('Linked. This is now your player profile.',3500)};
+}
 </script>
 </body>
 </html>
