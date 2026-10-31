@@ -2066,7 +2066,7 @@ http.createServer(async (req, res) => {
     return out(405, { ok: false, error: 'Method not allowed' });
   }
   if (path.startsWith('/api/shared/')) {   // shared public data: matches, tournaments, auctions (anyone reads, the owner writes)
-    const [, , , col, id] = path.split('/'), COLS = ['matches', 'sports', 'tours', 'auc', 'grounds', 'market', 'teams'];
+    const [, , , col, id] = path.split('/'), COLS = ['matches', 'sports', 'tours', 'auc', 'grounds', 'market', 'teams', 'players'];
     if (!COLS.includes(col)) return out(404, { ok: false, error: 'Unknown collection' });
     const bag = db.shared[col] = db.shared[col] || {};
     if (req.method === 'GET' && !id) {
@@ -2085,6 +2085,11 @@ http.createServer(async (req, res) => {
     if (req.method !== 'PUT') return out(405, { ok: false, error: 'Method not allowed' });
     let raw = ''; for await (const c of req) { raw += c; if (raw.length > 400000) return out(413, { ok: false, error: 'Too large' }); }
     let b; try { b = JSON.parse(raw); } catch { return out(400, { ok: false, error: 'Bad body' }); }
+    if (col === 'players') {   // public player card: the player's own account or an admin shares a small summary so a ?player= link opens on any phone; no phone, email or date of birth
+      const c = b.data && b.data.c, str = (v, n) => v == null || (typeof v === 'string' && v.length <= n), num = v => v == null || (Number.isFinite(v) && v >= 0 && v < 1e6);
+      if (!c || c.id !== id || typeof c.name !== 'string' || !c.name.trim() || !str(c.name, 60) || !str(c.role, 20) || !str(c.team, 60) || !str(c.city, 60) || !str(c.shid, 16) || !str(c.bat, 40) || !str(c.bowl, 40) || !num(c.m) || !num(c.r) || !num(c.w) || !num(c.hs) || !num(c.f50) || !num(c.f100)) return out(400, { ok: false, error: 'Invalid player card' });
+      b.data = { c: { id, name: c.name.trim(), role: c.role || '', team: c.team || '', city: c.city || '', shid: c.shid || '', bat: c.bat || '', bowl: c.bowl || '', m: c.m || 0, r: c.r || 0, w: c.w || 0, hs: c.hs || 0, f50: c.f50 || 0, f100: c.f100 || 0, at: Date.now() } };
+    }
     if (col === 'sports') {
       const m = b.data && b.data.m;
       if (!m || m.id !== id || !['football','kabaddi','bd','bd15','vb','vbb'].includes(m.sport) ||

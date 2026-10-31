@@ -11140,6 +11140,21 @@ document.addEventListener('input',e=>{const el=e.target;if(!el||!/^qt-n-[ab]$/.t
   return h.slice(0,a)+chips+`<div class="card" style="padding:0">${list}</div>`+note+h.slice(b)};
  A.rkM=function(d){const K=UI.rk;K.m=K.m||{};K.m[K.cat]=d.v;render()};
 }
+/* ---------------- 92 PUBLIC PLAYER CARD (R26): sharing a player publishes a small card (no phone, email or birth date) so a ?player= link opens on any phone ---------------- */
+{
+ const base=()=>(typeof apiBase==='function'&&apiBase())||'';
+ const mayPub=p=>!!(S.tok&&S.user&&!S.user.guest&&(isAdmin()||S.user.pid===p.id));
+ const card=p=>{const a=(typeof ppAgg==='function')?ppAgg(p.id,{fmt:'all',yr:'all',comp:'all'}):null,t=T(p.team)||{};return {id:p.id,name:p.name,role:p.role||'',team:t.name||'',city:String(p.loc||p.city||'').slice(0,60),shid:(S.user&&S.user.pid===p.id&&S.prefs&&S.prefs.shid)||'',bat:p.bat||'',bowl:p.bowl||'',m:a?a.m.size:0,r:a?a.r:0,w:a?a.w:0,hs:a?a.hs:0,f50:a?a.f50:0,f100:a?a.f100:0}};
+ window.shPlayerPublish=async p=>{if(!mayPub(p)||!base())return false;try{const r=await fetch(base()+'/api/shared/players/'+encodeURIComponent(p.id),{method:'PUT',headers:{'Content-Type':'application/json',Authorization:'Bearer '+S.tok},body:JSON.stringify({data:{c:card(p)}})});const j=await r.json();return !!j.ok}catch(e){return false}};
+ const f0=A.ppShare;A.ppShare=function(d){const p=P(d.id);if(p&&mayPub(p))window.shPlayerPublish(p).then(ok=>{if(!ok)toast('Could not publish the public card. The link may not open on other phones.',4000)});return f0.apply(this,arguments)};
+ XV.pcard=function(){const c=UI.pcard;if(!c)return '<div class="card"><div class="mu">Loading…</div></div>';
+  return `<div class="card"><h3>${esc(c.name)}</h3><div class="mu sm">${[c.role,c.team,c.city,c.shid].filter(Boolean).map(esc).join(' · ')}</div>
+  <div class="tl" style="margin-top:10px"><div><b>${c.m}</b><span>Matches</span></div><div><b>${c.r}</b><span>Runs</span></div><div><b>${c.w}</b><span>Wickets</span></div><div><b>${c.hs}</b><span>Highest</span></div><div><b>${c.f50}</b><span>50s</span></div><div><b>${c.f100}</b><span>100s</span></div></div>
+  <div class="mu sm" style="margin-top:8px">Shared by the player on Scoring Heroes. Numbers are from matches scored in the app when it was shared, so they can be out of date.</div><button type="button" class="btn sm ghost" style="margin-top:8px" data-a="go" data-v="home">Open Scoring Heroes</button></div>`};
+ window.shPcardOpen=async id=>{UI.pcard=null;UI.view='pcard';render();try{const r=await fetch(base()+'/api/shared/players/'+encodeURIComponent(id)),j=await r.json();if(j.ok&&j.item&&j.item.data&&j.item.data.c){UI.pcard=j.item.data.c;render()}else{UI.view='home';render();toast('This player card is not shared.',4000)}}catch(e){UI.view='home';render();toast('No connection',3000)}};
+ const id=new URLSearchParams(location.search).get('player');
+ if(id){let done=0;const r0=render;render=function(){const o=r0.apply(this,arguments);if(!done&&S.user&&UI.stage==='app'){done=1;setTimeout(()=>{if(!P(id)&&base())window.shPcardOpen(id)},900)}return o}}
+}
 </script>
 </body>
 </html>
