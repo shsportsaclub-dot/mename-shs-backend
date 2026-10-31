@@ -1440,7 +1440,7 @@ routes['POST /api/push/follow'] = async (req, body) => {
   const s = grUser(req); if (!s) return [401, { ok: false, error: 'Please sign in first' }];
   if (limited('pushf:' + s.phone, 120, 36e5)) return [429, { ok: false, error: 'Too many tries, slow down' }];
   const ids = a => [...new Set((Array.isArray(a) ? a : []).map(String).filter(x => /^[\w-]{1,40}$/.test(x)))].slice(0, 100);
-  s.u.follows = { teams: ids(body.teams), matches: ids(body.matches) }; saveDb(); return [200, { ok: true, teams: s.u.follows.teams.length, matches: s.u.follows.matches.length }];
+  s.u.follows = { teams: ids(body.teams), matches: ids(body.matches), tours: ids(body.tours) }; saveDb(); return [200, { ok: true, teams: s.u.follows.teams.length, matches: s.u.follows.matches.length, tours: s.u.follows.tours.length }];
 };
 // Match alerts: when a scorer's save changes a shared match, followers of either team (or the match) hear about the start, each wicket and the result.
 const wktCount = m => (m && Array.isArray(m.innings) ? m.innings.reduce((n, i) => n + ((i && Array.isArray(i.ev)) ? i.ev.filter(e => e && e.w).length : 0), 0) : 0);
@@ -1455,7 +1455,7 @@ function matchAlerts(id, old, nw, teams, owner) {
   if (!ev) return;
   for (const [ph, u] of Object.entries(db.users)) {
     if (ph === owner || !(u.push || []).length || !u.follows) continue;
-    if (!(u.follows.matches || []).includes(id) && !(u.follows.teams || []).some(t => t === nw.a || t === nw.b)) continue;
+    if (!(u.follows.matches || []).includes(id) && !(nw.tid && (u.follows.tours || []).includes(nw.tid)) && !(u.follows.teams || []).some(t => t === nw.a || t === nw.b)) continue;
     pushTo(ph, { title: ev.title, body: ev.body, url: '/?match=' + id }).catch(() => {});
   }
 }

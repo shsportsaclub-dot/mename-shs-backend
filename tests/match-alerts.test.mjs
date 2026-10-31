@@ -42,5 +42,13 @@ test('match alerts: start, wicket (throttled) and result reach followers of eith
     assert.equal(got.length, 1); p = decrypt(fan.e, fan.auth, got[0].body); assert.equal(p.title, 'Result: Lions v Tigers'); assert.equal(p.body, 'Lions won by 5 runs');
     assert.ok(got.every(x => x.url === '/fan'));   // 'other' never followed, scorer excluded
     got.length = 0; await save({ status: 'done', result: 'Lions won by 5 runs', innings: [{ ev: wk(2) }] }); await wait(); assert.equal(got.length, 0);   // resaving a finished match is silent
+    // tournament follow and single-match follow
+    await call('POST', '/api/push/follow', T.o, { teams: [], tours: ['tourX'], matches: ['mm3'] });
+    got.length = 0; await call('PUT', '/api/shared/matches/mm2', T.s, { data: { m: { id: 'mm2', a: 'tC', b: 'tD', tid: 'tourX', status: 'live', innings: [] }, teams } }); await wait();
+    assert.equal(got.length, 1); assert.equal(got[0].url, '/other');
+    got.length = 0; await call('PUT', '/api/shared/matches/mm2', T.s, { data: { m: { id: 'mm2', a: 'tC', b: 'tD', tid: 'tourY', status: 'done', result: 'x', innings: [] }, teams } }); await wait();
+    assert.equal(got.length, 0);   // the saved match now belongs to a tournament this user does not follow
+    got.length = 0; await call('PUT', '/api/shared/matches/mm3', T.s, { data: { m: { id: 'mm3', a: 'tE', b: 'tF', status: 'live', innings: [] }, teams } }); await wait();
+    assert.equal(got.length, 1); assert.equal(got[0].url, '/other');
   } finally { srv.kill(); ps.close(); }
 });
