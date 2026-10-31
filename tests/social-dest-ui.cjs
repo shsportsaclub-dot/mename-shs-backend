@@ -23,6 +23,7 @@ await p.evaluate(()=>{S.stream.tick={lines:'Drinks break\nSponsor: Acme',live:tr
 assert.match(await p.locator('.ovprev').innerHTML(),/Drinks break/);
 /* language search */
 await p.evaluate(()=>{UI.view='settings';render()});
+await p.evaluate(()=>{UI.iso='FR';render()});assert.match(await p.locator('.lp .lph').first().innerText(),/Suggested for France/i);assert.equal(await p.locator('.lpl[data-sug] .lpb').first().getAttribute('data-v'),'fr');
 await p.fill('.lp input[data-c=lpQ]','swah');assert.equal(await p.locator('.lp .lpb:visible').count(),1);
 await p.click('.lp .lpb:visible');assert.equal(await p.evaluate(()=>S.prefs.lang),'sw');
 await p.fill('.lp input[data-c=lpQ]','日本');assert.equal(await p.locator('.lp .lpb:visible').count(),1);
