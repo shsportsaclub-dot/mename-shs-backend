@@ -160,3 +160,4 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 
 ## Pitch types (2026-11-01)
 - One shared pitch list: Turf, Black soil (clay), Red soil (clay), Matting, Cement / concrete, Astro turf, Synthetic / indoor, Dry mud, Mixed, each with a short behaviour note. Start a match: Pitch is a scroll-down list (search box); a registered ground's own pitches are listed first as "(this ground)" and the first one is picked when the ground is chosen. The match stores pitchType and shows it in the match header. Ground registration and owner edit use scroll-down selects with a second optional pitch; the server keeps up to 4 valid pitches per ground (pitches, with pitch = first). Block 116, tests/qs-pitch.cjs, tests/ground-registry.test.mjs.
+- Captain and wicket-keeper chosen in the playing XI show as (c) and a dagger next to the name in the scorecard (batters, bowlers, did not bat). Test: tests/captain-mark.cjs.

@@ -367,6 +367,7 @@ const NOBOWL=['Run out','Obstructing the field','Hit the ball twice'];let BPO=6,
 const P=id=>S.players.find(p=>p.id===id)||(S.rt&&S.rt.players[id]);
 const T=id=>S.teams.find(t=>t.id===id)||(S.rt&&S.rt.teams[id]);
 const nm=id=>(P(id)||{}).name||'-';
+const shMk=(m,id)=>{const c=(m&&m.cap)||{},k=(m&&m.keeper)||{};return (Object.values(c).includes(id)?' (c)':'')+(Object.values(k).includes(id)?' \u2020':'')};
 const sh=id=>{const n=nm(id).split(' ');return n.length>1?n[0][0]+'. '+n.slice(1).join(' '):n[0]};
 const mx=m=>{setFmt(m);return (m.cur===1&&m.ovr2?m.ovr2:m.overs)*BPO};
 const maxWk=(m,i)=>Math.min(10,((m.xi[m.innings[i].bat]||[]).length)-1);
@@ -719,7 +720,7 @@ function tLive(m){
   const s=st(m);if(!s)return'<div class="empty">Match has not started.</div>';
   const w=winP(m),A=T(m.a),B=T(m.b),c=s.inn.cur;
   const L=overList(m,s.i).slice(-2);
-  const batRow=(id,star)=>{const b=s.k.bat[id]||{r:0,b:0,f4:0,f6:0};return `<tr><td>${esc(nm(id))}${star?' *':''}</td><td><b>${b.r}</b></td><td>${b.b}</td><td>${b.f4}</td><td>${b.f6}</td><td>${b.b?(b.r*100/b.b).toFixed(1):'0.0'}</td></tr>`};
+  const batRow=(id,star)=>{const b=s.k.bat[id]||{r:0,b:0,f4:0,f6:0};return `<tr><td>${esc(nm(id))}${typeof m!=='undefined'?shMk(m,id):''}${star?' *':''}</td><td><b>${b.r}</b></td><td>${b.b}</td><td>${b.f4}</td><td>${b.f6}</td><td>${b.b?(b.r*100/b.b).toFixed(1):'0.0'}</td></tr>`};
   const bw=c.bl?s.k.bowl[c.bl]||{b:0,r:0,w:0,m:0}:null;
   const last=s.k.fow[s.k.fow.length-1];
   const proj=[['CRR',s.crr],[6,6],[8,8],[10,10],[12,12]].map(([l,r])=>`<td>${Math.round(s.k.runs+s.left/BPO*r)}</td>`).join('');
@@ -743,10 +744,10 @@ function tCard(m){
     const k=calc(m,i),bt=T(inn.bat),ex=k.ex,exT=ex.wd+ex.nb+ex.b+ex.lb,dnb=(m.xi[inn.bat]||[]).filter(id=>!inn.used.includes(id));
     const c=inn.cur;
     return `<div class="card scroll"><div class="row" style="justify-content:space-between"><h3>${esc(bt.name)} innings</h3><h3>${k.runs}-${k.wk} (${fmtOv(k.lg)} ov)</h3></div>
-    <table><tr><th>Batter</th><th></th><th>R</th><th>B</th><th>4s</th><th>6s</th><th>SR</th></tr>${k.ord.map(id=>{const b=k.bat[id];const live=!inn.done&&(c.s===id||c.n===id);return `<tr><td>${esc(nm(id))}${c.s===id&&!inn.done?' *':''}</td><td class="mu sm" style="text-align:left">${b.out?esc(b.out):live?'not out':'not out'}</td><td><b>${b.r}</b></td><td>${b.b}</td><td>${b.f4}</td><td>${b.f6}</td><td>${b.b?(b.r*100/b.b).toFixed(1):'-'}</td></tr>`}).join('')}
+    <table><tr><th>Batter</th><th></th><th>R</th><th>B</th><th>4s</th><th>6s</th><th>SR</th></tr>${k.ord.map(id=>{const b=k.bat[id];const live=!inn.done&&(c.s===id||c.n===id);return `<tr><td>${esc(nm(id))}${typeof m!=='undefined'?shMk(m,id):''}${c.s===id&&!inn.done?' *':''}</td><td class="mu sm" style="text-align:left">${b.out?esc(b.out):live?'not out':'not out'}</td><td><b>${b.r}</b></td><td>${b.b}</td><td>${b.f4}</td><td>${b.f6}</td><td>${b.b?(b.r*100/b.b).toFixed(1):'-'}</td></tr>`}).join('')}
     <tr><td>Extras</td><td class="mu sm" style="text-align:left">b ${ex.b}, lb ${ex.lb}, wd ${ex.wd}, nb ${ex.nb}</td><td colspan="5"><b>${exT}</b></td></tr></table>
     ${dnb.length?`<div class="mu sm" style="margin:8px 0">Did not bat: ${dnb.map(nm).map(esc).join(', ')}</div>`:''}
-    <table style="margin-top:10px"><tr><th>Bowler</th><th>O</th><th>M</th><th>R</th><th>W</th><th>Wd</th><th>Nb</th><th>Econ</th></tr>${Object.entries(k.bowl).map(([id,w])=>`<tr><td>${esc(nm(id))}</td><td>${fmtOv(w.b)}</td><td>${w.m}</td><td>${w.r}</td><td><b>${w.w}</b></td><td>${w.wd}</td><td>${w.nb}</td><td>${w.b?(w.r*BPO/w.b).toFixed(1):'-'}</td></tr>`).join('')}</table>
+    <table style="margin-top:10px"><tr><th>Bowler</th><th>O</th><th>M</th><th>R</th><th>W</th><th>Wd</th><th>Nb</th><th>Econ</th></tr>${Object.entries(k.bowl).map(([id,w])=>`<tr><td>${esc(nm(id))}${typeof m!=='undefined'?shMk(m,id):''}</td><td>${fmtOv(w.b)}</td><td>${w.m}</td><td>${w.r}</td><td><b>${w.w}</b></td><td>${w.wd}</td><td>${w.nb}</td><td>${w.b?(w.r*BPO/w.b).toFixed(1):'-'}</td></tr>`).join('')}</table>
     <div class="mu sm" style="margin-top:10px"><b>Fall of wickets:</b> ${k.fow.map(f=>`${f.r}-${f.w} (${esc(nm(f.id))}, ${f.ov})`).join(', ')||'none'}</div></div>`}).join('')}
 /* charts */
 const CX=(W,xm,v)=>34+(W-42)*v/xm,CY=(H,ym,v)=>H-34-(H-51)*v/ym;
@@ -2859,7 +2860,7 @@ tCard=function(m){
   <div class="carow"><div class="canm"><div><div class="b">Extras</div><div class="mu sm">b ${ex.b}, lb ${ex.lb}, wd ${ex.wd}, nb ${ex.nb}</div></div></div><span><b>${exT}</b></span><span></span><span></span></div>
   <div class="carow alt"><div class="canm"><div class="b">Total</div></div><span><b>${k.runs}-${k.wk}</b></span><span>${fmtOv(k.lg)} ov</span><span>${k.lg?(k.runs*BPO/k.lg).toFixed(2):'0.00'}</span></div></div>
   ${dnb.length?`<div class="mu sm" style="margin:8px 2px">Did not bat: ${dnb.map(nm).map(esc).join(', ')}</div>`:''}
-  <div class="card scroll"><table><tr><th>Bowler</th><th>O</th><th>M</th><th>R</th><th>W</th><th>Wd</th><th>Nb</th><th>Econ</th></tr>${Object.entries(k.bowl).map(([id,w])=>`<tr><td>${esc(nm(id))}</td><td>${fmtOv(w.b)}</td><td>${w.m}</td><td>${w.r}</td><td><b>${w.w}</b></td><td>${w.wd}</td><td>${w.nb!=null?w.nb:(w.n||0)}</td><td>${w.b?(w.r*BPO/w.b).toFixed(1):'0.0'}</td></tr>`).join('')}</table>
+  <div class="card scroll"><table><tr><th>Bowler</th><th>O</th><th>M</th><th>R</th><th>W</th><th>Wd</th><th>Nb</th><th>Econ</th></tr>${Object.entries(k.bowl).map(([id,w])=>`<tr><td>${esc(nm(id))}${typeof m!=='undefined'?shMk(m,id):''}</td><td>${fmtOv(w.b)}</td><td>${w.m}</td><td>${w.r}</td><td><b>${w.w}</b></td><td>${w.wd}</td><td>${w.nb!=null?w.nb:(w.n||0)}</td><td>${w.b?(w.r*BPO/w.b).toFixed(1):'0.0'}</td></tr>`).join('')}</table>
   <div class="mu sm" style="margin-top:10px"><b>Fall of wickets:</b> ${k.fow.map(f=>`${f.r}-${f.w} (${esc(nm(f.id))}, ${f.ov})`).join(', ')||'none'}</div></div>`};
 tBBB=function(m){
   if(!m.innings.length)return'<div class="empty">Commentary starts with the first ball.</div>';
@@ -2902,11 +2903,11 @@ tCard=function(m){
   const i=UI.ci>=m.innings.length?m.innings.length-1:UI.ci,inn=m.innings[i],k=calc(m,i),ex=k.ex,exT=ex.wd+ex.nb+ex.b+ex.lb,c=inn.cur,dnb=(m.xi[inn.bat]||[]).filter(id=>!inn.used.includes(id));
   const tg=`<div class="cxtg">${m.innings.map((x,j)=>{const q=calc(m,j);return `<button class="${i===j?'on':''}" data-a="ci" data-v="${j}">${esc(T(x.bat).short)} ${i===j||true?`<b>${q.runs}-${q.wk}</b> <span class="sm">(${fmtOv(q.lg)})</span>`:''}</button>`}).join('')}</div>`;
   return tg+`<div class="card scroll cxt" style="padding:0"><table><tr><th>Batter</th><th>R</th><th>B</th><th>4s</th><th>6s</th><th>SR</th></tr>${k.ord.map(id=>{const b=k.bat[id],bt=!inn.done&&(c.s===id||c.n===id);
-    return `<tr><td><div class="${bt?'cxlive':''}">${esc(nm(id))}${c.s===id&&!inn.done?' <span class="cxbat">&#127951;</span>':''}</div><div class="mu sm">${b.out?esc(b.out):(bt?'Batting':'')}</div></td><td><b>${b.r}</b></td><td>${b.b}</td><td>${b.f4}</td><td>${b.f6}</td><td>${b.b?(b.r*100/b.b).toFixed(2):'0.00'}</td></tr>`}).join('')}
+    return `<tr><td><div class="${bt?'cxlive':''}">${esc(nm(id))}${shMk(m,id)}${c.s===id&&!inn.done?' <span class="cxbat">&#127951;</span>':''}</div><div class="mu sm">${b.out?esc(b.out):(bt?'Batting':'')}</div></td><td><b>${b.r}</b></td><td>${b.b}</td><td>${b.f4}</td><td>${b.f6}</td><td>${b.b?(b.r*100/b.b).toFixed(2):'0.00'}</td></tr>`}).join('')}
   <tr><td><b>Extras:</b> ${exT} <span class="mu sm">${[ex.lb&&ex.lb+'lb',ex.wd&&ex.wd+'w',ex.nb&&ex.nb+'nb',ex.b&&ex.b+'b'].filter(Boolean).join(', ')}</span></td><td colspan="5"></td></tr>
   <tr><td><b>Total</b></td><td colspan="2"><b>${k.runs}-${k.wk}</b></td><td colspan="3">${fmtOv(k.lg)} ov, RR ${k.lg?(k.runs*BPO/k.lg).toFixed(2):'0.00'}</td></tr></table></div>
-  ${dnb.length?`<div class="mu sm" style="margin:8px 2px">Did not bat: ${dnb.map(nm).map(esc).join(', ')}</div>`:''}
-  <div class="card scroll cxt"><table><tr><th>Bowler</th><th>O</th><th>M</th><th>R</th><th>W</th><th>Wd</th><th>Nb</th><th>Econ</th></tr>${Object.entries(k.bowl).map(([id,w])=>`<tr><td>${esc(nm(id))}</td><td>${fmtOv(w.b)}</td><td>${w.m}</td><td>${w.r}</td><td><b>${w.w}</b></td><td>${w.wd}</td><td>${w.nb!=null?w.nb:(w.n||0)}</td><td>${w.b?(w.r*BPO/w.b).toFixed(1):'0.0'}</td></tr>`).join('')}</table></div>
+  ${dnb.length?`<div class="mu sm" style="margin:8px 2px">Did not bat: ${dnb.map(id=>esc(nm(id))+shMk(m,id)).join(', ')}</div>`:''}
+  <div class="card scroll cxt"><table><tr><th>Bowler</th><th>O</th><th>M</th><th>R</th><th>W</th><th>Wd</th><th>Nb</th><th>Econ</th></tr>${Object.entries(k.bowl).map(([id,w])=>`<tr><td>${esc(nm(id))}${typeof m!=='undefined'?shMk(m,id):''}</td><td>${fmtOv(w.b)}</td><td>${w.m}</td><td>${w.r}</td><td><b>${w.w}</b></td><td>${w.wd}</td><td>${w.nb!=null?w.nb:(w.n||0)}</td><td>${w.b?(w.r*BPO/w.b).toFixed(1):'0.0'}</td></tr>`).join('')}</table></div>
   <div class="card"><div class="mu sm"><b>Fall of wickets:</b> ${k.fow.map(f=>`${f.r}-${f.w} (${esc(nm(f.id))}, ${f.ov})`).join(', ')||'none'}</div></div>`};
 function oddsSVG(m){
   const pts=wpSeries(m);if(pts.length<2)return'<div class="mu">Needs a few overs of data.</div>';
