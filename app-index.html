@@ -11171,6 +11171,23 @@ document.addEventListener('input',e=>{const el=e.target;if(!el||!/^qt-n-[ab]$/.t
   return o+card};
  A.claimPl=function(d){const p=P(d.id);if(!p||!cands().some(x=>x.id===p.id))return toast('This profile cannot be linked');S.user.pid=p.id;const u=S.users.find(x=>x.id===S.user.id);if(u)u.pid=p.id;commit();toast('Linked. This is now your player profile.',3500)};
 }
+/* ---------------- 94 MATCH START: SELECT SPORT STEP + COMPETITION / FIXTURE LINKAGE (R18) ---------------- */
+{
+ const w0=wzStepHTML;wzStepHTML=function(){let h=w0.apply(this,arguments);const w=S.wiz;if(!w||w.step!==0)return h;
+  let keys=[];try{keys=shHubKeys()}catch(e){}
+  const sp=`<div class="mu sm" style="margin-bottom:4px">Sport</div><div class="row" style="gap:6px;flex-wrap:wrap;margin-bottom:10px"><button type="button" class="btn sm" data-a="wzSport" data-v="cricket">\u{1F3CF} Cricket</button>${keys.map(k=>`<button type="button" class="btn sm ghost" data-a="wzSport" data-v="${esc(k)}">${esc(shLab(k))}</button>`).join('')}</div>`;
+  let fx='';
+  if(w.mode==='tournament'||w.mode==='series'){
+   const want=w.mode==='series'?'series':'tournament',TL=S.tours.filter(t=>(t.kind==='series')===(want==='series')||!t.kind),cur=TL.find(t=>t.id===(w._tsel||w.tid))||TL[0];
+   const open=cur?cur.fixtures.filter(f=>!f.mid&&f.a&&f.b):[];
+   fx=TL.length?`<div class="card" style="margin-top:10px"><b>Link to a ${want}</b><label>${want==='series'?'Series':'Tournament'}<select data-c="wzTsel">${TL.map(t=>`<option value="${esc(t.id)}" ${cur&&cur.id===t.id?'selected':''}>${esc(t.name)}</option>`).join('')}</select></label>
+    ${open.length?open.slice(0,12).map(f=>`<div class="item"><div style="flex:1">${esc((T(f.a)||{}).name||'')} v ${esc((T(f.b)||{}).name||'')}<div class="mu sm">${esc(fxLabel(cur,f))}${f.date?' · '+esc(f.date):''}</div></div><button type="button" class="btn sm" data-a="wzFix" data-t="${esc(cur.id)}" data-id="${esc(f.id)}">Start this fixture</button></div>`).join(''):'<div class="mu sm">No open fixtures here. Create fixtures in the tournament first, or continue to set up a one-off match.</div>'}</div>`
+    :`<div class="need" style="margin-top:10px">No ${want} exists yet. Create one under Tournaments first, or continue to save this as an unlinked ${want} match.</div>`}
+  h=h.replace(/<div class="need" style="margin-top:10px">Tournament and series fixtures[\s\S]*?<\/div>/,'');
+  return sp+h+fx};
+ Object.assign(A,{wzSport(d){if(d.v==='cricket')return;S.wiz=null;save();UI.modal=null;renderModal();A.sgNew({v:d.v})},wzFix(d){A.tStart({t:d.t,id:d.id})}});
+ Object.assign(C,{wzTsel(v){if(S.wiz){S.wiz._tsel=v;save();wzShow()}}});
+}
 </script>
 </body>
 </html>
