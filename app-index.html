@@ -10442,7 +10442,7 @@ document.addEventListener('input',e=>{const el=e.target;if(!el||!/^qt-n-[ab]$/.t
  const groundSvg=(m,hand)=>{const z=UI.ang?zoneOf(UI.ang,hand):null;let g=`<circle cx="120" cy="120" r="110" fill="#1b6b3a" stroke="#d8ffe6" stroke-width="2"/><circle cx="120" cy="120" r="${110*.75}" fill="none" stroke="#6fe19a" stroke-width=".8" opacity=".55"/>`;
   for(let i=0;i<12;i++){const [x,y]=polar(1,i*30+15);g+=`<line x1="120" y1="120" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="#6fe19a" stroke-width=".7" opacity=".4"/>`}
   if(z)g+=`<path d="${wedge(z.k,z.r,hand)}" fill="#ffd43b" opacity=".38" stroke="#ffd43b" stroke-width="1.2"/>`;
-  g+=`<circle cx="120" cy="120" r="${110*.42}" fill="none" stroke="#fff" stroke-width="1.4" stroke-dasharray="5 4"/><text x="120" y="${120-110*.42-3}" text-anchor="middle" font-size="7" fill="#fff" opacity=".9">30 YARDS</text><text x="120" y="10" text-anchor="middle" font-size="7.5" fill="#cfe">BOWLER'S END</text><text x="120" y="236" text-anchor="middle" font-size="7.5" fill="#cfe">BEHIND THE KEEPER</text><text x="${hand==='Left-hand'?9:231}" y="123" text-anchor="${hand==='Left-hand'?'start':'end'}" font-size="7.5" fill="#cfe">OFF</text><text x="${hand==='Left-hand'?231:9}" y="123" text-anchor="${hand==='Left-hand'?'end':'start'}" font-size="7.5" fill="#cfe">LEG</text><rect x="116" y="106" width="8" height="28" fill="#d9c28a" stroke="#00000055"/>`;
+  g+=`<circle cx="120" cy="120" r="${110*.42}" fill="none" stroke="#fff" stroke-width="1.4" stroke-dasharray="5 4"/><text x="120" y="${120-110*.42-3}" text-anchor="middle" font-size="7" fill="#fff" opacity=".9">30 YARDS</text><text x="120" y="10" text-anchor="middle" font-size="7.5" fill="#cfe">BOWLER'S END</text><text x="120" y="236" text-anchor="middle" font-size="7.5" fill="#cfe">BEHIND THE KEEPER</text><text x="${hand==='Left-hand'?3:237}" y="14" text-anchor="${hand==='Left-hand'?'start':'end'}" font-size="8" font-weight="700" fill="#cfe">OFF SIDE</text><text x="${hand==='Left-hand'?237:3}" y="14" text-anchor="${hand==='Left-hand'?'end':'start'}" font-size="8" font-weight="700" fill="#cfe">LEG SIDE</text><rect x="116" y="106" width="8" height="28" fill="#d9c28a" stroke="#00000055"/>`;
   if(UI.ang){const [x,y]=[120+Math.cos(UI.ang.a)*Math.min(1.05,UI.ang.d)*110,120+Math.sin(UI.ang.a)*Math.min(1.05,UI.ang.d)*110];g+=`<line x1="120" y1="120" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="#fff" stroke-width="2.4"/><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="5" fill="#ffd43b" stroke="#000"/>`}
   return `<svg id="wag" data-a="wag" viewBox="0 0 240 240" style="width:100%;max-width:340px;display:block;margin:0 auto;touch-action:manipulation">${g}</svg>`};
  /* ---- records (earlier matches only, so a ball always reads the same) ---- */
@@ -11929,6 +11929,50 @@ const SH_ICON='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALAAAACwCAYAAACvt+R
   const n=S.matches.length,snap=q?{tm:q.tm==='manual'?'manual':'coin',by:q.tcall,call:q.tside,res:q.tres,toss:q.toss}:null,r=s0.apply(this,arguments);
   if(snap&&S.matches.length>n){const m=S.matches[S.matches.length-1];m.tossInfo={mode:snap.tm,caller:snap.tm==='coin'?snap.by:'',call:snap.tm==='coin'?snap.call:'',result:snap.tm==='coin'?snap.res:'',winner:m.toss};try{save&&save()}catch(e){}if(q){q.tres='';q.tcall='';q.tside=''}}
   return r};
+}
+
+/* ---------------- 118 UMPIRE SIGNALS AND PLAYER FIGURES (original line pictograms): small signal icons on the extras buttons, a short pop-up after Wide / No ball / Bye / Leg bye / Four / Six / Out and 50 / 100, and a Signals guide (umpire signals and player actions) in Scorer tools ---------------- */
+{
+ const head=(x,y,hat)=>`<circle cx="${x}" cy="${y}" r="5" fill="currentColor" stroke="none"/>${hat?`<path d="M${x-8} ${y-2}h16" stroke-width="2.6"/><path d="M${x-5} ${y-3}c0-5 3-8 5-8s5 3 5 8" fill="currentColor" stroke="none"/>`:''}`;
+ const U=(arms,legs)=>`<svg viewBox="0 0 48 64" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${head(24,11,1)}<path d="M24 18v22" stroke-width="8"/><path d="M24 40v21" stroke-width="0"/>${legs||'<path d="M21 40v21M27 40v21"/>'}${arms}</svg>`;
+ const SIG={
+  out:U('<path d="M31 22l6-8v-9" /><path d="M17 22l-4 17"/>'),
+  wide:U('<path d="M17 22L3 22M31 22l14 0"/>'),
+  noball:U('<path d="M31 22l15 0"/><path d="M17 22l-4 17"/>'),
+  bye:U('<path d="M31 22l4-11v-9"/><circle cx="35" cy="3" r="2.4" fill="currentColor" stroke="none"/><path d="M17 22l-4 17"/>'),
+  legbye:U('<path d="M31 22l3 14v6"/><path d="M17 22l-4 17"/>','<path d="M21 40v21"/><path d="M27 40l7 4-5 8"/>'),
+  four:U('<path d="M31 22l-8 7-13 0"/><path d="M8 24l-3 5 3 5" stroke-width="2"/><path d="M17 22l-4 17"/>'),
+  six:U('<path d="M17 22L11 4M31 22l6-18"/>'),
+  dead:U('<path d="M17 22l6 16 9 5M31 22l-6 16-9 5"/>'),
+  short:U('<path d="M31 22l9 6-8-7"/><path d="M17 22l-4 17"/>'),
+  revoke:U('<path d="M17 22l14 11M31 22L17 33"/>')};
+ const LAB={out:'OUT',wide:'WIDE',noball:'NO BALL',bye:'BYE',legbye:'LEG BYE',four:'FOUR',six:'SIX',dead:'DEAD BALL',short:'SHORT RUN',revoke:'DISREGARD LAST SIGNAL'};
+ const F=(body)=>`<svg viewBox="0 0 48 64" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
+ const FIG={
+  bowler:['Bowler',F('<circle cx="24" cy="8" r="4.6" fill="currentColor" stroke="none"/><path d="M24 14l-2 20M24 16l8-13M24 16l-11 8M22 34l-9 16M22 34l10 14"/><circle cx="35" cy="4" r="2.6" fill="#d33" stroke="none"/>')],
+  batter:['Batter',F('<circle cx="21" cy="8" r="4.6" fill="currentColor" stroke="none"/><path d="M21 14v20M21 34l-5 19M21 34l7 19M21 20l9 6"/><path d="M30 26l8 22" stroke-width="5"/>')],
+  keeper:['Wicket-keeper',F('<circle cx="22" cy="24" r="4.6" fill="currentColor" stroke="none"/><path d="M22 30l3 12 9 4M25 42l-9 3 0 14M22 32l10 6"/><circle cx="36" cy="40" r="3" fill="currentColor" stroke="none"/>')],
+  catch:['Catch',F('<circle cx="12" cy="30" r="4.4" fill="currentColor" stroke="none"/><path d="M17 31l17 3M34 34l9 8M34 34l5-8M17 31l-7-6"/><circle cx="4" cy="22" r="2.6" fill="#d33" stroke="none"/>')],
+  celebrate:['Celebration',F('<circle cx="24" cy="12" r="4.8" fill="currentColor" stroke="none"/><path d="M24 18v20M24 38l-6 20M24 38l6 20M24 22L12 6M24 22L36 6"/>')],
+  hundred:['Century',F('<circle cx="22" cy="14" r="4.8" fill="currentColor" stroke="none"/><path d="M22 20v20M22 40l-6 18M22 40l7 18M22 24l-10-6M22 24l12-6M34 18l8-14" stroke-width="3.6"/>')]};
+ window.shSig=k=>SIG[k]||'';window.shFig=k=>(FIG[k]||['',''])[1];
+ const st=document.createElement('style');st.textContent='i.us{display:inline-block;width:18px;height:24px;vertical-align:-6px;margin-right:4px;font-style:normal}i.us svg{width:100%;height:100%}.shsig{position:fixed;left:50%;top:18%;transform:translateX(-50%);z-index:9999;pointer-events:none;display:flex;align-items:center;gap:12px;padding:10px 18px;border-radius:16px;background:rgba(10,14,24,.88);color:#fff;border:2px solid var(--sp1,#e11d2e);box-shadow:0 8px 28px rgba(0,0,0,.5);animation:shsig 1.7s ease both}.shsig svg{width:46px;height:62px;color:#ffd43b}.shsig b{font-size:22px;letter-spacing:1px}.shsig small{display:block;font-size:12px;opacity:.8}@keyframes shsig{0%{opacity:0;transform:translateX(-50%) scale(.7)}12%{opacity:1;transform:translateX(-50%) scale(1.05)}20%{transform:translateX(-50%) scale(1)}80%{opacity:1}100%{opacity:0;transform:translateX(-50%) translateY(-10px)}}@media (prefers-reduced-motion:reduce){.shsig{animation:none}}.sgg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.sgg div{text-align:center;font-size:11px;font-weight:700}.sgg svg{width:44px;height:58px;display:block;margin:0 auto 2px}';document.head.appendChild(st);
+ const show=(svg,txt,sub)=>{if(S.settings&&S.settings.sigOff)return;const old=document.getElementById('sh-sig');if(old)old.remove();const d=document.createElement('div');d.id='sh-sig';d.className='shsig';d.setAttribute('role','status');d.innerHTML=svg+`<div><b>${esc(txt)}</b>${sub?`<small>${esc(sub)}</small>`:''}</div>`;document.body.appendChild(d);setTimeout(()=>{if(d.parentNode)d.remove()},1750)};
+ const b0=ball;ball=function(m,s){const inn=m&&m.innings&&m.innings[m.cur],n=inn?inn.ev.length:0;let before=0,bt=null;try{bt=s&&s.bt;const c=calc(m,m.cur);const id=inn&&inn.cur&&inn.cur.s;before=id&&c.bat[id]?c.bat[id].r:0;bt=id}catch(e){}
+  const r=b0.apply(this,arguments);
+  try{const e=inn&&inn.ev.length>n?inn.ev[n]:null;if(e){let k='';if(e.w)k='out';else if(e.x==='wd')k='wide';else if(e.x==='nb')k='noball';else if(e.x==='b')k='bye';else if(e.x==='lb')k='legbye';else if(e.r===6)k='six';else if(e.r===4)k='four';
+   if(k)show(SIG[k],LAB[k],k==='out'?(typeof nm==='function'&&e.out?nm(e.out):''):'');
+   else{const c=calc(m,m.cur),id=e.bt,after=id&&c.bat[id]?c.bat[id].r:0;if(id&&before<100&&after>=100)show(FIG.hundred[1],'HUNDRED',nm(id));else if(id&&before<50&&after>=50)show(FIG.celebrate[1],'FIFTY',nm(id))}
+   if(k&&(k==='four'||k==='six')){const c=calc(m,m.cur),id=e.bt,after=id&&c.bat[id]?c.bat[id].r:0;if(id&&before<100&&after>=100)setTimeout(()=>show(FIG.hundred[1],'HUNDRED',nm(id)),1800);else if(id&&before<50&&after>=50)setTimeout(()=>show(FIG.celebrate[1],'FIFTY',nm(id)),1800)}}}catch(e){}
+  return r};
+ const sc0=scoreConsole;scoreConsole=function(m){let h=sc0.apply(this,arguments);if(typeof h!=='string')return h;
+  const M={wd:'wide',nb:'noball',b:'bye',lb:'legbye'};
+  h=h.replace(/(<button[^>]*data-a="ex"[^>]*data-v="(wd|nb|b|lb)"[^>]*>)(?!<i class="us")/g,(x,tag,k)=>tag+'<i class="us">'+SIG[M[k]]+'</i>');
+  h=h.replace('<summary>Scorer tools</summary><div class="tg">','<summary>Scorer tools</summary><div class="tg"><button class="btn ghost sm" data-a="sigGuide">Signals guide</button><button class="btn ghost sm" data-a="sigToggle">Signal pop-up: '+((S.settings&&S.settings.sigOff)?'Off':'On')+'</button>');
+  return h};
+ Object.assign(A,{sigToggle(){S.settings.sigOff=!S.settings.sigOff;commit();toast('Signal pop-up '+(S.settings.sigOff?'off':'on'),2000)},
+  sigGuide(){const sg=Object.keys(SIG).map(k=>`<div>${SIG[k]}${LAB[k]}</div>`).join(''),fg=Object.keys(FIG).map(k=>`<div>${FIG[k][1]}${FIG[k][0]}</div>`).join('');
+   UI.modal={t:'html',html:`<h3>Umpire signals</h3><div class="sgg">${sg}</div><h3 style="margin-top:14px">Players</h3><div class="sgg">${fg}</div><button type="button" class="btn wide" style="margin-top:12px" data-a="closeModal">Close</button>`};renderModal()}});
 }
 </script>
 </body>

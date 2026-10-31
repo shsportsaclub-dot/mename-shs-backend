@@ -164,3 +164,8 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 
 ## Toss (2026-11-01)
 - Start a match, Toss step: Flip the coin (default) or Enter result. Coin flow: pick which team calls, call Heads or Tails, flip a spinning 3D coin (random from the device's secure random source, no replay on re-render, reduced-motion respected). The caller wins the toss if the call matches, otherwise the other team; the winner then chooses Bat first or Bowl first. A match cannot start in coin mode before the flip. The match stores tossInfo (mode, caller, call, result, winner). Block 117, tests/qs-toss.cjs.
+
+## Umpire signals & player figures (CricHeroes style)
+- Extras buttons (Wide/No ball/Bye/Leg bye) show umpire-signal icons; each scored ball shows a short pop-up (OUT, WIDE, NO BALL, BYE, LEG BYE, FOUR, SIX, FIFTY, HUNDRED) with the signal/figure.
+- Scorer tools: Signals on/off toggle and Signals guide (umpire signals + bowler/batter/keeper/catch/celebration/century figures).
+- Field map: no position names on screen; tap a point and the wagon-wheel input is taken from that point. Corner labels OFF SIDE / LEG SIDE.
