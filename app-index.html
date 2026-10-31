@@ -11939,27 +11939,27 @@ const SH_ICON='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALAAAACwCAYAAACvt+R
   const kit={
    hat:(x,y)=>`<ellipse cx="${x}" cy="${y-3.5}" rx="10.5" ry="2.6" fill="currentColor"/><path d="M${x-6.5} ${y-4}c0-6 3-9 6.5-9s6.5 3 6.5 9z" fill="currentColor"/>`,
    cap:(x,y,d=1)=>`<path d="M${x-6.6} ${y-1}c0-7 3-9 6.6-9s6.6 2 6.6 9z" fill="currentColor"/><path d="M${x+(d>0?4:-4)} ${y-2}h${d*8}" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>`,
-   helmet:(x,y,d=1)=>`<path d="M${x-7.6} ${y+1}c-1-9 3-11.5 7.6-11.5s8.6 2.5 7.6 11.5z" fill="currentColor"/><path d="M${x+(d>0?5:-5)} ${y-1}h${d*6}" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M${x-d*6} ${y+1}l${-d*1.5} 6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>`,
+   helmet:(x,y,d=1)=>`<path d="M${x+d*2} ${y+1.5}h${d*6.5}v5.2h${-d*6.5}z" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M${x+d*4.2} ${y+1.5}v5.2M${x+d*6.4} ${y+1.5}v5.2" stroke="currentColor" stroke-width="1"/><path d="M${x-7.6} ${y+1}c-1-9 3-11.5 7.6-11.5s8.6 2.5 7.6 11.5z" fill="currentColor"/><path d="M${x+(d>0?5:-5)} ${y-1}h${d*6}" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M${x-d*6} ${y+1}l${-d*1.5} 6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>`,
    none:()=>''};
   const bat=(a,b,w=5.2)=>L([a,b],w)+L([a,[a[0]+(b[0]-a[0])*.28,a[1]+(b[1]-a[1])*.28]],2.6);
   // pose: h head, n neck, p pelvis, a:[[e,h],[e,h]], l:[[k,f],[k,f]]
   const G='var(--figgap,#101626)';
-  const cap=(a,b,w1,w2)=>{const dx=b[0]-a[0],dy=b[1]-a[1],d=Math.hypot(dx,dy)||1,nx=-dy/d,ny=dx/d,r1=w1/2,r2=w2/2;
-   return `<path d="M${a[0]+nx*r1} ${a[1]+ny*r1}L${b[0]+nx*r2} ${b[1]+ny*r2}A${r2} ${r2} 0 0 1 ${b[0]-nx*r2} ${b[1]-ny*r2}L${a[0]-nx*r1} ${a[1]-ny*r1}A${r1} ${r1} 0 0 0 ${a[0]+nx*r1} ${a[1]+ny*r1}z" fill="currentColor"/>`};
+  const cap=(a,b,w1,w2,fill)=>{const dx=b[0]-a[0],dy=b[1]-a[1],d=Math.hypot(dx,dy)||1,nx=-dy/d,ny=dx/d,r1=w1/2,r2=w2/2;
+   return `<path d="M${a[0]+nx*r1} ${a[1]+ny*r1}L${b[0]+nx*r2} ${b[1]+ny*r2}A${r2} ${r2} 0 0 1 ${b[0]-nx*r2} ${b[1]-ny*r2}L${a[0]-nx*r1} ${a[1]-ny*r1}A${r1} ${r1} 0 0 0 ${a[0]+nx*r1} ${a[1]+ny*r1}z" fill="${fill||'currentColor'}" stroke="${fill?'currentColor':G}" stroke-width="${fill?1.6:.9}" stroke-linejoin="round"/>`};
   const seam=(p,w=1.3)=>`<path d="${p}" fill="none" stroke="${G}" stroke-width="${w}" stroke-linecap="round"/>`;
   function fig(P){
    let o='';const pads=P.pads;
    P.l.forEach(l=>{const k=l[0],f=l[1],d=P.fd||1;
     o+=cap(P.p,k,11.5,8.6)+cap(k,f,8.2,5.8);
-    if(pads){const m=t=>[k[0]+(f[0]-k[0])*t,k[1]+(f[1]-k[1])*t];o+=cap(m(.08),m(.9),11.6,9.4)+C(k[0],k[1],5.8)+seam(`M${m(.45)[0]-4} ${m(.45)[1]}L${m(.45)[0]+4} ${m(.45)[1]}`,1.1)}
+    if(pads){const m=t=>[k[0]+(f[0]-k[0])*t,k[1]+(f[1]-k[1])*t];o+=cap(m(.06),m(.92),12,10,G)+`<path d="M${k[0]-4.2} ${k[1]-2.5}q4.2 -3 8.4 0v5q-4.2 3 -8.4 0z" fill="currentColor" stroke="${G}" stroke-width=".9"/>`+seam(`M${m(.45)[0]-4} ${m(.45)[1]}L${m(.45)[0]+4} ${m(.45)[1]}`,1.1)}
     o+=`<path d="M${f[0]-3.4} ${f[1]-1.5}h${3.4+d*7}q${d*2.4} 0 ${d*2.4} 2.6v1.6h${-(6.8+d*2.4)}z" fill="currentColor"/>`;
    });
    const sh=P.sh||5.2,n=P.n,p=P.p;
-   o+=`<path d="M${n[0]-sh-1} ${n[1]+2.5}Q${n[0]} ${n[1]-1.5} ${n[0]+sh+1} ${n[1]+2.5}L${p[0]+4.6} ${p[1]}L${p[0]-4.6} ${p[1]}z" fill="currentColor" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>`;
+   o+=`<path d="M${n[0]-sh-1} ${n[1]+2.5}Q${n[0]} ${n[1]-1.5} ${n[0]+sh+1} ${n[1]+2.5}L${p[0]+4.6} ${p[1]}L${p[0]-4.6} ${p[1]}z" fill="currentColor" stroke="${G}" stroke-width=".9" stroke-linejoin="round"/>`;
    o+=seam(`M${p[0]-5.2} ${p[1]-.5}L${p[0]+5.2} ${p[1]-.5}`,1.2);
    P.a.forEach(a=>{const s0=[n[0]+(a.s||0),n[1]+3.6];o+=cap(s0,a.e,8.4,6.4)+cap(a.e,a.h,6,4.6)+C(a.h[0],a.h[1],2.7)+seam(`M${a.e[0]+(a.h[1]-a.e[1])*.0-3} ${a.e[1]+3}`,0)});
    o+=cap(n,P.h,5,4.2);
-   o+=C(P.h[0],P.h[1],6.2);
+   o+=`<circle cx="${P.h[0]}" cy="${P.h[1]}" r="6.2" fill="currentColor" stroke="${G}" stroke-width="1.5"/>`;
    o+=(kit[P.kit||'none'])(P.h[0],P.h[1],P.d||1);
    o+=(P.x||'');
    return `<svg viewBox="0 0 64 80" aria-hidden="true">${o}</svg>`;
@@ -11995,7 +11995,7 @@ const SH_ICON='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALAAAACwCAYAAACvt+R
  
  const LAB={out:'OUT',wide:'WIDE',noball:'NO BALL',bye:'BYE',legbye:'LEG BYE',four:'FOUR',six:'SIX',dead:'DEAD BALL',short:'SHORT RUN',revoke:'DISREGARD LAST SIGNAL'};
  window.shSig=k=>SIG[k]||'';window.shFig=k=>(FIG[k]||['',''])[1];
- const st=document.createElement('style');st.textContent='i.us{display:inline-block;width:22px;height:28px;vertical-align:-8px;margin-right:4px;font-style:normal}i.us svg{width:100%;height:100%}.shsig{--figgap:#0a0e18;position:fixed;left:50%;top:18%;transform:translateX(-50%);z-index:9999;pointer-events:none;display:flex;align-items:center;gap:12px;padding:10px 18px;border-radius:16px;background:rgba(10,14,24,.88);color:#fff;border:2px solid var(--sp1,#e11d2e);box-shadow:0 8px 28px rgba(0,0,0,.5);animation:shsig 1.7s ease both}.shsig svg{width:56px;height:70px;overflow:visible;color:#ffd43b}.shsig b{font-size:22px;letter-spacing:1px}.shsig small{display:block;font-size:12px;opacity:.8}@keyframes shsig{0%{opacity:0;transform:translateX(-50%) scale(.7)}12%{opacity:1;transform:translateX(-50%) scale(1.05)}20%{transform:translateX(-50%) scale(1)}80%{opacity:1}100%{opacity:0;transform:translateX(-50%) translateY(-10px)}}@media (prefers-reduced-motion:reduce){.shsig{animation:none}}.sgg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.sgg div{text-align:center;font-size:11px;font-weight:700}.sgg svg{width:44px;height:58px;display:block;margin:0 auto 2px}';document.head.appendChild(st);
+ const st=document.createElement('style');st.textContent='i.us{--figgap:#16203a;display:inline-block;width:22px;height:28px;vertical-align:-8px;margin-right:4px;font-style:normal}i.us svg{width:100%;height:100%}.shsig{--figgap:#0a0e18;position:fixed;left:50%;top:18%;transform:translateX(-50%);z-index:9999;pointer-events:none;display:flex;align-items:center;gap:12px;padding:10px 18px;border-radius:16px;background:rgba(10,14,24,.88);color:#fff;border:2px solid var(--sp1,#e11d2e);box-shadow:0 8px 28px rgba(0,0,0,.5);animation:shsig 1.7s ease both}.shsig svg{width:56px;height:70px;overflow:visible;color:#ffd43b}.shsig b{font-size:22px;letter-spacing:1px}.shsig small{display:block;font-size:12px;opacity:.8}@keyframes shsig{0%{opacity:0;transform:translateX(-50%) scale(.7)}12%{opacity:1;transform:translateX(-50%) scale(1.05)}20%{transform:translateX(-50%) scale(1)}80%{opacity:1}100%{opacity:0;transform:translateX(-50%) translateY(-10px)}}@media (prefers-reduced-motion:reduce){.shsig{animation:none}}.sgg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.sgg div{text-align:center;font-size:11px;font-weight:700}.sgg svg{width:44px;height:58px;display:block;margin:0 auto 2px}';document.head.appendChild(st);
  const show=(svg,txt,sub)=>{if(S.settings&&S.settings.sigOff)return;const old=document.getElementById('sh-sig');if(old)old.remove();const d=document.createElement('div');d.id='sh-sig';d.className='shsig';d.setAttribute('role','status');d.innerHTML=svg+`<div><b>${esc(txt)}</b>${sub?`<small>${esc(sub)}</small>`:''}</div>`;document.body.appendChild(d);setTimeout(()=>{if(d.parentNode)d.remove()},1750)};
  const b0=ball;ball=function(m,s){const inn=m&&m.innings&&m.innings[m.cur],n=inn?inn.ev.length:0;let before=0,bt=null;try{bt=s&&s.bt;const c=calc(m,m.cur);const id=inn&&inn.cur&&inn.cur.s;before=id&&c.bat[id]?c.bat[id].r:0;bt=id}catch(e){}
   const r=b0.apply(this,arguments);
