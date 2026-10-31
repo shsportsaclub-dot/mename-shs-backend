@@ -39,7 +39,7 @@ await p.click('button[data-k=overs][data-v="45"]');ok(await p.evaluate(()=>UI.qs
 await pick('fmt','hundred');t=await txt();ok(await p.evaluate(()=>UI.qs.overs==='20.5')&&/100 balls/.test(t),'hundred');
 // order: format, ball, pitch, date, ground
 const ord=['Format','Ball','Pitch','Match date','Ground / venue'].map(x=>t.indexOf(x));ok(ord.every((v,i)=>v>=0&&(i===0||v>ord[i-1])),'section order '+ord);
-await pick('fmt','t10');await p.click('button[data-k=pitchType][data-v=Cement]');await p.fill('#qs-venue','Box Arena');
+await pick('fmt','t10');await pick('pitchType','Cement');await p.fill('#qs-venue','Box Arena');
 await p.click('button[data-a=qsStep][data-v="1"]');await p.waitForTimeout(150);await p.click('button[data-a=qsStart]');await p.waitForTimeout(300);
 const r=await p.evaluate(()=>{const m=S.matches[0];return m&&{overs:m.overs,gtype:m.gtype,level:m.cat&&m.cat.level,pitch:m.pitchType,ball:m.ball,rem:S.prefs.qs,area:((S.venues[0]||{}).areas||[]).map(a=>a.name).join()}});
 ok(r&&r.overs===10&&r.gtype==='ibox'&&r.level==='corporate'&&r.pitch==='Cement'&&r.ball==='tennis','saved on the match '+JSON.stringify(r));

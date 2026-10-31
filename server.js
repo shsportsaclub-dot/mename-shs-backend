@@ -1106,8 +1106,9 @@ routes['PUT /api/desk'] = async (req, body) => {
 const GR_NEAR = 200;
 const grKm = (a, b, c, d) => { const R = 6371000, r = x => x * Math.PI / 180, dl = r(c - a), dg = r(d - b), h = Math.sin(dl / 2) ** 2 + Math.cos(r(a)) * Math.cos(r(c)) * Math.sin(dg / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(h)); };   // metres
 const grBag = () => (db.shared.grounds = db.shared.grounds || {});
-const GR_PITCH = ['Turf', 'Matting', 'Cement', 'Astro turf', 'Mixed'];
-const grPub = (g, d) => ({ id: g.id, name: g.name, city: g.city || '', pitch: g.pitch || '', fac: g.fac || '', lat: g.lat, lng: g.lng, owned: !!g.owner, owner: g.ownerName || '', by: g.byName || '', matches: (g.recs || []).length, photos: (g.photos || []).length, rating: grAvg(g), reviews: (g.revs || []).length, dist: d == null ? undefined : Math.round(d) });
+const GR_PITCH = ['Turf', 'Black soil', 'Red soil', 'Matting', 'Cement', 'Astro turf', 'Synthetic', 'Dry mud', 'Mixed'];
+const grPitches = body => { const a = Array.isArray(body.pitches) ? body.pitches : (body.pitch ? [body.pitch] : []); return [...new Set(a.map(String))].filter(x => GR_PITCH.includes(x)).slice(0, 4); };
+const grPub = (g, d) => ({ id: g.id, name: g.name, city: g.city || '', pitch: g.pitch || '', pitches: g.pitches && g.pitches.length ? g.pitches : (g.pitch ? [g.pitch] : []), fac: g.fac || '', lat: g.lat, lng: g.lng, owned: !!g.owner, owner: g.ownerName || '', by: g.byName || '', matches: (g.recs || []).length, photos: (g.photos || []).length, rating: grAvg(g), reviews: (g.revs || []).length, dist: d == null ? undefined : Math.round(d) });
 const grAvg = g => { const r = g.revs || []; return r.length ? Math.round(r.reduce((a, x) => a + x.stars, 0) / r.length * 10) / 10 : 0; };
 const grNm = v => String(v || '').replace(/[<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, 60);
 const grUser = req => { const phone = readSession((req.headers.authorization || '').replace(/^Bearer /, '')), u = phone && db.users[phone]; if (u) promote(u, phone); return u ? { phone, u } : null; };
@@ -1125,7 +1126,7 @@ routes['POST /api/grounds'] = async (req, body) => {
   const name = grNm(body.name), p = grLL(body); if (name.length < 3) return [400, { ok: false, error: 'Enter the ground name (3+ letters)' }]; if (!p) return [400, { ok: false, error: 'Location is needed: allow GPS and try again' }];
   const clash = Object.values(grBag()).map(g => [g, grKm(p.lat, p.lng, g.lat, g.lng)]).filter(x => x[1] <= GR_NEAR).sort((a, b) => a[1] - b[1])[0];
   if (clash) return [409, { ok: false, error: 'A ground is already registered within 200 m: ' + clash[0].name, existing: grPub(clash[0], clash[1]) }];
-  const id = 'g' + crypto.randomBytes(5).toString('hex'), g = { id, name, lat: p.lat, lng: p.lng, by: s.phone, byName: String(s.u.nick || s.u.name || '').slice(0, 30), t: Date.now(), owner: body.owner ? s.phone : '', ownerName: body.owner ? String(s.u.nick || s.u.name || '').slice(0, 30) : '', recs: [], city: grNm(body.city).slice(0, 40), pitch: GR_PITCH.includes(body.pitch) ? body.pitch : '', fac: grNm(body.fac).slice(0, 120) };
+  const id = 'g' + crypto.randomBytes(5).toString('hex'), g = { id, name, lat: p.lat, lng: p.lng, by: s.phone, byName: String(s.u.nick || s.u.name || '').slice(0, 30), t: Date.now(), owner: body.owner ? s.phone : '', ownerName: body.owner ? String(s.u.nick || s.u.name || '').slice(0, 30) : '', recs: [], city: grNm(body.city).slice(0, 40), pitch: grPitches(body)[0] || '', pitches: grPitches(body), fac: grNm(body.fac).slice(0, 120) };
   grBag()[id] = g; saveDb(); return [200, { ok: true, item: grPub(g, 0) }];
 };
 routes['POST /api/grounds/claim'] = async (req, body) => {
@@ -1140,7 +1141,7 @@ routes['PUT /api/grounds'] = async (req, body) => {   // owner (or admin) rename
   if (g.owner !== s.phone && s.u.role !== 'admin') return [403, { ok: false, error: 'Only the ground owner can change this' }];
   const name = grNm(body.name || g.name); if (name.length < 3) return [400, { ok: false, error: 'Enter the ground name (3+ letters)' }];
   if (Object.values(grBag()).some(o => o.id !== g.id && o.name.toLowerCase() === name.toLowerCase() && grKm(o.lat, o.lng, g.lat, g.lng) <= GR_NEAR)) return [409, { ok: false, error: 'Another ground with this name is within 200 m' }];
-  g.name = name; if ('city' in body) g.city = grNm(body.city).slice(0, 40); if ('pitch' in body) g.pitch = GR_PITCH.includes(body.pitch) ? body.pitch : ''; if ('fac' in body) g.fac = grNm(body.fac).slice(0, 120);
+  g.name = name; if ('city' in body) g.city = grNm(body.city).slice(0, 40); if ('pitch' in body || 'pitches' in body) { g.pitches = grPitches(body); g.pitch = g.pitches[0] || ''; } if ('fac' in body) g.fac = grNm(body.fac).slice(0, 120);
   saveDb(); return [200, { ok: true, item: grPub(g) }];
 };
 routes['POST /api/grounds/record'] = async (req, body) => {   // a scorer's match played at this ground; the owner reads these

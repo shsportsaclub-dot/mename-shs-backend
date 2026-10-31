@@ -157,3 +157,6 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 
 ## Start a match: playing XI selection (2026-11-01)
 - Players step follows Play-Cricket / MyCricket team selection: the selected Playing XI is a numbered list in batting order (move up / down, remove), the rest of the squad is listed below with a "+ Play" button and a search box, the XI is capped at 11, C (captain) and WK (wicket-keeper) toggles per player with a hint when missing, "Same XI as last match", and adding a new or registered player on the spot. Captain and keeper are stored on the match (m.cap, m.keeper per team). Block 115, tests/qs-xi.cjs. Scorecard markers for C and WK are not shown yet.
+
+## Pitch types (2026-11-01)
+- One shared pitch list: Turf, Black soil (clay), Red soil (clay), Matting, Cement / concrete, Astro turf, Synthetic / indoor, Dry mud, Mixed, each with a short behaviour note. Start a match: Pitch is a scroll-down list (search box); a registered ground's own pitches are listed first as "(this ground)" and the first one is picked when the ground is chosen. The match stores pitchType and shows it in the match header. Ground registration and owner edit use scroll-down selects with a second optional pitch; the server keeps up to 4 valid pitches per ground (pitches, with pitch = first). Block 116, tests/qs-pitch.cjs, tests/ground-registry.test.mjs.
