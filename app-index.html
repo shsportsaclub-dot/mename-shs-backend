@@ -11962,7 +11962,8 @@ const SH_ICON='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALAAAACwCAYAAACvt+R
    o+=`<circle cx="${P.h[0]}" cy="${P.h[1]}" r="6.2" fill="currentColor" stroke="${G}" stroke-width="1.5"/>`;
    o+=(kit[P.kit||'none'])(P.h[0],P.h[1],P.d||1);
    o+=(P.x||'');
-   return `<svg viewBox="0 0 64 80" aria-hidden="true">${o}</svg>`;
+   o=o.replace(/currentColor/g,'url(#shgold)');
+   return `<svg viewBox="0 0 64 80" aria-hidden="true"><defs><linearGradient id="shgold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff0b8"/><stop offset=".35" stop-color="#e9b94a"/><stop offset=".7" stop-color="#b9831f"/><stop offset="1" stop-color="#f3d27a"/></linearGradient><filter id="shgsh" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.2" stdDeviation="1" flood-color="#000" flood-opacity=".55"/></filter></defs><g filter="url(#shgsh)">${o}</g></svg>`;
   }
   return {fig,L,C,bat};
  })();
