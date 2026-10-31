@@ -13,7 +13,7 @@ let t=await txt();
 ok(/Ground/.test(t)&&/Open ground/.test(t)&&/Open box cricket/.test(t)&&/Indoor box cricket/.test(t),'ground types first');
 ok(/Individual/.test(t)&&/Corporate/.test(t)&&/Board cricket/.test(t)&&/Club cricket/.test(t)&&/Demo match/.test(t),'match types');
 ok(await p.evaluate(()=>{const e=document.querySelector('.qs-scroll');return getComputedStyle(e).overflowX==='auto'}),'scrolling row');
-ok(t.indexOf('Ground')<t.indexOf('Home XI')||t.indexOf('Ground')<t.indexOf('Team'),'ground selection is above the teams');
+ok(t.indexOf('Team A')>=0&&t.indexOf('Team A')<t.indexOf('Ground'),'teams come first, then ground and match type');
 await p.click('button[data-k=gtype][data-v=ibox]');await p.click('button[data-k=mcat][data-v=corporate]');
 ok(await p.evaluate(()=>UI.qs.gtype==='ibox'&&UI.qs.mcat==='corporate'),'chips set');
 await p.click('button[data-a=qsStep][data-v="1"]');await p.click('button[data-a=qsStep][data-v="1"]');await p.waitForTimeout(150);
