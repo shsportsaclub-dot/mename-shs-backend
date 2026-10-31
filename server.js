@@ -1312,6 +1312,39 @@ const GFX_PKG = {
 };
 routes['GET /api/graphics/package'] = async () => [200, { ok: true, package: GFX_PKG }];
 
+// Guardian, parent, coach and teacher links to a player account. The guardian asks with the player's SH ID; the player account (or an admin) approves; either side can end the link later. A link carries no extra data access by itself: it records who is recognised as responsible. No phone numbers or emails are shown to the other side.
+const glBag = () => (db.shared.glinks = db.shared.glinks || []);
+const GL_REL = ['parent', 'guardian', 'coach', 'teacher'];
+const glPub = (r, me) => ({ id: r.id, rel: r.rel, status: r.status, role: r.g === me ? 'guardian' : 'player', who: r.g === me ? r.childNick : r.gNick, shid: r.g === me ? r.shid : '', note: r.note, reason: r.reason, t: r.t });
+routes['POST /api/links/request'] = async (req, body) => {
+  const s = grUser(req); if (!s) return [401, { ok: false, error: 'Please sign in first' }];
+  if (limited('gl:' + s.phone, 10, 36e5)) return [429, { ok: false, error: 'Too many requests, slow down' }];
+  const shid = String(body.shid || '').trim().toUpperCase(), rel = GL_REL.includes(body.rel) ? body.rel : '';
+  if (!/^SH-[A-Z0-9]{8}$/.test(shid)) return [400, { ok: false, error: 'Enter the SH ID, like SH-AB12CD34' }];
+  if (!rel) return [400, { ok: false, error: 'Choose parent, guardian, coach or teacher' }];
+  const e = Object.entries(db.users).find(([, u]) => u.shid === shid && !u.closed);
+  if (!e) return [404, { ok: false, error: 'No player with this SH ID' }];
+  const [cph, cu] = e; if (cph === s.phone) return [400, { ok: false, error: 'This is your own SH ID' }];
+  const L = glBag(), dup = L.find(r => r.g === s.phone && r.child === cph && r.rel === rel && (r.status === 'pending' || r.status === 'approved'));
+  if (dup) return [409, { ok: false, error: dup.status === 'approved' ? 'Already linked' : 'Your request is already waiting' }];
+  const r = { id: 'gl' + crypto.randomBytes(4).toString('hex'), g: s.phone, gNick: String(s.u.nick || '').slice(0, 30), child: cph, childNick: String(cu.nick || '').slice(0, 30), shid, rel, note: trNm(body.note, 120), status: 'pending', reason: '', t: Date.now() };
+  L.push(r); saveDb(); return [200, { ok: true, id: r.id }];
+};
+routes['GET /api/links'] = async (req) => {
+  const s = grUser(req); if (!s) return [401, { ok: false, error: 'Please sign in first' }];
+  return [200, { ok: true, items: glBag().filter(r => r.g === s.phone || r.child === s.phone).slice(-60).reverse().map(r => glPub(r, s.phone)) }];
+};
+routes['POST /api/links/decide'] = async (req, body) => {
+  const s = grUser(req); if (!s) return [401, { ok: false, error: 'Please sign in first' }];
+  const r = glBag().find(x => x.id === body.id); if (!r) return [404, { ok: false, error: 'Link not found' }];
+  const isChild = r.child === s.phone, isG = r.g === s.phone, adm = s.u.role === 'admin';
+  if (!isChild && !isG && !adm) return [403, { ok: false, error: 'Not your link' }];
+  const st = ['approved', 'rejected', 'revoked'].includes(body.status) ? body.status : ''; if (!st) return [400, { ok: false, error: 'Choose approve, reject or end' }];
+  if (st === 'approved' || st === 'rejected') { if (!isChild && !adm) return [403, { ok: false, error: 'Only the player account can approve or reject' }]; if (r.status !== 'pending') return [400, { ok: false, error: 'Already decided' }]; }
+  if (st === 'revoked' && r.status !== 'approved' && r.status !== 'pending') return [400, { ok: false, error: 'Nothing to end' }];
+  r.status = st; r.reason = trNm(body.reason, 120); r.decidedBy = s.phone; r.decidedAt = Date.now(); saveDb(); return [200, { ok: true }];
+};
+
 // Sessions and account closure. Tokens carry their issue time; "sign out everywhere" invalidates every older token. Closing an account stops sign-in at once; matches, tournaments and other records stay (they are never deleted); signing in again within 30 days reopens it.
 routes['POST /api/me/signout-all'] = async (req) => {
   const s = grUser(req); if (!s) return [401, { ok: false, error: 'Please sign in again' }];

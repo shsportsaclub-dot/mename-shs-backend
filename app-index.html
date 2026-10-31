@@ -11091,6 +11091,30 @@ document.addEventListener('input',e=>{const el=e.target;if(!el||!/^qt-n-[ab]$/.t
    if(e.unknown.length&&!w._eligOk){w._eligOk=1;return toast('No date of birth saved for: '+e.unknown.slice(0,4).join(', ')+(e.unknown.length>4?' and '+(e.unknown.length-4)+' more':'')+'. Press Start match again to continue anyway.',6000)}}
   return w0.apply(this,arguments)};
 }
+/* ---------------- 90 FAMILY, COACH AND TEACHER LINKS (R12): ask with the player's SH ID, the player account approves, either side can end it; no phone or email is shared ---------------- */
+{
+ const base=()=>(typeof apiBase==='function'&&apiBase())||'';
+ const call=async(m,path,body)=>{try{const r=await fetch(base()+path,{method:m,headers:{'Content-Type':'application/json',Authorization:'Bearer '+(S.tok||'')},body:m==='GET'?undefined:JSON.stringify(body||{})});return await r.json()}catch(e){return {ok:false,error:'No connection'}}};
+ const N=()=>(UI.gl=UI.gl||{items:null});
+ const val=id=>String((document.getElementById(id)||{}).value||'').trim();
+ const signed=()=>!!(S.tok&&S.user&&!S.user.guest);
+ const RL={parent:'Parent',guardian:'Guardian',coach:'Coach',teacher:'Teacher'};
+ const ST={pending:'Waiting',approved:'Linked',rejected:'Declined',revoked:'Ended'};
+ const load=async()=>{const n=N(),r=await call('GET','/api/links');n.items=r.ok?r.items:[];render()};
+ const v0=vSettings;vSettings=function(){const o=v0.apply(this,arguments);if(!signed())return o;const n=N();if(n.items===null){n.items=[];setTimeout(load,0)}
+  const me=S.prefs&&S.prefs.shid;
+  const row=r=>`<div class="item" style="display:block;padding:6px 0;border-top:1px solid var(--bd)"><div class="row" style="justify-content:space-between;gap:8px"><span><b>${esc(r.who||'')}</b> <span class="mu sm">${r.role==='guardian'?'you are their '+esc(RL[r.rel]||r.rel).toLowerCase()+(r.shid?' · '+esc(r.shid):''):esc(RL[r.rel]||r.rel)+' of yours'}</span></span><span class="pill ${r.status==='approved'?'ok':r.status==='pending'?'':'bad'}">${ST[r.status]||r.status}</span></div>${r.note?`<div class="mu sm">${esc(r.note)}</div>`:''}
+   <div class="row" style="gap:6px;margin-top:4px">${r.status==='pending'&&r.role==='player'?`<button type="button" class="btn sm" data-a="glYes" data-id="${esc(r.id)}">Approve</button><button type="button" class="btn sm ghost" data-a="glNo" data-id="${esc(r.id)}">Decline</button>`:''}${r.status==='approved'||(r.status==='pending'&&r.role==='guardian')?`<button type="button" class="btn sm ghost" data-a="glEnd" data-id="${esc(r.id)}">${r.status==='pending'?'Cancel request':'End link'}</button>`:''}</div></div>`;
+  return o+`<div class="card" id="gl-card"><h3>Family, coach and teacher links</h3><div class="mu sm">Link yourself to a player as their parent, guardian, coach or teacher, or approve who is linked to you. A link records who is recognised as responsible. It does not share your phone number or email.</div>
+   ${me?`<div class="mu sm" style="margin-top:6px">Your SH ID: <b>${esc(me)}</b>. Give it to the person who should link to you.</div>`:''}
+   ${n.items.length?n.items.map(row).join(''):'<div class="mu sm" style="margin-top:6px">No links yet.</div>'}
+   <div class="row" style="gap:8px;margin-top:8px"><input id="gl-id" placeholder="Player SH ID, e.g. SH-AB12CD34" maxlength="11" style="flex:2"><select id="gl-r" style="flex:1">${Object.entries(RL).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select></div><input id="gl-n" maxlength="120" placeholder="Note (optional)" style="margin-top:6px"><button type="button" class="btn sm" style="margin-top:6px" data-a="glSend">Request link</button></div>`};
+ const done=(r,ok)=>{if(!r.ok){toast(r.error||'Could not do that',4000);return false}toast(ok);load();return true};
+ Object.assign(A,{async glSend(){if(!/^SH-[A-Za-z0-9]{8}$/.test(val('gl-id')))return toast('Enter the SH ID, like SH-AB12CD34');done(await call('POST','/api/links/request',{shid:val('gl-id'),rel:val('gl-r'),note:val('gl-n')}),'Request sent. The player must approve it.')},
+  async glYes(d){done(await call('POST','/api/links/decide',{id:d.id,status:'approved'}),'Linked')},
+  async glNo(d){done(await call('POST','/api/links/decide',{id:d.id,status:'rejected'}),'Declined')},
+  async glEnd(d){done(await call('POST','/api/links/decide',{id:d.id,status:'revoked'}),'Link ended')}});
+}
 </script>
 </body>
 </html>

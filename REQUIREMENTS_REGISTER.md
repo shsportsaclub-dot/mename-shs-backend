@@ -18,7 +18,7 @@ Requirements are kept separate from implementation status. Conflicts: latest exp
 | R09 | Change number / recovery / merge review | Number doc 7 | Account | - | - | - | Number change + merge with admin review, alias sign-in (block 85, tests/number-change*) | BUILT |
 | R10 | Scorer private phone lookup, minimum participant profile | Number doc 5 | Scorer squad | - | Role-based | - | Scorer lookup, minimum profile, logged (block 85) | BUILT |
 | R11 | World location hierarchy with stable IDs | Number doc 3 | Location | - | - | - | NOT BUILT (SOURCE: dataset required) |
-| R12 | Guardian/student links | Number doc 10 | Account | - | - | - | NOT BUILT |
+| R12 | Guardian/student links | Number doc 10 | Account | - | - | - | Request by SH ID, player approves, either side ends; no contact details shared (block 90, tests/guardian-links*) | BUILT (links record responsibility only; no extra data access yet) |
 | R13 | Player profile tabs (Overview..Social), filters, empty states | Player doc | Player | ppBody | Public | Playwright, 10 tabs screenshotted, no JS errors | BUILT-TESTED for cricket data from SH matches; Academy/Gallery/Social are honest placeholders |
 | R14 | Career timeline with Verified/Imported/Self-declared labels | Player doc 4 | Career tab | - | - | Achievements tab: VERIFIED vs SELF-DECLARED labels, own career entries (block 86, tests/career-labels.cjs) | BUILT |
 | R15 | Rankings per sport with disclosed method | Player doc 6, Rem. 5 | Rankings tab | - | - | Simple runs/wickets leaderboard, disclosed as NOT a points formula | PARTIAL; formulas SOURCE/DEFINITION REQUIRED |
