@@ -10,7 +10,7 @@ test('graphics package manifest is public and versioned', async () => {
     await new Promise(r => setTimeout(r, 1500));
     const j = await (await fetch(`http://127.0.0.1:${port}/api/graphics/package`)).json();
     assert.equal(j.ok, true); assert.equal(j.package.schema, 'sh.graphic/1'); assert.match(j.package.version, /^\d+\.\d+\.\d+$/);
-    assert.equal(j.package.templates.length, 12); assert.equal(j.package.effects.length, 5); assert.equal(j.package.output.width, 1920);
+    assert.equal(j.package.templates.length, 14); assert.equal(j.package.effects.length, 5); assert.equal(j.package.output.width, 1920);
     assert.equal(j.package.changelog[0].v, j.package.version);
   } finally { srv.kill(); }
 });

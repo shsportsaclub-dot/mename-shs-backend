@@ -1296,8 +1296,8 @@ routes['POST /api/scorer/lookup'] = async (req, body) => {
 
 // Shared graphics package (R47): one versioned manifest and data contract that the web overlay, the Windows/Web Studio and the Broadcast Companion all read. Templates are listed with the rows they carry; clients render with their own engine from the JSON data (schema sh.graphic/1). Bump version on any template change; clients compare and offer the update.
 const GFX_PKG = {
-  schema: 'sh.graphic/1', version: '1.1.0', updated: '2026-10-31',
-  changelog: [{ v: '1.1.0', note: 'Added bowler intro, team intro, live-score ticker and auction SOLD.' }, { v: '1.0.0', note: 'Batter intro, playing XI, fall of wickets, scorecard, points table, fixtures, leaders, QR, FOUR/SIX/WICKET/FIFTY/HUNDRED effects.' }],
+  schema: 'sh.graphic/1', version: '1.2.0', updated: '2026-10-31',
+  changelog: [{ v: '1.2.0', note: 'Added news ticker and labelled advertisement.' }, { v: '1.1.0', note: 'Added bowler intro, team intro, live-score ticker and auction SOLD.' }, { v: '1.0.0', note: 'Batter intro, playing XI, fall of wickets, scorecard, points table, fixtures, leaders, QR, FOUR/SIX/WICKET/FIFTY/HUNDRED effects.' }],
   output: { width: 1920, height: 1080, background: 'transparent', safeMarginPct: 5 },
   positions: ['l', 'c', 'r'], sizes: ['s', 'm', 'l'],
   templates: [
@@ -1306,9 +1306,9 @@ const GFX_PKG = {
     { id: 'fow', name: 'Fall of wickets', needs: ['match'] }, { id: 'card', name: 'Scorecard', needs: ['match'] },
     { id: 'points', name: 'Points table', needs: ['match', 'tournament'] }, { id: 'fix', name: 'Fixtures', needs: ['match', 'tournament'] },
     { id: 'lead', name: 'Leaders', needs: ['match'] }, { id: 'tick', name: 'Score ticker', needs: ['match'] },
-    { id: 'sold', name: 'Auction SOLD', needs: ['auction'] }, { id: 'qr', name: 'QR link', needs: ['match'] }],
+    { id: 'sold', name: 'Auction SOLD', needs: ['auction'] }, { id: 'news', name: 'News ticker', needs: [] }, { id: 'ad', name: 'Advertisement (always labelled AD)', needs: [] }, { id: 'qr', name: 'QR link', needs: ['match'] }],
   effects: [{ id: 'four', text: 'FOUR', color: '#2f9e44' }, { id: 'six', text: 'SIX', color: '#e8590c' }, { id: 'wicket', text: 'WICKET', color: '#e03131' }, { id: 'fifty', text: 'FIFTY', color: '#1971c2' }, { id: 'hundred', text: 'HUNDRED', color: '#9c36b5' }],
-  data: { description: 'Every graphic is delivered as {schema, version, template, matchId, title, rows:[{l,v}], at}. rows carry already formatted text; studios only lay it out.', example: { schema: 'sh.graphic/1', version: '1.1.0', template: 'fow', matchId: 'm1', title: 'Fall of wickets', rows: [{ l: '1. Player 1', v: '12-1 (2.3 ov)' }], at: 0 } }
+  data: { description: 'Every graphic is delivered as {schema, version, template, matchId, title, rows:[{l,v}], at}. rows carry already formatted text; studios only lay it out.', example: { schema: 'sh.graphic/1', version: '1.2.0', template: 'fow', matchId: 'm1', title: 'Fall of wickets', rows: [{ l: '1. Player 1', v: '12-1 (2.3 ov)' }], at: 0 } }
 };
 routes['GET /api/graphics/package'] = async () => [200, { ok: true, package: GFX_PKG }];
 
