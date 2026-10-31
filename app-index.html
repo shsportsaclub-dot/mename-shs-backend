@@ -11484,6 +11484,24 @@ Object.assign(C,{ovAd(v){S.stream.adText=String(v||'').slice(0,140);save()}});
  const r0=render;render=function(){r0.apply(this,arguments);fit();setTimeout(fit,60)};
  addEventListener('resize',fit);
 }
+
+/* ---------------- 107 SCORER: live streaming setup right on the scoring screen (link, OBS overlay, AI scene, paid viewing) ---------------- */
+{
+ const cur=()=>S.matches.find(x=>x.id===UI.sid)||S.matches.filter(x=>x.status!=='done').slice(-1)[0];
+ const base=()=>location.href.split('#')[0].split('?')[0];
+ const v0=vScore;
+ vScore=function(){const h=v0.apply(this,arguments),m=cur();if(typeof h!=='string'||!m||!canStream())return h;
+  const key='m'+m.id,own=getStream(key),md=S.stream.mode||'camera',open=UI.scStr===undefined?!own:UI.scStr;
+  const card=`<div class="card sh-scstr" style="margin:10px 0"><div class="row" style="justify-content:space-between;align-items:center"><b>&#128250; Live streaming</b><span class="pill ${own?'ok':''}">${own?'Video link set':'Not set up'}</span><button class="btn sm ghost" data-a="scStrToggle">${open?'Hide':'Set up'}</button></div>
+  ${open?`<form data-f="scstream" style="margin-top:8px"><input type="hidden" name="key" value="${esc(key)}"><label>Stream link (YouTube Live, Facebook Live or .m3u8)<input name="url" inputmode="url" placeholder="https://www.youtube.com/live/..." value="${esc(own)}"></label><div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn sm">Save link</button>${own?'<button type="button" class="btn sm ghost" data-a="stDel" data-k="'+esc(key)+'">Remove</button>':''}</div></form>
+  <div class="mu sm" style="margin:8px 0">Go live with OBS, Larix or the YouTube/Facebook app, then paste the live link above. Viewers watch inside the match centre.</div>
+  <div class="sh-drs-row"><div>${SH_STR_MODES.map(x=>`<button class="${md===x[0]?'on':''}" data-a="strMode" data-v="${x[0]}">${x[1]}</button>`).join('')}</div></div>
+  <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:8px">${md==='ai'?'<button class="btn sm" data-a="openStudio">Open AI scene</button>':'<button class="btn sm" data-a="openOverlay">Open score overlay</button>'}<button class="btn sm ghost" data-a="copyStr" data-v="${md==='ai'?'ai':'ov'}">Copy OBS link</button><button class="btn sm ghost" data-a="scStrMore">Paid viewing and servers</button></div>`:''}</div>`;
+  return h+card};
+ Object.assign(A,{scStrToggle(){const m=cur(),own=m&&getStream('m'+m.id),o=UI.scStr===undefined?!own:UI.scStr;UI.scStr=!o;render()},
+  scStrMore(){const m=cur();if(m){UI.mid=m.id;UI.view='match'}render()}});
+ F.scstream=async function(fd){const url=String(fd.get('url')||'').trim(),key=String(fd.get('key')||'');if(url&&!/^https:\/\//i.test(url))return toast('The link must start with https://',3000);await saveStream(key,url);UI.scStr=!url;toast(url?'Stream link saved':'Stream removed');render()};
+}
 </script>
 </body>
 </html>
