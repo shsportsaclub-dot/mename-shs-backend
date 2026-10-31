@@ -9937,8 +9937,7 @@ try{if(S.settings&&S.settings.mskin==='ca'){S.settings.mskin='cb';try{save()}cat
   <div class="b" style="margin:10px 0 4px">Pitch (optional)</div>${window.shPitchDD?window.shPitchDD(q):''}
   <div class="row" style="margin-top:10px;gap:8px"><label style="flex:1">Match date<input type="date" id="qs-date" value="${esc(q.date||new Date().toISOString().slice(0,10))}"></label><label style="flex:1">Start time<input type="time" id="qs-time" value="${esc(q.time||'')}"></label></div>
   <label style="margin-top:10px">Ground / venue<input name="venue" id="qs-venue" list="qs-vl" value="${esc(q.venue)}" placeholder="Ground name" maxlength="60" autocomplete="off"><datalist id="qs-vl">${rec.map(n=>`<option value="${esc(n)}">`).join('')}</datalist></label>${window.shQsGround?window.shQsGround():''}`,
-   `<div class="b" style="margin:8px 0 4px">Toss won by</div>${ok2?`<div class="row" style="gap:6px">${chip('toss',q.a,T(q.a)?T(q.a).name:'',q.toss===q.a)}${chip('toss',q.b,T(q.b)?T(q.b).name:'',q.toss===q.b)}</div>`:'<div class="mu sm">Choose both teams first</div>'}
-  <div class="b" style="margin:8px 0 4px">Chose to</div><div class="row" style="gap:6px">${chip('dec','bat','Bat',q.dec==='bat')}${chip('dec','bowl','Bowl',q.dec==='bowl')}</div>
+   `${window.shQsToss?window.shQsToss(q,ok2,chip):''}
   <details ${q.more?'open':''} style="margin-top:10px" data-qsm="1"><summary class="mu sm" style="cursor:pointer">More options (optional)</summary>
    <label>Match name<input id="qs-name" value="${esc(q.name)}" placeholder="e.g. Sunday friendly" maxlength="50"></label>
    <div class="row"><label style="flex:1">Category<select data-c="qs" name="gender">${opt([['men','Men'],['women','Women'],['mixed','Mixed']],q.gender)}</select></label><label style="flex:1">Scorer<input id="qs-sc" value="${esc(q.sc)}" maxlength="40"></label></div>
@@ -11896,6 +11895,39 @@ Object.assign(C,{ovAd(v){S.stream.adText=String(v||'').slice(0,140);save()}});
  window.shPitchDD=function(q){const all=window.SH_PITCH||[],mine=(q.gpit||[]).filter(x=>all.some(a=>a[0]===x)),opts=[['','Not set']].concat(mine.length?mine.map(x=>[x,x+' (this ground)']):[]).concat(all.filter(a=>!mine.includes(a[0])));
   const cur=q.pitchType||'',note=(window.SH_PITCH_NOTE||{})[cur];
   return window.shDD('pitchType',opts,cur,'qsSet')+(UI.dd==='pitchType'?window.shDDList('pitchType',opts,cur,'qsSet'):'')+(note?`<div class="mu sm" style="margin:2px 0 6px">${esc(note)}</div>`:'')};
+}
+
+/* ---------------- 117 TOSS STEP: who calls, Heads or Tails, a coin that really spins (random), winner, then Bat or Bowl; or enter the result by hand ---------------- */
+{
+ const rnd=()=>{try{const a=new Uint8Array(1);crypto.getRandomValues(a);return a[0]&1}catch(e){return Math.random()<.5?1:0}};
+ const tn=id=>(T(id)||{}).name||'';
+ const tb=(k,v,l,on,dis)=>`<button type="button" class="btn sm ${on?'':'ghost'}" style="flex:1" data-a="qsToss" data-k="${k}" data-v="${esc(v)}" ${dis?'disabled':''}>${esc(l)}</button>`;
+ window.shQsToss=function(q,ok2,chip){
+  if(!ok2)return '<div class="b" style="margin:8px 0 4px">Toss</div><div class="mu sm">Choose both teams first</div>';
+  const man=q.tm==='manual',tabs=`<div class="row" style="gap:6px;margin:4px 0 8px">${tb('tm','flip','Flip the coin',!man)}${tb('tm','manual','Enter result',man)}</div>`;
+  const dec=w=>`<div class="b" style="margin:10px 0 4px">${w?esc(tn(w))+' chose to':'Chose to'}</div><div class="row" style="gap:6px">${chip('dec','bat','Bat first',q.dec==='bat')}${chip('dec','bowl','Bowl first',q.dec==='bowl')}</div>`;
+  if(man)return `<div class="b" style="margin:8px 0 4px">Toss</div>${tabs}<div class="b" style="margin:4px 0">Toss won by</div><div class="row" style="gap:6px">${chip('toss',q.a,tn(q.a),q.toss===q.a)}${chip('toss',q.b,tn(q.b),q.toss===q.b)}</div>${dec(q.toss)}`;
+  const done=!!q.tres,call=q.tside,by=q.tcall,anim=!!q.tanim;if(anim)setTimeout(()=>{q.tanim=false},80);
+  const face=r=>r==='H'?'HEADS':'TAILS',cls=done?(anim?'spin':'end')+q.tres:'';
+  const coin=`<div class="coinw"><div class="coin ${cls}"><div class="cf">HEADS</div><div class="cb">TAILS</div></div></div>`;
+  const res=done?`<div class="tres ${anim?'late':''}"><b>${face(q.tres)}</b>. ${esc(tn(by))} called ${face(call)}, so <b>${esc(tn(q.toss))}</b> won the toss.</div>`:'';
+  return `<div class="b" style="margin:8px 0 4px">Toss</div>${tabs}
+  <div class="mu sm">1. Who calls?</div><div class="row" style="gap:6px;margin:4px 0 8px">${tb('tcall',q.a,tn(q.a),by===q.a,done)}${tb('tcall',q.b,tn(q.b),by===q.b,done)}</div>
+  <div class="mu sm">2. Call</div><div class="row" style="gap:6px;margin:4px 0 8px">${tb('tside','H','Heads',call==='H',done)}${tb('tside','T','Tails',call==='T',done)}</div>
+  ${coin}${res}
+  <div class="row" style="gap:6px;margin:8px 0"><button type="button" class="btn" style="flex:1" data-a="qsFlip" ${done||!by||!call?'disabled':''}>\u{1FA99} ${done?'Flipped':'Flip the coin'}</button>${done?'<button type="button" class="btn ghost" data-a="qsFlipReset">Flip again</button>':''}</div>
+  ${done?dec(q.toss):'<div class="mu sm">Pick who calls and Heads or Tails, then flip.</div>'}`};
+ A.qsToss=function(d){if(window.shQsRead)window.shQsRead();const q=UI.qs;
+  if(d.k==='tm')q.tm=d.v;else if(d.k==='tcall')q.tcall=d.v;else if(d.k==='tside')q.tside=d.v;window.shQsShow()};
+ A.qsFlip=function(){if(window.shQsRead)window.shQsRead();const q=UI.qs;if(!q.tcall||!q.tside||q.tres)return;
+  const r=rnd()?'H':'T';q.tres=r;q.toss=r===q.tside?q.tcall:(q.tcall===q.a?q.b:q.a);q.tanim=true;q.dec=q.dec||'bat';window.shQsShow()};
+ A.qsFlipReset=function(){const q=UI.qs;q.tres='';q.tanim=false;window.shQsShow()};
+ const st=document.createElement('style');st.textContent='.coinw{perspective:600px;display:grid;place-items:center;height:118px}.coin{position:relative;width:96px;height:96px;transform-style:preserve-3d}.coin .cf,.coin .cb{position:absolute;inset:0;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:15px;letter-spacing:.5px;color:#5a3d00;background:radial-gradient(circle at 35% 30%,#ffe9a3,#e7b73a 60%,#b98a12);border:3px solid #fff3c4;box-shadow:inset 0 0 0 4px #c99a1a,0 4px 10px rgba(0,0,0,.35);backface-visibility:hidden}.coin .cb{transform:rotateY(180deg)}.coin.endH{transform:rotateY(1800deg)}.coin.endT{transform:rotateY(1980deg)}.coin.spinH{animation:cfH 1.7s cubic-bezier(.2,.7,.3,1) forwards}.coin.spinT{animation:cfT 1.7s cubic-bezier(.2,.7,.3,1) forwards}@keyframes cfH{0%{transform:translateY(0) rotateY(0)}45%{transform:translateY(-46px) rotateY(900deg)}100%{transform:translateY(0) rotateY(1800deg)}}@keyframes cfT{0%{transform:translateY(0) rotateY(0)}45%{transform:translateY(-46px) rotateY(990deg)}100%{transform:translateY(0) rotateY(1980deg)}}.tres{text-align:center;margin:4px 0}.tres.late{animation:tfade .4s 1.7s both}@keyframes tfade{from{opacity:0}to{opacity:1}}@media (prefers-reduced-motion:reduce){.coin.spinH{animation:none;transform:rotateY(1800deg)}.coin.spinT{animation:none;transform:rotateY(1980deg)}.tres.late{animation:none}}';document.head.appendChild(st);
+ const s0=A.qsStart;A.qsStart=function(){const q=UI.qs;
+  if(q&&q.tm!=='manual'&&!q.tres)return toast('Flip the coin first, or choose Enter result',3500);
+  const n=S.matches.length,snap=q?{tm:q.tm==='manual'?'manual':'coin',by:q.tcall,call:q.tside,res:q.tres,toss:q.toss}:null,r=s0.apply(this,arguments);
+  if(snap&&S.matches.length>n){const m=S.matches[S.matches.length-1];m.tossInfo={mode:snap.tm,caller:snap.tm==='coin'?snap.by:'',call:snap.tm==='coin'?snap.call:'',result:snap.tm==='coin'?snap.res:'',winner:m.toss};try{save&&save()}catch(e){}if(q){q.tres='';q.tcall='';q.tside=''}}
+  return r};
 }
 </script>
 </body>

@@ -13,7 +13,7 @@ const boot=async(b)=>{const p=await b.newPage({viewport:{width:412,height:900}})
  await p.click('button[data-a=qsRule][data-v=impact]');assert.equal(await p.locator('input[data-c=qssub]').count(),4);
  await p.click('input[data-c=qssub][data-t=a] >> nth=0');await p.click('input[data-c=qssub][data-t=b] >> nth=0');
  await p.click('button[data-a=qsStep][data-v="1"]');await p.fill('#qs-venue','Test Ground');
- await p.click('button[data-a=qsStep][data-v="1"]');await p.click('button[data-a=qsStart]');await p.waitForTimeout(300);
+ await p.click('button[data-a=qsStep][data-v="1"]');await p.evaluate(()=>{if(UI.qs)UI.qs.tm='manual'});await p.click('button[data-a=qsStart]');await p.waitForTimeout(300);
  const m0=await p.evaluate(()=>{const m=S.matches[0];return {r:m.subRule,sa:m.subs.a.length,sb:m.subs.b.length}});
  assert.deepEqual(m0,{r:'impact',sa:1,sb:1});assert.deepEqual(p.errs,[]);
  /* super sub needs exactly one */

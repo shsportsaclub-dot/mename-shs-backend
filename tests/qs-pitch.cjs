@@ -22,6 +22,6 @@ const opts=await p.locator('#qg-pitch option').allInnerTexts();assert.ok(opts.in
 assert.ok(await p.locator('#qg-pitch2').count());
 /* start: the match keeps the pitch */
 await p.evaluate(()=>{UI.qg=null;UI.qs.gid='';UI.qs.step=2;shQsShow()});
-await p.fill('#qs-venue','Soil Ground');await p.click('button[data-a=qsStep][data-v="1"]');await p.click('button[data-a=qsStart]');await p.waitForTimeout(300);
+await p.fill('#qs-venue','Soil Ground');await p.click('button[data-a=qsStep][data-v="1"]');await p.evaluate(()=>{if(UI.qs)UI.qs.tm='manual'});await p.click('button[data-a=qsStart]');await p.waitForTimeout(300);
 assert.equal(await p.evaluate(()=>S.matches[0].pitchType),'Black soil');
 assert.deepEqual(errs,[]);console.log('PASS qs-pitch');await b.close()})().catch(e=>{console.error(e);process.exit(1)})

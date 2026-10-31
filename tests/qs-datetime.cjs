@@ -7,6 +7,6 @@ S.teams=[{id:'a',name:'India',short:'IND',players:S.players.slice(0,11).map(p=>p
 render();A.newMatch();const q=UI.qs;q.step=2;shQsShow();
 const has=!!document.getElementById('qs-date')&&!!document.getElementById('qs-time')&&!!document.getElementById('qs-ov');
 document.getElementById('qs-date').value='2026-11-02';document.getElementById('qs-time').value='14:30';document.getElementById('qs-ov').value='12';
-shQsRead();q.venue='QA Ground';q.step=3;shQsShow();A.qsStart();const m=S.matches[S.matches.length-1];
+shQsRead();q.venue='QA Ground';q.step=3;shQsShow();UI.qs.tm='manual';A.qsStart();const m=S.matches[S.matches.length-1];
 return {has,overs:m&&m.overs,date:m&&m.date,time:m&&m.time,st:m&&m.startTime}});
 console.log(JSON.stringify(r));const ok=r.has&&r.overs===12&&r.date==='2026-11-02'&&/^2026-11-02T/.test(r.time||'')&&r.st==='14:30'&&!errs.length;console.log(ok?'PASS qs date/time/overs':'FAIL '+errs);process.exitCode=ok?0:1;await b.close()})()

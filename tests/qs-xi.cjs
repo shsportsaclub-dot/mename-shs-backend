@@ -29,7 +29,7 @@ await p.evaluate(()=>{UI.qs.xi.b=UI.qs.xi.b.slice(0,3);shQsShow()});assert.ok(aw
 await p.fill('#xs-b','Player 2');assert.ok(await p.locator('#xb-b .xir:visible').count()<10);
 /* start: captain and keeper stored on the match */
 await p.evaluate(()=>{UI.qs.xi.a=['p0','p1','p2','p3','p4','p5','p6','p7','p8','p9','p11'];UI.qs.xi.b=S.teams[1].players.slice(0,11);UI.qs.cap.a='p0';UI.qs.keeper.a='p3';shQsShow()});
-await p.click('button[data-a=qsStep][data-v="1"]');await p.fill('#qs-venue','XI Ground');await p.click('button[data-a=qsStep][data-v="1"]');await p.click('button[data-a=qsStart]');await p.waitForTimeout(300);
+await p.click('button[data-a=qsStep][data-v="1"]');await p.fill('#qs-venue','XI Ground');await p.click('button[data-a=qsStep][data-v="1"]');await p.evaluate(()=>{if(UI.qs)UI.qs.tm='manual'});await p.click('button[data-a=qsStart]');await p.waitForTimeout(300);
 const m=await p.evaluate(()=>{const m=S.matches[0];return m&&{cap:m.cap.a,k:m.keeper.a,xi:m.xi.a.length}});
 assert.deepEqual(m,{cap:'p0',k:'p3',xi:11});
 /* next match: same XI as last */

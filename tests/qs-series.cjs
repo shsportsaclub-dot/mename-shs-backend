@@ -20,7 +20,7 @@ assert.match(await p.locator('#modal').innerText(),/Winter Cup rules[\s\S]*10 ov
 await p.evaluate(()=>{A.qsSet({k:'overs',v:'50'});A.qsSet({k:'ball',v:'leather'});A.qsFmt({v:'odi'})});
 assert.deepEqual(await p.evaluate(()=>[UI.qs.overs,UI.qs.fmt,UI.qs.ball]),['10','t10','tennis'],'cannot drift from the tournament');
 await p.click('button[data-a=qsStep][data-v="1"]');await p.click('button[data-a=qsStep][data-v="1"]');await p.fill('#qs-venue','Cup Ground');
-await p.click('button[data-a=qsStep][data-v="1"]');await p.click('button[data-a=qsStart]');await p.waitForTimeout(300);
+await p.click('button[data-a=qsStep][data-v="1"]');await p.evaluate(()=>{if(UI.qs)UI.qs.tm='manual'});await p.click('button[data-a=qsStart]');await p.waitForTimeout(300);
 const r=await p.evaluate(()=>{const m=S.matches[0];return m&&{mode:m.mode,tid:m.tid,fid:m.fid,linked:S.tours[0].fixtures[0].mid===m.id}});
 assert.deepEqual(r,{mode:'tournament',tid:'t1',fid:'f1',linked:true});
 assert.equal(await p.evaluate(()=>S.matches[0].overs),10,'match follows the tournament overs');

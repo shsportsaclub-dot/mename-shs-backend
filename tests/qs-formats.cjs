@@ -40,7 +40,7 @@ await pick('fmt','hundred');t=await txt();ok(await p.evaluate(()=>UI.qs.overs===
 // order: format, ball, pitch, date, ground
 const ord=['Format','Ball','Pitch','Match date','Ground / venue'].map(x=>t.indexOf(x));ok(ord.every((v,i)=>v>=0&&(i===0||v>ord[i-1])),'section order '+ord);
 await pick('fmt','t10');await pick('pitchType','Cement');await p.fill('#qs-venue','Box Arena');
-await p.click('button[data-a=qsStep][data-v="1"]');await p.waitForTimeout(150);await p.click('button[data-a=qsStart]');await p.waitForTimeout(300);
+await p.click('button[data-a=qsStep][data-v="1"]');await p.waitForTimeout(150);await p.evaluate(()=>{if(UI.qs)UI.qs.tm='manual'});await p.click('button[data-a=qsStart]');await p.waitForTimeout(300);
 const r=await p.evaluate(()=>{const m=S.matches[0];return m&&{overs:m.overs,gtype:m.gtype,level:m.cat&&m.cat.level,pitch:m.pitchType,ball:m.ball,rem:S.prefs.qs,area:((S.venues[0]||{}).areas||[]).map(a=>a.name).join()}});
 ok(r&&r.overs===10&&r.gtype==='ibox'&&r.level==='corporate'&&r.pitch==='Cement'&&r.ball==='tennis','saved on the match '+JSON.stringify(r));
 ok(r&&r.rem.fmt==='t10'&&r.rem.gtype==='ibox'&&r.rem.mcat==='corporate'&&/Indoor box cricket/.test(r.area),'remembered + area '+JSON.stringify(r));
@@ -50,7 +50,7 @@ ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'fits 
 await p.evaluate(()=>{S.matches=[];A.newMatch()});await p.waitForTimeout(150);
 ok(await p.evaluate(()=>UI.qs.mcat==='corporate'),'last real type remembered');
 await pick('mcat','demo');await p.fill('#qs-venue','Demo Ground').catch(()=>{});
-await p.click('button[data-a=qsStep][data-v="1"]');await p.click('button[data-a=qsStep][data-v="1"]');await p.fill('#qs-venue','Demo Ground');await p.click('button[data-a=qsStep][data-v="1"]');await p.waitForTimeout(150);await p.click('button[data-a=qsStart]');await p.waitForTimeout(300);
+await p.click('button[data-a=qsStep][data-v="1"]');await p.click('button[data-a=qsStep][data-v="1"]');await p.fill('#qs-venue','Demo Ground');await p.click('button[data-a=qsStep][data-v="1"]');await p.waitForTimeout(150);await p.evaluate(()=>{if(UI.qs)UI.qs.tm='manual'});await p.click('button[data-a=qsStart]');await p.waitForTimeout(300);
 const d=await p.evaluate(()=>{const m=S.matches[0];return m&&{demo:isDemo(m),level:m.cat&&m.cat.level,rem:S.prefs.qs.mcat}});
 ok(d&&d.demo===true&&d.level===''&&d.rem==='corporate','demo match '+JSON.stringify(d));
 // 24-hour expiry: a fresh demo stays, an older one goes, a real match is never touched

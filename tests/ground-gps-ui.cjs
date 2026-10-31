@@ -22,7 +22,7 @@ await p.evaluate(()=>{UI.qg=null;A.newMatch();UI.qs.step=2;shQsShow()});await p.
 ok(await p.evaluate(()=>/You are at a registered ground/.test(document.body.innerText)&&/Sky Turf Ground/.test(document.body.innerText)),'existing ground offered');
 await p.click('button[data-a=qsPickG]');await p.waitForTimeout(200);
 await p.evaluate(()=>{for(const id of ['t1p0','t1p1'])UI.qs.xi&&0;});
-await p.evaluate(()=>{UI.qs.step=3;shQsShow()});await p.click('button[data-a=qsStart]');await p.waitForTimeout(800);
+await p.evaluate(()=>{UI.qs.step=3;shQsShow()});await p.evaluate(()=>{if(UI.qs)UI.qs.tm='manual'});await p.click('button[data-a=qsStart]');await p.waitForTimeout(800);
 const r=await p.evaluate(()=>({n:S.matches.length,gid:(S.venues.find(v=>v.name==='Sky Turf Ground')||{}).gid,posts:window.__posts.length}));
 ok(r.n>=1&&r.gid==='g1','match started with ground linked '+JSON.stringify(r));
 await p.evaluate(()=>shGroundSync());await p.waitForTimeout(300);
