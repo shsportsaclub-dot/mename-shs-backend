@@ -3,8 +3,8 @@ const {chromium}=require('playwright');const assert=require('node:assert/strict'
 await p.route('**/*',r=>r.request().url().startsWith('file:')?r.continue():r.fulfill({contentType:'application/json',body:'{"ok":false}'}));
 await p.goto('file://'+process.cwd()+'/app-index.html');await p.waitForTimeout(400);
 await p.evaluate(()=>{UI.stage='app';S.user={name:'QA',role:'admin',phone:'+910000000000'};S.prefs={...S.prefs,asked:1,welcomed:1,avDone:1,avSkip:1,country:'IN'};UI.view='social';render()});
-assert.equal(await p.locator('.sdpanel .sdb.add').count(),2,'two Add tiles');
-await p.click('.sdb.add >> nth=0');
+assert.equal(await p.locator('.sdpanel .sdb.add').count(),3,'three Add tiles');
+await p.click('.sdb.add >> nth=0');await p.click('button[data-a=sdMode][data-v=social]');
 let names=await p.locator('.sdgrid .sdb span:last-child').allInnerTexts();
 assert.ok(names.includes('ShareChat')&&names.includes('YouTube')&&!names.includes('Weibo'),'India list: '+names);
 await p.selectOption('select[data-c=sdCty]','CN');names=await p.locator('.sdgrid .sdb span:last-child').allInnerTexts();assert.ok(names.includes('Weibo')&&!names.includes('ShareChat'),'China list');
@@ -12,10 +12,12 @@ await p.selectOption('select[data-c=sdCty]','IN');await p.click('.sdgrid .sdb:ha
 await p.fill('form[data-f=sdsave] input[name=label]','SH Cricket Live');await p.fill('form[data-f=sdsave] input[name=key]','abcd-1234');await p.click('form[data-f=sdsave] button');
 assert.equal(await p.evaluate(()=>S.settings.dest.length),1);assert.ok(!(await p.evaluate(()=>JSON.stringify(S))).includes('abcd-1234'),'key not in S');
 assert.equal(await p.locator('.sdpanel .sdb:has-text("SH Cricket Live")').count(),1);
-assert.equal(await p.locator('.sdpanel .sdb.add').count(),2);
+assert.equal(await p.locator('.sdpanel .sdb.add').count(),3);
+await p.click('.sdb.add >> nth=0');await p.click('button[data-a=sdMode][data-v=custom]');await p.fill('form[data-f=sdsave] input[name=label]','Club net');await p.fill('form[data-f=sdsave] input[name=rtmp]','http://bad');await p.click('form[data-f=sdsave] button');assert.equal(await p.evaluate(()=>S.settings.dest.length),1,'bad rtmp rejected');await p.fill('form[data-f=sdsave] input[name=rtmp]','rtmp://live.example.com/app');await p.fill('form[data-f=sdsave] input[name=key]','k-999');await p.click('form[data-f=sdsave] button');assert.equal(await p.evaluate(()=>S.settings.dest[1].rtmp),'rtmp://live.example.com/app');assert.ok(!(await p.evaluate(()=>JSON.stringify(S))).includes('k-999'));
 /* broadcast dashboard */
 await p.evaluate(()=>{UI.view='stream';render()});
-await p.click('.bdt button:has-text("Go live")');assert.match(await p.locator('.bdcard').innerText(),/rtmp:\/\/a\.rtmp\.youtube\.com/);
+await p.click('.bdt button:has-text("Go live")');assert.match(await p.locator('.bdcard').innerText(),/rtmp:\/\/a\.rtmp\.youtube\.com/);assert.match(await p.locator('.bdcard').innerText(),/rtmp:\/\/live\.example\.com/);
+await p.evaluate(()=>{S.settings.dest=[];render()});assert.match(await p.locator('.bdcard').innerText(),/YouTube \(default\)/);
 await p.click('.bdt button:has-text("Animations")');await p.click('button[data-a=bdAnim][data-v=slide]');assert.equal(await p.evaluate(()=>S.stream.anim),'slide');
 await p.evaluate(()=>{S.stream.tick={lines:'Drinks break\nSponsor: Acme',live:true,msg:true,speed:'f'};UI.ovScene='ticker';render()});
 assert.match(await p.locator('.ovprev').innerHTML(),/Drinks break/);

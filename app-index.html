@@ -11527,6 +11527,7 @@ Object.assign(C,{ovAd(v){S.stream.adText=String(v||'').slice(0,140);save()}});
   ['pinterest','Pinterest','#E60023',T_('P'),'*',(t,u)=>'https://www.pinterest.com/pin/create/button/?url='+E(u)+'&description='+E(t),null,'https://www.pinterest.com/'],
   ['reddit','Reddit','#FF4500',T_('r/'),'*',(t,u)=>'https://www.reddit.com/submit?url='+E(u)+'&title='+E(t),null,'https://www.reddit.com/'],
   ['twitch','Twitch','#9146FF',T_('T'),'*',null,{rtmp:'rtmp://live.twitch.tv/app',studio:'https://dashboard.twitch.tv/stream-manager'},'https://www.twitch.tv/'],
+  ['custom','Custom (any network)','#455A64','<b style="font-size:11px">RTMP</b>',[],null,{rtmp:''},''],
   ['sharechat','ShareChat','#FF6D00',T_('SC'),['IN'],null,null,'https://sharechat.com/'],
   ['moj','Moj','#E91E63',T_('M'),['IN'],null,null,'https://mojapp.in/'],
   ['josh','Josh','#8E24AA',T_('J'),['IN'],null,null,'https://myjosh.in/'],
@@ -11549,39 +11550,43 @@ Object.assign(C,{ovAd(v){S.stream.adText=String(v||'').slice(0,140);save()}});
  const KEYS={get(){try{return JSON.parse(localStorage.getItem('sh-dest-keys')||'{}')}catch(e){return{}}},set(id,k){try{const o=KEYS.get();if(k)o[id]=k;else delete o[id];localStorage.setItem('sh-dest-keys',JSON.stringify(o))}catch(e){}}};
  const D=()=>(S.settings.dest=S.settings.dest||[]);
  const SD=()=>(UI.sd=UI.sd||{add:false,p:'',q:'',cty:(S.prefs&&S.prefs.country)||''});
- const forCountry=cty=>PL.map(p=>PLM[p[0]]).filter(p=>p.cc==='*'||cty==='ALL'||(cty&&p.cc.includes(cty)));
+ const forCountry=cty=>PL.map(p=>PLM[p[0]]).filter(p=>p.id!=='custom').filter(p=>p.cc==='*'||cty==='ALL'||(cty&&p.cc.includes(cty)));
  const capNow=()=>{const ta=document.getElementById('socCap');if(ta&&ta.value)return ta.value;try{return shareText(curM())}catch(e){return (S.settings.appName||'Scoring Heroes')+' live cricket'}};
  const url0=()=>location.origin+location.pathname;
  window.shDestPanel=function(ctx){
   const sd=SD(),L=D(),n=L.length;
-  const strip=`<div class="sdstrip">${L.map(d=>{const p=PLM[d.p];return p?`<button class="sdb" data-a="sdPost" data-id="${esc(d.id)}" title="Post to ${esc(p.n)}">${ico(p)}<span>${esc(d.label||p.n)}</span></button>`:''}).join('')}${[n+1,n+2].map(i=>`<button class="sdb add" data-a="sdAdd">${'<span class="sdi" style="background:var(--c2,#223)">+</span>'}<span>Add ${i}</span></button>`).join('')}</div>`;
+  const strip=`<div class="sdstrip">${L.map(d=>{const p=PLM[d.p];return p?`<button class="sdb" data-a="sdPost" data-id="${esc(d.id)}" title="Post to ${esc(p.n)}">${ico(p)}<span>${esc(d.label||p.n)}</span></button>`:''}).join('')}${[n+1,n+2,n+3].map(i=>`<button class="sdb add" data-a="sdAdd">${'<span class="sdi" style="background:var(--c2,#223)">+</span>'}<span>Add ${i}</span></button>`).join('')}</div>`;
   let add='';
   if(sd.add){
-   const cty=sd.cty,lst=forCountry(cty),pick=sd.p&&PLM[sd.p];
-   add=`<div class="card" style="margin-top:8px"><div class="row" style="justify-content:space-between"><b>Add a social account</b><button class="btn sm ghost" data-a="sdClose">Close</button></div>
-   <label>Country<select data-c="sdCty"><option value="" ${!cty?'selected':''}>Worldwide apps only</option><option value="ALL" ${cty==='ALL'?'selected':''}>All countries (every app)</option>${WC.map(([k,nm])=>`<option value="${k}" ${cty===k?'selected':''}>${esc(nm)}</option>`).join('')}</select></label>
+   const cty=sd.cty,lst=forCountry(cty),pick=sd.p&&PLM[sd.p],mode=sd.mode||'';
+   const head=`<div class="row" style="justify-content:space-between"><b>Add network ${n+1}</b><button class="btn sm ghost" data-a="sdClose">Close</button></div><div class="row" style="gap:8px;margin:8px 0"><button class="btn sm ${mode==='custom'?'':'ghost'}" data-a="sdMode" data-v="custom">Custom</button><button class="btn sm ${mode==='social'?'':'ghost'}" data-a="sdMode" data-v="social">Social media</button></div>`;
+   let inner='<div class="mu sm">Custom: any network with an RTMP server and key. Social media: pick an app (YouTube, Facebook, Instagram...). If you add nothing, going live uses YouTube by default.</div>';
+   if(mode==='custom')inner=`<form data-f="sdsave"><input type="hidden" name="p" value="custom"><label>Name<input name="label" maxlength="30" placeholder="My club network" required></label><label>RTMP server (rtmp:// or rtmps://)<input name="rtmp" inputmode="url" placeholder="rtmp://live.example.com/app" required></label><label>Stream key (saved on this device only)<input name="key" autocomplete="off" placeholder="paste the key"></label><label>Viewer link (where people watch, optional)<input name="link" inputmode="url" placeholder="https://..."></label><button class="btn wide">Save network</button></form>`;
+   else if(mode==='social')inner=`<label>Country<select data-c="sdCty"><option value="" ${!cty?'selected':''}>Worldwide apps only</option><option value="ALL" ${cty==='ALL'?'selected':''}>All countries (every app)</option>${WC.map(([k,nm])=>`<option value="${k}" ${cty===k?'selected':''}>${esc(nm)}</option>`).join('')}</select></label>
    <div class="sdgrid">${lst.map(p=>`<button type="button" class="sdb ${sd.p===p.id?'on':''}" data-a="sdPick" data-v="${p.id}">${ico(p)}<span>${esc(p.n)}</span></button>`).join('')}</div>
-   ${pick?`<form data-f="sdsave" style="margin-top:10px"><input type="hidden" name="p" value="${pick.id}"><label>Account name (shown on the button)<input name="label" maxlength="30" placeholder="${esc(pick.n)} - my club" required></label><label>Page / channel link<input name="link" inputmode="url" placeholder="https://..." ></label>
-   ${pick.live&&pick.live.rtmp?`<label>Stream key (optional, saved on this device only)<input name="key" autocomplete="off" placeholder="paste from ${esc(pick.n)} studio"></label>`:''}<button class="btn wide">Save ${esc(pick.n)}</button></form>`:'<div class="mu sm" style="margin-top:8px">Tap an app to add it.</div>'}</div>`}
+   ${pick&&pick.id!=='custom'?`<form data-f="sdsave" style="margin-top:10px"><input type="hidden" name="p" value="${pick.id}"><label>Account name (shown on the button)<input name="label" maxlength="30" placeholder="${esc(pick.n)} - my club" required></label><label>Page / channel / live link (viewers open this)<input name="link" inputmode="url" placeholder="https://..."></label>
+   ${pick.live&&pick.live.rtmp?`<label>Stream key (optional, saved on this device only)<input name="key" autocomplete="off" placeholder="paste from ${esc(pick.n)} studio"></label>`:''}<button class="btn wide">Save ${esc(pick.n)}</button></form>`:'<div class="mu sm" style="margin-top:8px">Tap an app to add it.</div>'}`;
+   add=`<div class="card" style="margin-top:8px">${head}${inner}</div>`}
   return `<div class="card sdpanel"><div class="row" style="justify-content:space-between"><b>${ctx==='live'?'Your streaming accounts':'Post to your social accounts'}</b><span class="mu sm">${n} saved</span></div>${strip}${add}
   ${ctx==='social'?`<div class="mu sm" style="margin-top:6px">Tap an account: the caption opens ready to post where the app allows it. Instagram, TikTok and Snapchat have no web post, so the caption is copied and the app opens.</div>`:''}</div>`};
  window.shGoLivePanel=function(){
-  const L=D().filter(d=>PLM[d.p]&&PLM[d.p].live),keys=KEYS.get();
-  if(!L.length)return `<div class="mu sm">Add YouTube, Facebook, Twitch or another live-enabled account above to see its server and stream key fields here.</div>`;
+  const L=D().filter(d=>PLM[d.p]&&PLM[d.p].live&&(d.p!=='custom'||d.rtmp||true)),keys=KEYS.get();
+  if(!L.length){const y=PLM.youtube;return `<div class="item" style="display:block"><div class="row" style="gap:8px;align-items:center">${ico(y)}<b style="flex:1">YouTube (default)</b></div><div class="mu sm" style="margin-top:6px">No network added, so going live uses YouTube. Server: <code>${esc(y.live.rtmp)}</code></div><div class="mu sm">Copy the stream key from YouTube Studio, then paste it in OBS or Larix.</div><a class="btn sm" style="margin-top:6px;display:inline-block" href="${y.live.studio}" target="_blank" rel="noopener">Open YouTube live studio</a></div><div class="mu sm" style="margin-top:6px">Add Custom or Social media networks above to stream to more places.</div>`}
   return L.map(d=>{const p=PLM[d.p],lv=p.live;return `<div class="item" style="display:block"><div class="row" style="gap:8px;align-items:center">${ico(p)}<b style="flex:1">${esc(d.label||p.n)}</b><button class="btn sm ghost" data-a="sdDel" data-id="${esc(d.id)}">Remove</button></div>
-   ${lv.rtmp?`<div class="mu sm" style="margin-top:6px">Server: <code>${esc(lv.rtmp)}</code> <button class="btn sm ghost" data-a="sdCopy" data-w="s" data-id="${esc(d.id)}">Copy</button></div><div class="mu sm">Stream key: ${keys[d.id]?'saved on this device':'not saved'} <button class="btn sm ghost" data-a="sdCopy" data-w="k" data-id="${esc(d.id)}">Copy key</button></div>`:''}
+   ${(d.rtmp||lv.rtmp)?`<div class="mu sm" style="margin-top:6px">Server: <code>${esc(d.rtmp||lv.rtmp)}</code> <button class="btn sm ghost" data-a="sdCopy" data-w="s" data-id="${esc(d.id)}">Copy</button></div><div class="mu sm">Stream key: ${keys[d.id]?'saved on this device':'not saved'} <button class="btn sm ghost" data-a="sdCopy" data-w="k" data-id="${esc(d.id)}">Copy key</button></div>`:''}
    ${lv.note?`<div class="mu sm">${esc(lv.note)}</div>`:''}${lv.studio?`<a class="btn sm" style="margin-top:6px;display:inline-block" href="${lv.studio}" target="_blank" rel="noopener">Open ${esc(p.n)} live studio</a>`:''}</div>`}).join('')+`<div class="mu sm" style="margin-top:8px">The app cannot send video by itself. In OBS (or Larix on a phone) paste the server and key for each account. To go live on several apps at once use OBS with a multi-output plugin or a restream service. The score overlay works with all of them.</div>`};
  Object.assign(A,{
-  sdAdd(){SD().add=true;render()},sdClose(){SD().add=false;SD().p='';render()},sdPick(d){SD().p=d.v;render()},
+  sdAdd(){SD().add=true;SD().mode='';SD().p='';render()},sdMode(d){SD().mode=d.v;SD().p='';render()},sdClose(){SD().add=false;SD().p='';render()},sdPick(d){SD().p=d.v;render()},
   sdDel(d){S.settings.dest=D().filter(x=>x.id!==d.id);KEYS.set(d.id,'');commit();render()},
-  sdCopy(d){const x=D().find(y=>y.id===d.id);if(!x)return;const v=d.w==='k'?KEYS.get()[x.id]:(PLM[x.p].live||{}).rtmp;if(!v)return toast('Nothing saved to copy yet',3000);try{navigator.clipboard.writeText(v).then(()=>toast('Copied')).catch(()=>toast('Copy failed',3000))}catch(e){toast('Copy failed',3000)}},
+  sdCopy(d){const x=D().find(y=>y.id===d.id);if(!x)return;const v=d.w==='k'?KEYS.get()[x.id]:(x.rtmp||(PLM[x.p].live||{}).rtmp);if(!v)return toast('Nothing saved to copy yet',3000);try{navigator.clipboard.writeText(v).then(()=>toast('Copied')).catch(()=>toast('Copy failed',3000))}catch(e){toast('Copy failed',3000)}},
   sdPost(d){const x=D().find(y=>y.id===d.id),p=x&&PLM[x.p];if(!p)return;const cap=capNow(),u=url0(),link=p.share&&p.share(cap,u);
    if(link){window.open(link,'_blank','noopener');return}
    try{navigator.clipboard.writeText(cap+' '+u)}catch(e){}
    toast('Caption copied. Add the poster in '+p.n+' and paste.',5000);const to=x.link&&/^https:\/\//i.test(x.link)?x.link:p.home;if(to)window.open(to,'_blank','noopener')}});
  Object.assign(C,{sdCty(v){SD().cty=v;SD().p='';render()}});
  F.sdsave=function(fd){const p=String(fd.get('p')||''),pl=PLM[p];if(!pl)return;let link=String(fd.get('link')||'').trim();if(link&&!/^https:\/\//i.test(link))return toast('The link must start with https://',3000);
-  const id=uid();D().push({id,p,label:String(fd.get('label')||pl.n).slice(0,30),link});const k=String(fd.get('key')||'').trim();if(k)KEYS.set(id,k);
+  let rtmp='';if(p==='custom'){rtmp=String(fd.get('rtmp')||'').trim();if(!/^rtmps?:\/\/[^\s]+$/i.test(rtmp))return toast('The server must start with rtmp:// or rtmps://',3500)}
+  const id=uid();D().push({id,p,label:String(fd.get('label')||pl.n).slice(0,30),link,...(rtmp?{rtmp}:{})});const k=String(fd.get('key')||'').trim();if(k)KEYS.set(id,k);
   UI.sd.add=false;UI.sd.p='';commit();toast(pl.n+' added');render()};
  /* Social studio: the accounts strip sits under the share buttons */
  {const s0=XV.social;XV.social=function(){const h=s0.apply(this,arguments);return typeof h==='string'?h+window.shDestPanel('social'):h}}
