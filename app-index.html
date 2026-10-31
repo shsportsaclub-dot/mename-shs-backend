@@ -11232,6 +11232,21 @@ Object.assign(C,{ovAd(v){S.stream.adText=String(v||'').slice(0,140);save()}});
  const id=new URLSearchParams(location.search).get('pay');
  if(id){let done=0;const r0=render;render=function(){const o=r0.apply(this,arguments);if(!done&&S.user&&UI.stage==='app'){done=1;setTimeout(()=>openPay(id),300)}return o}}
 }
+/* ---------------- 96 TOURNAMENT ENTRY FEE (UPI): the organiser sets an amount and their UPI ID, a UPI charge is created for the tournament, and teams asking to join see a Pay entry fee button ---------------- */
+{
+ const base=()=>(typeof apiBase==='function'&&apiBase())||'';
+ const call=async(m,path,body)=>{try{const r=await fetch(base()+path,{method:m,headers:{'Content-Type':'application/json',Authorization:'Bearer '+(S.tok||'')},body:m==='GET'?undefined:JSON.stringify(body||{})});return await r.json()}catch(e){return {ok:false,error:'No connection'}}};
+ const val=id=>String((document.getElementById(id)||{}).value||'').trim();
+ const x0=XV.tour;XV.tour=function(){const o=x0.apply(this,arguments),t=trObj(UI.tid);if(!t||UI.ttab!=='info'||!can())return o;
+  const has=!!t.feeCharge,card=`<div class="card" id="trfee"><h3>Entry fee (UPI)</h3><div class="mu sm">Teams pay straight to your UPI ID. You confirm each payment under More > Collect payments. The tournament must be shared so teams can find it.</div>${has?`<div class="mu sm" style="margin-top:6px">Fee charge is active${t.feeAmt?': ₹'+esc(String(t.feeAmt)):''}.</div><button type="button" class="btn sm ghost" style="margin-top:6px" data-a="go" data-v="collect">Open Collect payments</button>`:`<div class="row" style="gap:8px;margin-top:6px"><label style="flex:1">Fee per team (₹)<input id="tf-a" inputmode="decimal" placeholder="1000"></label><label style="flex:1">Your UPI ID<input id="tf-u" placeholder="name@bank" autocapitalize="off" value="${esc((S.settings&&S.settings.upi)||'')}"></label></div><button type="button" class="btn sm" style="margin-top:6px" data-a="trFee">Create entry fee</button>`}</div>`;
+  return o.replace(/<\/div>\s*$/,card+'</div>')};
+ A.trFee=async function(){const t=trObj(UI.tid);if(!t||!can())return;const a=Math.round(parseFloat(val('tf-a').replace(/,/g,''))*100);if(!(a>=100))return toast('Enter the fee in rupees');
+  const r=await call('POST','/api/pay/charge',{title:(t.name+' entry fee').slice(0,80),amount:a,upi:val('tf-u'),payee:(S.user&&(S.user.name||S.user.nick))||'',kind:'tour',ref:t.id});
+  if(!r.ok)return toast(r.error||'Could not create the fee',4500);t.feeCharge=r.id;t.feeAmt=a/100;if(S.settings)S.settings.upi=val('tf-u');commit();toast('Entry fee created. Share the tournament so teams can pay.',4000)};
+ const j0=XV.tjoin;XV.tjoin=function(){const o=j0.apply(this,arguments),i=(UI.tj||{}).info;if(!i||!i.fee)return o;
+  return o+`<div class="card"><h3>Entry fee</h3><div class="mu sm">This tournament collects an entry fee by UPI. Pay the organiser directly, then submit the UTR on the payment page.</div><button type="button" class="btn sm" style="margin-top:6px" data-a="tjPay" data-id="${esc(i.fee)}">Pay entry fee</button></div>`};
+ A.tjPay=function(d){window.shPayOpen&&window.shPayOpen(d.id)};
+}
 </script>
 </body>
 </html>

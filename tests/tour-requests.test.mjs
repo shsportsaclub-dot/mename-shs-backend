@@ -15,8 +15,8 @@ test('tournament team approval: request, duplicates, only organiser decides, rea
     await new Promise(r => setTimeout(r, 1500));
     let st, j;
     [st] = await call('GET', '/api/tours/info?tid=nope'); assert.equal(st, 404);
-    [st] = await call('PUT', '/api/shared/tours/tour-1', T.o, { data: { t: { id: 'tour-1', name: 'Summer Cup', overs: 20, teams: ['a'] }, teams: {} } }); assert.equal(st, 200);
-    [st, j] = await call('GET', '/api/tours/info?tid=tour-1'); assert.equal(j.tour.name, 'Summer Cup'); assert.equal(j.tour.organizer, 'Org');
+    [st] = await call('PUT', '/api/shared/tours/tour-1', T.o, { data: { t: { id: 'tour-1', name: 'Summer Cup', overs: 20, teams: ['a'], feeCharge: 'py0123456789' }, teams: {} } }); assert.equal(st, 200);
+    [st, j] = await call('GET', '/api/tours/info?tid=tour-1'); assert.equal(j.tour.name, 'Summer Cup'); assert.equal(j.tour.organizer, 'Org'); assert.equal(j.tour.fee, 'py0123456789');
     [st] = await call('POST', '/api/tours/join', null, { tid: 'tour-1', name: 'Lions' }); assert.equal(st, 401);
     [st] = await call('POST', '/api/tours/join', T.a, { tid: 'tour-1', name: 'L' }); assert.equal(st, 400);
     [st, j] = await call('POST', '/api/tours/join', T.a, { tid: 'tour-1', name: 'Lions <b>', short: 'lio', city: 'Hyd' }); assert.equal(st, 200); const rid = j.id;

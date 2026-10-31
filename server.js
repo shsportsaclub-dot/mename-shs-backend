@@ -1147,7 +1147,7 @@ const trNm = (v, n) => String(v || '').replace(/[<>]/g, '').replace(/\s+/g, ' ')
 routes['GET /api/tours/info'] = async (req, body) => {
   const x = trTour(body.tid); if (!x) return [404, { ok: false, error: 'Tournament not found. Ask the organiser to share it first.' }];
   const t = (x.data && x.data.t) || x.data || {};
-  return [200, { ok: true, tour: { id: String(body.tid), name: trNm(t.name || x.name, 80), organizer: x.ownerName || '', overs: t.overs || '', city: trNm(t.city || t.venue, 40), teams: Array.isArray(t.teams) ? t.teams.length : 0 } }];
+  return [200, { ok: true, tour: { id: String(body.tid), name: trNm(t.name || x.name, 80), organizer: x.ownerName || '', overs: t.overs || '', city: trNm(t.city || t.venue, 40), teams: Array.isArray(t.teams) ? t.teams.length : 0, fee: /^py[0-9a-f]{10}$/.test(String(t.feeCharge || '')) ? t.feeCharge : '' } }];
 };
 routes['POST /api/tours/join'] = async (req, body) => {
   const s = grUser(req); if (!s) return [401, { ok: false, error: 'Please sign in first' }];
