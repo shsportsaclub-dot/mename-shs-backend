@@ -5656,7 +5656,7 @@ UI.ot=UI.ot||null;
   if(s.ot){const inn=m.innings[m.cur],e=inn.ev[inn.ev.length-1];if(e){e.ot=s.ot;e.otb=!!s.otb}}return r}}
 {const c9=commentary;commentary=function(m,i){const L=c9.apply(this,arguments),inn=m.innings[i];if(!inn)return L;
   const bs=L.filter(x=>x.t==='b');bs.forEach((x,k)=>{const e=inn.ev[inn.ev.length-1-k];if(e&&e.ot&&x.txt.indexOf('overthrow')<0)x.txt+=` Overthrows: ${e.ot} extra run${e.ot===1?'':'s'}${e.otb?' (boundary)':''}.`});return L}}
-const csPool=(m,tid)=>{const xi=m.xi[tid]||[],sub=(m.subs&&m.subs[tid])||[],sq=(T(tid)&&T(tid).players)||[];return [...new Set([...sub,...sq])].filter(id=>!xi.includes(id)&&P(id)&&!(m.cs||[]).some(c=>c.out===id))};
+const csPool=(m,tid)=>{const xi=m.xi[tid]||[],sub=(m.subs&&m.subs[tid])||[],sq=(T(tid)&&T(tid).players)||[];return [...new Set([...sub,...sq])].filter(id=>!xi.includes(id)&&P(id)&&!(m.cs||[]).some(c=>c.out===id)&&!(m.sx||[]).some(c=>c.out===id))};
 function csApplyTo(m,tid,outId,inId){
   if(!m||!m.xi||!m.xi[tid]||!m.xi[tid].includes(outId)||m.xi[tid].includes(inId)||m.status==='done')return false;
   if(!csPool(m,tid).includes(inId))return false;
@@ -9929,7 +9929,7 @@ try{if(S.settings&&S.settings.mskin==='ca'){S.settings.mskin='cb';try{save()}cat
   const nav=`<div class="row" style="margin-top:14px;gap:8px">${stp>0?'<button type="button" class="btn ghost" data-a="qsStep" data-v="-1">Back</button>':''}<div class="grow"></div>${stp<3?'<button type="button" class="btn" data-a="qsStep" data-v="1">Next</button>':'<button type="button" class="btn" data-a="qsStart">Start match</button>'}</div>`;
   const body=[
    `<div class="b" style="margin:4px 0">Ground</div>${scroll(GT.map(([v,l])=>chipA('qsSet','gtype',v,l,q.gtype===v)).join(''))}<div class="b" style="margin:4px 0">Match type</div>${scroll(MT.map(([v,l])=>chipA('qsSet','mcat',v,l,q.mcat===v)).join(''))}${q.mcat==='demo'?'<div class="mu sm" style="margin:0 0 6px">A demo match is for practice. It is not counted in stats or shared, and it is deleted 24 hours after it starts.</div>':''}${window.shQsTeams?window.shQsTeams():''}`,
-   ok2?pl(q.a)+pl(q.b):'<div class="need">Pick both teams first.</div>',
+   ok2?pl(q.a)+pl(q.b)+(window.shRuleHTML?window.shRuleHTML(q):''):'<div class="need">Pick both teams first.</div>',
    `<div class="b" style="margin:8px 0 4px">Format</div>${scroll(FMT.map(([k,l])=>chipA('qsFmt','fmt',k,l,fm===k)).join(''))}
   ${fm==='test'?`<div class="b" style="margin:6px 0 4px">Match length</div>${scroll(DAYS.map(([v,l])=>chip('overs',v,l,String(q.overs)===v)).join(''))}`:fm==='hundred'?`<div class="mu sm" style="margin:6px 0">The Hundred: 100 balls per side, bowled in sets of 5 balls.</div>`:`<div class="b" style="margin:6px 0 4px">Overs per side</div><div class="row" style="flex-wrap:wrap;gap:6px">${FOV[fm].map(v=>chip('overs',v,v,String(q.overs)===v)).join('')}</div><label style="margin-top:6px">Or type the overs yourself<input id="qs-ov" inputmode="numeric" maxlength="3" placeholder="e.g. 12, 25, 35 (1-100)" value="${FOV[fm].includes(String(q.overs))?'':esc(q.overs)}"></label>`}
   <div class="b" style="margin:10px 0 4px">Ball</div><div class="row" style="gap:6px">${chip('ball','leather','Leather',q.ball==='leather')}${chip('ball','tennis','Tennis ball',q.ball==='tennis')}</div>
@@ -11654,6 +11654,59 @@ Object.assign(C,{ovAd(v){S.stream.adText=String(v||'').slice(0,140);save()}});
  Object.assign(C,{lpQ(v,el){const q=String(v||'').toLowerCase().trim(),box=el.closest('.lp');if(!box)return;box.querySelectorAll('[data-sug]').forEach(e=>{e.hidden=!!q});box.querySelectorAll('[data-all] .lpb').forEach(b=>{b.hidden=!!q&&!b.dataset.s.includes(q)})}});
  document.addEventListener('input',e=>{const t=e.target;if(t&&t.dataset&&t.dataset.c==='lpQ')C.lpQ(t.value,t)});
  Object.assign(A,{lpSet(d){const k=d.v;if(!WL.some(x=>x[0]===k))return;S.prefs.lang=k;S.prefs.ts=Date.now();document.documentElement.lang=k;document.documentElement.dir=RTL.includes(k)?'rtl':'ltr';commit();const x=WL.find(y=>y[0]===k);toast((typeof I18N!=='undefined'&&I18N[k])||k==='en'?'Language: '+x[1]:x[1]+' saved. App text is English until a translation is added.',4000);render()}});
+}
+
+/* ---------------- 109 SUBSTITUTION SYSTEMS PER MATCH: Standard, Impact Player (IPL) and Super Sub (ICC 2005 trial), chosen by swipe after the playing XI ---------------- */
+{
+ const RULES=[
+  ['none','Standard','Only the named playing XI bat and bowl. A substitute may field but never bat or bowl (Law 24). Concussion replacement stays available.',['No substitutes to name','Fielding substitute only']],
+  ['impact','Impact Player','IPL system. Name 4 or 5 substitutes with the XI. Each team may use ONE Impact Player per match.',['Allowed when a wicket falls, at the end of an over, or when a batter retires','Must come before the end of over 14 in a 20-over match (scaled for other lengths)','The player taken off cannot bat, bowl or field again','The Impact Player may bat and bowl a full quota']],
+  ['super','Super Sub','ICC one-day trial of 2005. Name ONE super sub before the toss. Each team may use it once.',['Can replace any player at any time in the match','The player taken off is out of the rest of the match','The Super Sub may bat and bowl in full','Dropped by the ICC after the 2005-06 trial']]];
+ const MAX={impact:5,super:1};
+ const cutoff=m=>Math.max(1,Math.round((+m.overs||20)*0.7));
+ const css=document.createElement('style');css.textContent='.qsrules{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding:2px 0 6px}.qsrules::-webkit-scrollbar{display:none}.qsrc{flex:none;width:80%;max-width:300px;scroll-snap-align:start;border:1px solid var(--bd,#4443);border-radius:14px;padding:12px;background:var(--card,transparent);display:flex;flex-direction:column;gap:6px}.qsrc.on{border-color:var(--sp1,#e11d2e);box-shadow:inset 0 0 0 1px var(--sp1,#e11d2e)}.qsrc ul{margin:0;padding-left:18px;font-size:12px;line-height:1.5;opacity:.9}.qsrc .b{font-size:15px}';document.head.appendChild(css);
+ window.shRuleHTML=function(q){const r=q.rule||'none',sub=q.sub=q.sub||{};
+  const cards=RULES.map(([k,t,d,l])=>`<div class="qsrc ${r===k?'on':''}"><div class="row" style="justify-content:space-between"><span class="b">${t}</span>${r===k?'<span class="pill ok">Selected</span>':''}</div><div class="mu sm">${d}</div><ul>${l.map(x=>`<li>${x}</li>`).join('')}</ul><button type="button" class="btn sm ${r===k?'':'ghost'}" data-a="qsRule" data-v="${k}">${r===k?'Selected':'Use '+t}</button></div>`).join('');
+  let picks='';
+  if(r!=='none'){picks=[q.a,q.b].map(tid=>{const t=T(tid),xi=(q.xi&&q.xi[tid])||[],pool=(t?t.players:[]).filter(id=>!xi.includes(id)),mine=(sub[tid]=(sub[tid]||[]).filter(id=>pool.includes(id)));
+    return `<div class="card" style="margin:8px 0"><div class="row" style="justify-content:space-between"><b>${esc(t?t.name:'')}: ${r==='super'?'Super Sub':'substitutes'}</b><span class="mu sm">${mine.length}/${MAX[r]}</span></div>${pool.length?pool.map(id=>`<label class="ck"><input type="checkbox" data-c="qssub" data-t="${tid}" value="${id}" ${mine.includes(id)?'checked':''}> ${esc(nm(id))}</label>`).join(''):'<div class="mu sm">No spare players. Add more players to this team above (not in the XI).</div>'}</div>`}).join('');
+   picks+=`<div class="mu sm">${r==='impact'?'Substitutes are named before the toss. Use the Impact Player from the scoring screen (cut-off: before the end of over '+cutoff({overs:+q.overs||20})+').':'Super Sub is named before the toss and can be used any time from the scoring screen.'}</div>`}
+  return `<div class="b" style="margin:12px 0 4px">Substitution rule <span class="mu sm">(swipe)</span></div><div class="qsrules">${cards}</div>${picks}`};
+ Object.assign(A,{qsRule(d){if(window.shQsRead)window.shQsRead();const q=UI.qs;q.rule=d.v;q.sub=q.sub||{};window.shQsShow();setTimeout(()=>{const e=document.querySelector('.qsrc.on');if(e&&e.parentNode)e.parentNode.scrollLeft=Math.max(0,e.offsetLeft-12)},0)}});
+ Object.assign(C,{qssub(v,el){const q=UI.qs,r=q.rule||'none',t=el.dataset.t,L=(q.sub=q.sub||{})[t]=(q.sub[t]||[]);
+  if(el.checked){if(L.length>=MAX[r]){el.checked=false;return toast((r==='super'?'Only one Super Sub':'At most '+MAX[r]+' substitutes')+' per team',3000)}if(!L.includes(v))L.push(v)}else q.sub[t]=L.filter(x=>x!==v);window.shQsShow()}});
+ const s0=A.qsStart;
+ A.qsStart=function(){const q=UI.qs||{};const rule=q.rule||'none',Q={a:q.a,b:q.b,sub:JSON.parse(JSON.stringify(q.sub||{}))};
+  if(rule!=='none'&&q.a&&q.b){const xs=t=>((q.xi&&q.xi[t])||[]);const ok=t=>(Q.sub[t]||[]).filter(id=>!xs(t).includes(id));
+   for(const t of [q.a,q.b]){const n=ok(t).length;if(rule==='super'&&n!==1)return toast('Pick exactly one Super Sub for '+T(t).name,3500);if(rule==='impact'&&n<1)return toast('Pick at least one Impact Player substitute for '+T(t).name,3500)}}
+  const n0=S.matches.length,r=s0.apply(this,arguments);
+  if(rule!=='none'&&S.matches.length>n0){const m=S.matches[S.matches.length-1];m.subRule=rule;m.subs=Object.assign({},m.subs||{},{[Q.a]:Q.sub[Q.a]||[],[Q.b]:Q.sub[Q.b]||[]});m.sx=[];commit()}
+  return r};
+ /* in-match use */
+ const used=(m,t)=>(m.sx||[]).some(x=>x.tid===t);
+ const why=(m,tid)=>{if(m.status==='done')return 'Match is over';if(used(m,tid))return 'Already used by this team';
+  if(m.subRule==='impact'){if(m.overs>=900)return 'Impact Player is for limited-overs matches';const inn=m.innings[m.cur];if(!inn||m.status==='setup')return '';
+   const q=calc(m,m.cur),over=Math.floor(q.lg/BPO);if(over>=cutoff(m))return 'Too late: the Impact Player must come before the end of over '+cutoff(m);
+   const c=inn.cur||{},lastW=inn.ev.length&&inn.ev[inn.ev.length-1].w,gap=c.s==null||c.n==null;
+   if(!(q.lg%BPO===0||lastW||gap))return 'Allowed only at the end of an over, after a wicket, or when a batter retires'}
+  return ''};
+ const sxBar=m=>{if(!m||!m.subRule||m.subRule==='none')return '';const U=UI.sx=UI.sx||{},tid=U.t||m.a,xi=m.xi[tid]||[],pool=(m.subs&&m.subs[tid])||[],nmx=id=>esc((P(id)||{}).name||id),name=m.subRule==='impact'?'Impact Player':'Super Sub',w=why(m,tid);
+  const sel=(n,arr,v,ph)=>`<select data-c="${n}"><option value="">${ph}</option>${arr.map(id=>`<option value="${id}"${v===id?' selected':''}>${nmx(id)}</option>`).join('')}</select>`;
+  return `<details class="card sh-sx" ${U.open?'open':''}><summary><b>${name}</b> · ${[m.a,m.b].map(t=>esc(T(t).short||T(t).name)+' '+(used(m,t)?'used':'available')).join(' · ')}</summary>
+  <div class="mu sm" style="margin:6px 0">${m.subRule==='impact'?'IPL rule: one per team, when a wicket falls, at the end of an over or when a batter retires, before the end of over '+cutoff(m)+'. The player taken off cannot take any further part.':'Trial rule: one per team, any time. The player taken off cannot take any further part.'}</div>
+  <div class="row" style="gap:6px;flex-wrap:wrap"><select data-c="sxTeam">${[m.a,m.b].map(t=>`<option value="${t}"${t===tid?' selected':''}>${esc(T(t).name)}</option>`).join('')}</select>${sel('sxOut',xi,U.out,'Player going off')}${sel('sxIn',pool,U.inn,name)}<button class="btn sm" data-a="sxApply" ${w?'disabled':''}>Use ${name}</button></div>
+  ${w?`<div class="mu sm" style="margin-top:6px;color:var(--ac2,#e67e22)">${esc(w)}</div>`:''}
+  ${(m.sx||[]).map(c=>`<div class="mu sm" style="margin-top:6px">${esc(T(c.tid).name)}: ${nmx(c.out)} replaced by ${nmx(c.inn)} (${name}, at ${c.at} ov)</div>`).join('')}</details>`};
+ const v9=vScore;vScore=function(){let h=v9.apply(this,arguments);const m=scM();if(typeof h!=='string'||!m||m.status==='done')return h;const b=sxBar(m);if(!b)return h;const i=h.indexOf('<details class="card sh-cs"');return i>=0?h.slice(0,i)+b+h.slice(i):h+b};
+ Object.assign(C,{sxTeam(v){UI.sx={t:v,open:true};render()},sxOut(v){(UI.sx=UI.sx||{}).out=v;UI.sx.open=true},sxIn(v){(UI.sx=UI.sx||{}).inn=v;UI.sx.open=true}});
+ Object.assign(A,{sxApply(){const m=scM(),U=UI.sx||{},tid=U.t||m.a;if(!m||!m.subRule)return;const w=why(m,tid);if(w)return toast(w,4000);
+  if(!U.out||!U.inn)return toast('Pick who goes off and who comes on',3000);if(!(m.subs[tid]||[]).includes(U.inn))return toast('The player coming on must be a named substitute',3500);
+  if(!csApplyTo(m,tid,U.out,U.inn))return toast('Could not make that change',3000);
+  const rec=m.cs.pop();m.sx=(m.sx||[]).concat([Object.assign({},rec,{type:m.subRule})]);UI.sx={t:tid,open:true};commit();toast((m.subRule==='impact'?'Impact Player':'Super Sub')+' in: '+((P(U.inn)||{}).name||''),3500);render()}});
+ /* shown on the match header so viewers see the rule and the swaps */
+ const h0=mHead;mHead=function(m){const o=h0.apply(this,arguments);if(typeof o!=='string'||!m||!m.subRule||m.subRule==='none')return o;
+  const nmx=id=>esc((P(id)||{}).name||id),line=(m.sx||[]).map(c=>`${esc(T(c.tid).short||T(c.tid).name)}: ${nmx(c.inn)} in for ${nmx(c.out)} (${c.at} ov)`).join(' · ');
+  return o+`<div class="mu sm" style="margin:4px 0"><b>${m.subRule==='impact'?'Impact Player':'Super Sub'} rule</b>${line?' · '+line:''}</div>`};
 }
 </script>
 </body>
