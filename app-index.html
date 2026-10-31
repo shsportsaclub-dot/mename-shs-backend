@@ -11502,6 +11502,150 @@ Object.assign(C,{ovAd(v){S.stream.adText=String(v||'').slice(0,140);save()}});
   scStrMore(){const m=cur();if(m){UI.mid=m.id;UI.view='match'}render()}});
  F.scstream=async function(fd){const url=String(fd.get('url')||'').trim(),key=String(fd.get('key')||'');if(url&&!/^https:\/\//i.test(url))return toast('The link must start with https://',3000);await saveStream(key,url);UI.scStr=!url;toast(url?'Stream link saved':'Stream removed');render()};
 }
+
+/* ---------------- 108 SOCIAL DESTINATIONS BY COUNTRY, BROADCAST DASHBOARD (ticker, animations, lower third, go live), WORLD LANGUAGE SEARCH ---------------- */
+{
+ const E=encodeURIComponent,W=n=>`<svg viewBox="0 0 24 24" aria-hidden="true">${n}</svg>`;
+ const GL={
+  yt:W('<path fill="#fff" d="M21.6 7.2a2.5 2.5 0 0 0-1.8-1.8C18.2 5 12 5 12 5s-6.2 0-7.8.4A2.5 2.5 0 0 0 2.4 7.2C2 8.8 2 12 2 12s0 3.2.4 4.8a2.5 2.5 0 0 0 1.8 1.8C5.8 19 12 19 12 19s6.2 0 7.8-.4a2.5 2.5 0 0 0 1.8-1.8c.4-1.6.4-4.8.4-4.8s0-3.2-.4-4.8zM10 15V9l5.2 3z"/>'),
+  ig:W('<rect x="4" y="4" width="16" height="16" rx="5" fill="none" stroke="#fff" stroke-width="2"/><circle cx="12" cy="12" r="3.6" fill="none" stroke="#fff" stroke-width="2"/><circle cx="17" cy="7" r="1.2" fill="#fff"/>'),
+  wa:W('<path fill="none" stroke="#fff" stroke-width="2" d="M12 3a9 9 0 0 0-7.7 13.6L3 21l4.5-1.2A9 9 0 1 0 12 3z"/><path fill="#fff" d="M9 8c0 3 3 6 6 6l1-1.5-2-1-1 .8c-1-.4-2-1.4-2.4-2.4l.8-1-1-2z"/>'),
+  tg:W('<path fill="#fff" d="M3 11.5l17-7-3 15-5-3.5-2.5 2.5v-4.5l7-6-9 5.5z"/>')};
+ const T_=t=>`<b>${t}</b>`;
+ /* id, name, colour, glyph, countries ('*' = everywhere), share(text,url), live{rtmp,studio,note}, home */
+ const PL=[
+  ['whatsapp','WhatsApp','#25D366',GL.wa,'*',(t,u)=>'https://wa.me/?text='+E(t+' '+u),null,'https://web.whatsapp.com/'],
+  ['facebook','Facebook','#1877F2',T_('f'),'*',(t,u)=>'https://www.facebook.com/sharer/sharer.php?u='+E(u)+'&quote='+E(t),{rtmp:'rtmps://live-api-s.facebook.com:443/rtmp/',studio:'https://www.facebook.com/live/producer'},'https://www.facebook.com/'],
+  ['instagram','Instagram','linear-gradient(45deg,#f9ce34,#ee2a7b,#6228d7)',GL.ig,'*',null,{note:'Go live from the Instagram app. Only some accounts get a stream key.'},'https://www.instagram.com/'],
+  ['youtube','YouTube','#FF0000',GL.yt,'*',null,{rtmp:'rtmp://a.rtmp.youtube.com/live2',studio:'https://studio.youtube.com/'},'https://www.youtube.com/'],
+  ['x','X (Twitter)','#000000',T_('X'),'*',(t,u)=>'https://twitter.com/intent/tweet?text='+E(t)+'&url='+E(u),null,'https://x.com/'],
+  ['telegram','Telegram','#229ED9',GL.tg,'*',(t,u)=>'https://t.me/share/url?url='+E(u)+'&text='+E(t),null,'https://web.telegram.org/'],
+  ['linkedin','LinkedIn','#0A66C2',T_('in'),'*',(t,u)=>'https://www.linkedin.com/sharing/share-offsite/?url='+E(u),null,'https://www.linkedin.com/'],
+  ['threads','Threads','#000000',T_('@'),'*',(t,u)=>'https://www.threads.net/intent/post?text='+E(t+' '+u),null,'https://www.threads.net/'],
+  ['tiktok','TikTok','#010101',T_('♪'),'*',null,{note:'Go live from the TikTok app (needs a live-enabled account).'},'https://www.tiktok.com/'],
+  ['snapchat','Snapchat','#FFFC00',T_('S'),'*',null,null,'https://www.snapchat.com/'],
+  ['pinterest','Pinterest','#E60023',T_('P'),'*',(t,u)=>'https://www.pinterest.com/pin/create/button/?url='+E(u)+'&description='+E(t),null,'https://www.pinterest.com/'],
+  ['reddit','Reddit','#FF4500',T_('r/'),'*',(t,u)=>'https://www.reddit.com/submit?url='+E(u)+'&title='+E(t),null,'https://www.reddit.com/'],
+  ['twitch','Twitch','#9146FF',T_('T'),'*',null,{rtmp:'rtmp://live.twitch.tv/app',studio:'https://dashboard.twitch.tv/stream-manager'},'https://www.twitch.tv/'],
+  ['sharechat','ShareChat','#FF6D00',T_('SC'),['IN'],null,null,'https://sharechat.com/'],
+  ['moj','Moj','#E91E63',T_('M'),['IN'],null,null,'https://mojapp.in/'],
+  ['josh','Josh','#8E24AA',T_('J'),['IN'],null,null,'https://myjosh.in/'],
+  ['wechat','WeChat','#07C160',T_('微'),['CN','HK','TW','SG','MY'],null,null,'https://www.wechat.com/'],
+  ['weibo','Weibo','#E6162D',T_('微博'),['CN','HK'],(t,u)=>'https://service.weibo.com/share/share.php?url='+E(u)+'&title='+E(t),null,'https://weibo.com/'],
+  ['douyin','Douyin','#111111',T_('抖'),['CN'],null,null,'https://www.douyin.com/'],
+  ['bilibili','Bilibili','#00A1D6',T_('B'),['CN','HK','TW'],null,{note:'Use Bilibili Live Studio to go live.'},'https://www.bilibili.com/'],
+  ['vk','VK','#0077FF',T_('VK'),['RU','BY','KZ','UA','UZ','KG','AM','AZ','MD'],(t,u)=>'https://vk.com/share.php?url='+E(u)+'&title='+E(t),{note:'VK Live accepts an RTMP stream. Copy the server and key from your VK Live studio.'},'https://vk.com/'],
+  ['ok','Odnoklassniki','#EE8208',T_('OK'),['RU','BY','KZ','UA','UZ','KG','AM','AZ','MD'],(t,u)=>'https://connect.ok.ru/offer?url='+E(u)+'&title='+E(t),null,'https://ok.ru/'],
+  ['line','LINE','#06C755',T_('LINE'),['JP','TW','TH','ID'],(t,u)=>'https://social-plugins.line.me/lineit/share?url='+E(u)+'&text='+E(t),null,'https://line.me/'],
+  ['kakao','KakaoTalk','#FEE500',T_('K'),['KR'],null,null,'https://www.kakaocorp.com/'],
+  ['band','Naver Band','#00C73C',T_('B'),['KR'],null,null,'https://band.us/'],
+  ['zalo','Zalo','#0068FF',T_('Z'),['VN'],null,null,'https://zalo.me/'],
+  ['kwai','Kwai','#FF5000',T_('K'),['BR','MX','CO','PE','CL','AR','ID','PK','BD'],null,null,'https://www.kwai.com/']];
+ const PLM={};PL.forEach(p=>PLM[p[0]]={id:p[0],n:p[1],c:p[2],g:p[3],cc:p[4],share:p[5],live:p[6],home:p[7]});
+ const WC='AF:Afghanistan|AL:Albania|DZ:Algeria|AR:Argentina|AM:Armenia|AU:Australia|AT:Austria|AZ:Azerbaijan|BH:Bahrain|BD:Bangladesh|BY:Belarus|BE:Belgium|BO:Bolivia|BA:Bosnia and Herzegovina|BR:Brazil|BG:Bulgaria|KH:Cambodia|CM:Cameroon|CA:Canada|CL:Chile|CN:China|CO:Colombia|CR:Costa Rica|HR:Croatia|CU:Cuba|CY:Cyprus|CZ:Czechia|DK:Denmark|DO:Dominican Republic|EC:Ecuador|EG:Egypt|SV:El Salvador|EE:Estonia|ET:Ethiopia|FJ:Fiji|FI:Finland|FR:France|GE:Georgia|DE:Germany|GH:Ghana|GR:Greece|GT:Guatemala|HK:Hong Kong|HU:Hungary|IS:Iceland|IN:India|ID:Indonesia|IR:Iran|IQ:Iraq|IE:Ireland|IL:Israel|IT:Italy|JM:Jamaica|JP:Japan|JO:Jordan|KZ:Kazakhstan|KE:Kenya|KW:Kuwait|KG:Kyrgyzstan|LA:Laos|LV:Latvia|LB:Lebanon|LT:Lithuania|LU:Luxembourg|MY:Malaysia|MV:Maldives|MT:Malta|MX:Mexico|MD:Moldova|MN:Mongolia|MA:Morocco|MM:Myanmar|NP:Nepal|NL:Netherlands|NZ:New Zealand|NG:Nigeria|NO:Norway|OM:Oman|PK:Pakistan|PA:Panama|PY:Paraguay|PE:Peru|PH:Philippines|PL:Poland|PT:Portugal|QA:Qatar|RO:Romania|RU:Russia|SA:Saudi Arabia|RS:Serbia|SG:Singapore|SK:Slovakia|SI:Slovenia|ZA:South Africa|KR:South Korea|ES:Spain|LK:Sri Lanka|SE:Sweden|CH:Switzerland|TW:Taiwan|TJ:Tajikistan|TZ:Tanzania|TH:Thailand|TN:Tunisia|TR:Turkey|TM:Turkmenistan|UG:Uganda|UA:Ukraine|AE:United Arab Emirates|GB:United Kingdom|US:United States|UY:Uruguay|UZ:Uzbekistan|VE:Venezuela|VN:Vietnam|YE:Yemen|ZM:Zambia|ZW:Zimbabwe'.split('|').map(x=>x.split(':'));
+ const dark=c=>c==='#FFFC00'||c==='#FEE500';
+ const ico=p=>`<span class="sdi" style="background:${p.c};${dark(p.c)?'color:#111':''}">${p.g}</span>`;
+ /* stream keys never go into S (S can be synced to a server); they stay on this device only */
+ const KEYS={get(){try{return JSON.parse(localStorage.getItem('sh-dest-keys')||'{}')}catch(e){return{}}},set(id,k){try{const o=KEYS.get();if(k)o[id]=k;else delete o[id];localStorage.setItem('sh-dest-keys',JSON.stringify(o))}catch(e){}}};
+ const D=()=>(S.settings.dest=S.settings.dest||[]);
+ const SD=()=>(UI.sd=UI.sd||{add:false,p:'',q:'',cty:(S.prefs&&S.prefs.country)||''});
+ const forCountry=cty=>PL.map(p=>PLM[p[0]]).filter(p=>p.cc==='*'||cty==='ALL'||(cty&&p.cc.includes(cty)));
+ const capNow=()=>{const ta=document.getElementById('socCap');if(ta&&ta.value)return ta.value;try{return shareText(curM())}catch(e){return (S.settings.appName||'Scoring Heroes')+' live cricket'}};
+ const url0=()=>location.origin+location.pathname;
+ window.shDestPanel=function(ctx){
+  const sd=SD(),L=D(),n=L.length;
+  const strip=`<div class="sdstrip">${L.map(d=>{const p=PLM[d.p];return p?`<button class="sdb" data-a="sdPost" data-id="${esc(d.id)}" title="Post to ${esc(p.n)}">${ico(p)}<span>${esc(d.label||p.n)}</span></button>`:''}).join('')}${[n+1,n+2].map(i=>`<button class="sdb add" data-a="sdAdd">${'<span class="sdi" style="background:var(--c2,#223)">+</span>'}<span>Add ${i}</span></button>`).join('')}</div>`;
+  let add='';
+  if(sd.add){
+   const cty=sd.cty,lst=forCountry(cty),pick=sd.p&&PLM[sd.p];
+   add=`<div class="card" style="margin-top:8px"><div class="row" style="justify-content:space-between"><b>Add a social account</b><button class="btn sm ghost" data-a="sdClose">Close</button></div>
+   <label>Country<select data-c="sdCty"><option value="" ${!cty?'selected':''}>Worldwide apps only</option><option value="ALL" ${cty==='ALL'?'selected':''}>All countries (every app)</option>${WC.map(([k,nm])=>`<option value="${k}" ${cty===k?'selected':''}>${esc(nm)}</option>`).join('')}</select></label>
+   <div class="sdgrid">${lst.map(p=>`<button type="button" class="sdb ${sd.p===p.id?'on':''}" data-a="sdPick" data-v="${p.id}">${ico(p)}<span>${esc(p.n)}</span></button>`).join('')}</div>
+   ${pick?`<form data-f="sdsave" style="margin-top:10px"><input type="hidden" name="p" value="${pick.id}"><label>Account name (shown on the button)<input name="label" maxlength="30" placeholder="${esc(pick.n)} - my club" required></label><label>Page / channel link<input name="link" inputmode="url" placeholder="https://..." ></label>
+   ${pick.live&&pick.live.rtmp?`<label>Stream key (optional, saved on this device only)<input name="key" autocomplete="off" placeholder="paste from ${esc(pick.n)} studio"></label>`:''}<button class="btn wide">Save ${esc(pick.n)}</button></form>`:'<div class="mu sm" style="margin-top:8px">Tap an app to add it.</div>'}</div>`}
+  return `<div class="card sdpanel"><div class="row" style="justify-content:space-between"><b>${ctx==='live'?'Your streaming accounts':'Post to your social accounts'}</b><span class="mu sm">${n} saved</span></div>${strip}${add}
+  ${ctx==='social'?`<div class="mu sm" style="margin-top:6px">Tap an account: the caption opens ready to post where the app allows it. Instagram, TikTok and Snapchat have no web post, so the caption is copied and the app opens.</div>`:''}</div>`};
+ window.shGoLivePanel=function(){
+  const L=D().filter(d=>PLM[d.p]&&PLM[d.p].live),keys=KEYS.get();
+  if(!L.length)return `<div class="mu sm">Add YouTube, Facebook, Twitch or another live-enabled account above to see its server and stream key fields here.</div>`;
+  return L.map(d=>{const p=PLM[d.p],lv=p.live;return `<div class="item" style="display:block"><div class="row" style="gap:8px;align-items:center">${ico(p)}<b style="flex:1">${esc(d.label||p.n)}</b><button class="btn sm ghost" data-a="sdDel" data-id="${esc(d.id)}">Remove</button></div>
+   ${lv.rtmp?`<div class="mu sm" style="margin-top:6px">Server: <code>${esc(lv.rtmp)}</code> <button class="btn sm ghost" data-a="sdCopy" data-w="s" data-id="${esc(d.id)}">Copy</button></div><div class="mu sm">Stream key: ${keys[d.id]?'saved on this device':'not saved'} <button class="btn sm ghost" data-a="sdCopy" data-w="k" data-id="${esc(d.id)}">Copy key</button></div>`:''}
+   ${lv.note?`<div class="mu sm">${esc(lv.note)}</div>`:''}${lv.studio?`<a class="btn sm" style="margin-top:6px;display:inline-block" href="${lv.studio}" target="_blank" rel="noopener">Open ${esc(p.n)} live studio</a>`:''}</div>`}).join('')+`<div class="mu sm" style="margin-top:8px">The app cannot send video by itself. In OBS (or Larix on a phone) paste the server and key for each account. To go live on several apps at once use OBS with a multi-output plugin or a restream service. The score overlay works with all of them.</div>`};
+ Object.assign(A,{
+  sdAdd(){SD().add=true;render()},sdClose(){SD().add=false;SD().p='';render()},sdPick(d){SD().p=d.v;render()},
+  sdDel(d){S.settings.dest=D().filter(x=>x.id!==d.id);KEYS.set(d.id,'');commit();render()},
+  sdCopy(d){const x=D().find(y=>y.id===d.id);if(!x)return;const v=d.w==='k'?KEYS.get()[x.id]:(PLM[x.p].live||{}).rtmp;if(!v)return toast('Nothing saved to copy yet',3000);try{navigator.clipboard.writeText(v).then(()=>toast('Copied')).catch(()=>toast('Copy failed',3000))}catch(e){toast('Copy failed',3000)}},
+  sdPost(d){const x=D().find(y=>y.id===d.id),p=x&&PLM[x.p];if(!p)return;const cap=capNow(),u=url0(),link=p.share&&p.share(cap,u);
+   if(link){window.open(link,'_blank','noopener');return}
+   try{navigator.clipboard.writeText(cap+' '+u)}catch(e){}
+   toast('Caption copied. Add the poster in '+p.n+' and paste.',5000);const to=x.link&&/^https:\/\//i.test(x.link)?x.link:p.home;if(to)window.open(to,'_blank','noopener')}});
+ Object.assign(C,{sdCty(v){SD().cty=v;SD().p='';render()}});
+ F.sdsave=function(fd){const p=String(fd.get('p')||''),pl=PLM[p];if(!pl)return;let link=String(fd.get('link')||'').trim();if(link&&!/^https:\/\//i.test(link))return toast('The link must start with https://',3000);
+  const id=uid();D().push({id,p,label:String(fd.get('label')||pl.n).slice(0,30),link});const k=String(fd.get('key')||'').trim();if(k)KEYS.set(id,k);
+  UI.sd.add=false;UI.sd.p='';commit();toast(pl.n+' added');render()};
+ /* Social studio: the accounts strip sits under the share buttons */
+ {const s0=XV.social;XV.social=function(){const h=s0.apply(this,arguments);return typeof h==='string'?h+window.shDestPanel('social'):h}}
+
+ /* ----- broadcast dashboard ----- */
+ const Z=()=>S.stream;
+ S.stream.tick=S.stream.tick||{lines:'',live:true,msg:true,speed:'m'};S.stream.l3=S.stream.l3||{on:false,t:'',s:''};S.stream.anim=S.stream.anim||'pop';
+ const BD=()=>(UI.bd=UI.bd||{tab:'tick'});
+ const TXT={pop:'Pop',slide:'Slide',zoom:'Zoom',flash:'Flash'};
+ const css=document.createElement('style');css.textContent=[
+  '.sdstrip{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:6px 0}.sdstrip::-webkit-scrollbar{display:none}',
+  '.sdb{flex:none;display:flex;flex-direction:column;align-items:center;gap:4px;width:74px;background:transparent;border:0;color:inherit;font-size:11px;font-weight:600;cursor:pointer;padding:4px 0}.sdb span:last-child{max-width:72px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+  '.sdi{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;color:#fff;font:800 14px system-ui;flex:none}.sdi svg{width:26px;height:26px}.sdi b{font-weight:800}',
+  '.sdb.on .sdi{outline:3px solid var(--sp1,#e11d2e);outline-offset:2px}.sdb.add .sdi{font-size:22px;border:1px dashed currentColor}',
+  '.sdgrid{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}',
+  '.bdt{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid var(--bd,#3333);margin-bottom:10px}.bdt::-webkit-scrollbar{display:none}.bdt button{flex:none;background:transparent;border:0;border-bottom:3px solid transparent;color:inherit;opacity:.85;padding:9px 14px;font-weight:600}.bdt button.on{border-bottom-color:var(--sp1,#e11d2e);opacity:1}',
+  '.ovs-cl{left:4cqw;bottom:12cqw;display:grid;gap:.3cqw;background:#0b1020ee;border-left:1cqw solid var(--oc,#c4f000);padding:1.4cqw 3cqw;border-radius:.8cqw;animation:shSlideIn .6s both}.ovs-cl b{font-size:4cqw}.ovs-cl span{font-size:2.6cqw;opacity:.9}',
+  '@keyframes shSlideIn{from{transform:translateX(-8cqw);opacity:0}to{transform:none;opacity:1}}',
+  '@keyframes shSlide{0%{transform:translateX(-140%);opacity:0}12%{transform:translateX(-50%);opacity:1}88%{transform:translateX(-50%);opacity:1}100%{transform:translateX(160%);opacity:0}}',
+  '@keyframes shZoom{0%{transform:translateX(-50%) scale(.2);opacity:0}12%{transform:translateX(-50%) scale(1.15);opacity:1}20%{transform:translateX(-50%) scale(1)}88%{transform:translateX(-50%) scale(1);opacity:1}100%{transform:translateX(-50%) scale(1.3);opacity:0}}',
+  '@keyframes shFlash{0%,20%,40%,60%{opacity:0;transform:translateX(-50%)}10%,30%,50%,70%,90%{opacity:1;transform:translateX(-50%)}100%{opacity:0;transform:translateX(-50%)}}',
+  '.ovroot[data-anim=slide] .ovfx{animation:shSlide 4.5s ease both!important}.ovroot[data-anim=zoom] .ovfx{animation:shZoom 4.5s ease both!important}.ovroot[data-anim=flash] .ovfx{animation:shFlash 4.5s linear both!important}'].join('\n');
+ document.head.appendChild(css);
+ const sceneNow=()=>{try{const q=new URLSearchParams(location.search).get('scene');return location.hash==='#overlay'&&q?q:UI.ovScene&&UI.view==='stream'?UI.ovScene:''}catch(e){return''}};
+ const o1=overlayHTML;
+ overlayHTML=function(prev){let h=o1.apply(this,arguments);if(typeof h!=='string')return h;const z=Z(),sc=sceneNow();
+  const tk=z.tick||{};
+  if(sc==='ticker'&&h.includes('class="mv"')){const parts=[];String(tk.lines||'').split(/\n+/).map(x=>x.trim()).filter(Boolean).forEach(x=>parts.push(x));
+   if(tk.live!==false)try{S.matches.filter(m=>m.status==='live').forEach(m=>{const q=st(m);parts.push(T(m.a).short+' v '+T(m.b).short+(q?' '+q.k.runs+'-'+q.k.wk+' ('+fmtOv(q.k.lg)+')':''))})}catch(e){}
+   if(tk.msg!==false)S.messages.filter(x=>!x.off).slice(-4).forEach(x=>parts.push(x.text));
+   const sec={s:60,m:30,f:16}[tk.speed]||30;if(parts.length)h=h.replace(/<span class="mv">[\s\S]*?<\/span>/,`<span class="mv" style="animation-duration:${sec}s">${esc(parts.join('   |   '))}</span>`)}
+  h=h.replace('class="ovroot ov"',`class="ovroot ov" data-anim="${esc(z.anim||'pop')}"`);
+  const l3=z.l3;if(l3&&l3.on&&l3.t&&sc!=='break')h=h.replace(/<\/div>\s*$/,`<div class="ovs ovs-cl"><b>${esc(l3.t)}</b>${l3.s?`<span>${esc(l3.s)}</span>`:''}</div></div>`);
+  const ts=z.test;if(ts&&Date.now()-ts.at<4500){const L={four:['FOUR','Boundary'],six:['SIX','Maximum'],out:['OUT','Wicket'],m50:['50','Half century'],m100:['100','Century']}[ts.k]||['FOUR',''];h=h.replace(/<\/div>\s*$/,`<div class="ovfx ovfx-${ts.k}" role="status"><b>${L[0]}</b><span>${L[1]}</span></div></div>`)}
+  return h};
+ const v0=vStream;
+ vStream=function(){const o=v0.apply(this,arguments),b=BD(),z=Z(),tk=z.tick,l3=z.l3,t=b.tab;
+  const tabs=`<div class="bdt">${[['tick','Ticker'],['anim','Animations'],['l3','Lower third'],['live','Go live']].map(([k,l])=>`<button class="${t===k?'on':''}" data-a="bdTab" data-v="${k}">${l}</button>`).join('')}</div>`;
+  let body='';
+  if(t==='tick')body=`<form data-f="bdtick"><label>Ticker lines (one per line: sponsor, toss, drinks break...)<textarea name="lines" rows="4" maxlength="800">${esc(tk.lines||'')}</textarea></label>
+   <label class="ck"><input type="checkbox" name="live" ${tk.live!==false?'checked':''}> Add live scores of running matches</label><label class="ck"><input type="checkbox" name="msg" ${tk.msg!==false?'checked':''}> Add broadcast messages</label>
+   <label>Speed<select name="speed">${[['s','Slow'],['m','Medium'],['f','Fast']].map(([k,l])=>`<option value="${k}" ${tk.speed===k?'selected':''}>${l}</option>`).join('')}</select></label><button class="btn">Save ticker</button><div class="mu sm" style="margin-top:6px">Preview it with the Ticker scene below. OBS link: the page address plus <code>?scene=ticker#overlay</code></div></form>`;
+  else if(t==='anim')body=`<div class="mu sm" style="margin-bottom:6px">Style for FOUR, SIX, OUT, 50 and 100 banners</div><div class="sh-drs-row"><div>${Object.entries(TXT).map(([k,l])=>`<button class="${(z.anim||'pop')===k?'on':''}" data-a="bdAnim" data-v="${k}">${l}</button>`).join('')}</div></div>
+   <label class="ck" style="margin-top:8px"><input type="checkbox" data-c="bdFx" ${z.nofx?'':'checked'}> Show banners automatically on the overlay</label><div class="mu sm" style="margin:8px 0 4px">Test on the preview</div><div class="row" style="gap:6px;flex-wrap:wrap">${[['four','FOUR'],['six','SIX'],['out','OUT'],['m50','50'],['m100','100']].map(([k,l])=>`<button class="btn sm ghost" data-a="bdTest" data-v="${k}">${l}</button>`).join('')}</div>`;
+  else if(t==='l3')body=`<form data-f="bdl3"><label>Title<input name="t" maxlength="50" value="${esc(l3.t||'')}" placeholder="Toss: Lions won, chose to bat"></label><label>Second line<input name="s" maxlength="80" value="${esc(l3.s||'')}" placeholder="Commentary: Ravi and Kiran"></label><div class="row" style="gap:6px"><button class="btn">${l3.on?'Update on air':'Show on air'}</button>${l3.on?'<button type="button" class="btn ghost" data-a="bdL3Off">Hide</button>':''}</div></form>`;
+  else body=window.shGoLivePanel();
+  const card=`<div class="card bdcard"><div class="row" style="justify-content:space-between"><b>Broadcast dashboard</b><span class="mu sm">${D().length} account${D().length===1?'':'s'}</span></div>${tabs}${body}</div>`+(t==='live'?window.shDestPanel('live'):'');
+  const i=o.indexOf('</div>')+6;return o.slice(0,i)+card+o.slice(i)};
+ Object.assign(A,{bdTab(d){BD().tab=d.v;render()},bdAnim(d){Z().anim=d.v;commit();render()},bdTest(d){Z().test={k:d.v,at:Date.now()};render();clearTimeout(UI.bdT);UI.bdT=setTimeout(render,4700)},bdL3Off(){Z().l3.on=false;commit();render()}});
+ Object.assign(C,{bdFx(v,el){Z().nofx=!el.checked;commit();render()}});
+ F.bdtick=function(fd){Z().tick={lines:String(fd.get('lines')||'').slice(0,800),live:fd.get('live')==='on',msg:fd.get('msg')==='on',speed:String(fd.get('speed')||'m')};commit();toast('Ticker saved');render()};
+ F.bdl3=function(fd){Z().l3={on:true,t:String(fd.get('t')||'').slice(0,50),s:String(fd.get('s')||'').slice(0,80)};commit();toast('Lower third is on air');render()};
+
+ /* ----- worldwide language search ----- */
+ const WL=[['en','English','English'],['hi','Hindi','हिन्दी'],['te','Telugu','తెలుగు'],['ta','Tamil','தமிழ்'],['kn','Kannada','ಕನ್ನಡ'],['ml','Malayalam','മലയാളം'],['bn','Bengali','বাংলা'],['mr','Marathi','मराठी'],['gu','Gujarati','ગુજરાતી'],['pa','Punjabi','ਪੰਜਾਬੀ'],['or','Odia','ଓଡ଼ିଆ'],['ur','Urdu','اردو'],['as','Assamese','অসমীয়া'],['ne','Nepali','नेपाली'],['si','Sinhala','සිංහල'],['sd','Sindhi','سنڌي'],['ks','Kashmiri','کٲشُر'],['sa','Sanskrit','संस्कृतम्'],['ar','Arabic','العربية'],['fa','Persian','فارسی'],['he','Hebrew','עברית'],['tr','Turkish','Türkçe'],['fr','French','Français'],['es','Spanish','Español'],['pt','Portuguese','Português'],['de','German','Deutsch'],['it','Italian','Italiano'],['nl','Dutch','Nederlands'],['sv','Swedish','Svenska'],['no','Norwegian','Norsk'],['da','Danish','Dansk'],['fi','Finnish','Suomi'],['is','Icelandic','Íslenska'],['ga','Irish','Gaeilge'],['cy','Welsh','Cymraeg'],['pl','Polish','Polski'],['cs','Czech','Čeština'],['sk','Slovak','Slovenčina'],['hu','Hungarian','Magyar'],['ro','Romanian','Română'],['bg','Bulgarian','Български'],['el','Greek','Ελληνικά'],['sr','Serbian','Српски'],['hr','Croatian','Hrvatski'],['sl','Slovenian','Slovenščina'],['bs','Bosnian','Bosanski'],['mk','Macedonian','Македонски'],['sq','Albanian','Shqip'],['ru','Russian','Русский'],['uk','Ukrainian','Українська'],['be','Belarusian','Беларуская'],['lt','Lithuanian','Lietuvių'],['lv','Latvian','Latviešu'],['et','Estonian','Eesti'],['ka','Georgian','ქართული'],['hy','Armenian','Հայերեն'],['az','Azerbaijani','Azərbaycanca'],['kk','Kazakh','Қазақша'],['uz','Uzbek','Oʻzbekcha'],['ky','Kyrgyz','Кыргызча'],['tg','Tajik','Тоҷикӣ'],['tk','Turkmen','Türkmençe'],['mn','Mongolian','Монгол'],['zh','Chinese (Simplified)','简体中文'],['zt','Chinese (Traditional)','繁體中文'],['ja','Japanese','日本語'],['ko','Korean','한국어'],['vi','Vietnamese','Tiếng Việt'],['th','Thai','ไทย'],['lo','Lao','ລາວ'],['km','Khmer','ខ្មែរ'],['my','Burmese','မြန်မာ'],['id','Indonesian','Bahasa Indonesia'],['ms','Malay','Bahasa Melayu'],['fil','Filipino','Filipino'],['jv','Javanese','Basa Jawa'],['su','Sundanese','Basa Sunda'],['sw','Swahili','Kiswahili'],['am','Amharic','አማርኛ'],['ha','Hausa','Hausa'],['yo','Yoruba','Yorùbá'],['ig','Igbo','Igbo'],['zu','Zulu','isiZulu'],['xh','Xhosa','isiXhosa'],['af','Afrikaans','Afrikaans'],['so','Somali','Soomaali'],['rw','Kinyarwanda','Kinyarwanda'],['mg','Malagasy','Malagasy'],['sn','Shona','chiShona'],['om','Oromo','Afaan Oromoo'],['ti','Tigrinya','ትግርኛ'],['ps','Pashto','پښتو'],['ku','Kurdish','Kurdî'],['dv','Dhivehi','ދިވެހި'],['bo','Tibetan','བོད་སྐད'],['ug','Uyghur','ئۇيغۇرچە'],['ca','Catalan','Català'],['eu','Basque','Euskara'],['gl','Galician','Galego'],['mt','Maltese','Malti'],['lb','Luxembourgish','Lëtzebuergesch'],['ht','Haitian Creole','Kreyòl ayisyen'],['qu','Quechua','Runasimi'],['gn','Guarani','Avañeʼẽ'],['mi','Maori','Te Reo Māori'],['haw','Hawaiian','ʻŌlelo Hawaiʻi'],['sm','Samoan','Gagana Samoa'],['to','Tongan','Lea fakatonga'],['fj','Fijian','Vosa Vakaviti'],['eo','Esperanto','Esperanto']];
+ const RTL=['ar','fa','he','ur','ps','sd','ug','dv','ks'];
+ const lpHtml=()=>{const cur=(S.prefs&&S.prefs.lang)||'en';return `<div class="notr lp"><label>Language<input data-c="lpQ" placeholder="Type to search: Fr, 日本, Swahili..." autocomplete="off"></label><div class="lpl">${WL.map(([k,e,n])=>`<button type="button" class="lpb ${cur===k?'on':''}" data-a="lpSet" data-v="${k}" data-s="${esc((e+' '+n+' '+k).toLowerCase())}"><b>${esc(n)}</b><span>${esc(e)}${(typeof I18N!=='undefined'&&I18N[k])||k==='en'?'':' · app text stays English'}</span></button>`).join('')}</div></div>`};
+ const css2=document.createElement('style');css2.textContent='.lpl{max-height:240px;overflow:auto;display:grid;gap:4px;margin-top:6px}.lpb{display:flex;justify-content:space-between;align-items:center;gap:8px;text-align:left;padding:8px 10px;border-radius:10px;border:1px solid var(--bd,#4443);background:var(--card,transparent);color:inherit}.lpb span{font-size:11px;opacity:.75}.lpb.on{border-color:var(--sp1,#e11d2e)}.lpb[hidden]{display:none!important}';document.head.appendChild(css2);
+ {const d0=drawer;drawer=function(){let h=d0.apply(this,arguments);if(!h)return h;const re=/<div class="notr" style="padding:10px 14px"><label>Language[\s\S]*?<\/select><\/label><\/div>/;return re.test(h)?h.replace(re,`<div style="padding:10px 14px">${lpHtml()}</div>`):h}}
+ {const s0=vSettings;vSettings=function(){const o=s0.apply(this,arguments);return typeof o==='string'?o+`<div class="card"><h3>Language</h3>${lpHtml()}</div>`:o}}
+ Object.assign(C,{lpQ(v,el){const q=String(v||'').toLowerCase().trim(),box=el.closest('.lp');if(!box)return;box.querySelectorAll('.lpb').forEach(b=>{b.hidden=!!q&&!b.dataset.s.includes(q)})}});
+ document.addEventListener('input',e=>{const t=e.target;if(t&&t.dataset&&t.dataset.c==='lpQ')C.lpQ(t.value,t)});
+ Object.assign(A,{lpSet(d){const k=d.v;if(!WL.some(x=>x[0]===k))return;S.prefs.lang=k;S.prefs.ts=Date.now();document.documentElement.lang=k;document.documentElement.dir=RTL.includes(k)?'rtl':'ltr';commit();const x=WL.find(y=>y[0]===k);toast((typeof I18N!=='undefined'&&I18N[k])||k==='en'?'Language: '+x[1]:x[1]+' saved. App text is English until a translation is added.',4000);render()}});
+}
 </script>
 </body>
 </html>
