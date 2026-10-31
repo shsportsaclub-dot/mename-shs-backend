@@ -148,3 +148,7 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 - Player ID `SH-P-YYYYMM-NNNNNN` (monthly sequence) and Match ID `SH-M-YYYYMMDD-NNNNNN` (daily sequence, creation date, IST via env ID_TZ) are issued by the server (ids.mjs, routes /api/ids/*), never reused, unchanged by status, verification, team or tournament changes. Sports never collide (match key is sport plus ref). External provider IDs are stored separately (admin only). Audit log is append-only.
 - Same mobile number gives the same Player ID across teams and clubs. Shown in the match header, scorer screen, share text, profile and player lists (block 111). Tests: tests/ids.test.mjs, tests/ids-ui.cjs.
 - Limits: runtime store is db.idReg (JSON/Neon kv), atomic on a single instance. migrations/20261101_player_match_ids.sql holds the SQL tables and is not applied by the runtime.
+
+## Start a match: Select team / Create team and instant player add (2026-11-01)
+- Each team slot offers two clear choices, Select team (searchable list of saved teams, the other side's team hidden) and Create team (name, logo, details), like CricHeroes' "select or create" step. Change team returns to the list.
+- Players step: a quick-add row (name, optional mobile, role) is always visible for the XI and inside every Impact Player / Super Sub list. Name alone is enough (as in Play-Cricket's custom player). Added to the squad, to the XI when there is room, and auto-ticked as a substitute within the 5 / 1 limit. Enter key adds. Test: tests/qs-add.cjs.
