@@ -11,7 +11,7 @@ try{
  const status=await health.json();
  const build=String(status.commit||status.version||'local').slice(0,7);
  const stylePath=new URL('../public/main-live-reference.css',import.meta.url);
- const servedSource=source.replace('__SH_BUILD__',build).replace('</head>', '<style id="sh-main-live-reference">'+fs.readFileSync(stylePath,'utf8')+'</style></head>');
+ const servedSource=source.replace('__SH_BUILD__',build).replace('</head>', '<style id="sh-main-live-reference">'+fs.readFileSync(stylePath,'utf8')+'</style><script>'+fs.readFileSync(new URL('../public/match-market-display.js',import.meta.url),'utf8')+'</script></head>');
  const expectedServedHash=crypto.createHash('sha256').update(servedSource).digest('hex');
  const response=await fetch(base+'/?deployment-check='+Date.now(),{cache:'no-store',signal:AbortSignal.timeout(20000)});
  const html=await response.text();
