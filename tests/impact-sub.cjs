@@ -9,7 +9,7 @@ const boot=async(b)=>{const p=await b.newPage({viewport:{width:412,height:900}})
  /* 1. swipe cards in the start flow, subs picked, rule stored on the match */
  let p=await boot(b);await p.evaluate(()=>A.newMatch());await p.waitForTimeout(200);
  await p.click('button[data-a=qsStep][data-v="1"]');await p.waitForTimeout(150);
- assert.equal(await p.locator('.qsrc').count(),3);
+ assert.equal(await p.locator('button[data-a=qsRule]').count(),3);
  await p.click('button[data-a=qsRule][data-v=impact]');assert.equal(await p.locator('input[data-c=qssub]').count(),4);
  await p.click('input[data-c=qssub][data-t=a] >> nth=0');await p.click('input[data-c=qssub][data-t=b] >> nth=0');
  await p.click('button[data-a=qsStep][data-v="1"]');await p.fill('#qs-venue','Test Ground');

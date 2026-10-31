@@ -11666,12 +11666,13 @@ Object.assign(C,{ovAd(v){S.stream.adText=String(v||'').slice(0,140);save()}});
  const cutoff=m=>Math.max(1,Math.round((+m.overs||20)*0.7));
  const css=document.createElement('style');css.textContent='.qsrules{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding:2px 0 6px}.qsrules::-webkit-scrollbar{display:none}.qsrc{flex:none;width:80%;max-width:300px;scroll-snap-align:start;border:1px solid var(--bd,#4443);border-radius:14px;padding:12px;background:var(--card,transparent);display:flex;flex-direction:column;gap:6px}.qsrc.on{border-color:var(--sp1,#e11d2e);box-shadow:inset 0 0 0 1px var(--sp1,#e11d2e)}.qsrc ul{margin:0;padding-left:18px;font-size:12px;line-height:1.5;opacity:.9}.qsrc .b{font-size:15px}';document.head.appendChild(css);
  window.shRuleHTML=function(q){const r=q.rule||'none',sub=q.sub=q.sub||{};
-  const cards=RULES.map(([k,t,d,l])=>`<div class="qsrc ${r===k?'on':''}"><div class="row" style="justify-content:space-between"><span class="b">${t}</span>${r===k?'<span class="pill ok">Selected</span>':''}</div><div class="mu sm">${d}</div><ul>${l.map(x=>`<li>${x}</li>`).join('')}</ul><button type="button" class="btn sm ${r===k?'':'ghost'}" data-a="qsRule" data-v="${k}">${r===k?'Selected':'Use '+t}</button></div>`).join('');
+  const cur=RULES.find(x=>x[0]===r)||RULES[0];
+  const cards=`<div class="row" style="gap:6px;flex-wrap:nowrap">${RULES.map(([k,t])=>`<button type="button" class="btn sm ${r===k?'':'ghost'}" style="flex:1;padding-inline:4px" data-a="qsRule" data-v="${k}">${t}</button>`).join('')}</div><div class="mu sm" style="margin-top:6px"><b>${cur[1]}:</b> ${cur[2]} <details style="display:inline"><summary style="display:inline;cursor:pointer;color:var(--sp1,#e11d2e)">Rules</summary><ul style="margin:4px 0 0;padding-left:18px;line-height:1.5">${cur[3].map(x=>`<li>${x}</li>`).join('')}</ul></details></div>`;
   let picks='';
   if(r!=='none'){picks=[q.a,q.b].map(tid=>{const t=T(tid),xi=(q.xi&&q.xi[tid])||[],pool=(t?t.players:[]).filter(id=>!xi.includes(id)),mine=(sub[tid]=(sub[tid]||[]).filter(id=>pool.includes(id)));
     return `<div class="card" style="margin:8px 0"><div class="row" style="justify-content:space-between"><b>${esc(t?t.name:'')}: ${r==='super'?'Super Sub':'substitutes'}</b><span class="mu sm">${mine.length}/${MAX[r]}</span></div>${pool.length?pool.map(id=>`<label class="ck"><input type="checkbox" data-c="qssub" data-t="${tid}" value="${id}" ${mine.includes(id)?'checked':''}> ${esc(nm(id))}</label>`).join(''):'<div class="mu sm">No spare players. Add more players to this team above (not in the XI).</div>'}</div>`}).join('');
    picks+=`<div class="mu sm">${r==='impact'?'Substitutes are named before the toss. Use the Impact Player from the scoring screen (cut-off: before the end of over '+cutoff({overs:+q.overs||20})+').':'Super Sub is named before the toss and can be used any time from the scoring screen.'}</div>`}
-  return `<div class="b" style="margin:12px 0 4px">Substitution rule <span class="mu sm">(swipe)</span></div><div class="qsrules">${cards}</div>${picks}`};
+  return `<div class="b" style="margin:12px 0 4px">Substitution rule</div>${cards}${picks}`};
  Object.assign(A,{qsRule(d){if(window.shQsRead)window.shQsRead();const q=UI.qs;q.rule=d.v;q.sub=q.sub||{};window.shQsShow();setTimeout(()=>{const e=document.querySelector('.qsrc.on');if(e&&e.parentNode)e.parentNode.scrollLeft=Math.max(0,e.offsetLeft-12)},0)}});
  Object.assign(C,{qssub(v,el){const q=UI.qs,r=q.rule||'none',t=el.dataset.t,L=(q.sub=q.sub||{})[t]=(q.sub[t]||[]);
   if(el.checked){if(L.length>=MAX[r]){el.checked=false;return toast((r==='super'?'Only one Super Sub':'At most '+MAX[r]+' substitutes')+' per team',3000)}if(!L.includes(v))L.push(v)}else q.sub[t]=L.filter(x=>x!==v);window.shQsShow()}});
@@ -11707,6 +11708,37 @@ Object.assign(C,{ovAd(v){S.stream.adText=String(v||'').slice(0,140);save()}});
  const h0=mHead;mHead=function(m){const o=h0.apply(this,arguments);if(typeof o!=='string'||!m||!m.subRule||m.subRule==='none')return o;
   const nmx=id=>esc((P(id)||{}).name||id),line=(m.sx||[]).map(c=>`${esc(T(c.tid).short||T(c.tid).name)}: ${nmx(c.inn)} in for ${nmx(c.out)} (${c.at} ov)`).join(' · ');
   return o+`<div class="mu sm" style="margin:4px 0"><b>${m.subRule==='impact'?'Impact Player':'Super Sub'} rule</b>${line?' · '+line:''}</div>`};
+}
+
+/* ---------------- 110 FORMAT RULE PACK: every format carries its own rules and the scorer follows them (bowler limit, no consecutive overs, powerplay, free hit, reviews, minimum overs, Test rules) ---------------- */
+{
+ const fmtOfM=m=>m.fmt||(m.bpo===5?'hundred':m.overs>=900?'test':m.overs>=40?'odi':m.overs>=15?'t20':'t10');
+ const NAMES={academic:'Academic',test:'Test',odi:'ODI',t20:'T20',t10:'T10',hundred:'The Hundred'};
+ /* revs = DRS reviews per innings in ICC events; minOv = minimum overs per side for a result (DLS) */
+ const PACK={
+  t20:{revs:1,minOv:5,fh:1,so:1,pp:'Overs 1-6: 2 fielders outside the 30-yard circle, then 5',notes:['Each bowler: at most 4 overs (a fifth of the innings)','Front-foot no-ball gives a free hit','A tie in a knockout goes to a Super Over','Result needs at least 5 overs per side (DLS)']},
+  t10:{revs:0,minOv:3,fh:1,so:1,pp:'First 3 overs: fielding restrictions (2 outside the circle)',notes:['Each bowler: at most 2 overs','Front-foot no-ball gives a free hit','Tie: Super Over in knockouts','Check your tournament conditions for the exact powerplay']},
+  odi:{revs:2,minOv:20,fh:1,so:1,pp:'Overs 1-10: 2 outside, 11-40: 4 outside, 41-50: 5 outside',notes:['Each bowler: at most 10 overs','Free hit after a front-foot no-ball','Result needs at least 20 overs per side (DLS)','Two new balls, one from each end (ICC ODI)']},
+  hundred:{revs:0,minOv:0,fh:1,so:1,pp:'First 25 balls: 2 fielders outside the circle',notes:['100 balls per side in sets of 5 (or 10 from one bowler)','Each bowler: at most 20 balls','No-ball: 2 runs and a free hit','Tie: Super Five (5 balls each)']},
+  test:{revs:2,minOv:0,fh:0,so:0,pp:'No powerplay. Law 41 fielding limits apply',notes:['No bowler limit; no bowler may bowl two overs in a row (Law 17.6)','New ball due after 80 overs (Law 21.2)','Follow-on: lead of 200 (5 days or more), 150 (3-4 days), 100 (2 days), 75 (1 day), Law 14.1','At least 90 overs a day; innings can be declared (Law 15)']},
+  academic:{revs:0,minOv:0,fh:1,so:0,pp:'Coach decides fielding restrictions',notes:['Practice format: the bowler limit is a guide, not blocked','No bowler may bowl two overs in a row','Everyone may bat and bowl at the coach\'s call']}};
+ window.shFmtRules=m=>{const f=fmtOfM(m),p=PACK[f]||PACK.t20,lim=m.overs<900&&f!=='academic',q=m.overs<900?Math.ceil(m.overs/5)*(m.bpo||6):0;return Object.assign({f,name:NAMES[f]||'Match',quotaBalls:q,limited:lim,consec:m.bpo!==5},p)};
+ const why=(m,id)=>{const R=window.shFmtRules(m),inn=m.innings[m.cur];if(!inn||!id)return '';const k=calc(m,m.cur),used=(k.bowl[id]&&k.bowl[id].b)||0,BP=+m.bpo||6;
+  if(R.consec&&lastOverBowler(m)===id)return 'A bowler cannot bowl two overs in a row (Law 17.6)';
+  if(R.limited&&R.quotaBalls&&used>=R.quotaBalls)return (R.f==='hundred'?'Limit is 20 balls':'Limit is '+(R.quotaBalls/BP)+' overs')+' per bowler in '+R.name;return ''};
+ window.shBowlWhy=why;
+ const pb0=A.pickBowl;A.pickBowl=function(d){const m=S.matches.find(x=>x.id===UI.sid)||curM(),w=m&&m.status==='live'?why(m,d.id):'';if(w){toast(w,4000);return}return pb0.apply(this,arguments)};
+ const card=m=>{if(!m||m.sport&&m.sport!=='cricket')return '';const R=window.shFmtRules(m),inn=m.innings[m.cur],chips=[];
+  try{if(inn){const k=calc(m,m.cur),c=inn.cur||{},BP=+m.bpo||6;
+   const fs=typeof shFieldingState==='function'?shFieldingState(m):null;if(fs&&fs.supported)chips.push(fs.phase+' · '+fs.outside+' outside circle');
+   if(c.bl!=null){const b=k.bowl[c.bl]||{b:0};chips.push(esc(nm(c.bl))+': '+fmtOv(b.b)+(R.limited&&R.quotaBalls?' / '+(R.f==='hundred'?R.quotaBalls+' balls':R.quotaBalls/BP+' ov'):' ov'))}
+   const last=inn.ev&&inn.ev[inn.ev.length-1];if(R.fh&&last&&last.x==='nb')chips.push('FREE HIT next ball');
+   if(R.f==='test'&&k.lg>=80*BP)chips.push('New ball available ('+Math.floor(k.lg/BP)+' overs)');
+   if(R.minOv&&inn.lg!=null&&k.lg<R.minOv*BP)chips.push('Less than '+R.minOv+' overs so far: no result if stopped now')}}catch(e){}
+  return `<details class="card sh-fr" style="margin:8px 0"><summary><b>${esc(R.name)} rules</b>${chips.length?' · <span class="mu sm">'+chips.join(' · ')+'</span>':''}</summary><ul style="margin:8px 0 0;padding-left:18px;line-height:1.55;font-size:13px"><li>${esc(R.pp)}</li>${R.revs?`<li>DRS: ${R.revs} unsuccessful review${R.revs>1?'s':''} per innings in ICC events</li>`:''}${R.notes.map(x=>`<li>${esc(x)}</li>`).join('')}</ul><div class="mu sm" style="margin-top:6px">Reference: MCC Laws and ICC men's playing conditions. Your competition's own conditions come first.</div></details>`};
+ const v0=vScore;vScore=function(){const h=v0.apply(this,arguments),m=scM();if(typeof h!=='string'||!m)return h;const c=card(m);if(!c)return h;const i=h.indexOf('<section class="sh-scorer-console"');return i>=0?h.slice(0,i)+c+h.slice(i):h+c};
+ /* remember the format the scorer picked */
+ const s0=A.qsStart;A.qsStart=function(){const f=UI.qs&&UI.qs.fmt,n0=S.matches.length,r=s0.apply(this,arguments);if(f&&S.matches.length>n0){const m=S.matches[S.matches.length-1];if(!m.fmt)m.fmt=f;commit()}return r};
 }
 </script>
 </body>
