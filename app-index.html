@@ -9928,9 +9928,9 @@ try{if(S.settings&&S.settings.mskin==='ca'){S.settings.mskin='cb';try{save()}cat
   const head=`<h3>Start a match</h3><div class="qs-steps">${STEPS.map((n,i)=>`<span class="${i===stp?'on':i<stp?'done':''}"><b>${i<stp?'✓':i+1}</b>${n}</span>`).join('')}</div>`;
   const nav=`<div class="row" style="margin-top:14px;gap:8px">${stp>0?'<button type="button" class="btn ghost" data-a="qsStep" data-v="-1">Back</button>':''}<div class="grow"></div>${stp<3?'<button type="button" class="btn" data-a="qsStep" data-v="1">Next</button>':'<button type="button" class="btn" data-a="qsStart">Start match</button>'}</div>`;
   const body=[
-   `${window.shQsTeams?window.shQsTeams():''}<div class="b" style="margin:4px 0">Ground</div>${scroll(GT.map(([v,l])=>chipA('qsSet','gtype',v,l,q.gtype===v)).join(''))}<div class="b" style="margin:4px 0">Match type</div>${scroll(MT.map(([v,l])=>chipA('qsSet','mcat',v,l,q.mcat===v)).join(''))}${q.mcat==='demo'?'<div class="mu sm" style="margin:0 0 6px">A demo match is for practice. It is not counted in stats or shared, and it is deleted 24 hours after it starts.</div>':''}`,
+   `${window.shQsTeams?window.shQsTeams():''}<div class="row" style="gap:8px;align-items:flex-start;margin-top:6px"><div style="flex:1;min-width:0"><div class="b" style="margin:4px 0">Ground</div>${window.shDD('gtype',GT,q.gtype,'qsSet')}</div><div style="flex:1;min-width:0"><div class="b" style="margin:4px 0">Match type</div>${window.shDD('mcat',MT,q.mcat,'qsSet')}</div></div>${UI.dd==='gtype'||UI.dd==='mcat'?window.shDDList(UI.dd,UI.dd==='gtype'?GT:MT,UI.dd==='gtype'?q.gtype:q.mcat,'qsSet'):''}${q.mcat==='demo'?'<div class="mu sm" style="margin:0 0 6px">A demo match is for practice. It is not counted in stats or shared, and it is deleted 24 hours after it starts.</div>':''}`,
    ok2?pl(q.a)+pl(q.b)+(window.shRuleHTML?window.shRuleHTML(q):''):'<div class="need">Pick both teams first.</div>',
-   `<div class="b" style="margin:8px 0 4px">Format</div>${scroll(FMT.map(([k,l])=>chipA('qsFmt','fmt',k,l,fm===k)).join(''))}
+   `<div class="b" style="margin:8px 0 4px">Format</div>${window.shDD('fmt',FMT,fm,'qsFmt')}${UI.dd==='fmt'?window.shDDList('fmt',FMT,fm,'qsFmt'):''}
   ${fm==='test'?`<div class="b" style="margin:6px 0 4px">Match length</div>${scroll(DAYS.map(([v,l])=>chip('overs',v,l,String(q.overs)===v)).join(''))}`:fm==='hundred'?`<div class="mu sm" style="margin:6px 0">The Hundred: 100 balls per side, bowled in sets of 5 balls.</div>`:`<div class="b" style="margin:6px 0 4px">Overs per side</div><div class="row" style="flex-wrap:wrap;gap:6px">${FOV[fm].map(v=>chip('overs',v,v,String(q.overs)===v)).join('')}</div><label style="margin-top:6px">Or type the overs yourself<input id="qs-ov" inputmode="numeric" maxlength="3" placeholder="e.g. 12, 25, 35 (1-100)" value="${FOV[fm].includes(String(q.overs))?'':esc(q.overs)}"></label>`}
   <div class="b" style="margin:10px 0 4px">Ball</div><div class="row" style="gap:6px">${chip('ball','leather','Leather',q.ball==='leather')}${chip('ball','tennis','Tennis ball',q.ball==='tennis')}</div>
   <div class="b" style="margin:10px 0 4px">Pitch (optional)</div><div class="row" style="flex-wrap:wrap;gap:6px">${['Turf','Matting','Cement','Astro turf'].map(x=>chip('pitchType',x,x,q.pitchType===x)).join('')}</div>
@@ -11801,6 +11801,19 @@ Object.assign(C,{ovAd(v){S.stream.adText=String(v||'').slice(0,140);save()}});
   else if(Q2.xi[tid]&&Q2.xi[tid].length>11)Q2.xi[tid]=Q2.xi[tid].slice(0,11);
   window.shQsShow();toast(name+(sub?' added as a substitute':' added'),2200)};
  const s0=A.qsStart;A.qsStart=function(){const n=S.matches.length,r=s0.apply(this,arguments);if(S.matches.length>n)UI.qtm=null;return r};
+}
+
+/* ---------------- 113 DROP-DOWN LISTS: long option rows become a compact scroll-down list (with search when long) so the screen stays short ---------------- */
+{
+ const lab=(o,v)=>{const x=o.find(a=>a[0]===v);return x?x[1]:'Choose'};
+ window.shDD=(key,opts,cur,act)=>`<button type="button" class="dd-b ${UI.dd===key?'open':''}" data-a="ddOpen" data-k="${key}" aria-expanded="${UI.dd===key}"><span>${esc(lab(opts,cur))}</span><span aria-hidden="true">${UI.dd===key?'▴':'▾'}</span></button>`;
+ window.shDDList=(key,opts,cur,act)=>`<div class="dd-p">${opts.length>7?`<input class="dd-q" id="dd-q-${key}" data-dd="${key}" placeholder="Search" autocomplete="off">`:''}<div class="dd-l" id="dd-l-${key}">${opts.map(([v,l])=>`<button type="button" class="dd-o ${v===cur?'on':''}" data-a="ddPick" data-k="${key}" data-v="${esc(v)}" data-act="${act}" data-n="${esc(String(l).toLowerCase())}">${esc(l)}${v===cur?' ✓':''}</button>`).join('')}</div></div>`;
+ A.ddOpen=function(d){if(window.shQsRead)window.shQsRead();UI.dd=UI.dd===d.k?null:d.k;window.shQsShow()};
+ A.ddPick=function(d){UI.dd=null;(A[d.act]||function(){})({k:d.k,v:d.v})};
+ document.addEventListener('input',e=>{const t=e.target;if(!t||!t.dataset||!t.dataset.dd)return;const w=t.value.trim().toLowerCase();document.querySelectorAll('#dd-l-'+t.dataset.dd+' .dd-o').forEach(b=>{b.hidden=!!w&&!b.dataset.n.includes(w)})});
+ const st=document.createElement('style');st.textContent='.dd-b{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;padding:9px 12px;border:1px solid var(--bd,#4443);border-radius:10px;background:transparent;color:inherit;font:inherit;font-weight:600;cursor:pointer;text-align:left}.dd-b.open{border-color:var(--sp1,#e11d2e)}.dd-p{border:1px solid var(--bd,#4443);border-radius:10px;margin:6px 0 8px;overflow:hidden}.dd-q{width:100%;box-sizing:border-box;border:0;border-bottom:1px solid var(--bd,#4443);border-radius:0}.dd-l{max-height:210px;overflow-y:auto;display:flex;flex-direction:column}.dd-o{padding:10px 12px;border:0;border-bottom:1px solid var(--bd,#4442);background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer}.dd-o[hidden]{display:none}.dd-o.on{color:var(--sp1,#e11d2e);font-weight:700}';document.head.appendChild(st);
+ const s0=A.qsStart;A.qsStart=function(){const n=S.matches.length,r=s0.apply(this,arguments);if(S.matches.length>n)UI.dd=null;return r};
+ const sp0=A.qsStep;A.qsStep=function(){UI.dd=null;return sp0.apply(this,arguments)};
 }
 </script>
 </body>
