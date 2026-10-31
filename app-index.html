@@ -11115,6 +11115,31 @@ document.addEventListener('input',e=>{const el=e.target;if(!el||!/^qt-n-[ab]$/.t
   async glNo(d){done(await call('POST','/api/links/decide',{id:d.id,status:'rejected'}),'Declined')},
   async glEnd(d){done(await call('POST','/api/links/decide',{id:d.id,status:'revoked'}),'Link ended')}});
 }
+/* ---------------- 91 RANKINGS WITH A DISCLOSED METHOD (R15): choose the measure; every list states its qualification rule and tie-break. These are plain statistics from matches scored in this app, not an ICC-style rating ---------------- */
+{
+ const BM={runs:['Runs','Most runs. Tie: higher strike rate.'],avg:['Average','Runs per dismissal. Qualifies with 3+ innings and at least 1 dismissal. Tie: more runs.'],sr:['Strike rate','Runs per 100 balls. Qualifies with 60+ balls faced. Tie: more runs.'],six:['Sixes','Most sixes. Tie: more runs.']};
+ const WM={w:['Wickets','Most wickets. Tie: lower economy.'],econ:['Economy','Runs per over. Qualifies with 12+ overs bowled. Tie: more wickets.'],avg:['Average','Runs per wicket. Qualifies with 3+ wickets. Tie: more wickets.'],sr:['Strike rate','Balls per wicket. Qualifies with 3+ wickets. Tie: more wickets.']};
+ const x0=XV.rankings;XV.rankings=function(){let h=x0.apply(this,arguments);const K=UI.rk;if(K.cat==='fld')return h;K.m=K.m||{};const bat=K.cat==='bat',MM=bat?BM:WM,mk=MM[K.m[K.cat]]?K.m[K.cat]:Object.keys(MM)[0],cr=career();
+  const pl=S.players.filter(p=>{const t=T(p.team);if(!t)return false;if((K.g==='women')!==isWomen(t))return false;if(K.scope==='state'&&K.state&&t.state!==K.state)return false;if(K.scope==='country'&&K.country&&t.country!==K.country)return false;if(K.scope==='city'&&K.city&&String(p.loc||'').trim().toLowerCase()!==K.city.toLowerCase())return false;return true});
+  const rows=pl.map(p=>({p,c:cr[p.id]||{m:new Set()}})).filter(x=>x.c.m.size),BP=typeof BPO==='number'?BPO:6,sr=c=>c.b?c.r*100/c.b:0,ec=c=>c.ob?c.or*BP/c.ob:0;
+  let L=[],fmt;
+  if(bat){const out=c=>c.inn-c.no,sixes=c=>c.f6||0;
+   if(mk==='runs'){L=rows.filter(x=>x.c.r>0).sort((a,b)=>b.c.r-a.c.r||sr(b.c)-sr(a.c));fmt=x=>`${x.c.r} <span class="mu sm">(${x.c.inn} inn, SR ${sr(x.c).toFixed(0)})</span>`}
+   else if(mk==='avg'){L=rows.filter(x=>x.c.inn>=3&&out(x.c)>=1).sort((a,b)=>b.c.r/out(b.c)-a.c.r/out(a.c)||b.c.r-a.c.r);fmt=x=>`${(x.c.r/out(x.c)).toFixed(2)} <span class="mu sm">(${x.c.r} runs, ${x.c.inn} inn)</span>`}
+   else if(mk==='sr'){L=rows.filter(x=>x.c.b>=60).sort((a,b)=>sr(b.c)-sr(a.c)||b.c.r-a.c.r);fmt=x=>`${sr(x.c).toFixed(1)} <span class="mu sm">(${x.c.r} off ${x.c.b})</span>`}
+   else{L=rows.filter(x=>sixes(x.c)>0).sort((a,b)=>sixes(b.c)-sixes(a.c)||b.c.r-a.c.r);fmt=x=>`${sixes(x.c)} <span class="mu sm">(${x.c.r} runs)</span>`}}
+  else{
+   if(mk==='w'){L=rows.filter(x=>x.c.w>0).sort((a,b)=>b.c.w-a.c.w||ec(a.c)-ec(b.c));fmt=x=>`${x.c.w} <span class="mu sm">(Eco ${ec(x.c).toFixed(1)})</span>`}
+   else if(mk==='econ'){L=rows.filter(x=>x.c.ob>=12*BP).sort((a,b)=>ec(a.c)-ec(b.c)||b.c.w-a.c.w);fmt=x=>`${ec(x.c).toFixed(2)} <span class="mu sm">(${fmtOv(x.c.ob)} ov, ${x.c.w} wkts)</span>`}
+   else if(mk==='avg'){L=rows.filter(x=>x.c.w>=3).sort((a,b)=>a.c.or/a.c.w-b.c.or/b.c.w||b.c.w-a.c.w);fmt=x=>`${(x.c.or/x.c.w).toFixed(2)} <span class="mu sm">(${x.c.w} wkts)</span>`}
+   else{L=rows.filter(x=>x.c.w>=3).sort((a,b)=>a.c.ob/a.c.w-b.c.ob/b.c.w||b.c.w-a.c.w);fmt=x=>`${(x.c.ob/x.c.w).toFixed(1)} <span class="mu sm">(${x.c.w} wkts)</span>`}}
+  const chips=`<div class="mcsub" id="rk-method">${Object.entries(MM).map(([k,v])=>`<button class="${mk===k?'on':''}" data-a="rkM" data-v="${k}">${v[0]}</button>`).join('')}</div>`;
+  const list=L.length?L.slice(0,50).map((x,i)=>`<div class="chmv"><span class="mu" style="width:22px">${i+1}</span><span class="pphoto" style="width:44px;height:44px;flex:none">${av(x.p)}</span><div style="flex:1;min-width:0"><div class="b">${esc(x.p.name)}</div><div class="mu sm">${esc(T(x.p.team).name)}</div></div><b>${fmt(x)}</b></div>`).join(''):'<div class="empty">No player qualifies yet for this measure and filter. Rankings are built only from matches scored in this app.</div>';
+  const note=`<div class="mu sm" id="rk-note" style="margin:8px 2px"><b>How this is ranked:</b> ${esc(MM[mk][1])} Statistics come only from matches scored in Scoring Heroes. This is a plain statistics table, not an ICC-style rating.</div>`;
+  const a=h.indexOf('<div class="card" style="padding:0">'),b=h.indexOf('<div class="mu sm" style="margin:8px 2px">City uses');if(a<0||b<0)return h;
+  return h.slice(0,a)+chips+`<div class="card" style="padding:0">${list}</div>`+note+h.slice(b)};
+ A.rkM=function(d){const K=UI.rk;K.m=K.m||{};K.m[K.cat]=d.v;render()};
+}
 </script>
 </body>
 </html>
