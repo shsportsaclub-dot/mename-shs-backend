@@ -11472,6 +11472,18 @@ Object.assign(C,{ovAd(v){S.stream.adText=String(v||'').slice(0,140);save()}});
   return nav+h.slice(i+6)};
  Object.assign(A,{bnMk(d){UI.mk=UI.mk||{tab:'sell',q:''};UI.mk.tab=d.v;UI.view='market';UI.drawer=false;render();window.scrollTo(0,0)}});
 }
+
+/* ---------------- 106 HOME: header + top menu + MATCHES strip stay fixed, everything below scrolls; no extra scrollbar under the cards ---------------- */
+{
+ const st=document.createElement('style');
+ st.textContent='.hdr{z-index:40}.cbnav,.shnav{position:sticky!important;top:var(--hh,56px);z-index:30}.cbstrip{position:sticky;top:calc(var(--hh,56px) + var(--nh,44px));z-index:29}'+
+ '.cbcar,.cbch,.cbnav,.shnav,.mcsub,.mctabs,.cbxr{scrollbar-width:none!important}.cbcar::-webkit-scrollbar,.cbch::-webkit-scrollbar,.cbnav::-webkit-scrollbar,.shnav::-webkit-scrollbar,.mcsub::-webkit-scrollbar,.mctabs::-webkit-scrollbar,.cbxr::-webkit-scrollbar{display:none!important}';
+ document.head.appendChild(st);
+ const fit=()=>{try{const h=document.querySelector('#app>.hdr,#app>header'),n=document.querySelector('main .cbnav'),r=document.documentElement.style;
+  if(h)r.setProperty('--hh',Math.round(h.getBoundingClientRect().height)+'px');if(n)r.setProperty('--nh',Math.round(n.getBoundingClientRect().height)+'px')}catch(e){}};
+ const r0=render;render=function(){r0.apply(this,arguments);fit();setTimeout(fit,60)};
+ addEventListener('resize',fit);
+}
 </script>
 </body>
 </html>
