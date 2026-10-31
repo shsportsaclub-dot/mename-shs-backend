@@ -11933,30 +11933,69 @@ const SH_ICON='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALAAAACwCAYAAACvt+R
 
 /* ---------------- 118 UMPIRE SIGNALS AND PLAYER FIGURES (original line pictograms): small signal icons on the extras buttons, a short pop-up after Wide / No ball / Bye / Leg bye / Four / Six / Out and 50 / 100, and a Signals guide (umpire signals and player actions) in Scorer tools ---------------- */
 {
- const head=(x,y,hat)=>`<circle cx="${x}" cy="${y}" r="5" fill="currentColor" stroke="none"/>${hat?`<path d="M${x-8} ${y-2}h16" stroke-width="2.6"/><path d="M${x-5} ${y-3}c0-5 3-8 5-8s5 3 5 8" fill="currentColor" stroke="none"/>`:''}`;
- const U=(arms,legs)=>`<svg viewBox="0 0 48 64" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${head(24,11,1)}<path d="M24 18v22" stroke-width="8"/><path d="M24 40v21" stroke-width="0"/>${legs||'<path d="M21 40v21M27 40v21"/>'}${arms}</svg>`;
+ const PG=(()=>{
+  const L=(pts,w,extra='')=>`<polyline points="${pts.map(p=>p.join(',')).join(' ')}" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" ${extra}/>`;
+  const C=(x,y,r,f='currentColor')=>`<circle cx="${x}" cy="${y}" r="${r}" fill="${f}"/>`;
+  const kit={
+   hat:(x,y)=>`<ellipse cx="${x}" cy="${y-3.5}" rx="10.5" ry="2.6" fill="currentColor"/><path d="M${x-6.5} ${y-4}c0-6 3-9 6.5-9s6.5 3 6.5 9z" fill="currentColor"/>`,
+   cap:(x,y,d=1)=>`<path d="M${x-6.6} ${y-1}c0-7 3-9 6.6-9s6.6 2 6.6 9z" fill="currentColor"/><path d="M${x+(d>0?4:-4)} ${y-2}h${d*8}" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>`,
+   helmet:(x,y,d=1)=>`<path d="M${x-7.6} ${y+1}c-1-9 3-11.5 7.6-11.5s8.6 2.5 7.6 11.5z" fill="currentColor"/><path d="M${x+(d>0?5:-5)} ${y-1}h${d*6}" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M${x-d*6} ${y+1}l${-d*1.5} 6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>`,
+   none:()=>''};
+  const bat=(a,b,w=5.2)=>L([a,b],w)+L([a,[a[0]+(b[0]-a[0])*.28,a[1]+(b[1]-a[1])*.28]],2.6);
+  // pose: h head, n neck, p pelvis, a:[[e,h],[e,h]], l:[[k,f],[k,f]]
+  const G='var(--figgap,#101626)';
+  const cap=(a,b,w1,w2)=>{const dx=b[0]-a[0],dy=b[1]-a[1],d=Math.hypot(dx,dy)||1,nx=-dy/d,ny=dx/d,r1=w1/2,r2=w2/2;
+   return `<path d="M${a[0]+nx*r1} ${a[1]+ny*r1}L${b[0]+nx*r2} ${b[1]+ny*r2}A${r2} ${r2} 0 0 1 ${b[0]-nx*r2} ${b[1]-ny*r2}L${a[0]-nx*r1} ${a[1]-ny*r1}A${r1} ${r1} 0 0 0 ${a[0]+nx*r1} ${a[1]+ny*r1}z" fill="currentColor"/>`};
+  const seam=(p,w=1.3)=>`<path d="${p}" fill="none" stroke="${G}" stroke-width="${w}" stroke-linecap="round"/>`;
+  function fig(P){
+   let o='';const pads=P.pads;
+   P.l.forEach(l=>{const k=l[0],f=l[1],d=P.fd||1;
+    o+=cap(P.p,k,11.5,8.6)+cap(k,f,8.2,5.8);
+    if(pads){const m=t=>[k[0]+(f[0]-k[0])*t,k[1]+(f[1]-k[1])*t];o+=cap(m(.08),m(.9),11.6,9.4)+C(k[0],k[1],5.8)+seam(`M${m(.45)[0]-4} ${m(.45)[1]}L${m(.45)[0]+4} ${m(.45)[1]}`,1.1)}
+    o+=`<path d="M${f[0]-3.4} ${f[1]-1.5}h${3.4+d*7}q${d*2.4} 0 ${d*2.4} 2.6v1.6h${-(6.8+d*2.4)}z" fill="currentColor"/>`;
+   });
+   const sh=P.sh||5.2,n=P.n,p=P.p;
+   o+=`<path d="M${n[0]-sh-1} ${n[1]+2.5}Q${n[0]} ${n[1]-1.5} ${n[0]+sh+1} ${n[1]+2.5}L${p[0]+4.6} ${p[1]}L${p[0]-4.6} ${p[1]}z" fill="currentColor" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>`;
+   o+=seam(`M${p[0]-5.2} ${p[1]-.5}L${p[0]+5.2} ${p[1]-.5}`,1.2);
+   P.a.forEach(a=>{const s0=[n[0]+(a.s||0),n[1]+3.6];o+=cap(s0,a.e,8.4,6.4)+cap(a.e,a.h,6,4.6)+C(a.h[0],a.h[1],2.7)+seam(`M${a.e[0]+(a.h[1]-a.e[1])*.0-3} ${a.e[1]+3}`,0)});
+   o+=cap(n,P.h,5,4.2);
+   o+=C(P.h[0],P.h[1],6.2);
+   o+=(kit[P.kit||'none'])(P.h[0],P.h[1],P.d||1);
+   o+=(P.x||'');
+   return `<svg viewBox="0 0 64 80" aria-hidden="true">${o}</svg>`;
+  }
+  return {fig,L,C,bat};
+ })();
+ const {fig,L,C,bat}=PG;
+ // ---- umpire standing base
+ const UB={h:[32,13],n:[32,24],p:[32,47],l:[[[27.5,62],[26.5,76]],[[36.5,62],[37.5,76]]],kit:'hat'};
+ const U=(a,extra={})=>fig(Object.assign({},UB,{a},extra));
  const SIG={
-  out:U('<path d="M31 22l6-8v-9" /><path d="M17 22l-4 17"/>'),
-  wide:U('<path d="M17 22L3 22M31 22l14 0"/>'),
-  noball:U('<path d="M31 22l15 0"/><path d="M17 22l-4 17"/>'),
-  bye:U('<path d="M31 22l4-11v-9"/><circle cx="35" cy="3" r="2.4" fill="currentColor" stroke="none"/><path d="M17 22l-4 17"/>'),
-  legbye:U('<path d="M31 22l3 14v6"/><path d="M17 22l-4 17"/>','<path d="M21 40v21"/><path d="M27 40l7 4-5 8"/>'),
-  four:U('<path d="M31 22l-8 7-13 0"/><path d="M8 24l-3 5 3 5" stroke-width="2"/><path d="M17 22l-4 17"/>'),
-  six:U('<path d="M17 22L11 4M31 22l6-18"/>'),
-  dead:U('<path d="M17 22l6 16 9 5M31 22l-6 16-9 5"/>'),
-  short:U('<path d="M31 22l9 6-8-7"/><path d="M17 22l-4 17"/>'),
-  revoke:U('<path d="M17 22l14 11M31 22L17 33"/>')};
- const LAB={out:'OUT',wide:'WIDE',noball:'NO BALL',bye:'BYE',legbye:'LEG BYE',four:'FOUR',six:'SIX',dead:'DEAD BALL',short:'SHORT RUN',revoke:'DISREGARD LAST SIGNAL'};
- const F=(body)=>`<svg viewBox="0 0 48 64" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
+  out:U([{s:-3,e:[19,36],h:[20,47]},{s:3,e:[43,20],h:[45,6]}],{x:L([[45,6],[45,0]],2.4)}),
+  wide:U([{s:-3,e:[18,24],h:[3,24]},{s:3,e:[46,24],h:[61,24]}]),
+  noball:U([{s:-3,e:[19,36],h:[20,47]},{s:3,e:[46,24],h:[61,24]}]),
+  bye:U([{s:-3,e:[19,36],h:[20,47]},{s:3,e:[42,13],h:[43,0]}]),
+  legbye:U([{s:-3,e:[19,36],h:[20,47]},{s:3,e:[44,38],h:[41,52]}],{l:[[[27.5,62],[26.5,76]],[[44,54],[41,66]]]}),
+  four:U([{s:-3,e:[19,36],h:[20,47]},{s:3,e:[43,33],h:[27,31]}],{x:`<path d="M10 22q-6 8 0 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path d="M54 22q6 8 0 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>`}),
+  six:U([{s:-3,e:[21,12],h:[20,-1]},{s:3,e:[43,12],h:[44,-1]}]),
+  dead:U([{s:-3,e:[28,40],h:[38,46]},{s:3,e:[36,40],h:[26,46]}]),
+  short:U([{s:-3,e:[19,36],h:[20,47]},{s:3,e:[44,30],h:[37,25]}]),
+  revoke:U([{s:-3,e:[28,34],h:[40,25]},{s:3,e:[36,34],h:[24,25]}])};
+ // ---- players
  const FIG={
-  bowler:['Bowler',F('<circle cx="24" cy="8" r="4.6" fill="currentColor" stroke="none"/><path d="M24 14l-2 20M24 16l8-13M24 16l-11 8M22 34l-9 16M22 34l10 14"/><circle cx="35" cy="4" r="2.6" fill="#d33" stroke="none"/>')],
-  batter:['Batter',F('<circle cx="21" cy="8" r="4.6" fill="currentColor" stroke="none"/><path d="M21 14v20M21 34l-5 19M21 34l7 19M21 20l9 6"/><path d="M30 26l8 22" stroke-width="5"/>')],
-  keeper:['Wicket-keeper',F('<circle cx="22" cy="24" r="4.6" fill="currentColor" stroke="none"/><path d="M22 30l3 12 9 4M25 42l-9 3 0 14M22 32l10 6"/><circle cx="36" cy="40" r="3" fill="currentColor" stroke="none"/>')],
-  catch:['Catch',F('<circle cx="12" cy="30" r="4.4" fill="currentColor" stroke="none"/><path d="M17 31l17 3M34 34l9 8M34 34l5-8M17 31l-7-6"/><circle cx="4" cy="22" r="2.6" fill="#d33" stroke="none"/>')],
-  celebrate:['Celebration',F('<circle cx="24" cy="12" r="4.8" fill="currentColor" stroke="none"/><path d="M24 18v20M24 38l-6 20M24 38l6 20M24 22L12 6M24 22L36 6"/>')],
-  hundred:['Century',F('<circle cx="22" cy="14" r="4.8" fill="currentColor" stroke="none"/><path d="M22 20v20M22 40l-6 18M22 40l7 18M22 24l-10-6M22 24l12-6M34 18l8-14" stroke-width="3.6"/>')]};
+  bowler:['Bowler',fig({h:[40,17],n:[35,27],p:[28,48],kit:'cap',a:[{e:[37,14],h:[39,2],w:7},{e:[46,32],h:[55,40],w:7}],l:[[[44,58],[48,76]],[[17,60],[7,70]]],x:C(39,-1,3.4)})],
+  batter:['Batter',fig({h:[36,16],n:[31,26],p:[28,48],kit:'helmet',pads:1,a:[{e:[41,34],h:[45,45],w:7},{e:[40,32],h:[44,44],w:7}],l:[[[35,62],[34,76]],[[22,62],[19,76]]],x:bat([44,46],[55,76]),sh:6})],
+  drive:['Drive',fig({h:[38,17],n:[32,27],p:[26,49],kit:'helmet',pads:1,a:[{e:[44,34],h:[53,33],w:7},{e:[42,32],h:[52,32],w:7}],l:[[[44,60],[46,76]],[[16,62],[8,74]]],x:bat([53,33],[38,2]).replace(/\/>/g,'/>')})],
+  sweep:['Sweep',fig({h:[40,36],n:[34,44],p:[24,62],kit:'helmet',pads:1,a:[{e:[44,52],h:[52,58],w:7},{e:[42,50],h:[52,56],w:7}],l:[[[40,66],[30,77]],[[14,70],[6,77]]],x:bat([52,57],[58,74]),sh:6})],
+  keeper:['Wicket-keeper',fig({h:[38,32],n:[33,41],p:[24,58],kit:'cap',pads:1,a:[{e:[46,48],h:[54,52],w:7},{e:[44,46],h:[52,50],w:7}],l:[[[40,62],[34,77]],[[34,66],[22,77]]],x:C(56,52,5)})],
+  catch:['Catch',fig({h:[48,38],n:[40,40],p:[24,46],kit:'cap',a:[{e:[48,28],h:[56,22],w:7},{e:[46,30],h:[54,20],w:7}],l:[[[14,56],[4,66]],[[12,48],[2,52]]],x:C(58,14,3.4)})],
+  celebrate:['Celebration',fig({h:[32,15],n:[32,26],p:[32,49],kit:'cap',a:[{s:-3,e:[18,16],h:[12,2]},{s:3,e:[46,16],h:[52,2]}],l:[[[26,63],[22,77]],[[38,63],[42,77]]]})],
+  hundred:['Century',fig({h:[32,18],n:[32,28],p:[32,50],kit:'none',pads:1,a:[{s:-3,e:[17,17],h:[12,4]},{s:3,e:[46,18],h:[52,4]}],l:[[[28,63],[26,77]],[[36,63],[38,77]]],x:`<path d="M5 6c0-6 4-9 8-9s8 3 8 9z" fill="currentColor"/>`+bat([52,6],[60,-14]).replace('','')})]
+ };
+ 
+ const LAB={out:'OUT',wide:'WIDE',noball:'NO BALL',bye:'BYE',legbye:'LEG BYE',four:'FOUR',six:'SIX',dead:'DEAD BALL',short:'SHORT RUN',revoke:'DISREGARD LAST SIGNAL'};
  window.shSig=k=>SIG[k]||'';window.shFig=k=>(FIG[k]||['',''])[1];
- const st=document.createElement('style');st.textContent='i.us{display:inline-block;width:18px;height:24px;vertical-align:-6px;margin-right:4px;font-style:normal}i.us svg{width:100%;height:100%}.shsig{position:fixed;left:50%;top:18%;transform:translateX(-50%);z-index:9999;pointer-events:none;display:flex;align-items:center;gap:12px;padding:10px 18px;border-radius:16px;background:rgba(10,14,24,.88);color:#fff;border:2px solid var(--sp1,#e11d2e);box-shadow:0 8px 28px rgba(0,0,0,.5);animation:shsig 1.7s ease both}.shsig svg{width:46px;height:62px;color:#ffd43b}.shsig b{font-size:22px;letter-spacing:1px}.shsig small{display:block;font-size:12px;opacity:.8}@keyframes shsig{0%{opacity:0;transform:translateX(-50%) scale(.7)}12%{opacity:1;transform:translateX(-50%) scale(1.05)}20%{transform:translateX(-50%) scale(1)}80%{opacity:1}100%{opacity:0;transform:translateX(-50%) translateY(-10px)}}@media (prefers-reduced-motion:reduce){.shsig{animation:none}}.sgg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.sgg div{text-align:center;font-size:11px;font-weight:700}.sgg svg{width:44px;height:58px;display:block;margin:0 auto 2px}';document.head.appendChild(st);
+ const st=document.createElement('style');st.textContent='i.us{display:inline-block;width:22px;height:28px;vertical-align:-8px;margin-right:4px;font-style:normal}i.us svg{width:100%;height:100%}.shsig{--figgap:#0a0e18;position:fixed;left:50%;top:18%;transform:translateX(-50%);z-index:9999;pointer-events:none;display:flex;align-items:center;gap:12px;padding:10px 18px;border-radius:16px;background:rgba(10,14,24,.88);color:#fff;border:2px solid var(--sp1,#e11d2e);box-shadow:0 8px 28px rgba(0,0,0,.5);animation:shsig 1.7s ease both}.shsig svg{width:56px;height:70px;overflow:visible;color:#ffd43b}.shsig b{font-size:22px;letter-spacing:1px}.shsig small{display:block;font-size:12px;opacity:.8}@keyframes shsig{0%{opacity:0;transform:translateX(-50%) scale(.7)}12%{opacity:1;transform:translateX(-50%) scale(1.05)}20%{transform:translateX(-50%) scale(1)}80%{opacity:1}100%{opacity:0;transform:translateX(-50%) translateY(-10px)}}@media (prefers-reduced-motion:reduce){.shsig{animation:none}}.sgg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.sgg div{text-align:center;font-size:11px;font-weight:700}.sgg svg{width:44px;height:58px;display:block;margin:0 auto 2px}';document.head.appendChild(st);
  const show=(svg,txt,sub)=>{if(S.settings&&S.settings.sigOff)return;const old=document.getElementById('sh-sig');if(old)old.remove();const d=document.createElement('div');d.id='sh-sig';d.className='shsig';d.setAttribute('role','status');d.innerHTML=svg+`<div><b>${esc(txt)}</b>${sub?`<small>${esc(sub)}</small>`:''}</div>`;document.body.appendChild(d);setTimeout(()=>{if(d.parentNode)d.remove()},1750)};
  const b0=ball;ball=function(m,s){const inn=m&&m.innings&&m.innings[m.cur],n=inn?inn.ev.length:0;let before=0,bt=null;try{bt=s&&s.bt;const c=calc(m,m.cur);const id=inn&&inn.cur&&inn.cur.s;before=id&&c.bat[id]?c.bat[id].r:0;bt=id}catch(e){}
   const r=b0.apply(this,arguments);
@@ -11972,7 +12011,7 @@ const SH_ICON='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALAAAACwCAYAAACvt+R
   return h};
  Object.assign(A,{sigToggle(){S.settings.sigOff=!S.settings.sigOff;commit();toast('Signal pop-up '+(S.settings.sigOff?'off':'on'),2000)},
   sigGuide(){const sg=Object.keys(SIG).map(k=>`<div>${SIG[k]}${LAB[k]}</div>`).join(''),fg=Object.keys(FIG).map(k=>`<div>${FIG[k][1]}${FIG[k][0]}</div>`).join('');
-   UI.modal={t:'html',html:`<h3>Umpire signals</h3><div class="sgg">${sg}</div><h3 style="margin-top:14px">Players</h3><div class="sgg">${fg}</div><button type="button" class="btn wide" style="margin-top:12px" data-a="closeModal">Close</button>`};renderModal()}});
+   UI.modal={t:'html',html:`<h3>Umpire signals</h3><div class="sgg">${sg}</div><h3 style="margin-top:14px">Players</h3><div class="sgg">${fg}</div>`};renderModal()}});
 }
 </script>
 </body>
