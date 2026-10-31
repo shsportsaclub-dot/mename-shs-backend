@@ -787,7 +787,23 @@ routes['POST /api/wa/webhook'] = async (req, body) => {
 };
 
 // ---- Live stream links: anyone can read, admins and scorers can set ----
-routes['GET /api/streams'] = async () => [200, { ok: true, streams: db.streams || {} }];
+// Paid viewing (R20/R21): a stream key can be tied to a UPI charge. The link is withheld by the server from anyone without a confirmed payment, so it cannot be read from the network response.
+const streamBase = k => String(k).replace(/_s\d$/, '');
+const streamEntitled = (s, base) => { const g = (db.streamGate || {})[base]; if (!g) return true; const c = (db.shared.pay || {})[g]; if (!c) return true; if (!s) return false; return s.u.role === 'admin' || c.owner === s.phone || (c.subs || []).some(x => x.by === s.phone && x.status === 'confirmed'); };
+routes['GET /api/streams'] = async (req) => {
+  const s = grUser(req), out = {}, locked = [];
+  for (const [k, v] of Object.entries(db.streams || {})) { if (streamEntitled(s, streamBase(k))) out[k] = v; else if (!locked.includes(streamBase(k))) locked.push(streamBase(k)); }
+  return [200, { ok: true, streams: out, gates: db.streamGate || {}, locked }];
+};
+routes['POST /api/streams/gate'] = async (req, body) => {
+  const s = grUser(req); if (!s || !['admin', 'scorer'].includes(s.u.role)) return [403, { ok: false, error: 'Only admins and scorers can make a stream paid' }];
+  const key = String(body.key || ''); if (!/^[mw][\w-]{1,80}$/.test(key) || /_s\d$/.test(key)) return [400, { ok: false, error: 'Bad match key' }];
+  db.streamGate = db.streamGate || {};
+  if (!body.charge) { delete db.streamGate[key]; saveDb(); return [200, { ok: true }]; }
+  const c = (db.shared.pay || {})[String(body.charge)]; if (!c) return [404, { ok: false, error: 'Charge not found' }];
+  if (c.owner !== s.phone) return [403, { ok: false, error: 'Use a charge you created' }];
+  db.streamGate[key] = c.id; saveDb(); return [200, { ok: true }];
+};
 routes['POST /api/streams'] = async (req, body) => {
   const phone = readSession((req.headers.authorization || '').replace(/^Bearer /, '')), u = phone && db.users[phone];
   if (!u || !['admin', 'scorer'].includes(u.role)) return [403, { ok: false, error: 'Only admins and scorers can set stream links' }];
