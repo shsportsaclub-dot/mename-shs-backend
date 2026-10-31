@@ -2290,7 +2290,7 @@ function cbHome(){
   let L=[];if(j&&j.ok){const rec=F2.rec.filter(m=>Date.now()-wTm(m)<21*864e5);L=f==='live'?F2.live:f==='rec'?rec:f==='up'?F2.up:[...F2.live,...F2.up.slice(0,6),...rec.slice(0,8)]}
   const chips=j&&j.ok?[...F2.live,...F2.rec.slice(0,6)].map(m=>`<span data-a="wOpen" data-id="${esc(m.id)}">${esc(cbShortRes(m))}</span>`).join(''):'';
   const N=(UI.news&&UI.news.ok?UI.news.items:[]);
-  const nav=[['home','Live Scores'],['matches','Schedule'],['reports','Archives'],['news','News'],['tours','Series'],['teams','Teams'],['reels','Videos'],['players','Rankings'],['epaper','ePaper'],['social','Social'],['market','Market']];
+  const nav=[['home','Live Scores'],['matches','Schedule'],['reports','Archives'],['news','News'],['tours','Series'],['teams','Teams'],['reels','Videos'],['rankings','Rankings'],['epaper','ePaper'],['social','Social'],['market','Market']];
   const lab={all:'ALL',live:'LIVE',rec:'RESULTS',up:'UPCOMING'}[f];
   const feed=!j?'<div class="card mu" style="margin:10px 0">Loading live scores...</div>':!j.ok?`<div class="card mu" style="margin:10px 0">Live feed unavailable: ${esc(j.error||'')}</div>`:L.length?`<div class="cbcar">${L.map(cbCard).join('')}</div>`:'<div class="card mu" style="margin:10px 0">No matches in this filter right now.</div>';
   const lead=N[0],rest=N.slice(1,9);
@@ -10681,7 +10681,7 @@ document.addEventListener('input',e=>{const el=e.target;if(!el||!/^qt-n-[ab]$/.t
 
 /* ---------------- 74 SKY HIGH HOME: same top menu as Light (Live Scores, Schedule, Archives, News, Series, Teams, Videos, Rankings, ePaper, Social, Market) ---------------- */
 {
- const NAV=[['home','Live Scores'],['matches','Schedule'],['reports','Archives'],['news','News'],['tours','Series'],['teams','Teams'],['reels','Videos'],['players','Rankings'],['epaper','ePaper'],['social','Social'],['market','Market']];
+ const NAV=[['home','Live Scores'],['matches','Schedule'],['reports','Archives'],['news','News'],['tours','Series'],['teams','Teams'],['reels','Videos'],['rankings','Rankings'],['epaper','ePaper'],['social','Social'],['market','Market']];
  const h0=vHome;
  vHome=function(){const o=h0.apply(this,arguments);if(typeof o!=='string'||window.shTheme()==='mday')return o;
   return `<div class="cbnav shnav">${NAV.map(([k,l])=>`<button class="${k==='home'?'on':''}" data-a="${k==='news'?'cbNews':'go'}" data-v="${k}">${l}</button>`).join('')}</div>`+o};
@@ -11399,6 +11399,64 @@ Object.assign(C,{ovAd(v){S.stream.adText=String(v||'').slice(0,140);save()}});
    t.passCharge=r.id;t.passAmt=a;t.passDays=d;commit();toast('Viewing pass is on',3000);render()},
   async trPassOff(){const t=trObj(UI.tid);if(!t)return;const g=await call('POST','/api/streams/gate',{key:'T:'+t.id,charge:null});if(!g.ok)return toast(g.error||'Could not change',4500);t.passCharge='';commit();render()},
   trPassOpen(d){window.shPayOpen&&window.shPayOpen(d.id)}});
+}
+
+/* ---------------- 104 ONE DESIGN SYSTEM: same top menu on every page, per-sport accent, one tab/header/card/form style, readable skins ---------------- */
+{
+ const NAV=[['home','Live Scores'],['matches','Schedule'],['reports','Archives'],['news','News'],['tours','Series'],['teams','Teams'],['reels','Videos'],['rankings','Rankings'],['epaper','ePaper'],['social','Social'],['market','Market']];
+ const TAB={home:'home',wmatch:'home',matches:'matches',match:'matches',reports:'reports',history:'reports',tours:'tours',tour:'tours',tjoin:'tours',teams:'teams',reels:'reels',rankings:'rankings',players:'rankings',epaper:'epaper',social:'social',studio:'social',market:'market'};
+ const SKIP={score:1,aucreg:1,pay:1,pcard:1,stream:1,tdash:1,auth:1};
+ const SP={cricket:['#e11d2e','#0a1f5c'],football:['#16a34a','#064e3b'],hockey:['#0ea5e9','#0c4a6e'],kabaddi:['#f97316','#7c2d12'],badminton:['#a3e635','#365314'],volleyball:['#f59e0b','#78350f'],basketball:['#fb7185','#7f1d1d']};
+ const css=document.createElement('style');
+ css.textContent=[
+  /* per-sport tokens */
+  ...Object.entries(SP).map(([k,v])=>`html[data-sport=${k}]{--sp1:${v[0]};--sp2:${v[1]}}`),
+  'html{--sp1:#e11d2e;--sp2:#0a1f5c}',
+  /* the one top menu */
+  '.shnav{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;margin:0 0 14px!important;padding:0 6px;border-radius:12px;background:linear-gradient(90deg,var(--sp2),var(--sp1))!important;position:sticky;top:0;z-index:20}.shnav::-webkit-scrollbar{display:none}',
+  '.shnav button{flex:none;color:#fff!important;background:transparent!important;border:0;font:600 14px var(--ui,system-ui);padding:12px 12px;border-bottom:3px solid transparent;white-space:nowrap;cursor:pointer;opacity:.9}.shnav button.on{opacity:1;box-shadow:none!important;border-bottom-color:#ffc83d}',
+  /* page frame */
+  'main{max-width:1120px;margin-inline:auto;width:100%}',
+  'main>.bar,main>.ph{display:flex;align-items:center;gap:10px;margin:2px 0 12px}main>.bar h2,main>.ph h2{margin:0;font-size:20px}',
+  /* one underline-tab style for every sub-tab strip */
+  '.aucseg,.tabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid var(--line,rgba(128,128,128,.3));margin:0 0 12px;background:transparent!important;padding:0!important}.aucseg::-webkit-scrollbar,.tabs::-webkit-scrollbar{display:none}',
+  '.aucseg button,.tabs button{flex:none;background:transparent!important;border:0!important;border-radius:0!important;color:var(--mu,inherit)!important;opacity:.85;padding:10px 14px;border-bottom:3px solid transparent!important;font-weight:600;white-space:nowrap;box-shadow:none!important}',
+  '.aucseg button.on,.tabs button.on{color:var(--sp1)!important;opacity:1;border-bottom-color:var(--sp1)!important}',
+  /* one chip style for filter rows */
+  '.mcsub button,.mctabs button,.cbxr button{border-radius:999px;padding:7px 14px;font-weight:600}',
+  '.mcsub button.on,.mctabs button.on,.cbxr button.on{background:var(--sp1)!important;color:#fff!important;border-color:var(--sp1)!important}',
+  /* accent follows sport */
+  'main .btn:not(.ghost):not(.sec){background:var(--sp1);color:#fff}',
+  /* skins follow the theme instead of forcing white */
+  'html[data-theme=hero] .msk-cb{--bg:#0d1630;--card:#142044;--c2:#1b2a56;--tx:#eef2ff;--mu:#a9b6dc;--bd:rgba(255,255,255,.14);--ac:var(--sp1);background:#0d1630;color:#eef2ff}html[data-theme=hero] .msk-cb .tabs{background:transparent}',
+  'html[data-theme=hero] .msk-cb *{border-color:rgba(255,255,255,.12)}',
+  /* readable buttons */
+  'main button.btn.ghost,main button.sm.ghost{color:inherit;border:1px solid var(--line,rgba(128,128,128,.45));background:transparent;opacity:1}',
+  'main .card,main .cbcard{border-radius:14px}',
+  /* forms: two columns on wide screens */
+  '@media(min-width:900px){main form[data-f]{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;max-width:900px}main form[data-f]>.btn,main form[data-f]>button,main form[data-f]>h3,main form[data-f]>.mu,main form[data-f]>.row,main form[data-f]>textarea{grid-column:1/-1}}',
+  /* score button always visible */
+  '.fabfloat.idle{opacity:.78!important}',
+  '@media(max-width:600px){.shnav button{padding:11px 10px;font-size:13px}main{padding-inline:0}}'
+ ].join('\n');
+ document.head.appendChild(css);
+ const sportNow=()=>{let s=UI.sport||(S.settings&&S.settings.sport)||'cricket';return SP[s]?s:'cricket'};
+ window.shNavHtml=v=>{const on=TAB[v]||'';return `<div class="cbnav shnav">${NAV.map(([k,l])=>`<button class="${k===on?'on':''}" data-a="${k==='news'?'cbNews':'go'}" data-v="${k}">${l}</button>`).join('')}</div>`};
+ const r0=render;
+ render=function(){
+  r0.apply(this,arguments);
+  try{
+   const de=document.documentElement;de.dataset.sport=sportNow();
+   const m=document.querySelector('#app>main');if(!m)return;
+   m.dataset.view=UI.view||'';
+   if(!S.user||UI.stage==='welcome'||SKIP[UI.view]||m.querySelector('.cbnav')||m.querySelector('.msk-live'))return;
+   m.insertAdjacentHTML('afterbegin',window.shNavHtml(UI.view));
+   /* keep the active tab in view */
+   const on=m.querySelector('.shnav button.on');if(on&&on.scrollIntoView)try{on.scrollIntoView({block:'nearest',inline:'center'})}catch(e){}
+  }catch(e){}
+ };
+ /* Rankings goes to the rankings page when it exists */
+ const g0=A.go;
 }
 </script>
 </body>
