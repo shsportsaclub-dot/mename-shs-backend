@@ -21,6 +21,7 @@ import { genVapid, sendPush } from './webpush.mjs';
 import { snapshotOf, diffSnapshots } from './observer.mjs';
 import { createRecent, buildBbb, buildFow, buildPartnerships, inningsTotals, RECENT_SOURCE } from './recent.mjs';
 import { oddsOrWinningProbability } from './odds-probability.mjs';
+import { createIds } from './ids.mjs';
 
 const E = process.env;
 const PORT = +E.PORT || 8080;
@@ -70,6 +71,8 @@ const saveDb = () => {
   clearTimeout(neonTimer);
   neonTimer = setTimeout(() => neon('insert into kv(k,v) values($1,$2) on conflict(k) do update set v=excluded.v', ['db', JSON.stringify(db)]).catch(e => console.error('db save failed', e.message)), 1500);
 };
+const IDS = createIds({ db: () => db, save: () => saveDb(), tz: E.ID_TZ || 'Asia/Kolkata' });   // permanent Player / Match IDs
+const userPid = (phone, u) => { if (!u) return null; if (u.shPid) return u.shPid; try { const em = String(phone).startsWith('e:'); const r = IDS.allocPlayer({ phone: em ? '' : phone, email: em ? String(phone).slice(2) : (u.email || ''), ref: 'u:' + phone, name: u.nick || u.name || '', verified: true }); u.shPid = r.public_player_id; saveDb(); return u.shPid; } catch (e) { console.error('player id', e.message); return null; } };
 if (DATABASE_URL) {
   try {
     await neon('create table if not exists kv(k text primary key, v text not null)');
@@ -171,7 +174,7 @@ function cleanProfile(p) {
   return { profile: { nick, name: nick, email, age, dob, loc: String(p.loc || '').trim().slice(0, 60), kind } };
 }
 const pub = u => { promote(u); return pubRaw(u); };
-const pubRaw = u => ({ nick: u.nick, name: u.nick, email: u.email, age: u.age, loc: u.loc, kind: u.kind, role: u.role, phone: u.phone });
+const pubRaw = u => ({ nick: u.nick, name: u.nick, email: u.email, age: u.age, loc: u.loc, kind: u.kind, role: u.role, phone: u.phone, shPid: u.shPid || '' });
 
 async function sendSms(phone, code, link, cc) {
   cc = String(cc || '').replace(/\D/g, '').slice(0, 4) || COUNTRY;
@@ -227,6 +230,7 @@ function complete(phone, p) {
   let u = db.users[phone];
   if (!u && p.mode === 'reg' && p.profile) {
     u = db.users[phone] = { ...p.profile, phone, e164: p.e164, role: roleFor(phone, p.profile.kind), created: Date.now() };
+    userPid(phone, u);
     saveDb();
   }
   const session = sign(phone);
@@ -820,6 +824,33 @@ routes['POST /api/streams'] = async (req, body) => {
   if (url) db.streams[key] = url; else delete db.streams[key];
   saveDb();
   return [200, { ok: true, streams: db.streams }];
+};
+// ---- Permanent Player and Match IDs ----
+routes['GET /api/ids/me'] = async (req) => {
+  const s = grUser(req); if (!s) return [401, { ok: false, error: 'Please sign in again' }];
+  const id = userPid(s.phone, s.u), r = id && IDS.lookup(id);
+  return [200, { ok: true, player_id: id, verification_status: r ? r.verification_status : 'pending' }];
+};
+routes['POST /api/ids/batch'] = async (req, body) => {
+  const s = grUser(req); if (!s) return [401, { ok: false, error: 'Please sign in again' }];
+  if (limited('ids:' + s.phone, 60, 6e4)) return [429, { ok: false, error: 'Too many ID requests. Try again in a minute.' }];
+  const out = { players: {}, matches: {} }, errs = [];
+  for (const p of (Array.isArray(body.players) ? body.players : []).slice(0, 100)) {
+    try { const r = IDS.allocPlayer({ ref: p.ref, name: p.name, phone: p.phone, email: p.email, sport: p.sport }); out.players[String(p.ref)] = { id: r.public_player_id, status: r.verification_status }; } catch (e) { errs.push('player ' + String(p.ref).slice(0, 20) + ': ' + e.message); }
+  }
+  for (const m of (Array.isArray(body.matches) ? body.matches : []).slice(0, 100)) {
+    try { const r = IDS.allocMatch(m); out.matches[String(m.ref)] = { id: r.public_match_id, status: r.match_status }; } catch (e) { errs.push('match ' + String(m.ref).slice(0, 20) + ': ' + e.message); }
+  }
+  return [200, { ok: true, ...out, errors: errs }];
+};
+routes['POST /api/ids/external'] = async (req, body) => {
+  const s = grUser(req); if (!s || s.u.role !== 'admin') return [403, { ok: false, error: 'Only an admin can link external IDs' }];
+  try { return [200, { ok: true, map: IDS.mapExternal(body) }]; } catch (e) { return [400, { ok: false, error: e.message }]; }
+};
+routes['GET /api/ids/lookup'] = async (req) => {
+  const id = String(new URL(req.url, 'http://x').searchParams.get('id') || '').toUpperCase().trim(), r = IDS.lookup(id);
+  if (!r) return [404, { ok: false, error: 'ID not found' }];
+  return [200, { ok: true, type: r.type, id, status: r.verification_status || r.match_status, name: r.player_name || '', sport: r.sport_id || '', created_at: r.created_at }];
 };
 routes['POST /api/mo/inbound'] = moInbound;
 routes['GET /api/mo/inbound'] = moInbound;
@@ -2055,6 +2086,7 @@ routes['POST /api/auth/register'] = async (req, body, ip) => {
   if (Object.values(db.users).some(u => u.nick.toLowerCase() === c.profile.nick.toLowerCase())) return [400, { ok: false, error: 'That nickname is taken' }];
   const salt = crypto.randomBytes(8).toString('hex');
   const u = db.users[phone] = { ...c.profile, phone, e164: e164(P), role: roleFor(phone, c.profile.kind), created: Date.now(), salt, ph: pinHash(body.pin, salt), ...(P.isEmail ? { emailVerified: true } : {}) };
+  userPid(phone, u);
   saveDb();
   return [200, { ok: true, profile: pub(u), token: sign(phone) }];
 };

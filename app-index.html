@@ -11741,6 +11741,39 @@ Object.assign(C,{ovAd(v){S.stream.adText=String(v||'').slice(0,140);save()}});
  /* remember the format the scorer picked */
  const s0=A.qsStart;A.qsStart=function(){const f=UI.qs&&UI.qs.fmt,n0=S.matches.length,r=s0.apply(this,arguments);if(f&&S.matches.length>n0){const m=S.matches[S.matches.length-1];if(!m.fmt)m.fmt=f;commit()}return r};
 }
+
+/* ---------------- 111 PERMANENT PLAYER ID (SH-P-YYYYMM-NNNNNN) AND MATCH ID (SH-M-YYYYMMDD-NNNNNN), issued by the server ---------------- */
+{
+ const base=()=>(typeof apiBase==='function'&&apiBase())||'';
+ const on=()=>!!(S.tok&&S.user&&!S.user.guest&&base());
+ const st=s=>({setup:'scheduled',live:'live',break:'live',paused:'live',done:'completed'}[s]||'scheduled');
+ const allMatches=()=>[...(S.matches||[]),...(S.sg||[])].filter(m=>m&&!m.rm&&!(typeof isDemo==='function'&&isDemo(m)));
+ const nm0=newMatch;newMatch=function(){const m=nm0.apply(this,arguments);if(m&&!m.createdAt)m.createdAt=Date.now();return m};
+ let busy=false;
+ async function sync(){if(busy||!on())return;busy=true;
+  try{
+   const pl=(S.players||[]).filter(p=>p&&p.name&&!p.shPid).slice(0,100),ms=allMatches().filter(m=>!m.pubId||m.pubSt!==st(m.status)).slice(0,100);
+   if(S.user&&!S.user.shPid){try{const r=await fetch(base()+'/api/ids/me',{headers:{Authorization:'Bearer '+S.tok}}),j=await r.json();if(j&&j.ok&&j.player_id){S.user.shPid=j.player_id;S.user.shPidSt=j.verification_status}}catch(e){}}
+   if(pl.length||ms.length){
+    const body={players:pl.map(p=>({ref:p.id,name:p.name,phone:p.phone||''})),matches:ms.map(m=>({ref:m.id,sport:m.sport||'cricket',status:st(m.status),tournament_id:m.tid||m.tourId||'',scheduled_date:m.date||'',created:m.createdAt||0}))};
+    const r=await fetch(base()+'/api/ids/batch',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+S.tok},body:JSON.stringify(body)}),j=await r.json();
+    if(j&&j.ok){pl.forEach(p=>{const x=j.players[p.id];if(x){p.shPid=x.id}});ms.forEach(m=>{const x=j.matches[m.id];if(x){m.pubId=x.id;m.pubSt=st(m.status)}})}}
+   commit();if(['match','score','players','profile','matches'].includes(UI.view)&&!document.querySelector('input:focus,textarea:focus'))render();
+  }catch(e){}finally{busy=false}}
+ window.shIdSync=sync;
+ setInterval(sync,30000);addEventListener('online',sync);setTimeout(sync,4000);
+ const cm=A.qsStart;A.qsStart=function(){const r=cm.apply(this,arguments);setTimeout(sync,300);return r};
+ const idLine=(id,label)=>id?`<span class="shid" title="${label} ID (permanent)">${esc(id)}</span>`:`<span class="shid pend">${label} ID pending</span>`;
+ const mh=mHead;mHead=function(m){const o=mh.apply(this,arguments);if(typeof o!=='string'||!m)return o;return o+`<div class="mu sm" style="margin:2px 0">Match ID: ${idLine(m.pubId,'Match')}${m.pubId?` <button type="button" class="btn sm ghost" data-a="copyId" data-v="${esc(m.pubId)}">Copy</button>`:''}</div>`};
+ const sc0=vScore;vScore=function(){const h=sc0.apply(this,arguments),m=scM();if(typeof h!=='string'||!m)return h;return `<div class="mu sm" style="margin:4px 2px">Match ID: ${idLine(m.pubId,'Match')}</div>`+h};
+ const sh0=shareText;shareText=function(m){const t=sh0.apply(this,arguments);return m&&m.pubId&&typeof t==='string'?t+'\nMatch ID: '+m.pubId:t};
+ const pf=XV.profile;XV.profile=function(){const o=pf.apply(this,arguments),u=S.user||{};if(typeof o!=='string'||u.guest)return o;
+  return o+`<div class="card"><div class="b">Your Player ID</div><div style="font:700 18px var(--ui,system-ui);letter-spacing:.5px;margin:6px 0">${idLine(u.shPid,'Player')}</div><div class="mu sm">One permanent ID for you in every team, club, tournament and academy. It never changes, even after verification.</div>${u.shPid?`<button type="button" class="btn sm ghost" style="margin-top:6px" data-a="copyId" data-v="${esc(u.shPid)}">Copy</button>`:''}</div>`};
+ Object.assign(A,{copyId(d){try{navigator.clipboard.writeText(d.v).then(()=>toast('ID copied')).catch(()=>toast(d.v,5000))}catch(e){toast(d.v,5000)}}});
+ /* Player ID under every player's name in lists */
+ const r0=render;render=function(){r0.apply(this,arguments);try{document.querySelectorAll('[data-a="editPlayer"][data-id]').forEach(b=>{const row=b.closest('.item');if(!row||row.querySelector('.shid'))return;const p=P(b.dataset.id),nameEl=row.querySelector('.b');if(!p||!nameEl)return;nameEl.insertAdjacentHTML('afterend',`<div class="mu sm" style="font-size:11px">${idLine(p.shPid,'Player')}</div>`)})}catch(e){}};
+ const css=document.createElement('style');css.textContent='.shid{font-family:ui-monospace,Menlo,monospace;font-size:.92em;letter-spacing:.3px}.shid.pend{opacity:.65;font-family:inherit;letter-spacing:0}';document.head.appendChild(css);
+}
 </script>
 </body>
 </html>
