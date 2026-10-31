@@ -11,7 +11,7 @@ await p.waitForTimeout(200);
 const txt=()=>p.evaluate(()=>document.getElementById('modal').innerText);
 let t=await txt();
 ok(/Ground/.test(t)&&/Open ground/.test(t)&&/Open box cricket/.test(t)&&/Indoor box cricket/.test(t),'ground types first');
-ok(/Individual/.test(t)&&/Corporate/.test(t)&&/Board cricket/.test(t)&&/Club cricket/.test(t),'match types');
+ok(/Individual/.test(t)&&/Corporate/.test(t)&&/Board cricket/.test(t)&&/Club cricket/.test(t)&&/Demo match/.test(t),'match types');
 ok(await p.evaluate(()=>{const e=document.querySelector('.qs-scroll');return getComputedStyle(e).overflowX==='auto'}),'scrolling row');
 ok(t.indexOf('Ground')<t.indexOf('Home XI')||t.indexOf('Ground')<t.indexOf('Team'),'ground selection is above the teams');
 await p.click('button[data-k=gtype][data-v=ibox]');await p.click('button[data-k=mcat][data-v=corporate]');
@@ -43,4 +43,17 @@ ok(r&&r.overs===10&&r.gtype==='ibox'&&r.level==='corporate'&&r.pitch==='Cement'&
 ok(r&&r.rem.fmt==='t10'&&r.rem.gtype==='ibox'&&r.rem.mcat==='corporate'&&/Indoor box cricket/.test(r.area),'remembered + area '+JSON.stringify(r));
 ok(await p.evaluate(()=>/Indoor box cricket/.test(mHead(S.matches[0]))&&/Corporate/.test(mHead(S.matches[0]))),'shown on the match header');
 ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'fits phone');
+// a Demo match type marks the match as demo (kept out of stats and sync) and is not remembered as the default
+await p.evaluate(()=>{S.matches=[];A.newMatch()});await p.waitForTimeout(150);
+ok(await p.evaluate(()=>UI.qs.mcat==='corporate'),'last real type remembered');
+await p.click('button[data-k=mcat][data-v=demo]');await p.fill('#qs-venue','Demo Ground').catch(()=>{});
+await p.click('button[data-a=qsStep][data-v="1"]');await p.click('button[data-a=qsStep][data-v="1"]');await p.fill('#qs-venue','Demo Ground');await p.click('button[data-a=qsStep][data-v="1"]');await p.waitForTimeout(150);await p.click('button[data-a=qsStart]');await p.waitForTimeout(300);
+const d=await p.evaluate(()=>{const m=S.matches[0];return m&&{demo:isDemo(m),level:m.cat&&m.cat.level,rem:S.prefs.qs.mcat}});
+ok(d&&d.demo===true&&d.level===''&&d.rem==='corporate','demo match '+JSON.stringify(d));
+// 24-hour expiry: a fresh demo stays, an older one goes, a real match is never touched
+const x=await p.evaluate(()=>{const m=S.matches[0];const stamped=typeof m.demoAt==='number';const keepNow=window.shPurgeDemo()===0&&S.matches.length===1;
+ m.demoAt=Date.now()-23*36e5;const at23=window.shPurgeDemo()===0&&S.matches.length===1;
+ S.matches.push({id:'real1',a:'a',b:'b',status:'live',innings:[],cur:0,overs:20,xi:{}});S.matches.push({id:'old',a:'a',b:'b',status:'done',innings:[],cur:0,overs:20,xi:{},umpires:'Demo umpires'});
+ m.demoAt=Date.now()-25*36e5;UI.sid=m.id;const gone=window.shPurgeDemo();return{stamped,keepNow,at23,gone,left:S.matches.map(x=>x.id),sid:UI.sid,oldStamped:typeof (S.matches.find(x=>x.id==='old')||{}).demoAt}});
+ok(x.stamped&&x.keepNow&&x.at23,'fresh demo kept '+JSON.stringify(x));ok(x.gone===1&&x.left.join()==='real1,old'&&x.sid===null&&x.oldStamped==='number','25h demo deleted, real match and just-seen demo kept '+JSON.stringify(x));
 ok(!errs.length,errs.join(';'));await b.close();if(!process.exitCode)console.log('PASS: qs formats');})();

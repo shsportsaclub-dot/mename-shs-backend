@@ -1970,7 +1970,7 @@ function cleanT(t,src){t=String(t||'').replace(/https?:\/\/\S+/g,' ').replace(/\
 function reelStrip(){let R=[];try{R=reelItems()}catch(e){}if(!R.length||R[0].kind==='empty')return '';
   return `<div class="sec"><h3>Reels</h3><button class="btn sm ghost" data-a="go" data-v="reels">Open reels</button></div><div class="hscroll" style="margin-bottom:6px">${R.slice(0,10).map((r,i)=>`<button type="button" class="reelc c${i%4}" data-a="reelAt" data-i="${i}"><b>${esc(r.tag)}</b><i style="font-style:normal;font-size:30px;line-height:1">${({market:'\u{1F30D}',sh:'\u{1F3CF}',potm:'\u2B50',moments:'\u{1F525}',news:'\u{1F4F0}'})[r.kind]||'\u{1F3CF}'}</i><span>${esc(cleanT(r.kind==='news'?r.title:r.share).slice(0,90))}</span></button>`).join('')}</div>`}
 const isDemo=m=>!!m&&(m.demo||m.umpires==='Demo umpires');
-{const d0=demoMatch;demoMatch=function(){const r=d0.apply(this,arguments);const m=S.matches[S.matches.length-1];if(m)m.demo=true;return r}}
+{const d0=demoMatch;demoMatch=function(){const r=d0.apply(this,arguments);const m=S.matches[S.matches.length-1];if(m){m.demo=true;m.demoAt=m.demoAt||Date.now()}return r}}
 {const r0=reelItems;reelItems=function(){const R=r0.apply(this,arguments),real=S.matches.some(m=>!isDemo(m)&&m.innings.length);return R.filter(x=>!['sh','potm','moments'].includes(x.kind)||real)}}
 function lookBar(){return `<div class="hscroll" style="gap:6px;margin:0 0 10px;align-items:center"><span class="mu sm" style="flex:none">Look</span>${LOOKS.map(([k])=>`<button type="button" class="btn sm ${(window.shTheme()===k)?'':'ghost'}" data-a="look" data-v="${k}" style="flex:none">${esc(lookName(k))}</button>`).join('')}</div>`}
 {const h2=vHome;vHome=function(){let o=h2();
@@ -2023,7 +2023,7 @@ document.head.appendChild(cs)}
   const st1=m.status==='live'?'LIVE':done?'RESULT':'BREAK';
   const need=done?m.result:m.status==='break'?'Innings break':s.i===1?`${s.bat.name} need ${Math.max(0,s.need)} run${s.need===1?'':'s'} from ${s.left} balls`:`Projected score ${Math.round(k.runs+s.left/BPO*s.crr)} at current rate`;
   const L=overList(m,s.i).slice(-1)[0];
-  const demo=typeof isDemo==='function'&&isDemo(m)?'<span class="pill">DEMO (sample data)</span>':'';
+  const demo=typeof isDemo==='function'&&isDemo(m)?'<span class="pill">DEMO (sample data, deleted after 24 hours)</span>':'';
   return `<div class="cx"><div class="cxt"><span><b>${m.bpo===5?'The Hundred':m.overs>=40?'ODI':m.overs>=20?'T20':'Match'}</b> | ${esc(m.date||'')}${m.venue?' | '+esc(m.venue):''}</span><span class="cxn">${demo}<span class="pill ${m.status==='live'?'live pulse':''}">${st1}</span></span></div>
   <div class="cxm">${side(A)}<div class="cxc"><b>VS</b>${s.i===1?'<span>Target '+m.target+'</span>':''}</div>${side(B)}</div>
   <div class="cxst">${esc(need)}</div>
@@ -3311,7 +3311,8 @@ UI.sh=UI.sh||{hash:{},busy:false,last:0,state:'idle',err:''};
 function shPack(col,o){
   if(col==='sports'){const m=JSON.parse(JSON.stringify(o));delete m.rm;delete m._sh;return {m}}
   if(col==='matches'){const t={},pl={};[o.a,o.b].forEach(id=>{const x=T(id);if(x){t[id]={id:x.id,name:x.name,short:x.short,color:x.color,state:x.state,country:x.country,level:x.level,players:x.players}}});
-    Object.values(o.xi||{}).flat().forEach(id=>{const x=P(id);if(x)pl[id]={id:x.id,name:x.name,role:x.role,jersey:x.jersey,team:x.team,bat:x.bat,bowl:x.bowl,avatar:x.avatar}});return {m:o,teams:t,players:pl}}
+    const link={phones:[],rids:[],shids:[]};[...Object.values(o.xi||{}).flat(),...Object.values(o.subs||{}).flat()].forEach(id=>{const x=P(id);if(!x)return;if(x.phone)link.phones.push(String(x.phone));if(x.rid)link.rids.push(String(x.rid));if(x.shid)link.shids.push(String(x.shid))});
+    Object.values(o.xi||{}).flat().forEach(id=>{const x=P(id);if(x)pl[id]={id:x.id,name:x.name,role:x.role,jersey:x.jersey,team:x.team,bat:x.bat,bowl:x.bowl,avatar:x.avatar}});return {m:o,teams:t,players:pl,link}}
   if(col==='tours'){const t={};o.teams.forEach(id=>{const x=T(id);if(x)t[id]={id:x.id,name:x.name,short:x.short,color:x.color,players:[]}});return {t:o,teams:t}}
   return {a:o}}
 async function shPush(){
@@ -9908,7 +9909,7 @@ try{if(S.settings&&S.settings.mskin==='ca'){S.settings.mskin='cb';try{save()}cat
   FDEF={academic:'10',test:'905',odi:'50',t20:'20',t10:'10',hundred:'20.5'},
   DAYS=[['901','1 day'],['902','2 days'],['903','3 days'],['904','4 days'],['905','5 days']],
   GT=[['open','Open ground'],['obox','Open box cricket'],['ibox','Indoor box cricket']],
-  MT=[['individual','Individual'],['corporate','Corporate'],['board','Board cricket'],['club','Club cricket']],
+  MT=[['individual','Individual'],['corporate','Corporate'],['board','Board cricket'],['club','Club cricket'],['demo','Demo match']],
   fmtOf=o=>{o=String(o);return /^90[1-5]$/.test(o)?'test':o==='20.5'?'hundred':o==='50'?'odi':o==='20'?'t20':o==='10'?'t10':'academic'};
  window.shQsOptions={FMT,FOV,FDEF,DAYS,GT,MT};
  const lastQ=()=>(S.prefs&&S.prefs.qs)||{};
@@ -9927,7 +9928,7 @@ try{if(S.settings&&S.settings.mskin==='ca'){S.settings.mskin='cb';try{save()}cat
   const head=`<h3>Start a match</h3><div class="qs-steps">${STEPS.map((n,i)=>`<span class="${i===stp?'on':i<stp?'done':''}"><b>${i<stp?'✓':i+1}</b>${n}</span>`).join('')}</div>`;
   const nav=`<div class="row" style="margin-top:14px;gap:8px">${stp>0?'<button type="button" class="btn ghost" data-a="qsStep" data-v="-1">Back</button>':''}<div class="grow"></div>${stp<3?'<button type="button" class="btn" data-a="qsStep" data-v="1">Next</button>':'<button type="button" class="btn" data-a="qsStart">Start match</button>'}</div>`;
   const body=[
-   `<div class="b" style="margin:4px 0">Ground</div>${scroll(GT.map(([v,l])=>chipA('qsSet','gtype',v,l,q.gtype===v)).join(''))}<div class="b" style="margin:4px 0">Match type</div>${scroll(MT.map(([v,l])=>chipA('qsSet','mcat',v,l,q.mcat===v)).join(''))}${window.shQsTeams?window.shQsTeams():''}`,
+   `<div class="b" style="margin:4px 0">Ground</div>${scroll(GT.map(([v,l])=>chipA('qsSet','gtype',v,l,q.gtype===v)).join(''))}<div class="b" style="margin:4px 0">Match type</div>${scroll(MT.map(([v,l])=>chipA('qsSet','mcat',v,l,q.mcat===v)).join(''))}${q.mcat==='demo'?'<div class="mu sm" style="margin:0 0 6px">A demo match is for practice. It is not counted in stats or shared, and it is deleted 24 hours after it starts.</div>':''}${window.shQsTeams?window.shQsTeams():''}`,
    ok2?pl(q.a)+pl(q.b):'<div class="need">Pick both teams first.</div>',
    `<div class="b" style="margin:8px 0 4px">Format</div>${scroll(FMT.map(([k,l])=>chipA('qsFmt','fmt',k,l,fm===k)).join(''))}
   ${fm==='test'?`<div class="b" style="margin:6px 0 4px">Match length</div>${scroll(DAYS.map(([v,l])=>chip('overs',v,l,String(q.overs)===v)).join(''))}`:fm==='hundred'?`<div class="mu sm" style="margin:6px 0">The Hundred: 100 balls per side, bowled in sets of 5 balls.</div>`:`<div class="b" style="margin:6px 0 4px">Overs per side</div><div class="row" style="flex-wrap:wrap;gap:6px">${FOV[fm].map(v=>chip('overs',v,v,String(q.overs)===v)).join('')}</div><label style="margin-top:6px">Or type the overs yourself<input id="qs-ov" inputmode="numeric" maxlength="3" placeholder="e.g. 12, 25, 35 (1-100)" value="${FOV[fm].includes(String(q.overs))?'':esc(q.overs)}"></label>`}
@@ -9970,12 +9971,12 @@ try{if(S.settings&&S.settings.mskin==='ca'){S.settings.mskin='cb';try{save()}cat
   let v=S.venues.find(x=>x.name.toLowerCase()===q.venue.toLowerCase()||(x.aliases||[]).some(a=>a.toLowerCase()===q.venue.toLowerCase()));
   if(!v){v={id:uid(),name:q.venue,aliases:[],lat:null,lng:null,areas:[]};S.venues.push(v)}
   let ar=(v.areas||[])[0];if(!ar){ar={id:uid(),name:(GT.find(x=>x[0]===q.gtype)||[0,'Main ground'])[1],pitches:[]};(v.areas=v.areas||[]).push(ar)}
-  const w=wzFresh();Object.assign(w,{mode:'friendly',a:q.a,b:q.b,overs:+q.overs,name:q.name,xi:{[q.a]:xa.slice(),[q.b]:xb.slice()},subs:{},venueId:v.id,areaId:ar.id,pitchId:'',ball:q.ball,gender:q.gender,age:'',level:q.mcat||'',toss:q.toss,dec:q.dec,bc:'sh',bcUrl:'',
+  const w=wzFresh();Object.assign(w,{mode:'friendly',a:q.a,b:q.b,overs:+q.overs,name:q.name,xi:{[q.a]:xa.slice(),[q.b]:xb.slice()},subs:{},venueId:v.id,areaId:ar.id,pitchId:'',ball:q.ball,gender:q.gender,age:'',level:q.mcat==='demo'?'':(q.mcat||''),toss:q.toss,dec:q.dec,bc:'sh',bcUrl:'',
    off:{u1:q.u1,u2:q.u2,u3:'',ref:'',sc:q.sc||(S.user&&(S.user.nick||S.user.name))||'Scorer',co:''}});
-  S.wiz=w;S.prefs=S.prefs||{};S.prefs.qs={overs:String(q.overs),fmt:q.fmt||fmtOf(q.overs),gtype:q.gtype,mcat:q.mcat,ball:q.ball,gender:q.gender,venue:q.venue,dec:q.dec};
+  S.wiz=w;S.prefs=S.prefs||{};S.prefs.qs={overs:String(q.overs),fmt:q.fmt||fmtOf(q.overs),gtype:q.gtype,mcat:q.mcat==='demo'?(lastQ().mcat||'individual'):q.mcat,ball:q.ball,gender:q.gender,venue:q.venue,dec:q.dec};
   if(q.date)w.date=q.date;const n0=S.matches.length;
   A.wzStart();if(S.wiz){S.wiz=null;toast('Could not start. Check the details.')}
-  else if(S.matches.length>n0){const m=S.matches[S.matches.length-1];m.gtype=q.gtype||'';if(q.date)m.date=q.date;if(q.time&&q.date){const t=new Date(q.date+'T'+q.time);if(!isNaN(t))m.time=t.toISOString();m.startTime=q.time}try{m.tz=Intl.DateTimeFormat().resolvedOptions().timeZone}catch(e){}save&&save()}}
+  else if(S.matches.length>n0){const m=S.matches[S.matches.length-1];m.gtype=q.gtype||'';if(q.mcat==='demo'){m.demo=true;m.demoAt=Date.now()}if(q.date)m.date=q.date;if(q.time&&q.date){const t=new Date(q.date+'T'+q.time);if(!isNaN(t))m.time=t.toISOString();m.startTime=q.time}try{m.tz=Intl.DateTimeFormat().resolvedOptions().timeZone}catch(e){}save&&save()}}
 }
 
 /* LIVE VIEW: batters / bowler first, and tolerant of provider scorecards that mark the crease loosely or lag behind the score. */
@@ -11349,6 +11350,37 @@ Object.assign(C,{ovAd(v){S.stream.adText=String(v||'').slice(0,140);save()}});
   rgFeeOpen(d){window.shPayOpen&&window.shPayOpen(d.id)},rgFeePay(d){window.shPayOpen&&window.shPayOpen(d.id)},
   rgQr(d){const a=aucOf(d.v),l=rgLink(a);UI.modal={t:'html',html:`<h3>Registration QR</h3><div id="rgQrBox" style="display:grid;place-items:center;margin:8px 0"></div><input readonly value="${esc(l)}" style="width:100%" onclick="this.select()"><div class="mu sm" style="margin:6px 0">Scan to open the registration page for ${esc(a.name)}. The auction must be published first.</div><button type="button" class="btn sm ghost" data-a="closeModal">Close</button>`};renderModal();
    setTimeout(()=>{const h=document.getElementById('rgQrBox');if(h&&!h.firstChild&&typeof qrCanvas==='function'){const cv=qrCanvas(l,240);if(cv){cv.style.cssText='max-width:100%;border-radius:8px;background:#fff';h.appendChild(cv)}}},60)}});
+}
+
+/* ---------------- 101 DEMO MATCHES EXPIRE: a demo match is deleted 24 hours after it starts ---------------- */
+{
+ const DAY=864e5;
+ window.shPurgeDemo=function(){const now=Date.now();let stamped=false;
+  S.matches.forEach(m=>{if(isDemo(m)&&!m.demoAt){m.demoAt=now;stamped=true}});
+  const keep=S.matches.filter(m=>!(isDemo(m)&&now-m.demoAt>=DAY)),gone=S.matches.length-keep.length;
+  if(gone){S.matches=keep;if(UI.sid&&!S.matches.some(m=>m.id===UI.sid)){UI.sid=null;if(['match','score'].includes(UI.view))UI.view='home'}}
+  if(gone||stamped){try{save()}catch(e){}}
+  if(gone&&UI.stage==='app'){try{render()}catch(e){}}
+  return gone};
+ setTimeout(window.shPurgeDemo,1500);setInterval(window.shPurgeDemo,5*60*1000);
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden)window.shPurgeDemo()});
+}
+
+/* ---------------- 102 MY MATCHES: squad members with an account see the match in their own Matches list ---------------- */
+{
+ const base=()=>(typeof apiBase==='function'&&apiBase())||'';
+ const signed=()=>!!(S.tok&&S.user&&!S.user.guest);
+ const M=()=>(UI.mine=UI.mine||{items:[],t:0});
+ const load=async()=>{if(!signed()||!base())return;try{const r=await fetch(base()+'/api/me/matches',{headers:{Authorization:'Bearer '+S.tok}}),j=await r.json();if(!j.ok)return;const m=M(),o=JSON.stringify(m.items);m.items=j.items||[];m.t=Date.now();
+  for(const it of m.items){if(!S.matches.some(x=>x.id===it.id)&&typeof shPull==='function'){try{await shPull({col:'matches',id:it.id})}catch(e){}}}
+  if(o!==JSON.stringify(m.items)&&UI.stage==='app')render()}catch(e){}};
+ window.shMineLoad=load;setTimeout(load,2500);setInterval(load,60000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)load()});
+ const ST=s=>s==='live'?'LIVE':s==='break'?'INNINGS BREAK':s==='done'?'RESULT':'UPCOMING';
+ const x0=XV.matches;XV.matches=function(){const o=x0.apply(this,arguments),it=M().items;if(!signed()||!it.length)return o;
+  const card=`<div class="card" id="mine-card"><h3>Your matches <span class="mu sm">you are in the squad</span></h3>${it.slice(0,8).map(x=>`<div class="item" style="display:block;padding:6px 0;border-top:1px solid var(--bd)"><div class="row" style="justify-content:space-between;gap:8px"><span><b>${esc(x.a||'Team')} v ${esc(x.b||'Team')}</b><div class="mu sm">${esc([x.date,x.result].filter(Boolean).join(' · '))}</div></span><span class="row" style="gap:6px"><span class="pill ${x.status==='live'?'live':''}">${ST(x.status)}</span><button type="button" class="btn sm" data-a="mineOpen" data-id="${esc(x.id)}">Open</button></span></div></div>`).join('')}</div>`;
+  return card+o};
+ A.mineOpen=async function(d){if(!S.matches.some(x=>x.id===d.id)&&typeof shPull==='function'){try{await shPull({col:'matches',id:d.id})}catch(e){}}
+  if(S.matches.some(x=>x.id===d.id)){UI.mid=d.id;UI.view='match';render()}else toast('This match is not available yet. Try again in a moment.',3500)};
 }
 </script>
 </body>

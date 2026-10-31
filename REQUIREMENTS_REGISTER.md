@@ -138,3 +138,7 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 - 2026-10-20 Live tab (CREX-style `cx3Panel`): score + big last ball, CRR/RRR/Target, need line, this-over strip, batters, partnership, last wicket, bowler. Provider matches without ball-by-ball show scorecard-derived parts only.
 
 - 2026-10-27 All features hub (XV.hub, menu 'All features'): 24 modules / tabs from the master report with icons. LIVE modules open the real feature; the rest show an honest 'interface ready, feature not built yet' state. QR, payments and login are deliberately last (owner instruction).
+
+## Squad members and demo matches (2026-10-31)
+- Squad members with an account (matched by mobile number, SH ID or the team registry) get the match in their own Matches list and a push when they are added and when the match starts or ends. Phone numbers are used only to find accounts on the server and are never stored with, or returned from, the shared match (block 102, tests/match-participants.test.mjs, my-matches-ui.cjs). A squad member who has no account yet only gets it after they register with the same number.
+- Start a match: Demo match is a match type. A demo match is private to the device and deleted 24 hours after it starts (block 101, tests/qs-formats.cjs).

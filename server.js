@@ -1423,6 +1423,12 @@ async function pushTo(phone, msg) {
   for (const sub of u.push) { try { const r = await sendPush(sub, JSON.stringify({ title: String(msg.title || '').slice(0, 80), body: String(msg.body || '').slice(0, 160), url: String(msg.url || '/').slice(0, 200) }), vapid()); if (r.gone) continue; if (r.status < 300) n++; } catch { /* keep the subscription on a network error */ } keep.push(sub); }
   if (keep.length !== u.push.length) { u.push = keep; saveDb(); } return n;
 }
+routes['GET /api/me/matches'] = async (req) => {
+  const s = grUser(req); if (!s) return [401, { ok: false, error: 'Please sign in first' }];
+  const bag = db.shared.matches || {}, mp = db.matchPart || {};
+  const items = Object.keys(mp).filter(id => bag[id] && mp[id].includes(s.phone)).map(id => { const it = bag[id], m = (it.data && it.data.m) || {}, t = (it.data && it.data.teams) || {}; return { id, status: m.status || '', date: m.date || '', a: String((t[m.a] || {}).name || ''), b: String((t[m.b] || {}).name || ''), result: String(m.result || '').slice(0, 120), updated: it.updated }; }).sort((x, y) => y.updated - x.updated).slice(0, 50);
+  return [200, { ok: true, items }];
+};
 routes['GET /api/push/key'] = async () => [200, { ok: true, key: vapid().pub }];
 routes['POST /api/push/subscribe'] = async (req, body) => {
   const s = grUser(req); if (!s) return [401, { ok: false, error: 'Please sign in first' }];
@@ -1454,8 +1460,19 @@ function auctionAlerts(id, old, nw) {
     pushTo(r.owner, p.st === 'sold' ? { title: 'You were sold!', body: (team ? 'To ' + String(team).slice(0, 40) : 'Sold') + (p.price != null ? ' for ' + p.price : '') + ' in ' + String(nw.name || 'the auction').slice(0, 50), url: '/?reg=' + id } : { title: 'Unsold this round', body: 'You were not picked in ' + String(nw.name || 'the auction').slice(0, 50) + '. The organiser may bring you back.', url: '/?reg=' + id }).catch(() => {});
   }
 }
+// Squad members with an account (matched by their mobile number or SH ID) see the match in their own Match Centre and are alerted when it starts.
+function resolveParts(link) {
+  const d10 = new Set(), shids = new Set(), regs = (db.shared && db.shared.rgPlayers) || {};
+  const lst = (a, n) => (Array.isArray(a) ? a : []).slice(0, n).map(x => String(x || ''));
+  for (const p of lst(link.phones, 60)) { const d = p.replace(/\D/g, ''); if (d.length >= 7 && d.length <= 15) d10.add(d.slice(-10)); }
+  for (const r of lst(link.rids, 60)) { const x = regs[r]; if (x && x.ph) d10.add(String(x.ph).slice(-10)); }
+  for (const h of lst(link.shids, 60)) if (/^SH-[0-9A-F]{8}$/.test(h)) shids.add(h);
+  const out = [];
+  for (const [ph, u] of Object.entries(db.users)) { if (u.closed) continue; const dg = ph.startsWith('e:') ? '' : ph.replace(/\D/g, ''); if ((dg && d10.has(dg.slice(-10))) || (u.shid && shids.has(u.shid))) out.push(ph); }
+  return out;
+}
 const lastWkt = new Map();
-function matchAlerts(id, old, nw, teams, owner) {
+function matchAlerts(id, old, nw, teams, owner, part) {
   if (!nw || typeof nw !== 'object') return;
   const nm = x => String((teams && teams[x] && (teams[x].name || teams[x].short)) || 'Team').slice(0, 40), title = nm(nw.a) + ' v ' + nm(nw.b);
   let ev = null;
@@ -1463,8 +1480,10 @@ function matchAlerts(id, old, nw, teams, owner) {
   else if (nw.status === 'live' && (!old || !['live', 'break'].includes(old.status)) && !(old && old.status === 'done')) ev = { k: 'start', title: 'Match started', body: title };
   else if (old && nw.status === 'live' && wktCount(nw) > wktCount(old)) { if (Date.now() - (lastWkt.get(id) || 0) < 20000) return; lastWkt.set(id, Date.now()); ev = { k: 'wkt', title: 'Wicket! ' + title, body: wktCount(nw) + ' wickets have fallen in this match' }; }
   if (!ev) return;
+  const told = new Set();
+  if (ev.k === 'start' || ev.k === 'done') for (const ph of (part || [])) { if (ph === owner) continue; told.add(ph); pushTo(ph, ev.k === 'start' ? { title: 'Your match has started', body: title, url: '/?match=' + id } : { title: ev.title, body: ev.body, url: '/?match=' + id }).catch(() => {}); }
   for (const [ph, u] of Object.entries(db.users)) {
-    if (ph === owner || !(u.push || []).length || !u.follows) continue;
+    if (ph === owner || told.has(ph) || !(u.push || []).length || !u.follows) continue;
     if (!(u.follows.matches || []).includes(id) && !(nw.tid && (u.follows.tours || []).includes(nw.tid)) && !(u.follows.teams || []).some(t => t === nw.a || t === nw.b)) continue;
     pushTo(ph, { title: ev.title, body: ev.body, url: '/?match=' + id }).catch(() => {});
   }
@@ -2244,9 +2263,13 @@ http.createServer(async (req, res) => {
       b.data = { t: { id: t.id, name: t.name.trim(), short: t.short.trim(), color: t.color || '#2563eb', level: String(t.level || '').slice(0, 20), state: String(t.state || '').slice(0, 60), country: String(t.country || '').slice(0, 60) } };
     }
     if (limited('shw:' + phone, 600, 36e5)) return out(429, { ok: false, error: 'Too many saves, slow down' });
+    let part = null, prevPart = [];
+    if (col === 'matches' && b.data) { const link = b.data.link; delete b.data.link; db.matchPart = db.matchPart || {}; prevPart = db.matchPart[id] || []; if (link && typeof link === 'object') { part = resolveParts(link); db.matchPart[id] = part; } else part = prevPart; }
     bag[id] = { id, owner: cur ? cur.owner : phone, ownerName: u.nick || u.name || '', updated: Date.now(), data: b.data };
     if (col === 'auc') { try { auctionAlerts(id, cur && cur.data && cur.data.a, b.data && b.data.a); } catch { /* alerts never block a save */ } }
-    if (col === 'matches') { try { matchAlerts(id, cur && cur.data && cur.data.m, b.data && b.data.m, b.data && b.data.teams, bag[id].owner); } catch { /* alerts never block a save */ } }
+    if (col === 'matches') { try { matchAlerts(id, cur && cur.data && cur.data.m, b.data && b.data.m, b.data && b.data.teams, bag[id].owner, part || []);
+      const mm = b.data && b.data.m, tn = x => String(((b.data.teams || {})[x] || {}).name || 'Team').slice(0, 40);
+      if (mm && mm.status !== 'done') for (const ph of (part || [])) if (ph !== bag[id].owner && !prevPart.includes(ph)) pushTo(ph, { title: 'You are in a match', body: tn(mm.a) + ' v ' + tn(mm.b), url: '/?match=' + id }).catch(() => {}); } catch { /* alerts never block a save */ } }
     saveDb(); sseSend({ col, id, updated: bag[id].updated }); return out(200, { ok: true, updated: bag[id].updated });
   }
   if (path.startsWith('/api/teamreq/')) {   // join requests: a signed-in person asks to join a published team; only the team owner (or an admin) reads and answers them
