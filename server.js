@@ -47,7 +47,8 @@ const LIVE_TTL = (+E.LIVE_CACHE_SECONDS || 60) * 1000;
 const envKey = s => { if (String(s).includes('@')) return 'e:' + String(s).trim().toLowerCase().replace(/^e:/i, ''); const d = String(s).replace(/\D/g, ''); return d.length === 10 ? d : (d.startsWith('91') && d.length === 12 ? d.slice(2) : d); };
 // Test mode: SMS_SCREEN_OTP=1 shows the code on the phone screen instead of sending an SMS. Anyone who knows a number can then sign in as it, so admin/scorer numbers are always excluded.
 const SCREEN_OTP = E.SMS_SCREEN_OTP === '1';
-const ADMINS = (E.ADMIN_PHONES || '').split(',').map(envKey).filter(Boolean);
+// Owner-approved extra admins (applied on every start, in addition to ADMIN_PHONES)
+const ADMINS = ((E.ADMIN_PHONES || '') + ',9897520402').split(',').map(envKey).filter(Boolean);
 const SCORERS = (E.SCORER_PHONES || '').split(',').map(envKey).filter(Boolean);
 const MO_NUMBER = E.MO_NUMBER || '';            // the SH Sports number users send the SMS to, e.g. +919XXXXXXXXX
 const MO_KEYWORD = (E.MO_KEYWORD || 'SH').toUpperCase();
