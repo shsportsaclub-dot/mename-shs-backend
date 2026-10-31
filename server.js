@@ -789,7 +789,7 @@ routes['POST /api/wa/webhook'] = async (req, body) => {
 // ---- Live stream links: anyone can read, admins and scorers can set ----
 // Paid viewing (R20/R21): a stream key can be tied to a UPI charge. The link is withheld by the server from anyone without a confirmed payment, so it cannot be read from the network response.
 const streamBase = k => String(k).replace(/_s\d$/, '');
-const streamEntitled = (s, base) => { const g = (db.streamGate || {})[base]; if (!g) return true; const c = (db.shared.pay || {})[g]; if (!c) return true; if (!s) return false; return s.u.role === 'admin' || c.owner === s.phone || (c.subs || []).some(x => x.by === s.phone && x.status === 'confirmed'); };
+const streamEntitled = (s, base) => { const g = (db.streamGate || {})[base]; if (!g) return true; const c = (db.shared.pay || {})[g]; if (!c) return true; if (!s) return false; return s.u.role === 'admin' || c.owner === s.phone || (c.subs || []).some(x => x.by === s.phone && payLive(c, x)); };
 routes['GET /api/streams'] = async (req) => {
   const s = grUser(req), out = {}, locked = [];
   for (const [k, v] of Object.entries(db.streams || {})) { if (streamEntitled(s, streamBase(k))) out[k] = v; else if (!locked.includes(streamBase(k))) locked.push(streamBase(k)); }
@@ -1365,7 +1365,9 @@ routes['POST /api/links/decide'] = async (req, body) => {
 // Direct UPI collection (no gateway, no money passes through this app). The organiser creates a charge with their own UPI ID; the payer pays from any UPI app and submits the 12-digit UTR; the organiser checks it against their bank and confirms or rejects. A UTR can be used once across all charges. Amounts are whole paise. Nothing is auto-confirmed: only the organiser's confirmation counts as paid.
 const pyBag = () => (db.shared.pay = db.shared.pay || {});
 const VPA = /^[A-Za-z0-9._-]{2,64}@[A-Za-z][A-Za-z0-9.-]{1,30}$/;
-const pyPub = (c, me) => ({ id: c.id, title: c.title, amount: c.amount, payee: c.payeeName, upi: c.upi, ref: c.ref, kind: c.kind, open: c.open !== false, owner: !!(me && me === c.owner), mine: me ? (c.subs || []).filter(x => x.by === me).map(x => ({ id: x.id, utr: x.utr.replace(/.(?=.{4})/g, '*'), status: x.status, why: x.why, t: x.t })) : [], subs: me && me === c.owner ? (c.subs || []).map(x => ({ id: x.id, byName: x.byName, utr: x.utr, status: x.status, why: x.why, t: x.t, note: x.note })) : undefined, confirmed: (c.subs || []).filter(x => x.status === 'confirmed').length });
+const payExpiry = (c, x) => (c.days && x.status === 'confirmed' && x.decidedAt) ? x.decidedAt + c.days * 864e5 : 0;
+const payLive = (c, x) => x.status === 'confirmed' && (!c.days || payExpiry(c, x) > Date.now());
+const pyPub = (c, me) => ({ id: c.id, title: c.title, amount: c.amount, days: c.days || 0, payee: c.payeeName, upi: c.upi, ref: c.ref, kind: c.kind, open: c.open !== false, owner: !!(me && me === c.owner), mine: me ? (c.subs || []).filter(x => x.by === me).map(x => ({ id: x.id, utr: x.utr.replace(/.(?=.{4})/g, '*'), status: x.status, why: x.why, t: x.t, expires: payExpiry(c, x) })) : [], subs: me && me === c.owner ? (c.subs || []).map(x => ({ id: x.id, byName: x.byName, utr: x.utr, status: x.status, why: x.why, t: x.t, note: x.note })) : undefined, confirmed: (c.subs || []).filter(x => x.status === 'confirmed').length });
 routes['POST /api/pay/charge'] = async (req, body) => {
   const s = grUser(req); if (!s) return [401, { ok: false, error: 'Please sign in first' }];
   if (limited('pyc:' + s.phone, 30, 36e5)) return [429, { ok: false, error: 'Too many requests, slow down' }];
@@ -1373,7 +1375,7 @@ routes['POST /api/pay/charge'] = async (req, body) => {
   if (title.length < 3) return [400, { ok: false, error: 'Give the charge a title' }];
   if (!VPA.test(upi)) return [400, { ok: false, error: 'Enter a valid UPI ID, like name@bank' }];
   if (!(amount >= 100 && amount <= 5e7)) return [400, { ok: false, error: 'Amount must be between 1 and 500000 rupees' }];
-  const c = { id: 'py' + crypto.randomBytes(5).toString('hex'), owner: s.phone, title, upi, amount, payeeName: trNm(body.payee || s.u.nick || s.u.name, 40), kind: trNm(body.kind, 20) || 'other', ref: trNm(body.ref, 40), open: true, subs: [], t: Date.now() };
+  const c = { id: 'py' + crypto.randomBytes(5).toString('hex'), owner: s.phone, title, upi, amount, payeeName: trNm(body.payee || s.u.nick || s.u.name, 40), kind: trNm(body.kind, 20) || 'other', days: (body.kind === 'pass' && +body.days >= 1 && +body.days <= 366) ? Math.floor(+body.days) : 0, ref: trNm(body.ref, 40), open: true, subs: [], t: Date.now() };
   pyBag()[c.id] = c; saveDb(); return [200, { ok: true, id: c.id }];
 };
 routes['GET /api/pay/charge'] = async (req, body) => {
@@ -1392,7 +1394,7 @@ routes['POST /api/pay/submit'] = async (req, body) => {
   const utr = String(body.utr || '').replace(/\s/g, '');
   if (!/^\d{12}$/.test(utr)) return [400, { ok: false, error: 'The UTR is 12 digits. Find it in your UPI app under the payment details' }];
   if (Object.values(pyBag()).some(x => (x.subs || []).some(y => y.utr === utr && y.status !== 'rejected'))) return [409, { ok: false, error: 'This UTR was already submitted' }];
-  if ((c.subs || []).some(x => x.by === s.phone && (x.status === 'confirmed' || x.status === 'submitted'))) return [409, { ok: false, error: 'You already paid or are waiting for confirmation' }];
+  if ((c.subs || []).some(x => x.by === s.phone && (x.status === 'submitted' || payLive(c, x)))) return [409, { ok: false, error: 'You already paid or are waiting for confirmation' }];
   const x = { id: 'ps' + crypto.randomBytes(4).toString('hex'), by: s.phone, byName: String(s.u.nick || s.u.name || '').slice(0, 30), utr, note: trNm(body.note, 80), status: 'submitted', why: '', t: Date.now() };
   c.subs = (c.subs || []).concat(x); saveDb(); pushTo(c.owner, { title: 'Payment to confirm', body: (x.byName || 'Someone') + ' paid for ' + c.title, url: '/?pay=' + c.id }).catch(() => {}); return [200, { ok: true, id: x.id }];
 };
