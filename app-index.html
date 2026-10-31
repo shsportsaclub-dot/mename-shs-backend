@@ -11458,6 +11458,20 @@ Object.assign(C,{ovAd(v){S.stream.adText=String(v||'').slice(0,140);save()}});
  /* Rankings goes to the rankings page when it exists */
  const g0=A.go;
 }
+
+/* ---------------- 105 BOTTOM BAR: Deals (OLX-style buy and sell) and Shop icons ---------------- */
+{
+ IC.deals='<path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.4"/>';
+ IC.shop='<path d="M3 9l1.5-5h15L21 9v1a3 3 0 0 1-6 0 3 3 0 0 1-6 0 3 3 0 0 1-6 0z"/><path d="M5 13v7h14v-7M10 20v-4h4v4"/>';
+ const st=document.createElement('style');st.textContent='.bnav{grid-template-columns:repeat(7,1fr)!important}.bnav button{font-size:10px!important;padding:3px 0!important;min-width:0;white-space:nowrap}.bnav svg{width:21px;height:21px}';document.head.appendChild(st);
+ const b0=bnav;
+ bnav=function(){const h=b0.apply(this,arguments),i=h.indexOf('</nav>');if(i<0)return h;
+  const v=UI.view==='tour'?'tours':UI.view,mk=(UI.mk&&UI.mk.tab)||'sell',on=(k,t)=>v==='market'&&(t?mk===t:true)?'on':'';
+  const B=(k,l,i2,cls,a,d)=>`<button class="${cls}" data-a="${a}" data-v="${d}">${ic(i2)}${l}</button>`;
+  const nav=`<nav class="bnav">${B('home','Home','home',v==='home'?'on':'','go','home')}${B('matches','Matches','matches',v==='matches'?'on':'','go','matches')}${B('reels','Videos','reels',v==='reels'?'on':'','go','reels')}${B('epaper','News','news',v==='epaper'?'on':'','go','epaper')}${B('d','Deals','deals',on('d','sell'),'bnMk','sell')}${B('s','Shop','shop',on('s','shop'),'bnMk','shop')}<button data-a="menu" aria-label="More">${ic('dots')}More</button></nav>`;
+  return nav+h.slice(i+6)};
+ Object.assign(A,{bnMk(d){UI.mk=UI.mk||{tab:'sell',q:''};UI.mk.tab=d.v;UI.view='market';UI.drawer=false;render();window.scrollTo(0,0)}});
+}
 </script>
 </body>
 </html>
