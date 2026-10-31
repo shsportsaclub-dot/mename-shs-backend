@@ -12,7 +12,7 @@ const txt=()=>p.evaluate(()=>document.getElementById('modal').innerText);
 let t=await txt();
 const pick=async(k,v)=>{if(!await p.locator('button[data-a=ddPick][data-k='+k+']').count())await p.click('button[data-a=ddOpen][data-k='+k+']');await p.click('button[data-a=ddPick][data-k='+k+'][data-v='+v+']')};
 await p.click('button[data-a=ddOpen][data-k=gtype]');let t1=await txt();
-ok(/Ground/.test(t)&&/Open ground/.test(t1)&&/Open box cricket/.test(t1)&&/Indoor box cricket/.test(t1),'ground types in a drop-down');
+ok(/Ground/.test(t)&&/Open ground/.test(t1)&&/Outdoor box cricket/.test(t1)&&/Indoor box cricket/.test(t1),'ground types in a drop-down');
 await p.click('button[data-a=ddOpen][data-k=mcat]');t1=await txt();
 ok(/Individual/.test(t1)&&/Corporate/.test(t1)&&/Board cricket/.test(t1)&&/Club cricket/.test(t1)&&/Demo match/.test(t1),'match types in a drop-down');
 ok(await p.evaluate(()=>{const e=document.querySelector('.dd-l');return getComputedStyle(e).overflowY==='auto'}),'scroll-down list');

@@ -1961,7 +1961,7 @@ Object.assign(A,{
 });
 {const s0=vScore;vScore=function(){const open=S.matches.filter(x=>x.status!=='done'),m=S.matches.find(x=>x.id===UI.sid)||open[open.length-1];
   if(!m&&S.wiz&&can())return `<div class="empty">Your match setup is not finished.<br><br><button class="btn" data-a="newMatch">Continue setup (step ${S.wiz.step+1} of ${WSTEPS.length})</button></div>`;return s0()}}
-{const m0=mHead;mHead=function(m){const o=m0(m);const CL={men:'Men',women:'Women',mixed:'Mixed',u19:'Under 19',u16:'Under 16',u14:'Under 14',u12:'Under 12',vet:'Veterans',open:'Open',local:'Local',individual:'Individual',corporate:'Corporate',academy:'Academy',club:'Club',board:'Domestic board',national:'National',intl:'International'},cb=m.cat?[m.cat.gender,m.cat.age,m.cat.level].filter(Boolean).map(x=>CL[x]||x).join(' / '):'';const bits=[m.name,m.mode&&(MODES.find(x=>x[0]===m.mode)||[0,m.mode])[1],cb,({open:'Open ground',obox:'Open box cricket',ibox:'Indoor box cricket'})[m.gtype]].filter(Boolean);return bits.length?`<div class="mu sm" style="margin:2px 0 6px">${esc(bits.join(' | '))}</div>`+o:o}}
+{const m0=mHead;mHead=function(m){const o=m0(m);const CL={men:'Men',women:'Women',mixed:'Mixed',u19:'Under 19',u16:'Under 16',u14:'Under 14',u12:'Under 12',vet:'Veterans',open:'Open',local:'Local',individual:'Individual',corporate:'Corporate',academy:'Academy',club:'Club',board:'Domestic board',national:'National',intl:'International'},cb=m.cat?[m.cat.gender,m.cat.age,m.cat.level].filter(Boolean).map(x=>CL[x]||x).join(' / '):'';const bits=[m.name,m.mode&&(MODES.find(x=>x[0]===m.mode)||[0,m.mode])[1],cb,({open:'Open ground',obox:'Outdoor box cricket',ibox:'Indoor box cricket'})[m.gtype]].filter(Boolean);return bits.length?`<div class="mu sm" style="margin:2px 0 6px">${esc(bits.join(' | '))}</div>`+o:o}}
 
 
 /* ---------------- REELS STRIP on Home (tap opens the full-screen reels at that card) ---------------- */
@@ -9908,8 +9908,8 @@ try{if(S.settings&&S.settings.mskin==='ca'){S.settings.mskin='cb';try{save()}cat
   FOV={academic:['5','6','8','10','12','15','20','25','30'],odi:['50','45','40','35','30'],t20:['20','18','16','15','12'],t10:['10','8','6','5']},
   FDEF={academic:'10',test:'905',odi:'50',t20:'20',t10:'10',hundred:'20.5'},
   DAYS=[['901','1 day'],['902','2 days'],['903','3 days'],['904','4 days'],['905','5 days']],
-  GT=[['open','Open ground'],['obox','Open box cricket'],['ibox','Indoor box cricket']],
-  MT=[['individual','Individual'],['corporate','Corporate'],['board','Board cricket'],['club','Club cricket'],['demo','Demo match']],
+  GT=[['open','Open ground'],['obox','Outdoor box cricket'],['ibox','Indoor box cricket']],
+  MT=[['individual','Individual / Friendly'],['corporate','Corporate'],['board','Board cricket'],['club','Club cricket'],['series','Series'],['tournament','Tournament'],['league','League / Franchise'],['academy','Academy match'],['practice','Practice / Trial'],['demo','Demo match']],
   fmtOf=o=>{o=String(o);return /^90[1-5]$/.test(o)?'test':o==='20.5'?'hundred':o==='50'?'odi':o==='20'?'t20':o==='10'?'t10':'academic'};
  window.shQsOptions={FMT,FOV,FDEF,DAYS,GT,MT};
  const lastQ=()=>(S.prefs&&S.prefs.qs)||{};
@@ -9928,7 +9928,7 @@ try{if(S.settings&&S.settings.mskin==='ca'){S.settings.mskin='cb';try{save()}cat
   const head=`<h3>Start a match</h3><div class="qs-steps">${STEPS.map((n,i)=>`<span class="${i===stp?'on':i<stp?'done':''}"><b>${i<stp?'✓':i+1}</b>${n}</span>`).join('')}</div>`;
   const nav=`<div class="row" style="margin-top:14px;gap:8px">${stp>0?'<button type="button" class="btn ghost" data-a="qsStep" data-v="-1">Back</button>':''}<div class="grow"></div>${stp<3?'<button type="button" class="btn" data-a="qsStep" data-v="1">Next</button>':'<button type="button" class="btn" data-a="qsStart">Start match</button>'}</div>`;
   const body=[
-   `${window.shQsTeams?window.shQsTeams():''}<div class="row" style="gap:8px;align-items:flex-start;margin-top:6px"><div style="flex:1;min-width:0"><div class="b" style="margin:4px 0">Ground</div>${window.shDD('gtype',GT,q.gtype,'qsSet')}</div><div style="flex:1;min-width:0"><div class="b" style="margin:4px 0">Match type</div>${window.shDD('mcat',MT,q.mcat,'qsSet')}</div></div>${UI.dd==='gtype'||UI.dd==='mcat'?window.shDDList(UI.dd,UI.dd==='gtype'?GT:MT,UI.dd==='gtype'?q.gtype:q.mcat,'qsSet'):''}${q.mcat==='demo'?'<div class="mu sm" style="margin:0 0 6px">A demo match is for practice. It is not counted in stats or shared, and it is deleted 24 hours after it starts.</div>':''}`,
+   `${window.shQsTeams?window.shQsTeams():''}<div class="row" style="gap:8px;align-items:flex-start;margin-top:6px"><div style="flex:1;min-width:0"><div class="b" style="margin:4px 0">Ground</div>${window.shDD('gtype',GT,q.gtype,'qsSet')}</div><div style="flex:1;min-width:0"><div class="b" style="margin:4px 0">Match type</div>${window.shDD('mcat',MT,q.mcat,'qsSet')}</div></div>${UI.dd==='gtype'||UI.dd==='mcat'?window.shDDList(UI.dd,UI.dd==='gtype'?GT:MT,UI.dd==='gtype'?q.gtype:q.mcat,'qsSet'):''}${window.shQsSeries?window.shQsSeries(q):''}${q.mcat==='demo'?'<div class="mu sm" style="margin:0 0 6px">A demo match is for practice. It is not counted in stats or shared, and it is deleted 24 hours after it starts.</div>':''}`,
    ok2?pl(q.a)+pl(q.b)+(window.shRuleHTML?window.shRuleHTML(q):''):'<div class="need">Pick both teams first.</div>',
    `<div class="b" style="margin:8px 0 4px">Format</div>${window.shDD('fmt',FMT,fm,'qsFmt')}${UI.dd==='fmt'?window.shDDList('fmt',FMT,fm,'qsFmt'):''}
   ${fm==='test'?`<div class="b" style="margin:6px 0 4px">Match length</div>${scroll(DAYS.map(([v,l])=>chip('overs',v,l,String(q.overs)===v)).join(''))}`:fm==='hundred'?`<div class="mu sm" style="margin:6px 0">The Hundred: 100 balls per side, bowled in sets of 5 balls.</div>`:`<div class="b" style="margin:6px 0 4px">Overs per side</div><div class="row" style="flex-wrap:wrap;gap:6px">${FOV[fm].map(v=>chip('overs',v,v,String(q.overs)===v)).join('')}</div><label style="margin-top:6px">Or type the overs yourself<input id="qs-ov" inputmode="numeric" maxlength="3" placeholder="e.g. 12, 25, 35 (1-100)" value="${FOV[fm].includes(String(q.overs))?'':esc(q.overs)}"></label>`}
@@ -9971,7 +9971,7 @@ try{if(S.settings&&S.settings.mskin==='ca'){S.settings.mskin='cb';try{save()}cat
   let v=S.venues.find(x=>x.name.toLowerCase()===q.venue.toLowerCase()||(x.aliases||[]).some(a=>a.toLowerCase()===q.venue.toLowerCase()));
   if(!v){v={id:uid(),name:q.venue,aliases:[],lat:null,lng:null,areas:[]};S.venues.push(v)}
   let ar=(v.areas||[])[0];if(!ar){ar={id:uid(),name:(GT.find(x=>x[0]===q.gtype)||[0,'Main ground'])[1],pitches:[]};(v.areas=v.areas||[]).push(ar)}
-  const w=wzFresh();Object.assign(w,{mode:'friendly',a:q.a,b:q.b,overs:+q.overs,name:q.name,xi:{[q.a]:xa.slice(),[q.b]:xb.slice()},subs:{},venueId:v.id,areaId:ar.id,pitchId:'',ball:q.ball,gender:q.gender,age:'',level:q.mcat==='demo'?'':(q.mcat||''),toss:q.toss,dec:q.dec,bc:'sh',bcUrl:'',
+  const w=wzFresh();Object.assign(w,{mode:({individual:'friendly',corporate:'corporate',board:'club',club:'club',series:'series',tournament:'tournament',league:'league',academy:'academy',practice:'practice'})[q.mcat]||'friendly',tid:q.tid||'',fid:q.fid||'',a:q.a,b:q.b,overs:+q.overs,name:q.name,xi:{[q.a]:xa.slice(),[q.b]:xb.slice()},subs:{},venueId:v.id,areaId:ar.id,pitchId:'',ball:q.ball,gender:q.gender,age:'',level:['individual','corporate','board','club'].includes(q.mcat)?q.mcat:'',toss:q.toss,dec:q.dec,bc:'sh',bcUrl:'',
    off:{u1:q.u1,u2:q.u2,u3:'',ref:'',sc:q.sc||(S.user&&(S.user.nick||S.user.name))||'Scorer',co:''}});
   S.wiz=w;S.prefs=S.prefs||{};S.prefs.qs={overs:String(q.overs),fmt:q.fmt||fmtOf(q.overs),gtype:q.gtype,mcat:q.mcat==='demo'?(lastQ().mcat||'individual'):q.mcat,ball:q.ball,gender:q.gender,venue:q.venue,dec:q.dec};
   if(q.date)w.date=q.date;const n0=S.matches.length;
@@ -11814,6 +11814,39 @@ Object.assign(C,{ovAd(v){S.stream.adText=String(v||'').slice(0,140);save()}});
  const st=document.createElement('style');st.textContent='.dd-b{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;padding:9px 12px;border:1px solid var(--bd,#4443);border-radius:10px;background:transparent;color:inherit;font:inherit;font-weight:600;cursor:pointer;text-align:left}.dd-b.open{border-color:var(--sp1,#e11d2e)}.dd-p{border:1px solid var(--bd,#4443);border-radius:10px;margin:6px 0 8px;overflow:hidden}.dd-q{width:100%;box-sizing:border-box;border:0;border-bottom:1px solid var(--bd,#4443);border-radius:0}.dd-l{max-height:210px;overflow-y:auto;display:flex;flex-direction:column}.dd-o{padding:10px 12px;border:0;border-bottom:1px solid var(--bd,#4442);background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer}.dd-o[hidden]{display:none}.dd-o.on{color:var(--sp1,#e11d2e);font-weight:700}';document.head.appendChild(st);
  const s0=A.qsStart;A.qsStart=function(){const n=S.matches.length,r=s0.apply(this,arguments);if(S.matches.length>n)UI.dd=null;return r};
  const sp0=A.qsStep;A.qsStep=function(){UI.dd=null;return sp0.apply(this,arguments)};
+}
+
+/* ---------------- 114 START A MATCH: Series / Tournament / League match types: pick or create the competition here, pick its fixture, and the match follows the tournament's rules (overs, ball, category, age, eligibility) ---------------- */
+{
+ const kinds={series:'Series',tournament:'Tournament',league:'League / Franchise'};
+ const list=k=>(S.tours||[]).filter(t=>k==='series'?t.kind==='series':t.kind!=='series');
+ const cur=q=>q&&q.tid&&(S.tours||[]).find(t=>t.id===q.tid);
+ const fmtFor=o=>{o=String(o);return /^90[1-5]$/.test(o)?'test':o==='20.5'?'hundred':o==='50'?'odi':o==='20'?'t20':o==='10'?'t10':'academic'};
+ const rulesOf=t=>{const r=t.rules||{};return {overs:+t.overs||0,ball:r.ball||'',gender:r.gender||'',age:r.age||''}};
+ const apply=q=>{const t=cur(q);if(!t)return;const r=rulesOf(t);if(r.overs){q.overs=String(r.overs);q.fmt=fmtFor(r.overs)}if(r.ball)q.ball=r.ball;if(r.gender)q.gender=r.gender};
+ const summary=t=>{const r=rulesOf(t),p=t.rules||{},bits=[];if(r.overs)bits.push(r.overs+' overs per side');bits.push(r.ball?(r.ball==='tennis'?'Tennis ball':'Leather ball'):'ball: your choice');if(r.gender)bits.push('Category '+r.gender);if(r.age)bits.push('Age '+(r.age==='open'?'open':r.age));if(p.win!=null)bits.push('Points: win '+p.win+', tie '+(p.tie||0)+', no result '+(p.nr||0));return bits.join(' · ')};
+ window.shQsLocked=q=>!!cur(q);
+ window.shQsSeries=function(q){const k=q.mcat;if(!kinds[k])return '';const L=list(k),t=cur(q),noun=k==='series'?'series':'tournament';
+  const open=t?(t.fixtures||[]).filter(f=>!f.mid&&f.a&&f.b&&T(f.a)&&T(f.b)):[];
+  const pick=L.length?`<label style="margin:2px 0 6px">${k==='series'?'Series':'Tournament'}<select data-c="qsTour"><option value="">Not linked (one-off match)</option>${L.map(x=>`<option value="${esc(x.id)}" ${q.tid===x.id?'selected':''}>${esc(x.name)}</option>`).join('')}</select></label>`:`<div class="mu sm" style="margin:2px 0 6px">No ${noun} yet. Create one below.</div>`;
+  const rules=t?`<div class="card" style="margin:4px 0 8px;padding:8px 10px"><b>${esc(t.name)} rules</b><div class="mu sm" style="margin-top:2px">${esc(summary(t))}</div><div class="mu sm">The match follows these. Players must meet the eligibility rules to start.</div></div>${open.length?`<label style="margin:2px 0 8px">Fixture<select data-c="qsFix"><option value="">No fixture (extra match)</option>${open.slice(0,40).map(f=>`<option value="${esc(f.id)}" ${q.fid===f.id?'selected':''}>${esc(T(f.a).name)} v ${esc(T(f.b).name)}${f.date?' · '+esc(f.date):''}</option>`).join('')}</select></label>`:'<div class="mu sm" style="margin-bottom:8px">No open fixtures in this '+noun+'.</div>'}`:'';
+  const nt=UI.qnt?`<div class="card" style="margin:4px 0 8px;padding:8px 10px"><b>Create ${noun}</b><input id="qnt-name" placeholder="${k==='series'?'Series':'Tournament'} name" maxlength="50" style="width:100%;margin-top:6px"><div class="mu sm" style="margin-top:6px">Teams (tick at least 2). Overs: ${esc(q.overs)} per side.</div><div style="max-height:140px;overflow-y:auto">${S.teams.map(x=>`<label class="ck"><input type="checkbox" class="qnt-t" value="${esc(x.id)}" ${x.id===q.a||x.id===q.b?'checked':''}> ${esc(x.name)}</label>`).join('')}</div><div class="row" style="gap:6px;margin-top:6px"><button type="button" class="btn sm" data-a="qsTourNew">Create</button><button type="button" class="btn sm ghost" data-a="qsTourNewToggle">Cancel</button></div></div>`:`<button type="button" class="btn sm ghost" style="margin:0 0 8px" data-a="qsTourNewToggle">＋ Create ${noun}</button>`;
+  return pick+rules+nt};
+ A.qsTourNewToggle=function(){if(window.shQsRead)window.shQsRead();UI.qnt=!UI.qnt;window.shQsShow()};
+ A.qsTourNew=function(){const q=UI.qs,name=(document.getElementById('qnt-name')||{}).value||'',ids=[...document.querySelectorAll('.qnt-t:checked')].map(e=>e.value);
+  if(name.trim().length<2)return toast('Enter the name');if(ids.length<2)return toast('Tick at least 2 teams');
+  const fd=new FormData();fd.set('name',name.trim());ids.forEach(i=>fd.append('teams',i));fd.set('kind',q.mcat==='series'?'series':'');fd.set('overs',String(q.overs||20));fd.set('groups','1');fd.set('pw','2');fd.set('pt','1');fd.set('pn','1');fd.set('start',new Date().toISOString().slice(0,10));
+  const n=S.tours.length,v=UI.view,tt=UI.ttab,ti=UI.tid;F.tourAdd(fd);
+  UI.view=v;UI.ttab=tt;UI.tid=ti;if(S.tours.length===n)return toast('Only an organiser or admin can create a '+(q.mcat==='series'?'series':'tournament'),3500);
+  const t=S.tours[S.tours.length-1];q.tid=t.id;q.fid='';const open=(t.fixtures||[]).filter(f=>!f.mid&&f.a&&f.b);if(open.length===1){q.fid=open[0].id;q.a=open[0].a;q.b=open[0].b;q.toss=open[0].a}apply(q);UI.qnt=false;window.shQsShow()};
+ C.qsTour=function(v){if(window.shQsRead)window.shQsRead();const q=UI.qs;q.tid=v||'';q.fid='';apply(q);window.shQsShow()};
+ C.qsFix=function(v){if(window.shQsRead)window.shQsRead();const q=UI.qs,t=cur(q),f=t&&(t.fixtures||[]).find(x=>x.id===v);q.fid=v||'';if(f){q.a=f.a;q.b=f.b;q.toss=f.a}window.shQsShow()};
+ /* the tournament decides these, so the match cannot drift from it */
+ const guard=(name,keys)=>{const o=A[name];A[name]=function(d){const q=UI.qs,t=cur(q);if(t&&keys.includes(d&&d.k)){const r=rulesOf(t);if((d.k==='overs'||d.k==='fmt')&&r.overs||(d.k==='ball'&&r.ball))return toast('Set by the tournament rules: '+summary(t).split(' · ')[0],3000)}return o.apply(this,arguments)}};
+ guard('qsSet',['overs','ball','fmt']);
+ const f0=A.qsFmt;A.qsFmt=function(d){const t=cur(UI.qs);if(t&&rulesOf(t).overs)return toast('Set by the tournament rules: '+rulesOf(t).overs+' overs per side',3000);return f0.apply(this,arguments)};
+ const s0=A.qsStart;A.qsStart=function(){const q=UI.qs;if(q){if(!['series','tournament','league'].includes(q.mcat)){q.tid='';q.fid=''}else apply(q)}return s0.apply(this,arguments)};
+ const sp=A.qsStep;A.qsStep=function(){const q=UI.qs;if(q&&q.tid)apply(q);return sp.apply(this,arguments)};
 }
 </script>
 </body>
