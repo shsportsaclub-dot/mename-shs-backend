@@ -4066,7 +4066,7 @@ Object.assign(F,{async rgSubmit(fd){const a=UI.rg.info;if(!a)return;const f=Obje
   UI.rg.msg='';try{const r=await fetch(rgApi(a.id),{method:'POST',headers:rgHdr(),body:JSON.stringify({form:f})});const j=await r.json();if(j.ok){UI.rg.reg=j.reg;UI.rg.photo='';toast('Registration saved')}else UI.rg.msg=j.error||'Could not submit'}catch(e){UI.rg.msg='Cannot reach the server. Nothing was submitted.'}render()},
  async rgConfig(fd){const a=aucOf(fd.get('aid'));if(!a)return;const cats=String(fd.get('cats')||'').split(/[\n,]+/).map(s=>s.trim()).filter(Boolean).map(s=>{const m=/^(.+?)\s*[:=]\s*(\d+)$/.exec(s);return m?{n:m[1].trim().slice(0,30),base:+m[2]}:null});
   if(cats.some(x=>!x)||!cats.length){toast('Write categories like  A:500, B:300');return}
-  a.reg={open:!!fd.get('open'),fee:+fd.get('fee')||0,from:fd.get('from')||'',to:fd.get('to')||'',cats};commit();toast('Registration settings saved. Wait a few seconds for it to publish.')},
+  a.reg={open:!!fd.get('open'),fee:+fd.get('fee')||0,from:fd.get('from')||'',to:fd.get('to')||'',cats,feeCharge:(a.reg||{}).feeCharge||''};commit();toast('Registration settings saved. Wait a few seconds for it to publish.')},
  async rgDecide(fd){const a=aucOf(fd.get('aid'));const body={action:fd.get('act'),cat:fd.get('cat'),base:fd.get('base'),max:fd.get('max'),note:fd.get('note')};
   try{const r=await fetch(rgApi(a.id,fd.get('rid')),{method:'PUT',headers:rgHdr(),body:JSON.stringify(body)});const j=await r.json();if(!j.ok)toast(j.error||'Failed',4000);else{await rgOrgLoad(a.id);rgSync(a);commit()}}catch(e){toast('Cannot reach the server')}}});
 Object.assign(A,{rgReload(){rgLoad(UI.rg.aid)},rgCopy(d){const a=aucOf(d.v);try{navigator.clipboard.writeText(rgLink(a));toast('Link copied')}catch(e){toast(rgLink(a),6000)}}});
@@ -11314,6 +11314,29 @@ Object.assign(C,{ovAd(v){S.stream.adText=String(v||'').slice(0,140);save()}});
   try{typeof commit==='function'&&commit()}catch(e){}
   const on=i<0,pushOn=!!(UI.wp&&UI.wp.on);toast(on?(pushOn?'Alerts on for this '+(d.k==='tours'?'tournament':'match'):'Saved. Turn on Notifications in Settings to receive them.'):'Alerts off',3500);
   if(window.shFollowSync)window.shFollowSync();if(UI.modal&&typeof UI.modal.html==='string'){UI.modal.html=UI.modal.html.replace(/<div class="row" style="gap:6px;margin:6px 0"><button type="button" class="btn sm [^"]*" data-a="alToggle"[\s\S]*?<\/div>/,'');A.qrShare({k:d.k==='tours'?'tour':'match',id:d.id})}};
+}
+
+/* ---------------- 100 AUCTION REGISTRATION: fee by UPI (organiser confirms), QR for the link ---------------- */
+{
+ const base=()=>(typeof apiBase==='function'&&apiBase())||'';
+ const call=async(m,path,body)=>{try{const r=await fetch(base()+path,{method:m,headers:{'Content-Type':'application/json',Authorization:'Bearer '+(S.tok||'')},body:m==='GET'?undefined:JSON.stringify(body||{})});return await r.json()}catch(e){return {ok:false,error:'No connection'}}};
+ const val=id=>String((document.getElementById(id)||{}).value||'').trim();
+ const o0=rgOrgHtml;rgOrgHtml=function(a){const h=o0.apply(this,arguments),c=a.reg||{};if(!c.open)return h;
+  const fee=+c.fee||0;let box='';
+  if(fee>0&&c.feeCharge)box=`<div class="card" id="rg-fee"><div class="b">Fee by UPI is on</div><div class="mu sm">Players pay ₹${fee} straight to your UPI ID and submit the 12-digit UTR. You confirm each payment, and the registration is then marked paid by itself.</div><button type="button" class="btn sm ghost" style="margin-top:6px" data-a="rgFeeOpen" data-id="${esc(c.feeCharge)}">Review payments</button></div>`;
+  else if(fee>0)box=`<div class="card" id="rg-fee"><div class="b">Collect the fee by UPI</div><div class="mu sm">Optional. Players pay you directly. Nothing goes through us, and you confirm every payment yourself.</div><div class="row" style="gap:8px;margin-top:6px"><input id="rgf-u" placeholder="Your UPI ID" style="flex:1"><button type="button" class="btn sm" data-a="rgFeeOn" data-v="${esc(a.id)}">Turn on</button></div><div class="mu sm" style="margin-top:4px">Save the fee amount above first.</div></div>`;
+  const qr=`<div class="card"><button type="button" class="btn sm ghost" data-a="rgQr" data-v="${esc(a.id)}">Show QR code for the link</button></div>`;
+  return h+box+qr};
+ const x0=XV.aucreg;XV.aucreg=function(){const o=x0.apply(this,arguments),R=UI.rg,c=R.info&&R.info.reg,rg=R.reg;
+  if(!c||!c.open||!(+c.fee>0)||!c.feeCharge||(rg&&rg.paid))return o;
+  return o+`<div class="card" id="rg-pay"><div class="b">Registration fee: ₹${+c.fee}</div><div class="mu sm">Pay the organiser by UPI, then submit the UTR on the payment page. When the organiser confirms it, your registration moves on by itself. Paying does not mean you are selected.</div><button type="button" class="btn sm" style="margin-top:6px" data-a="rgFeePay" data-id="${esc(c.feeCharge)}">Pay fee by UPI</button>${rg?`<button type="button" class="btn sm ghost" style="margin-top:6px" data-a="rgReload">I have paid, refresh</button>`:''}</div>`};
+ Object.assign(A,{
+  async rgFeeOn(d){const a=aucOf(d.v),fee=+((a.reg||{}).fee)||0;if(!a||!(fee>0))return toast('Set a fee above zero and save first');
+   const r=await call('POST','/api/pay/charge',{title:'Registration fee: '+a.name,upi:val('rgf-u'),amount:Math.round(fee*100),kind:'aucreg',ref:a.id});if(!r.ok)return toast(r.error||'Could not turn on',4000);
+   a.reg.feeCharge=r.id;commit();toast('Fee by UPI is on. Wait a few seconds for it to publish.',4000);render()},
+  rgFeeOpen(d){window.shPayOpen&&window.shPayOpen(d.id)},rgFeePay(d){window.shPayOpen&&window.shPayOpen(d.id)},
+  rgQr(d){const a=aucOf(d.v),l=rgLink(a);UI.modal={t:'html',html:`<h3>Registration QR</h3><div id="rgQrBox" style="display:grid;place-items:center;margin:8px 0"></div><input readonly value="${esc(l)}" style="width:100%" onclick="this.select()"><div class="mu sm" style="margin:6px 0">Scan to open the registration page for ${esc(a.name)}. The auction must be published first.</div><button type="button" class="btn sm ghost" data-a="closeModal">Close</button>`};renderModal();
+   setTimeout(()=>{const h=document.getElementById('rgQrBox');if(h&&!h.firstChild&&typeof qrCanvas==='function'){const cv=qrCanvas(l,240);if(cv){cv.style.cssText='max-width:100%;border-radius:8px;background:#fff';h.appendChild(cv)}}},60)}});
 }
 </script>
 </body>

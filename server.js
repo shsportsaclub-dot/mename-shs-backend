@@ -1444,6 +1444,16 @@ routes['POST /api/push/follow'] = async (req, body) => {
 };
 // Match alerts: when a scorer's save changes a shared match, followers of either team (or the match) hear about the start, each wicket and the result.
 const wktCount = m => (m && Array.isArray(m.innings) ? m.innings.reduce((n, i) => n + ((i && Array.isArray(i.ev)) ? i.ev.filter(e => e && e.w).length : 0), 0) : 0);
+// Auction alerts: a registered player hears when the organiser sells them or leaves them unsold.
+function auctionAlerts(id, old, nw) {
+  if (!nw || !Array.isArray(nw.players)) return;
+  const was = new Map(((old && old.players) || []).map(p => [p.id, p.st])), regs = (db.aucreg || {})[id] || {};
+  for (const p of nw.players) {
+    if (!p.regId || !['sold', 'unsold'].includes(p.st) || was.get(p.id) === p.st) continue;
+    const r = regs[p.regId]; if (!r) continue; const team = ((nw.teams || []).find(t => t.id === p.team) || {}).name;
+    pushTo(r.owner, p.st === 'sold' ? { title: 'You were sold!', body: (team ? 'To ' + String(team).slice(0, 40) : 'Sold') + (p.price != null ? ' for ' + p.price : '') + ' in ' + String(nw.name || 'the auction').slice(0, 50), url: '/?reg=' + id } : { title: 'Unsold this round', body: 'You were not picked in ' + String(nw.name || 'the auction').slice(0, 50) + '. The organiser may bring you back.', url: '/?reg=' + id }).catch(() => {});
+  }
+}
 const lastWkt = new Map();
 function matchAlerts(id, old, nw, teams, owner) {
   if (!nw || typeof nw !== 'object') return;
@@ -2235,6 +2245,7 @@ http.createServer(async (req, res) => {
     }
     if (limited('shw:' + phone, 600, 36e5)) return out(429, { ok: false, error: 'Too many saves, slow down' });
     bag[id] = { id, owner: cur ? cur.owner : phone, ownerName: u.nick || u.name || '', updated: Date.now(), data: b.data };
+    if (col === 'auc') { try { auctionAlerts(id, cur && cur.data && cur.data.a, b.data && b.data.a); } catch { /* alerts never block a save */ } }
     if (col === 'matches') { try { matchAlerts(id, cur && cur.data && cur.data.m, b.data && b.data.m, b.data && b.data.teams, bag[id].owner); } catch { /* alerts never block a save */ } }
     saveDb(); sseSend({ col, id, updated: bag[id].updated }); return out(200, { ok: true, updated: bag[id].updated });
   }
@@ -2349,6 +2360,8 @@ http.createServer(async (req, res) => {
     if (!u.shid) { let id; do { id = 'SH-' + crypto.randomBytes(5).toString('hex').slice(0, 8).toUpperCase(); } while (Object.values(db.users).some(x => x.shid === id)); u.shid = id; }
     const socClean = s => { const o = {}; s = s && typeof s === 'object' ? s : {}; for (const k of ['ig', 'fb', 'x', 'yt', 'web']) { const v = String(s[k] == null ? '' : s[k]).trim().slice(0, 120); if (/^https:\/\/[^\s<>"']+$/i.test(v) || /^@?[\w.]{1,40}$/.test(v)) o[k] = v; } return o; };
     const view = r => ({ id: r.id, pid: r.pid, status: r.status, form: r.form, cat: r.cat, base: r.base, max: r.max, fee: r.fee, paid: r.paid, note: r.note, created: r.created, updated: r.updated, audit: r.audit });
+    const feeCh = cfg && cfg.feeCharge && (db.shared.pay || {})[String(cfg.feeCharge)];   // fee collected by UPI: a payment the organiser confirmed marks the registration paid
+    if (feeCh && feeCh.owner === au.owner) { let ch = false; for (const r of Object.values(regs)) { if (r.paid || !(feeCh.subs || []).some(x => x.by === r.owner && x.status === 'confirmed')) continue; r.paid = true; if (r.status === 'PAYMENT_PENDING') r.status = 'SUBMITTED'; r.audit.push({ t: Date.now(), by: 'organiser', a: 'fee confirmed by UPI' }); ch = true; } if (ch) saveDb(); }
     const mine = Object.values(regs).find(r => r.owner === phone);
     if (req.method === 'GET') {
       if (isOrg && !rid) return out(200, { ok: true, org: true, regs: Object.values(regs).map(view) });
@@ -2377,7 +2390,8 @@ http.createServer(async (req, res) => {
         const id = 'RG-' + crypto.randomBytes(4).toString('hex').toUpperCase();
         regs[id] = { id, owner: phone, pid: u.shid, form, fee, paid: fee === 0, status: fee ? 'PAYMENT_PENDING' : 'SUBMITTED', created: now, updated: now, audit: [{ t: now, by: 'player', a: 'submitted' }] };
       }
-      saveDb(); return out(200, { ok: true, reg: view(mine || Object.values(regs).find(r => r.owner === phone)) });
+      saveDb(); if (!mine) pushTo(au.owner, { title: 'New registration', body: (form.name || 'A player') + ' registered for ' + String((au.data.a && au.data.a.name) || 'your auction').slice(0, 60), url: '/?reg=' + aid }).catch(() => {});
+      return out(200, { ok: true, reg: view(mine || Object.values(regs).find(r => r.owner === phone)) });
     }
     if (req.method === 'PUT' && rid) {   // organiser decision
       if (!isOrg) return out(403, { ok: false, error: 'Only the auction organiser can review registrations' });
@@ -2395,7 +2409,9 @@ http.createServer(async (req, res) => {
         if (!note) return out(400, { ok: false, error: 'Add a short reason for the player' });
         r.status = act === 'changes' ? 'CHANGES_REQUIRED' : 'REJECTED'; r.note = note; r.audit.push({ t: now, by: 'organiser', a: r.status.toLowerCase().replace(/_/g, ' ') + ': ' + note });
       } else return out(400, { ok: false, error: 'Unknown action' });
-      r.updated = now; saveDb(); return out(200, { ok: true, reg: view(r) });
+      r.updated = now; saveDb();
+      if (['approve', 'changes', 'reject'].includes(act)) pushTo(r.owner, { title: act === 'approve' ? 'Registration approved' : act === 'changes' ? 'Changes needed on your registration' : 'Registration not accepted', body: String((au.data.a && au.data.a.name) || 'Auction').slice(0, 60) + (note ? ': ' + note : ''), url: '/?reg=' + aid }).catch(() => {});
+      return out(200, { ok: true, reg: view(r) });
     }
     return out(405, { ok: false, error: 'Method not allowed' });
   }
