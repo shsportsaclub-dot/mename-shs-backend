@@ -9920,7 +9920,7 @@ try{if(S.settings&&S.settings.mskin==='ca'){S.settings.mskin='cb';try{save()}cat
  const chip=(k,v,l,on)=>`<button type="button" class="btn sm ${on?'':'ghost'}" data-a="qsSet" data-k="${k}" data-v="${esc(v)}">${esc(l)}</button>`;
  function qsHTML(){const q=UI.qs,tm=S.teams.map(t=>[t.id,t.name]);if(false)return '<h3>Start a match</h3><div class="need">Create your two teams first. Tap Add team below.</div><div class="row"><input id="qs-tn" placeholder="Team name" style="flex:1"><button type="button" class="btn sm" data-a="qsTeam">Add team</button></div>';
   const rec=[...new Set(S.venues.map(v=>v.name))].slice(-8);
-  const pl=tid=>{const t=T(tid),xi=xiOf(q,tid);return `<div class="card" style="margin:8px 0"><div class="row" style="justify-content:space-between;align-items:center"><b>${esc(t.name)}</b><span class="mu sm">XI ${xi.length}/11</span></div>${window.shQsQuick?window.shQsQuick(tid,0):''}
+  const pl=tid=>{if(window.shQsXI)return window.shQsXI(q,tid,xiOf(q,tid));const t=T(tid),xi=xiOf(q,tid);return `<div class="card" style="margin:8px 0"><div class="row" style="justify-content:space-between;align-items:center"><b>${esc(t.name)}</b><span class="mu sm">XI ${xi.length}/11</span></div>${window.shQsQuick?window.shQsQuick(tid,0):''}
    <details ${q.pl[tid]||xi.length<2?'open':''} data-qsd="${tid}"><summary class="mu sm" style="cursor:pointer">${xi.length<2?'Add at least 2 players':'Change players'}</summary>
    ${t.players.map(id=>`<label class="ck"><input type="checkbox" data-c="qsxi" data-t="${tid}" value="${id}" ${xi.includes(id)?'checked':''}> ${esc(nm(id))}${(P(id)||{}).unv?' <span class="pill" title="Added by mobile number; verified when this person registers with the same number">Unverified</span>':''}</label>`).join('')}
    ${window.shQsPlayerBox?window.shQsPlayerBox(tid):`<div class="row" style="margin-top:6px"><input id="qs-pn-${tid}" placeholder="New player name" style="flex:1" maxlength="30"><button type="button" class="btn sm" data-a="qsPlayer" data-t="${tid}">Add</button></div>`}</details></div>`};
@@ -11847,6 +11847,43 @@ Object.assign(C,{ovAd(v){S.stream.adText=String(v||'').slice(0,140);save()}});
  const f0=A.qsFmt;A.qsFmt=function(d){const t=cur(UI.qs);if(t&&rulesOf(t).overs)return toast('Set by the tournament rules: '+rulesOf(t).overs+' overs per side',3000);return f0.apply(this,arguments)};
  const s0=A.qsStart;A.qsStart=function(){const q=UI.qs;if(q){if(!['series','tournament','league'].includes(q.mcat)){q.tid='';q.fid=''}else apply(q)}return s0.apply(this,arguments)};
  const sp=A.qsStep;A.qsStep=function(){const q=UI.qs;if(q&&q.tid)apply(q);return sp.apply(this,arguments)};
+}
+
+/* ---------------- 115 START A MATCH, PLAYERS STEP: playing XI like Play-Cricket / MyCricket team selection (selected list in batting order, squad below, max 11, captain and wicket-keeper, reuse last XI, add a player on the spot) ---------------- */
+{
+ const q0=()=>UI.qs;
+ const xiL=(q,tid)=>{q.xi=q.xi||{};if(!q.xi[tid])q.xi[tid]=(T(tid)?T(tid).players:[]).slice(0,11);return q.xi[tid]};
+ const M=(q,k)=>(q[k]=q[k]||{});
+ const lastXI=tid=>{for(let i=S.matches.length-1;i>=0;i--){const m=S.matches[i];if(m&&!m.rm&&m.xi&&Array.isArray(m.xi[tid])&&m.xi[tid].length>=2)return m.xi[tid]}return null};
+ const reset=q=>{q._cw=0};
+ window.shQsXI=function(q,tid,xi){const t=T(tid);if(!t)return '';xi=xiL(q,tid);const cap=M(q,'cap')[tid],wk=M(q,'keeper')[tid],bench=t.players.filter(id=>!xi.includes(id)),last=lastXI(tid),
+  full=xi.length>=11,state=xi.length===11?'ok':xi.length<2?'bad':'warn';
+  const row=(id,i)=>`<div class="xir"><span class="xin">${i+1}</span><span class="xnm">${esc(nm(id))}${(P(id)||{}).unv?' <span class="pill">Unverified</span>':''}</span><button type="button" class="xb ${cap===id?'on':''}" data-a="xiCap" data-t="${tid}" data-v="${id}" aria-label="Captain" title="Captain">C</button><button type="button" class="xb ${wk===id?'on':''}" data-a="xiWk" data-t="${tid}" data-v="${id}" aria-label="Wicket-keeper" title="Wicket-keeper">WK</button><button type="button" class="xb" data-a="xiUp" data-t="${tid}" data-v="${id}" ${i?'':'disabled'} aria-label="Move up">▲</button><button type="button" class="xb" data-a="xiDown" data-t="${tid}" data-v="${id}" ${i<xi.length-1?'':'disabled'} aria-label="Move down">▼</button><button type="button" class="xb x" data-a="xiDrop" data-t="${tid}" data-v="${id}" aria-label="Remove">✕</button></div>`;
+  const brow=id=>`<div class="xir bn" data-n="${esc((nm(id)||'').toLowerCase())}"><span class="xnm">${esc(nm(id))}${(P(id)||{}).unv?' <span class="pill">Unverified</span>':''} <span class="mu sm">${esc(({BAT:'Batter',BOWL:'Bowler',AR:'All-rounder',WK:'Keeper'})[(P(id)||{}).role]||'')}</span></span><button type="button" class="btn sm ${full?'ghost':''}" data-a="xiAdd" data-t="${tid}" data-v="${id}">＋ Play</button></div>`;
+  const hint=xi.length>=2?[!cap?'No captain chosen (tap C)':'',!wk?'No wicket-keeper chosen (tap WK)':''].filter(Boolean).join(' · '):'';
+  return `<div class="card" style="margin:8px 0"><div class="row" style="justify-content:space-between;align-items:center"><b>${esc(t.name)}</b><span class="xcnt ${state}">Playing XI ${xi.length}/11</span></div>
+  ${xi.length?`<div class="xlist">${xi.map(row).join('')}</div>`:'<div class="mu sm" style="margin:6px 0">No players selected yet. Tap ＋ Play on a player below.</div>'}
+  ${hint?`<div class="mu sm" style="color:var(--ac2,#e67e22);margin:4px 0">${esc(hint)}</div>`:''}
+  <div class="mu sm" style="margin:4px 0">Order = batting order. C = captain, WK = wicket-keeper.${last?'':''}</div>
+  ${last&&last.join()!==xi.join()?`<button type="button" class="btn sm ghost" data-a="xiLast" data-t="${tid}" style="margin:2px 0 6px">Same XI as last match</button>`:''}
+  ${bench.length?`<div class="b" style="margin:8px 0 4px">Squad, not playing (${bench.length})</div>${bench.length>6?`<input id="xs-${tid}" data-xs="${tid}" placeholder="Search squad" autocomplete="off" style="width:100%;margin-bottom:6px">`:''}<div class="xbench" id="xb-${tid}">${bench.map(brow).join('')}</div>`:''}
+  ${window.shQsQuick?window.shQsQuick(tid,0):''}
+  <details ${q.pl&&q.pl[tid]||xi.length<2?'open':''} data-qsd="${tid}"><summary class="mu sm" style="cursor:pointer">Search registered players, scan QR, more details</summary>${window.shQsPlayerBox?window.shQsPlayerBox(tid):''}</details></div>`};
+ const st=document.createElement('style');st.textContent='.xlist,.xbench{display:flex;flex-direction:column;gap:4px;margin-top:6px}.xbench{max-height:240px;overflow-y:auto}.xir{display:flex;align-items:center;gap:4px;padding:4px 0;border-bottom:1px solid var(--bd,#4442)}.xir[hidden]{display:none}.xin{flex:none;width:20px;text-align:center;font-size:12px;opacity:.7}.xnm{flex:1;min-width:0;overflow-wrap:anywhere}.xb{flex:none;min-width:30px;height:30px;padding:0 6px;border:1px solid var(--bd,#4443);border-radius:8px;background:transparent;color:inherit;font:inherit;font-size:12px;font-weight:700;cursor:pointer}.xb.on{background:var(--sp1,#e11d2e);border-color:var(--sp1,#e11d2e);color:#fff}.xb:disabled{opacity:.3}.xb.x{opacity:.8}.xcnt{font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;border:1px solid var(--bd,#4443)}.xcnt.ok{color:#22c55e;border-color:#22c55e}.xcnt.warn{color:var(--ac2,#e67e22)}.xcnt.bad{color:var(--sp1,#e11d2e)}';document.head.appendChild(st);
+ document.addEventListener('input',e=>{const t=e.target;if(!t||!t.dataset||!t.dataset.xs)return;const w=t.value.trim().toLowerCase();document.querySelectorAll('#xb-'+t.dataset.xs+' .xir').forEach(r=>{r.hidden=!!w&&!r.dataset.n.includes(w)})});
+ const sh=()=>window.shQsShow(),rd=()=>{if(window.shQsRead)window.shQsRead()};
+ Object.assign(A,{
+  xiAdd(d){rd();const q=q0(),L=xiL(q,d.t);if(L.includes(d.v))return;if(L.length>=11)return toast('XI is full (11). Remove a player first.',3000);L.push(d.v);reset(q);sh()},
+  xiDrop(d){rd();const q=q0();q.xi[d.t]=xiL(q,d.t).filter(x=>x!==d.v);if(M(q,'cap')[d.t]===d.v)delete q.cap[d.t];if(M(q,'keeper')[d.t]===d.v)delete q.keeper[d.t];reset(q);sh()},
+  xiUp(d){rd();const L=xiL(q0(),d.t),i=L.indexOf(d.v);if(i>0){[L[i-1],L[i]]=[L[i],L[i-1]]}sh()},
+  xiDown(d){rd();const L=xiL(q0(),d.t),i=L.indexOf(d.v);if(i>=0&&i<L.length-1){[L[i+1],L[i]]=[L[i],L[i+1]]}sh()},
+  xiCap(d){rd();const q=q0(),c=M(q,'cap');if(c[d.t]===d.v)delete c[d.t];else c[d.t]=d.v;sh()},
+  xiWk(d){rd();const q=q0(),c=M(q,'keeper');if(c[d.t]===d.v)delete c[d.t];else c[d.t]=d.v;sh()},
+  xiLast(d){rd();const q=q0(),t=T(d.t),l=lastXI(d.t);if(!t||!l)return;q.xi[d.t]=l.filter(id=>t.players.includes(id)).slice(0,11);reset(q);sh();toast('Last match XI loaded',2200)}});
+ /* qsxi checkboxes no longer exist; keep captain / keeper valid if the XI is edited elsewhere */
+ const s0=A.qsStart;A.qsStart=function(){const q=q0();const snap=q?{cap:Object.assign({},q.cap||{}),keeper:Object.assign({},q.keeper||{}),a:q.a,b:q.b}:null;const n=S.matches.length,r=s0.apply(this,arguments);
+  if(snap&&S.matches.length>n){const m=S.matches[S.matches.length-1];[snap.a,snap.b].forEach(t=>{const L=(m.xi&&m.xi[t])||[];m.cap=m.cap||{};m.keeper=m.keeper||{};if(snap.cap[t]&&L.includes(snap.cap[t]))m.cap[t]=snap.cap[t];if(snap.keeper[t]&&L.includes(snap.keeper[t]))m.keeper[t]=snap.keeper[t]});save&&save()}
+  return r};
 }
 </script>
 </body>
