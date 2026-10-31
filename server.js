@@ -17,6 +17,7 @@ import net from 'node:net';
 import { answersFrom, board as pollBoard, POLL_POINTS } from './poll-score.mjs';
 import tls from 'node:tls';
 import { createHistory, sameTeamName } from './history.mjs';
+import { genVapid, sendPush } from './webpush.mjs';
 import { snapshotOf, diffSnapshots } from './observer.mjs';
 import { createRecent, buildBbb, buildFow, buildPartnerships, inningsTotals, RECENT_SOURCE } from './recent.mjs';
 import { oddsOrWinningProbability } from './odds-probability.mjs';
@@ -1377,7 +1378,7 @@ routes['POST /api/pay/submit'] = async (req, body) => {
   if (Object.values(pyBag()).some(x => (x.subs || []).some(y => y.utr === utr && y.status !== 'rejected'))) return [409, { ok: false, error: 'This UTR was already submitted' }];
   if ((c.subs || []).some(x => x.by === s.phone && (x.status === 'confirmed' || x.status === 'submitted'))) return [409, { ok: false, error: 'You already paid or are waiting for confirmation' }];
   const x = { id: 'ps' + crypto.randomBytes(4).toString('hex'), by: s.phone, byName: String(s.u.nick || s.u.name || '').slice(0, 30), utr, note: trNm(body.note, 80), status: 'submitted', why: '', t: Date.now() };
-  c.subs = (c.subs || []).concat(x); saveDb(); return [200, { ok: true, id: x.id }];
+  c.subs = (c.subs || []).concat(x); saveDb(); pushTo(c.owner, { title: 'Payment to confirm', body: (x.byName || 'Someone') + ' paid for ' + c.title, url: '/?pay=' + c.id }).catch(() => {}); return [200, { ok: true, id: x.id }];
 };
 routes['POST /api/pay/decide'] = async (req, body) => {
   const s = grUser(req); if (!s) return [401, { ok: false, error: 'Please sign in first' }];
@@ -1387,7 +1388,7 @@ routes['POST /api/pay/decide'] = async (req, body) => {
   const st = body.status === 'confirmed' ? 'confirmed' : body.status === 'rejected' ? 'rejected' : ''; if (!st) return [400, { ok: false, error: 'Choose confirm or reject' }];
   if (x.status !== 'submitted') return [400, { ok: false, error: 'Already decided' }];
   const why = trNm(body.reason, 120); if (st === 'rejected' && why.length < 3) return [400, { ok: false, error: 'Say why you are rejecting it' }];
-  x.status = st; x.why = st === 'rejected' ? why : ''; x.decidedAt = Date.now(); saveDb(); return [200, { ok: true }];
+  x.status = st; x.why = st === 'rejected' ? why : ''; x.decidedAt = Date.now(); saveDb(); pushTo(x.by, { title: st === 'confirmed' ? 'Payment confirmed' : 'Payment rejected', body: c.title + (st === 'rejected' ? ': ' + why : ''), url: '/?pay=' + c.id }).catch(() => {}); return [200, { ok: true }];
 };
 routes['POST /api/pay/close'] = async (req, body) => {
   const s = grUser(req); if (!s) return [401, { ok: false, error: 'Please sign in first' }];
@@ -1396,6 +1397,32 @@ routes['POST /api/pay/close'] = async (req, body) => {
   c.open = body.open === true; saveDb(); return [200, { ok: true }];
 };
 
+// Web Push (R26): browser notifications with a deep link. VAPID keys come from env or are generated once and kept in the database.
+const vapid = () => { if (E.VAPID_PUBLIC && E.VAPID_PRIVATE) return { pub: E.VAPID_PUBLIC, priv: E.VAPID_PRIVATE }; const sh = db.shared; if (!sh.vapid) { sh.vapid = genVapid(); saveDb(); } return sh.vapid; };
+const pushOk = ep => { try { const u = new URL(ep); return (u.protocol === 'https:' || (u.protocol === 'http:' && /^(127\.0\.0\.1|localhost)$/.test(u.hostname))) && ep.length < 600; } catch { return false; } };
+async function pushTo(phone, msg) {
+  const u = db.users[phone]; if (!u || !(u.push || []).length) return 0; let n = 0; const keep = [];
+  for (const sub of u.push) { try { const r = await sendPush(sub, JSON.stringify({ title: String(msg.title || '').slice(0, 80), body: String(msg.body || '').slice(0, 160), url: String(msg.url || '/').slice(0, 200) }), vapid()); if (r.gone) continue; if (r.status < 300) n++; } catch { /* keep the subscription on a network error */ } keep.push(sub); }
+  if (keep.length !== u.push.length) { u.push = keep; saveDb(); } return n;
+}
+routes['GET /api/push/key'] = async () => [200, { ok: true, key: vapid().pub }];
+routes['POST /api/push/subscribe'] = async (req, body) => {
+  const s = grUser(req); if (!s) return [401, { ok: false, error: 'Please sign in first' }];
+  const b = body.sub || {}, ep = String(b.endpoint || ''), k = b.keys || {};
+  if (!pushOk(ep) || !/^[\w-]{80,100}$/.test(String(k.p256dh || '')) || !/^[\w-]{20,30}$/.test(String(k.auth || ''))) return [400, { ok: false, error: 'This browser sent an invalid notification subscription' }];
+  if (limited('pushs:' + s.phone, 30, 36e5)) return [429, { ok: false, error: 'Too many tries, slow down' }];
+  const list = (s.u.push || []).filter(x => x.endpoint !== ep); list.push({ endpoint: ep, keys: { p256dh: k.p256dh, auth: k.auth }, t: Date.now() });
+  s.u.push = list.slice(-5); saveDb(); return [200, { ok: true, devices: s.u.push.length }];
+};
+routes['POST /api/push/unsubscribe'] = async (req, body) => {
+  const s = grUser(req); if (!s) return [401, { ok: false, error: 'Please sign in first' }];
+  const ep = String(body.endpoint || ''); s.u.push = (s.u.push || []).filter(x => x.endpoint !== ep); saveDb(); return [200, { ok: true }];
+};
+routes['POST /api/push/test'] = async (req) => {
+  const s = grUser(req); if (!s) return [401, { ok: false, error: 'Please sign in first' }];
+  if (limited('pusht:' + s.phone, 5, 36e5)) return [429, { ok: false, error: 'Too many tests, try later' }];
+  const n = await pushTo(s.phone, { title: 'Scoring Heroes', body: 'Notifications are on for this device.', url: '/' }); return [200, { ok: true, sent: n }];
+};
 // Sessions and account closure. Tokens carry their issue time; "sign out everywhere" invalidates every older token. Closing an account stops sign-in at once; matches, tournaments and other records stay (they are never deleted); signing in again within 30 days reopens it.
 routes['POST /api/me/signout-all'] = async (req) => {
   const s = grUser(req); if (!s) return [401, { ok: false, error: 'Please sign in again' }];

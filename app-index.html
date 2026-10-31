@@ -11247,6 +11247,31 @@ Object.assign(C,{ovAd(v){S.stream.adText=String(v||'').slice(0,140);save()}});
   return o+`<div class="card"><h3>Entry fee</h3><div class="mu sm">This tournament collects an entry fee by UPI. Pay the organiser directly, then submit the UTR on the payment page.</div><button type="button" class="btn sm" style="margin-top:6px" data-a="tjPay" data-id="${esc(i.fee)}">Pay entry fee</button></div>`};
  A.tjPay=function(d){window.shPayOpen&&window.shPayOpen(d.id)};
 }
+
+/* ---------------- 97 WEB PUSH OPT-IN (R26): notifications with a deep link, per device ---------------- */
+{
+ const base=()=>(typeof apiBase==='function'&&apiBase())||'';
+ const call=async(m,path,body)=>{try{const r=await fetch(base()+path,{method:m,headers:{'Content-Type':'application/json',Authorization:'Bearer '+(S.tok||'')},body:m==='GET'?undefined:JSON.stringify(body||{})});return await r.json()}catch(e){return {ok:false,error:'No connection'}}};
+ const signed=()=>!!(S.tok&&S.user&&!S.user.guest);
+ const P=()=>(UI.wp=UI.wp||{on:null,msg:''});
+ const supported=()=>!!(window.isSecureContext!==false&&navigator.serviceWorker&&window.PushManager&&window.Notification);
+ const u8=b=>{const p='='.repeat((4-b.length%4)%4),r=atob((b+p).replace(/-/g,'+').replace(/_/g,'/'));return Uint8Array.from(r,c=>c.charCodeAt(0))};
+ const reg=()=>navigator.serviceWorker.ready;
+ const check=async()=>{const p=P();try{const s=await (await reg()).pushManager.getSubscription();p.on=!!s&&Notification.permission==='granted'}catch(e){p.on=false}render()};
+ const v0=vSettings;vSettings=function(){const o=v0.apply(this,arguments);if(!signed())return o;const p=P();if(p.on===null){p.on=false;if(supported())setTimeout(check,0)}
+  let body;
+  if(!supported())body=`<div class="mu sm">This browser cannot show notifications. On iPhone, add the app to the Home Screen first, then open it from there.</div>`;
+  else if(typeof Notification!=='undefined'&&Notification.permission==='denied')body=`<div class="mu sm">Notifications are blocked for this site. Allow them in your browser's site settings, then come back.</div>`;
+  else body=`<div class="mu sm">Get an alert when a payment needs your confirmation or has been decided. Each alert opens the right page. This is per device and you can turn it off any time.</div><div class="row" style="gap:8px;margin-top:8px">${p.on?`<button type="button" class="btn sm ghost" data-a="wpOff">Turn off</button><button type="button" class="btn sm" data-a="wpTest">Send a test</button>`:`<button type="button" class="btn sm" data-a="wpOn">Turn on notifications</button>`}</div>`;
+  return o+`<div class="card" id="wp-card"><h3>Notifications ${p.on?'<span class="pill ok">On</span>':''}</h3>${body}${p.msg?`<div class="mu sm" style="margin-top:6px">${esc(p.msg)}</div>`:''}</div>`};
+ Object.assign(A,{
+  async wpOn(){const p=P();try{const perm=await Notification.requestPermission();if(perm!=='granted'){p.msg='Permission was not given.';return render()}
+   const k=await call('GET','/api/push/key');if(!k.ok)throw new Error(k.error||'Server not ready');const r=await reg();let s=await r.pushManager.getSubscription();
+   if(!s)s=await r.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:u8(k.key)});
+   const j=await call('POST','/api/push/subscribe',{sub:s.toJSON?s.toJSON():s});if(!j.ok)throw new Error(j.error||'Could not save');p.on=true;p.msg='Notifications are on for this device.'}catch(e){p.msg='Could not turn on: '+(e.message||e)}render()},
+  async wpOff(){const p=P();try{const s=await (await reg()).pushManager.getSubscription();if(s){await call('POST','/api/push/unsubscribe',{endpoint:s.endpoint});await s.unsubscribe()}p.on=false;p.msg='Notifications are off for this device.'}catch(e){p.msg='Could not turn off: '+(e.message||e)}render()},
+  async wpTest(){const p=P(),j=await call('POST','/api/push/test');p.msg=j.ok?(j.sent?'Test sent. It should appear in a moment.':'Nothing was delivered. Turn notifications off and on again.'):(j.error||'Could not send');render()}});
+}
 </script>
 </body>
 </html>
