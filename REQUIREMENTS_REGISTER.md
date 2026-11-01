@@ -188,3 +188,7 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 - Franchise owner (team email matches the signed-in user) sees MY 3D TEAM on the Teams tab; an empty squad shows "Your team formation begins with your first player". Captain is chosen from the squad only (never buys a player).
 - Avatars are the player photo or the SH helmet on a team-colour kit bust. NOT built yet (needs assets/server): approved real 3D avatar files and kits, sound, orbit camera, server-authoritative multi-device bidding, owner mobile bid room, TV/broadcast scenes, reversal/transfer animations.
 - Test: tests/auction-fm.cjs.
+
+## Default YouTube channel + demo auction
+- Default stream/channel is SH Sports Club (UCEZj3e0XMZJmOQ7VteUM7Vg, https://www.youtube.com/@SHSPORTSCLUB) unless the organiser sets their own; matches without a stream show the channel link/live embed. Tests: default-channel.cjs, master-gap-browser.cjs.
+- Demo auction "Hero Champions League" auto-seeded (8 franchises named after IPL teams, no IPL/BCCI logos, user-supplied HCL logo, 48 demo players); deletable and does not re-seed after delete. Test: auction-demo.cjs.

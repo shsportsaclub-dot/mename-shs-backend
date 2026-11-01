@@ -62,7 +62,7 @@ const fs = require('node:fs');
   assert.match(result.phases,/0\.0–6\.0/);assert.match(result.phases,/0\.0–1\.3/);assert.match(result.target,/50/);assert.match(result.chase,/49 run/);
   assert.match(result.external,/AAAAAAAAAAA/);assert(!/class="swlogo"|class="swbug"/.test(result.external));
   assert.match(result.own,/class="swlogo"/);assert.match(result.fanVideo,/AAAAAAAAAAA/);
-  assert(!/data-f="stream4"/.test(result.fanVideo));assert.equal(result.emptyVideo,'');assert(result.fit);
+  assert(!/data-f="stream4"/.test(result.fanVideo));assert.match(result.emptyVideo,/SHSPORTSCLUB/);assert(result.fit);
   assert.deepEqual(errors,[]);
   await page.screenshot({path:`runtime-evidence/master-gap-${width}.png`,fullPage:true});
   evidence.push({width,passed:true,fixture:'synthetic',...result,persisted:undefined});await page.close();
