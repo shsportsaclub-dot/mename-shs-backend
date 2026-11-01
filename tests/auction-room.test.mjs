@@ -33,5 +33,7 @@ test('auction bid room: team codes, ordered bids, purse and eligibility checks, 
     [st, j] = await call('POST', '/api/aucroom/au9/pending', T.o, {}); assert.equal(j.pending.length, 0); assert.equal(j.ver, ver);
     [st, j] = await call('POST', '/api/aucroom/au9/sync', T.o, { open: false, ver, cur: null, bid: null, bidTeam: null, ladder: [], teams }); assert.equal(st, 200);   // next player not yet on the block
     [st, j] = await call('POST', '/api/aucroom/au9/bid', null, { team: 't1', code: codes.t1 }); assert.equal(st, 409);
+    [st, j] = await call('POST', '/api/aucroom/au9/sync', T.o, { open: false, cur: null, bid: null, bidTeam: null, ladder: [], teams, last: { key: 'k1', st: 'sold', name: 'Rohit', team: 'Lions', short: 'LI', price: 140 } }); assert.equal(st, 200);
+    [st, j] = await call('GET', '/api/aucroom/au9'); assert.equal(j.room.last.st, 'sold'); assert.equal(j.room.last.price, 140); assert.ok(Math.abs(j.room.now - j.room.last.at) < 5000);   // stamped with server time
   } catch (e) { throw e; } finally { srv.kill(); }
 });

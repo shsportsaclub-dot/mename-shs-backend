@@ -224,3 +224,6 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 ## SH Auction: owner bid room (blocks 136-137, server /api/aucroom)
 - Organiser turns on "Owner bid room" in auction detail: gets a link (?bid=<auction id>) and a code per team. Owners open the link on their own phone (no account), pick team + code, see the player on the block, current bid, leader, own purse and limit, and tap BID.
 - Server orders bids, rejects wrong code, stale screen, double-lead, purse over limit, ineligible team (quota/slab rules sent by organiser). Codes are never public. Organiser's app mirrors owner bids (pending list) and keeps sold/unsold control. Tests: tests/auction-room.test.mjs, tests/auction-room.cjs.
+
+## SH Auction streaming scenes (block 138)
+- OBS Browser Source URLs: ?scene=auclive|aucbid|aucsold|auctable|aucticker&auc=<auction id>#overlay. Fed by the public bid-room feed (GET /api/aucroom/<id>, photo only with ?full=1) plus /api/shared/auc/<id> for team logos, so no login in OBS. Auto SOLD/UNSOLD stamp for 8 s (server-time stamped). Studio page lists the scenes with Preview and Copy URL after choosing the auction. Tests: tests/auction-stream.cjs, tests/auction-room.test.mjs.

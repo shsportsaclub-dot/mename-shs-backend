@@ -2433,8 +2433,8 @@ http.createServer(async (req, res) => {
     const au = db.shared.auc && db.shared.auc[aid];
     if (!au) return out(404, { ok: false, error: 'This auction is not published yet' });
     const bag = (db.aucroom = db.aucroom || {}), room = bag[aid] = bag[aid] || { ver: 0, codes: {}, teams: [], cur: null, ladder: [], idx: 0, bid: null, bidTeam: null, open: false, log: [], updated: Date.now() };
-    const pub = () => ({ ver: room.ver, open: room.open, cur: room.cur, bid: room.bid, bidTeam: room.bidTeam, next: room.ladder[room.idx] == null ? null : room.ladder[room.idx], teams: room.teams.map(t => ({ id: t.id, name: t.name, short: t.short, purse: t.purse, max: t.max, ok: t.ok, left: t.left })), log: room.log.slice(-8), updated: room.updated });
-    if (req.method === 'GET') return out(200, { ok: true, room: pub() });
+    const pub = (full) => ({ now: Date.now(), last: room.last || null, ver: room.ver, open: room.open, cur: room.cur && (full ? room.cur : { ...room.cur, photo: '' }), bid: room.bid, bidTeam: room.bidTeam, next: room.ladder[room.idx] == null ? null : room.ladder[room.idx], teams: room.teams.map(t => ({ id: t.id, name: t.name, short: t.short, purse: t.purse, max: t.max, ok: t.ok, left: t.left })), log: room.log.slice(-8), updated: room.updated });
+    if (req.method === 'GET') return out(200, { ok: true, room: pub(new URL(req.url, 'http://x').searchParams.get('full') === '1') });
     if (req.method !== 'POST') return out(405, { ok: false, error: 'Method not allowed' });
     let raw = ''; for await (const c of req) { raw += c; if (raw.length > 60000) return out(413, { ok: false, error: 'Too large' }); }
     let b; try { b = JSON.parse(raw); } catch { return out(400, { ok: false, error: 'Bad body' }); }
@@ -2469,9 +2469,11 @@ http.createServer(async (req, res) => {
       if (b.ver != null && +b.ver !== room.ver && pend.length) { room.pending = []; return out(409, { ok: false, error: 'Owner bids arrived', pending: pend, room: pub() }); }
       room.teams = b.teams.map(t => ({ id: t.id, name: String(t.name || '').slice(0, 60), short: String(t.short || '').slice(0, 8), purse: t.purse, max: t.max, ok: t.ok !== false, why: String(t.why || '').slice(0, 80), left: Math.max(0, Math.min(99, +t.left || 0)) }));
       for (const t of room.teams) if (!room.codes[t.id]) room.codes[t.id] = crypto.randomBytes(3).toString('hex').toUpperCase();
-      const c = b.cur && typeof b.cur === 'object' ? { id: String(b.cur.id || '').slice(0, 40), name: String(b.cur.name || '').slice(0, 60), role: String(b.cur.role || '').slice(0, 30), base: num(b.cur.base) ? b.cur.base : 0, photo: typeof b.cur.photo === 'string' && b.cur.photo.length < 40000 && /^data:image\/(jpeg|png|webp);base64,/.test(b.cur.photo) ? b.cur.photo : '' } : null;
+      const c = b.cur && typeof b.cur === 'object' ? { id: String(b.cur.id || '').slice(0, 40), name: String(b.cur.name || '').slice(0, 60), role: String(b.cur.role || '').slice(0, 30), base: num(b.cur.base) ? b.cur.base : 0, lot: num(b.cur.lot) ? b.cur.lot : 0, total: num(b.cur.total) ? b.cur.total : 0, photo: typeof b.cur.photo === 'string' && b.cur.photo.length < 40000 && /^data:image\/(jpeg|png|webp);base64,/.test(b.cur.photo) ? b.cur.photo : '' } : null;
       room.cur = c; room.open = !!b.open && !!c; room.bid = num(b.bid) ? b.bid : null; room.bidTeam = b.bidTeam ? String(b.bidTeam).slice(0, 40) : null; room.ladder = Array.isArray(b.ladder) ? b.ladder : []; room.idx = 0; room.pending = [];
-      room.ver++; room.updated = Date.now(); if (!c) room.log = []; saveDb();
+      const L = b.last && typeof b.last === 'object' ? b.last : null;   // result of the last player: SOLD or UNSOLD, stamped with server time so streams show it for a few seconds
+      if (L && L.key && (!room.last || room.last.key !== String(L.key).slice(0, 60))) room.last = { key: String(L.key).slice(0, 60), st: L.st === 'sold' ? 'sold' : 'unsold', name: String(L.name || '').slice(0, 60), role: String(L.role || '').slice(0, 30), team: String(L.team || '').slice(0, 60), short: String(L.short || '').slice(0, 8), price: num(L.price) ? L.price : null, at: Date.now() };
+      room.ver++; room.updated = Date.now(); if (!c) room.log = room.log; saveDb();
       return out(200, { ok: true, ver: room.ver, codes: room.codes });
     }
     if (act === 'pending') { const p = room.pending || []; room.pending = []; return out(200, { ok: true, pending: p, ver: room.ver }); }

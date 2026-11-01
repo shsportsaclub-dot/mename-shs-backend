@@ -12759,14 +12759,14 @@ const isOrg=a=>a&&(isAdmin()||a.owner===(S.user&&S.user.id));
 window.shRoomLadder=function(a){let b=a.bid||null,out=[];for(let i=0;i<60;i++){const nb=b?b+au2Step(a,b):(a.cbase||a.base);out.push(nb);b=nb}return out};
 window.shRoomPayload=function(a){const p=a.players.find(x=>x.id===a.cur),nb=au2Nb(a);
  return{open:!!p,ver:(UI.room&&UI.room.ver)||0,bid:a.bid||null,bidTeam:a.bidTeam||null,ladder:p?shRoomLadder(a):[],
-  cur:p?{id:p.id,name:p.name,role:p.skill||p.cat||'',base:a.cbase||p.base||a.base,photo:(p.photo&&p.photo.length<40000)?p.photo:''}:null,
+  last:a.last||null,cur:p?{id:p.id,name:p.name,role:p.skill||p.cat||'',lot:a.players.filter(x=>x.st).length+1,total:a.players.length,base:a.cbase||p.base||a.base,photo:(p.photo&&p.photo.length<40000)?p.photo:''}:null,
   teams:a.teams.map(t=>{const why=p?au2Why(a,t,nb,p):'';return{id:t.id,name:t.name,short:t.short,purse:t.purse,max:aucMax(a,t),ok:!why,why:why||'',left:Math.max(0,(a.ppt||0)-t.players.length)}})}};
 UI.room=UI.room||{ver:0,codes:null,busy:0,hash:''};
 async function tick(){const a=UI.view==='auction'&&UI.au&&UI.au.open&&aucOf(UI.au.open);if(!a||!a.roomOn||!isOrg(a)||UI.room.busy)return;UI.room.busy=1;
  try{const pend=await call('POST','/api/aucroom/'+a.id+'/pending',{},1);
   if(pend.ok){UI.room.ver=pend.ver;const ps=(pend.pending||[]).filter(x=>x.pid===a.cur);if(ps.length){const p=a.players.find(x=>x.id===a.cur);ps.forEach(x=>{const t=a.teams.find(y=>y.id===x.team);if(!t||!(x.amt>(a.bid||0)))return;(a.hist=a.hist||[]).push({pid:p.id,tid:t.id,amt:x.amt,prev:a.bid||null,prevTeam:a.bidTeam||null,at:x.at,by:'owner'});a.bid=x.amt;a.bidTeam=t.id});a.hist=a.hist.slice(-200);commit();toast((a.teams.find(y=>y.id===a.bidTeam)||{}).short+' bid '+money(a.bid),2500)}}
   else if(pend._s===404){a.roomOn=0;toast('Publish this auction first (sign in and sync), then turn the bid room on again',5000)}
-  const pl=shRoomPayload(a),h=JSON.stringify([pl.cur&&pl.cur.id,pl.bid,pl.bidTeam,pl.teams.map(t=>[t.purse,t.max,t.ok])]);
+  const pl=shRoomPayload(a),h=JSON.stringify([pl.cur&&pl.cur.id,pl.last&&pl.last.key,pl.bid,pl.bidTeam,pl.teams.map(t=>[t.purse,t.max,t.ok])]);
   if(h!==UI.room.hash||!UI.room.synced){const r=await call('POST','/api/aucroom/'+a.id+'/sync',pl,1);if(r.ok){UI.room.hash=h;UI.room.ver=r.ver;UI.room.codes=r.codes;UI.room.synced=1}else if(r._s===409&&r.room)UI.room.ver=r.room.ver}
  }finally{UI.room.busy=0}}
 setInterval(()=>{try{tick()}catch(e){}},1500);
@@ -12787,7 +12787,7 @@ Object.assign(A,{
 const q=new URLSearchParams(location.search).get('bid')||'';
 UI.br=UI.br||{aid:q,room:null,team:'',code:'',msg:'',err:'',busy:0,shown:0};
 try{const sv=JSON.parse(localStorage.getItem('shbr:'+UI.br.aid)||'null');if(sv){UI.br.team=sv.team||'';UI.br.code=sv.code||''}}catch(e){}
-async function pull(){const B=UI.br;if(!B.aid)return;const r=await call('GET','/api/aucroom/'+B.aid);if(r.ok){const old=B.room&&B.room.ver;B.room=r.room;B.err='';if(old!==r.room.ver&&UI.view==='bidroom')render()}else{B.err=r.error||'Not available';if(UI.view==='bidroom'&&!B.room)render()}}
+async function pull(){const B=UI.br;if(!B.aid)return;let r=await call('GET','/api/aucroom/'+B.aid);if(r.ok&&r.room.cur&&(!B.room||!B.room.cur||B.room.cur.id!==r.room.cur.id||!B.room.cur.photo&&B._ph!==r.room.cur.id)){B._ph=r.room.cur.id;const f=await call('GET','/api/aucroom/'+B.aid+'?full=1');if(f.ok)r=f}else if(r.ok&&r.room.cur&&B.room&&B.room.cur&&B.room.cur.id===r.room.cur.id&&B.room.cur.photo)r.room.cur.photo=B.room.cur.photo;if(r.ok){const old=B.room&&B.room.ver;B.room=r.room;B.err='';if(old!==r.room.ver&&UI.view==='bidroom')render()}else{B.err=r.error||'Not available';if(UI.view==='bidroom'&&!B.room)render()}}
 setInterval(()=>{if(UI.view==='bidroom')pull()},1000);
 XV.bidroom=function(){const B=UI.br,R=B.room,head='<div class="bar"><h2>Bid room</h2></div>';
  if(!R)return head+`<div class="card"><div class="mu">${esc(B.err||'Loading the auction...')}</div></div>`;
@@ -12814,6 +12814,69 @@ if(UI.br.aid){UI.br.shown=1;UI.stage='app';UI.view='bidroom';pull();render()}
 })();
 
 /* 137 */document.head.appendChild(Object.assign(document.createElement('style'),{textContent:'body[data-v=bidroom]::before,body[data-v=bidroom]::after{display:none!important}'}));
+
+/* 138 AUCTION STREAMING: OBS scenes for a live auction (?scene=auclive&auc=<id>#overlay). Data comes from the public bid-room feed, so any OBS Browser Source works with no login. */
+(function(){
+const AS=[['auclive','Auction live (all-in-one)','Player on the block, current bid, leader, team purses, bid ticker. Switches to SOLD / UNSOLD for 8 seconds automatically.'],['aucbid','Player and bid','Only the player card with the current bid'],['aucsold','SOLD / UNSOLD stamp','Shows for 8 seconds after each result, transparent otherwise'],['auctable','Team purses','All teams: purse left and players still needed'],['aucticker','Bid ticker','Latest bids in a strip at the bottom']];
+const IDS=AS.map(x=>x[0]),H=(typeof HELMET!=='undefined')?HELMET:'';
+const st=document.createElement('style');st.textContent=`.ao{position:absolute;font-family:var(--dsp,system-ui);color:#fff;text-shadow:0 1px 3px #000a}
+.ao-card{left:3cqw;top:7cqh;width:62cqw;height:68cqh;border-radius:2cqw;overflow:hidden;display:flex;background:linear-gradient(160deg,#061238,#0a1f5c 55%,#7a0f22);border:.25cqw solid #ffffff55;box-shadow:0 1cqw 4cqw #000a}
+.ao-card:before{content:"";position:absolute;inset:0;background:url(${H}) 70% 45%/70% auto no-repeat;opacity:.14}
+.ao-ph{position:relative;width:26cqw;flex:none;display:flex;align-items:flex-end;justify-content:center}.ao-ph img{width:100%;height:100%;object-fit:cover;object-position:50% 20%}.ao-ph .nop{font-size:10cqw;opacity:.35;align-self:center}
+.ao-in{position:relative;flex:1;padding:2.4cqw 2.4cqw;display:flex;flex-direction:column;justify-content:center;gap:1cqh}
+.ao-lot{font-size:1.9cqw;letter-spacing:.25em;opacity:.8}.ao-nm{font-size:4.6cqw;font-weight:900;line-height:1.05}.ao-rl{font-size:2.2cqw;opacity:.9}
+.ao-bid{font-size:9.5cqw;font-weight:900;line-height:1;color:#ffd84d;margin-top:1cqh}.ao-bl{font-size:1.8cqw;opacity:.8;letter-spacing:.2em}
+.ao-ld{display:flex;align-items:center;gap:1.4cqw;font-size:2.6cqw;font-weight:800;margin-top:1cqh}.ao-ld .aucc{width:5.4cqw!important;height:5.4cqw!important;border-radius:1cqw}
+.ao-tb{right:3cqw;top:7cqh;width:28cqw;background:#0b1020e8;border-radius:1.6cqw;padding:1.4cqw;border-left:.6cqw solid #c4f000}.ao-tb h4{margin:0 0 1cqh;font-size:1.9cqw;letter-spacing:.2em;opacity:.8}
+.ao-tr{display:flex;align-items:center;gap:1cqw;padding:.7cqh .6cqw;border-radius:.8cqw;font-size:2cqw}.ao-tr .aucc{width:3.6cqw!important;height:3.6cqw!important;border-radius:.7cqw}.ao-tr b{flex:1}.ao-tr.ld{background:#c4f00033}.ao-tr i{font-style:normal;opacity:.75;font-size:1.6cqw}
+.ao-tk{left:0;right:0;bottom:0;height:7cqh;background:#0b1020f2;display:flex;align-items:center;gap:3cqw;padding:0 3cqw;font-size:2.4cqw;border-top:.3cqw solid #c4f000;overflow:hidden;white-space:nowrap}.ao-tk b{color:#ffd84d}
+.ao-sd{inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 40%,#1a2a6af0,#061238f5);text-align:center;animation:aosd .5s ease-out}
+.ao-sd .stamp{font-size:11cqw;font-weight:900;letter-spacing:.08em;color:#ffd84d;border:.9cqw solid #ffd84d;padding:0 3cqw;border-radius:2cqw;transform:rotate(-6deg)}.ao-sd.un .stamp{color:#ff6b6b;border-color:#ff6b6b}
+.ao-sd .who{font-size:4.6cqw;font-weight:900;margin-top:4cqh}.ao-sd .to{display:flex;align-items:center;gap:2cqw;font-size:4cqw;margin-top:2cqh}.ao-sd .to .aucc{width:9cqw!important;height:9cqw!important;border-radius:1.6cqw}.ao-sd .pr{font-size:7cqw;font-weight:900;color:#ffd84d}
+@keyframes aosd{from{transform:scale(.85);opacity:0}to{transform:none;opacity:1}}
+.ao-wait{inset:0;display:flex;align-items:center;justify-content:center;font-size:4cqw;opacity:.85}`;document.head.appendChild(st);
+const AO=UI.ao=UI.ao||{id:'',room:null,shared:null,lastKey:'',sdUntil:0,fetchedShared:0,ph:'',phId:'',busy:0};
+const q=()=>{try{return new URLSearchParams(location.search)}catch(e){return new URLSearchParams('')}};
+const sceneNow=()=>{if(location.hash==='#overlay'){const p=q(),sc=p.get('scene');if(IDS.includes(sc)){AO.id=p.get('auc')||AO.id;return sc}return''}return UI.view==='stream'&&IDS.includes(UI.ovScene)?UI.ovScene:''};
+const money=n=>n==null?'-':Number(n).toLocaleString('en-IN');
+const rootH=x=>`<div class="ovroot ov" data-t="sh">${x}</div>`;
+async function poll(){const sc=sceneNow();if(!sc||!AO.id||AO.busy)return;AO.busy=1;try{
+ const b=apiBase();let r=await (await fetch(b+'/api/aucroom/'+AO.id)).json();if(!r.ok)return;let room=r.room;
+ if(room.cur){if(AO.phId!==room.cur.id){const f=await (await fetch(b+'/api/aucroom/'+AO.id+'?full=1')).json();if(f.ok){AO.ph=f.room.cur&&f.room.cur.photo||'';AO.phId=room.cur.id}}room.cur.photo=AO.ph}
+ if(Date.now()-AO.fetchedShared>9000){AO.fetchedShared=Date.now();try{const j=await (await fetch(b+'/api/shared/auc/'+AO.id)).json();if(j.ok){AO.shared=j.item.data.a;AO.chg=1}}catch(e){}}
+ const skew=room.now-Date.now();const sdOn=room.last&&(Date.now()+skew-room.last.at)<8000;
+ const key=JSON.stringify([room.ver,room.last&&room.last.key,sdOn,AO.chg]);AO.chg=0;AO.room=room;
+ if(key!==AO.key){AO.key=key;render()}else if(AO.sd&&!sdOn){AO.sd=0;AO.key='';render()}
+ AO.sd=sdOn}catch(e){}finally{AO.busy=0}}
+setInterval(poll,1000);
+function crest(teamId,short,name){const t=AO.shared&&AO.shared.teams&&AO.shared.teams.find(x=>x.id===teamId);return aucCrestT(t||{name:name||short},40)}
+function card(R){const p=R.cur,lead=R.teams.find(t=>t.id===R.bidTeam);
+ if(!R.open||!p)return `<div class="ao ao-wait">Next player coming up...</div>`;
+ return `<div class="ao ao-card"><div class="ao-ph">${p.photo?`<img src="${esc(p.photo)}" alt="">`:'<span class="nop">&#127951;</span>'}</div><div class="ao-in"><div class="ao-lot">${p.lot&&p.total?'LOT '+p.lot+' / '+p.total:'ON THE BLOCK'}</div><div class="ao-nm">${esc(p.name)}</div><div class="ao-rl">${esc(p.role)} | Base ${money(p.base)}</div>
+  <div class="ao-bl">${R.bid?'CURRENT BID':'OPENING BID'}</div><div class="ao-bid">${money(R.bid||p.base)}</div>
+  <div class="ao-ld">${lead?crest(lead.id,lead.short,lead.name)+'<span>'+esc(lead.name)+'</span>':'<span style="opacity:.7">Waiting for the first bid</span>'}</div></div></div>`}
+function table(R){const rows=R.teams.map(t=>`<div class="ao-tr ${t.id===R.bidTeam?'ld':''}">${crest(t.id,t.short,t.name)}<b>${esc(t.short||t.name)}</b><span>${money(t.purse)}</span><i>${t.left} left</i></div>`).join('');return `<div class="ao ao-tb"><h4>PURSE LEFT</h4>${rows}</div>`}
+function ticker(R){const l=(R.log||[]).slice().reverse();return `<div class="ao ao-tk">${l.length?l.map(x=>`<span><b>${esc(x.t)}</b> ${money(x.a)}</span>`).join(''):'<span style="opacity:.7">Scoring Heroes | SH Auction live</span>'}</div>`}
+function sold(R){const L=R.last;if(!L)return '';const un=L.st!=='sold';
+ return `<div class="ao ao-sd ${un?'un':''}"><div class="stamp">${un?'UNSOLD':'SOLD'}</div><div class="who">${esc(L.name)}</div>${un?'':`<div class="to">${crest((R.teams.find(t=>t.short===L.short)||{}).id,L.short,L.team)}<span>${esc(L.team)}</span></div><div class="pr">${money(L.price)}</div>`}</div>`}
+const o0=overlayHTML;overlayHTML=function(prev){const sc=sceneNow();if(!sc)return o0.apply(this,arguments);
+ if(!AO.id)return rootH('<div class="ao ao-wait">Add &amp;auc=AUCTION_ID to this URL</div>');const R=AO.room;if(!R){setTimeout(poll,0);return rootH('<div class="ao ao-wait">Connecting to the auction...</div>')}
+ const sdOn=R.last&&(Date.now()+(R.now-Date.now())-R.last.at)<8000;
+ if(sc==='aucbid')return rootH(card(R));if(sc==='auctable')return rootH(table(R));if(sc==='aucticker')return rootH(ticker(R));if(sc==='aucsold')return rootH(sdOn?sold(R):'');
+ return rootH((sdOn?'':card(R)+table(R)+ticker(R))+(sdOn?sold(R):''))};
+/* Studio page: pick the auction, preview, copy URLs */
+const base=()=>location.href.split('#')[0].split('?')[0];
+const vs=vStream;vStream=function(){let h=vs.apply(this,arguments);const mine=(S.auc||[]).filter(a=>!a.rm),cur=UI.ovScene||'';
+ const sel=`<select data-c="aoPick"><option value="">Choose auction</option>${mine.map(a=>`<option value="${esc(a.id)}" ${AO.id===a.id?'selected':''}>${esc(a.name)}</option>`).join('')}</select>`;
+ const bx=`<div class="card"><h3>Auction streaming scenes</h3><div class="mu sm" style="margin-bottom:6px">Turn on the Owner bid room for the auction first (it feeds these scenes). Then add each scene as an OBS Browser Source (1920x1080).</div>${sel}${AS.map(([k,l,d])=>`<div class="item" style="flex-wrap:wrap;gap:6px"><div style="flex:1;min-width:150px"><b>${l}</b>${cur===k?' <span class="mu sm">(previewing)</span>':''}<div class="mu sm">${d}</div></div><button class="btn sm ghost" data-a="aoPrev" data-v="${k}">Preview</button><button class="btn sm ghost" data-a="aoCopy" data-v="${k}">Copy URL</button></div>`).join('')}</div>`;
+ const i=h.indexOf('<div class="g2"><div class="card"><h3>Overlay settings</h3>');return i<0?h+bx:h.slice(0,i)+bx+h.slice(i)};
+Object.assign(C,{aoPick(v){AO.id=v;AO.room=null;AO.phId='';AO.key='';AO.fetchedShared=0;render();poll()}});
+Object.assign(A,{aoPrev(d){if(!AO.id)return toast('Choose the auction first');UI.ovScene=d.v;AO.room=null;AO.key='';render();poll()},
+ aoCopy(d){if(!AO.id)return toast('Choose the auction first');const u=base()+'?scene='+d.v+'&auc='+AO.id+'#overlay';try{navigator.clipboard.writeText(u);toast('URL copied')}catch(e){toast(u,6000)}}});
+/* the organiser's app records each result so the stream can show it */
+for(const k of ['auSold','auUns']){const f0=A[k];A[k]=function(){const a=aucOf(UI.au.open),p=a&&a.players.find(x=>x.id===a.cur),t=a&&a.teams.find(x=>x.id===a.bidTeam),bid=a&&a.bid;const r=f0.apply(this,arguments);
+ if(a&&p&&(k==='auUns'||t)){a.last={key:p.id+':'+Date.now(),st:k==='auSold'?'sold':'unsold',name:p.name,role:p.skill||p.cat||'',team:t?t.name:'',short:t?t.short:'',price:k==='auSold'?bid:null};commit()}return r}}
+})();
 </script>
 </body>
 </html>
