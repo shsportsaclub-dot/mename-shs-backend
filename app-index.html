@@ -12677,6 +12677,17 @@ const st=document.createElement('style');st.id='sh-photo-css';st.textContent='.s
 document.head.appendChild(st);
 {const x0=XV.pp;XV.pp=function(){const o=x0.apply(this,arguments);if(typeof o!=='string')return o;const p=P((UI.pp||{}).id);return (p&&p.cut)?o.replace('<div class="pph" style="','<div class="pph" style="background:#061238!important;').replace(/(<div class="pph"[^>]*>)/,'$1<div class="shbk"></div>'):o}}
 }
+
+/* ---- 132 Upgrade an existing profile photo: remove its background and centre the face once, so the SH banner shows behind it ---- */
+{
+const up=async p=>{const U=UI._cutBusy=UI._cutBusy||{};if(U[p.id])return;U[p.id]=1;
+ try{const b=await fetch(p.photo).then(r=>r.blob()),r=await shPrepPhoto(new File([b],'p.jpg',{type:b.type||'image/jpeg'}));
+  if(r&&r.cut){p.cut=r.cut;p.photo=r.photo;p.cutTry=0;commit();toast('Your photo now has the Scoring Heroes banner behind it',2500)}else p.cutTry=Date.now()}
+ catch(e){p.cutTry=Date.now()}
+ finally{delete U[p.id];try{render()}catch(e){}}};
+const x0=XV.pp;XV.pp=function(){const o=x0.apply(this,arguments);try{const p=P((UI.pp||{}).id);
+  if(p&&p.photo&&!p.cut&&/^data:image/.test(p.photo)&&(S.user&&(S.user.pid===p.id||S.user.role==='admin'))&&(!p.cutTry||Date.now()-p.cutTry>6e5)&&!(UI._cutBusy||{})[p.id])setTimeout(()=>up(p),400)}catch(e){}return o}
+}
 </script>
 </body>
 </html>
