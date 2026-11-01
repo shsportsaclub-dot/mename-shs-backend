@@ -5,14 +5,14 @@ await p.route('**/*',r=>r.request().url()==='http://127.0.0.1:18998/'?r.continue
 await p.goto('http://127.0.0.1:18998/');
 await p.evaluate(()=>{window.__wo=[];window.open=u=>{window.__wo.push(u)};UI.stage='app';S.user={name:'Seller',id:'u1',role:'scorer',kind:'Scorer',phone:'+919000000001'};S.prefs={...S.prefs,asked:1,welcomed:1};
 S.market=[{id:'m1',kind:'used',title:'Kookaburra bat',cat:'Bats',cond:'Good',price:'3000',nego:true,loc:'Hapur',phone:'9000000001',desc:'Two seasons old, no cracks',by:'Seller',uid:'u1',status:'open',t:Date.now()},{id:'m2',kind:'used',title:'Leather football',cat:'Balls',cond:'New',price:'900',loc:'Hapur',phone:'9000000001',by:'Seller',uid:'u1',status:'open',sport:'football',t:Date.now()}];
-S.offers=[{id:'o1',lid:'m1',by:'Buyer',phone:'9111111111',amt:'2500',msg:'today',t:Date.now()}];UI.view='market';UI.mk.tab='used';render()});
+S.offers=[{id:'o1',lid:'m1',by:'Buyer',phone:'9111111111',amt:'2500',msg:'today',t:Date.now()}];UI.view='market';UI.mk.home=false;UI.mk.tab='used';UI.mk.home=false;render()});
 assert.equal(await p.locator('.mk .it').count(),2);
 await p.locator('[data-a="mkSport"][data-v="football"]').click();assert.equal(await p.locator('.mk .it').count(),1);assert.match(await p.locator('.mk').innerText(),/football/i);
 await p.locator('[data-a="mkSport"][data-v=""]').click();assert.equal(await p.locator('.mk .it').count(),2);
 await p.locator('.mk .it [data-a="mkView"]').first().click();
 const mt=await p.locator('#modal, .modal, [role=dialog]').first().innerText().catch(()=>p.evaluate(()=>document.body.innerText));
 assert.match(await p.evaluate(()=>document.body.innerText),/Two seasons old[\s\S]*Location: Hapur[\s\S]*Seller: Seller/,'detail shows full info');
-await p.evaluate(()=>{UI.modal=null;renderModal();UI.mk.tab='mine';render()});
+await p.evaluate(()=>{UI.modal=null;renderModal();UI.mk.tab='mine';UI.mk.home=false;render()});
 assert.match(await p.locator('#app').innerText(),/Rs 2500 for Kookaburra bat/);
 await p.locator('[data-a="mkCounter"][data-id="o1"]').click();await p.locator('form[data-f="mkCounterSend"] input[name="amt"]').fill('2800');await p.locator('form[data-f="mkCounterSend"] button').click();
 let o=await p.evaluate(()=>({o:S.offers[0],wo:window.__wo}));assert.equal(o.o.status,'countered');assert.equal(o.o.counter,'2800');assert.match(decodeURIComponent(o.wo[0]||''),/My price is Rs 2800/);

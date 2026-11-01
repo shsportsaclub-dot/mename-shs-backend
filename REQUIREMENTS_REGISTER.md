@@ -174,3 +174,9 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 - When a stream is live, a score strip sits under the video: score-wickets, overs, CRR, target needed/RRR (2nd innings) and last two overs of ball chips.
 - Scrolling past the video shrinks it into a small floating player (bottom right); scrolling back restores it. Signal pop-ups are hidden on the OBS overlay page.
 - Test: tests/video-strip.cjs. Known pre-existing failure: tests/stream-modes.cjs (banner text) — not part of this change.
+
+## Toss, continue scoring, My matches, section landing pages
+- Toss: the coin only spins as a visual. The people at the ground select who won the toss and Bat/Bowl first (required); who called and Heads/Tails are optional. Saved on the match (tossInfo) and shown as "X won the toss and chose to bowl first. Y called TAILS".
+- Home shows "Continue scoring" for any unfinished match the scorer started (setup/live/break) and "My matches" for matches I scored or played in (every player in a playing XI sees the match).
+- Marketplace and Social studio open on a landing page: welcome note, icon tiles with a one-line description, tap goes inside, "back" button returns to the landing page.
+- Tests: qs-toss, quick-start, landing-continue, marketplace-*, rfq, poster-v3, social-*. Pre-existing failures (same on c8e4512): desktop-match, device-layouts, interruptions, no-flash, over-strip, pitch-map, plus-drag, sbb-pad, registry*, logo-library, qs-teams, stream-modes, scorer-tools, overlay-tickers, ground-map.

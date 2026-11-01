@@ -4,7 +4,7 @@ const { chromium } = require('playwright');
   await p.goto('file://' + require('path').resolve(__dirname, '../app-index.html')); await p.waitForTimeout(400);
   const ok = (c, m) => { if (!c) { console.error('FAIL', m); process.exitCode = 1; } };
   const c = f => p.evaluate(f);
-  await c(() => { window.pullLive = async () => {}; UI.stage = 'app'; S.prefs = { ...S.prefs, asked: 1, welcomed: 1 }; S.user = { id: 'buyer', name: 'Ravi', nick: 'Ravi', phone: '9000000002', role: 'viewer', kind: 'Fan' }; S.market = []; S.orders = []; UI.view = 'market'; UI.mk.tab = 'orders'; render(); });
+  await c(() => { window.pullLive = async () => {}; UI.stage = 'app'; S.prefs = { ...S.prefs, asked: 1, welcomed: 1 }; S.user = { id: 'buyer', name: 'Ravi', nick: 'Ravi', phone: '9000000002', role: 'viewer', kind: 'Fan' }; S.market = []; S.orders = []; UI.view='market';UI.mk.home=false; UI.mk.tab='orders';UI.mk.home=false; render(); });
   await p.fill('form[data-f="mkOrder"] input[name=item]', '20 leather balls'); await p.fill('form[data-f="mkOrder"] input[name=qty]', '20'); await p.fill('form[data-f="mkOrder"] input[name=loc]', 'Hapur');
   await p.click('form[data-f="mkOrder"] button');
   ok(await c(() => S.market.some(x => x.kind === 'rfq' && x.status === 'open' && x.title === '20 leather balls' && x.uid === 'buyer')), 'bulk request becomes a shared listing');

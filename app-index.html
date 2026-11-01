@@ -11905,29 +11905,28 @@ const SH_ICON='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALAAAACwCAYAAACvt+R
  const tb=(k,v,l,on,dis)=>`<button type="button" class="btn sm ${on?'':'ghost'}" style="flex:1" data-a="qsToss" data-k="${k}" data-v="${esc(v)}" ${dis?'disabled':''}>${esc(l)}</button>`;
  window.shQsToss=function(q,ok2,chip){
   if(!ok2)return '<div class="b" style="margin:8px 0 4px">Toss</div><div class="mu sm">Choose both teams first</div>';
-  const man=q.tm==='manual',tabs=`<div class="row" style="gap:6px;margin:4px 0 8px">${tb('tm','flip','Flip the coin',!man)}${tb('tm','manual','Enter result',man)}</div>`;
-  const dec=w=>`<div class="b" style="margin:10px 0 4px">${w?esc(tn(w))+' chose to':'Chose to'}</div><div class="row" style="gap:6px">${chip('dec','bat','Bat first',q.dec==='bat')}${chip('dec','bowl','Bowl first',q.dec==='bowl')}</div>`;
-  if(man)return `<div class="b" style="margin:8px 0 4px">Toss</div>${tabs}<div class="b" style="margin:4px 0">Toss won by</div><div class="row" style="gap:6px">${chip('toss',q.a,tn(q.a),q.toss===q.a)}${chip('toss',q.b,tn(q.b),q.toss===q.b)}</div>${dec(q.toss)}`;
-  const done=!!q.tres,call=q.tside,by=q.tcall,anim=!!q.tanim;if(anim)setTimeout(()=>{q.tanim=false},80);
+  const call=q.tside,by=q.tcall,anim=!!q.tanim,done=!!q.tres;if(anim)setTimeout(()=>{q.tanim=false},80);
   const face=r=>r==='H'?'HEADS':'TAILS',cls=done?(anim?'spin':'end')+q.tres:'';
   const coin=`<div class="coinw"><div class="coin ${cls}"><div class="cf">${HEAD_SVG}<b>HEADS</b></div><div class="cb">${TAIL_SVG}<b>TAILS</b></div></div></div>`;
-  const res=done?`<div class="tres ${anim?'late':''}"><b>${face(q.tres)}</b>. ${esc(tn(by))} called ${face(call)}, so <b>${esc(tn(q.toss))}</b> won the toss.</div>`:'';
-  return `<div class="b" style="margin:8px 0 4px">Toss</div>${tabs}
-  <div class="mu sm">1. Who calls?</div><div class="row" style="gap:6px;margin:4px 0 8px">${tb('tcall',q.a,tn(q.a),by===q.a,done)}${tb('tcall',q.b,tn(q.b),by===q.b,done)}</div>
-  <div class="mu sm">2. Call</div><div class="row" style="gap:6px;margin:4px 0 8px">${tb('tside','H','Heads',call==='H',done)}${tb('tside','T','Tails',call==='T',done)}</div>
-  ${coin}${res}
-  <div class="row" style="gap:6px;margin:8px 0"><button type="button" class="btn" style="flex:1" data-a="qsFlip" ${done||!by||!call?'disabled':''}>\u{1FA99} ${done?'Flipped':'Flip the coin'}</button>${done?'<button type="button" class="btn ghost" data-a="qsFlipReset">Flip again</button>':''}</div>
-  ${done?dec(q.toss):'<div class="mu sm">Pick who calls and Heads or Tails, then flip.</div>'}`};
+  const sum=q.tsel&&q.dsel?`<div class="tres"><b>${esc(tn(q.toss))}</b> won the toss and chose to <b>${q.dec==='bat'?'bat':'bowl'}</b> first${by&&call?`. ${esc(tn(by))} called ${face(call)}`:''}${done?`. Coin: ${face(q.tres)}`:''}.</div>`:'';
+  return `<div class="b" style="margin:8px 0 4px">Toss</div>
+  ${coin}<div class="row" style="gap:6px;margin:4px 0 10px"><button type="button" class="btn" style="flex:1" data-a="qsFlip">\u{1FA99} ${done?'Flip again':'Flip the coin'}</button></div>
+  <div class="mu sm">Who called? (optional)</div><div class="row" style="gap:6px;margin:4px 0 8px">${tb('tcall',q.a,tn(q.a),by===q.a)}${tb('tcall',q.b,tn(q.b),by===q.b)}</div>
+  <div class="mu sm">Call (optional)</div><div class="row" style="gap:6px;margin:4px 0 8px">${tb('tside','H','Heads',call==='H')}${tb('tside','T','Tails',call==='T')}</div>
+  <div class="b" style="margin:6px 0 4px">Toss won by</div><div class="row" style="gap:6px">${chip('toss',q.a,tn(q.a),q.toss===q.a)}${chip('toss',q.b,tn(q.b),q.toss===q.b)}</div>
+  <div class="b" style="margin:10px 0 4px">${q.toss?esc(tn(q.toss))+' chose to':'Chose to'}</div><div class="row" style="gap:6px">${chip('dec','bat','Bat first',q.dec==='bat')}${chip('dec','bowl','Bowl first',q.dec==='bowl')}</div>
+  ${sum}`};
  A.qsToss=function(d){if(window.shQsRead)window.shQsRead();const q=UI.qs;
-  if(d.k==='tm')q.tm=d.v;else if(d.k==='tcall')q.tcall=d.v;else if(d.k==='tside')q.tside=d.v;window.shQsShow()};
- A.qsFlip=function(){if(window.shQsRead)window.shQsRead();const q=UI.qs;if(!q.tcall||!q.tside||q.tres)return;
-  const r=rnd()?'H':'T';q.tres=r;q.toss=r===q.tside?q.tcall:(q.tcall===q.a?q.b:q.a);q.tanim=true;q.dec=q.dec||'bat';window.shQsShow()};
- A.qsFlipReset=function(){const q=UI.qs;q.tres='';q.tanim=false;window.shQsShow()};
+  if(d.k==='tcall')q.tcall=q.tcall===d.v?'':d.v;else if(d.k==='tside')q.tside=q.tside===d.v?'':d.v;window.shQsShow()};
+ /* the coin is only a spin to look at: the people at the ground enter who won the toss and what they chose */
+ A.qsFlip=function(){if(window.shQsRead)window.shQsRead();const q=UI.qs;q.tres=rnd()?'H':'T';q.tanim=true;window.shQsShow()};
+ A.qsFlipReset=A.qsFlip;
  const st=document.createElement('style');st.textContent='.coinw{perspective:600px;display:grid;place-items:center;height:128px}.coin{position:relative;width:104px;height:104px;transform-style:preserve-3d}.coin .cf,.coin .cb{position:absolute;inset:0;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;font-weight:800;font-size:10px;letter-spacing:.8px;color:#5a3d00;background:radial-gradient(circle at 35% 30%,#ffe9a3,#e7b73a 60%,#b98a12);border:3px solid #fff3c4;box-shadow:inset 0 0 0 4px #c99a1a,0 4px 10px rgba(0,0,0,.35);backface-visibility:hidden}.coin .cb{transform:rotateY(180deg)}.coin.endH{transform:rotateY(1800deg)}.coin.endT{transform:rotateY(1980deg)}.coin.spinH{animation:cfH 1.7s cubic-bezier(.2,.7,.3,1) forwards}.coin.spinT{animation:cfT 1.7s cubic-bezier(.2,.7,.3,1) forwards}@keyframes cfH{0%{transform:translateY(0) rotateY(0)}45%{transform:translateY(-46px) rotateY(900deg)}100%{transform:translateY(0) rotateY(1800deg)}}@keyframes cfT{0%{transform:translateY(0) rotateY(0)}45%{transform:translateY(-46px) rotateY(990deg)}100%{transform:translateY(0) rotateY(1980deg)}}.tres{text-align:center;margin:4px 0}.tres.late{animation:tfade .4s 1.7s both}@keyframes tfade{from{opacity:0}to{opacity:1}}@media (prefers-reduced-motion:reduce){.coin.spinH{animation:none;transform:rotateY(1800deg)}.coin.spinT{animation:none;transform:rotateY(1980deg)}.tres.late{animation:none}}';document.head.appendChild(st);
+ const qs0=A.qsSet;A.qsSet=function(d){if(UI.qs&&d){if(d.k==='toss')UI.qs.tsel=1;if(d.k==='dec')UI.qs.dsel=1}return qs0.apply(this,arguments)};
  const s0=A.qsStart;A.qsStart=function(){const q=UI.qs;
-  if(q&&q.tm!=='manual'&&!q.tres)return toast('Flip the coin first, or choose Enter result',3500);
-  const n=S.matches.length,snap=q?{tm:q.tm==='manual'?'manual':'coin',by:q.tcall,call:q.tside,res:q.tres,toss:q.toss}:null,r=s0.apply(this,arguments);
-  if(snap&&S.matches.length>n){const m=S.matches[S.matches.length-1];m.tossInfo={mode:snap.tm,caller:snap.tm==='coin'?snap.by:'',call:snap.tm==='coin'?snap.call:'',result:snap.tm==='coin'?snap.res:'',winner:m.toss};try{save&&save()}catch(e){}if(q){q.tres='';q.tcall='';q.tside=''}}
+  if(q&&q.tm!=='manual'){if(!q.tsel)return toast('Select who won the toss',3500);if(!q.dsel)return toast('Select Bat first or Bowl first',3500)}
+  const n=S.matches.length,snap=q?{by:q.tcall,call:q.tside,res:q.tres,toss:q.toss}:null,r=s0.apply(this,arguments);
+  if(snap&&S.matches.length>n){const m=S.matches[S.matches.length-1];m.tossInfo={mode:'coin',caller:snap.by||'',call:snap.call||'',result:snap.res||'',winner:m.toss,chose:m.dec};try{save&&save()}catch(e){}if(q){q.tres='';q.tcall='';q.tside=''}}
   return r};
 }
 
@@ -12035,6 +12034,51 @@ const SH_ICON='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALAAAACwCAYAAACvt+R
    if(out&&!w.classList.contains('mini')){sn.style.height=w.offsetHeight+'px';w.classList.add('mini')}
    else if(!out&&e.isIntersecting&&w.classList.contains('mini')){w.classList.remove('mini');sn.style.height='1px'}})},{threshold:0}).observe(sn)};
  const r0=render;render=function(){r0.apply(this,arguments);setTimeout(watch,60)};
+}
+
+/* ---------------- 120 CONTINUE SCORING AND MY MATCHES: the match, its toss and its scoring stay saved. Home shows Continue scoring for any match the scorer left unfinished, and a My matches list for matches I scored or played in (every player in the playing XI sees the match) ---------------- */
+{
+ const mineList=()=>{const U=S.user;if(!U)return[];const pid=U.pid;return (S.matches||[]).filter(m=>m.scorer===U.name||(pid&&m.xi&&((m.xi[m.a]||[]).includes(pid)||(m.xi[m.b]||[]).includes(pid)))).slice().reverse()};
+ window.shMineMatches=mineList;
+ const st=(m)=>m.status==='done'?'RESULT':(m.status==='live'||m.status==='break')?'LIVE':'UPCOMING';
+ const nm2=t=>((T(t)||{}).short||(T(t)||{}).name||'');
+ const score=m=>{try{const inn=m.innings&&m.innings[m.cur];if(!inn)return m.toss&&m.dec?`${esc((T(m.toss)||{}).name||'')} won the toss, chose to ${m.dec}`:'Not started';setFmt(m);const c=calc(m,m.cur),lg=inn.ev.reduce((n,e)=>n+((e.x==='wd'||e.x==='nb')?0:1),0);return `${c.runs}-${c.wk} (${fmtOv(lg)} ov)`}catch(e){return ''}};
+ const row=(m,cta)=>`<div class="mcm ${st(m)==='LIVE'?'live':''}" data-a="${cta?'scoreIt':'open'}" data-id="${esc(m.id)}" style="margin:6px 0"><div class="row" style="justify-content:space-between"><b>${esc(nm2(m.a))} v ${esc(nm2(m.b))}</b><span class="mcst ${st(m)}">${st(m)}</span></div><div class="mu sm">${score(m)} · ${esc(m.date||'')}</div>${cta?`<div class="b" style="color:var(--ac,#e11d2e);margin-top:4px">▶ ${m.status==='setup'?'Select openers and start':'Continue scoring'}</div>`:''}</div>`;
+ const banner=()=>{const U=S.user;if(!U||typeof can!=='function'||!can())return '';const L=(S.matches||[]).filter(m=>(m.status==='live'||m.status==='break'||m.status==='setup')&&(m.scorer===U.name||U.role==='admin')&&!m.result).slice(-2).reverse();
+  const my=mineList().slice(0,4);
+  return (L.length?`<div class="card" id="sh-cont" style="margin:8px 0;border-color:var(--ac,#e11d2e)"><h3 style="margin:0 0 4px">Continue scoring</h3><div class="mu sm">Your match is saved exactly where you stopped.</div>${L.map(m=>row(m,1)).join('')}</div>`:'')
+   +(my.length?`<div class="card" id="sh-mine" style="margin:8px 0"><div class="row" style="justify-content:space-between"><h3 style="margin:0">My matches</h3><button class="btn sm ghost" data-a="go" data-v="mycricket">All</button></div>${my.map(m=>row(m,0)).join('')}</div>`:'')};
+ const r0=render;render=function(){r0.apply(this,arguments);try{if(UI.view!=='home'||location.hash==='#overlay')return;const mn=document.querySelector('main');if(!mn||document.getElementById('sh-cont')||document.getElementById('sh-mine'))return;const h=banner();if(!h)return;const ref=mn.querySelector('.ig-top');const d=document.createElement('div');d.innerHTML=h;if(ref&&ref.nextSibling)mn.insertBefore(d,ref.nextSibling);else mn.prepend(d)}catch(e){}};
+}
+
+/* ---------------- 121 SECTION LANDING PAGES (Marketplace and Social studio): a welcome note that says what the section is, then clear icon tiles with a one-line "what it does"; tapping a tile goes inside, and a back button returns to the section page ---------------- */
+{
+ const css='.hubw{padding:12px 14px;border-radius:14px;background:linear-gradient(135deg,rgba(225,29,46,.18),rgba(255,255,255,.04));border:1px solid rgba(255,255,255,.1);margin:6px 0 12px}.hubw b{display:block;font-size:17px;margin-bottom:4px}.hubw span{font-size:13px;opacity:.85;line-height:1.45}.hubg{display:grid;grid-template-columns:1fr 1fr;gap:10px}.hubt{display:flex;flex-direction:column;align-items:flex-start;gap:6px;text-align:left;padding:12px;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:inherit;font:inherit;cursor:pointer;min-height:112px}.hubt i{font-style:normal;font-size:28px;line-height:1}.hubt b{font-size:14px}.hubt span{font-size:12px;opacity:.8;line-height:1.35}.hubt:active{transform:scale(.98)}.hubb{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.18);background:transparent;color:inherit;font:inherit;font-size:13px;margin:4px 0 8px;cursor:pointer}.hubn{padding:8px 12px;border-radius:12px;background:rgba(255,255,255,.05);font-size:12.5px;line-height:1.4;margin-bottom:10px}';
+ const st=document.createElement('style');st.textContent=css;document.head.appendChild(st);
+ const tiles=L=>`<div class="hubg">${L.map(x=>`<button type="button" class="hubt" data-a="${x.a}" data-v="${x.v}"><i>${x.i}</i><b>${esc(x.t)}</b><span>${esc(x.d)}</span></button>`).join('')}</div>`;
+ /* Marketplace */
+ const MK={used:['♻️','Buy or sell second-hand bats, pads, gloves and kits with players near you.'],shop:['\u{1F3EA}','Verified local sports shops: see what they stock and contact them directly.'],brand:['\u{1F3F7}️','Brand outlets and authorised dealers for new gear.'],rent:['\u{1F511}','Rent gear for a day or a match instead of buying.'],orders:['\u{1F4E6}','Team jerseys and bulk orders: send your requirement and compare quotes.'],mine:['\u{1F464}','Your listings, offers you received and your favourites.'],admin:['\u{1F6E1}️','Check and approve listings and handle reports (admins only).']};
+ const mk0=XV.market;
+ XV.market=function(){UI.mk=UI.mk||{};if(UI.mk.home===undefined)UI.mk.home=true;
+  const h=mk0.apply(this,arguments);
+  const tabs=[...h.matchAll(/data-a="mkTab" data-v="(\w+)"[^>]*>([^<]*)</g)].map(m=>[m[1],m[2].trim()]);
+  if(UI.mk.home)return `<div class="bar"><h2>Marketplace</h2></div><div class="hubw"><b>Welcome to the Marketplace</b><span>Buy, sell and rent cricket gear safely. Every listing shows who posted it and how to contact them. Choose a section to start.</span></div>${tiles(tabs.map(([k,l])=>({a:'mkGo',v:k,i:(MK[k]||['\u{1F6D2}'])[0],t:l,d:(MK[k]||['',''])[1]||''})))}<div class="mu sm" style="margin-top:12px">Online payment is not connected yet. Buyers and sellers contact each other directly by WhatsApp or phone. Meet in a public place and check the item before paying.</div>`;
+  const cur=UI.mk.tab,t=tabs.find(x=>x[0]===cur);
+  return `<button type="button" class="hubb" data-a="mkHome">‹ Marketplace</button><div class="hubn"><b>${(MK[cur]||[''])[0]} ${esc(t?t[1]:'')}</b> — ${esc((MK[cur]||['',''])[1]||'')}</div>`+h.replace(/<div class="bar"><h2>Marketplace<\/h2><\/div>/,'')};
+ const mt0=A.mkTab;A.mkTab=function(d){UI.mk.home=false;return mt0.apply(this,arguments)};
+ A.mkGo=function(d){UI.mk.home=false;UI.mk.tab=d.v;render();window.scrollTo(0,0)};
+ A.mkHome=function(){UI.mk.home=true;render();window.scrollTo(0,0)};
+ /* Social studio */
+ const SD={result:'Match result poster with scores and winner.',live:'Live score card to post while the match is on.',fix:'Upcoming match poster with date, time and venue.',toss:'Toss poster: who won and what they chose.',pom:'Player of the match with photo and stats.',mile:'Celebrate a 50, 100 or 5-wicket haul.',sold:'Auction poster when a player is sold.',reg:'Call for registrations for your tournament or academy.',sched:'Full schedule of fixtures in one image.',table:'Points table after the latest results.',adm:'Academy admission poster.',gnd:'Ground booking poster with slots and contact.',bday:'Birthday wishes for a player or member.',news:'News headline poster.',article:'Article card with title and summary.',custom:'Your own text on a branded poster.'};
+ const sc0=XV.social;
+ XV.social=function(){const U=UI.st2;
+  if(!U.open)return `<div class="bar"><h2>Social studio</h2></div><div class="hubw"><b>Welcome to the Social studio</b><span>Make ready-to-share posters for WhatsApp, Instagram and Facebook from your real match data. Pick a poster type, check the details, then download or share it. Your own logo is used and nothing is watermarked.</span></div>${tiles(ST2T.map(([k,e,l])=>({a:'socGo',v:k,i:e,t:l,d:SD[k]||''})))}`;
+  let h=sc0.apply(this,arguments);
+  h=h.replace(/<div class="bar"><h2>Social studio<\/h2><\/div>\s*<div class="mu sm"[^>]*>[\s\S]*?<\/div>\s*<div class="svg"[^>]*>[\s\S]*?<\/div>(?=\s*<div class="card")/,'');
+  const cur=ST2T.find(x=>x[0]===U.tpl)||ST2T[0];
+  return `<button type="button" class="hubb" data-a="socHome">‹ Social studio</button><div class="hubn"><b>${cur[1]} ${esc(cur[2])}</b> — ${esc(SD[cur[0]]||'')} Fill the details, then use Download or Share below.</div>`+h};
+ A.socGo=function(d){UI.st2.open=true;A.st2Tpl({v:d.v});window.scrollTo(0,0)};
+ A.socHome=function(){UI.st2.open=false;render();window.scrollTo(0,0)};
 }
 </script>
 </body>

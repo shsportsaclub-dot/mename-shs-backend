@@ -2,7 +2,7 @@ const {chromium}=require('playwright');const assert=require('node:assert/strict'
 (async()=>{const b=await chromium.launch(),p=await b.newPage({viewport:{width:390,height:900}}),errs=[];p.on('pageerror',e=>errs.push(e.message));
 await p.route('**/*',r=>r.request().url().startsWith('file:')?r.continue():r.fulfill({contentType:'application/json',body:'{"ok":false}'}));
 await p.goto('file://'+process.cwd()+'/app-index.html');await p.waitForTimeout(400);
-await p.evaluate(()=>{UI.stage='app';S.user={name:'QA',role:'admin',phone:'+910000000000'};S.prefs={...S.prefs,asked:1,welcomed:1,avDone:1,avSkip:1,country:'IN'};UI.view='social';render()});
+await p.evaluate(()=>{UI.stage='app';S.user={name:'QA',role:'admin',phone:'+910000000000'};S.prefs={...S.prefs,asked:1,welcomed:1,avDone:1,avSkip:1,country:'IN'};UI.view='social';UI.st2=UI.st2||{};UI.st2.open=true;render()});
 assert.equal(await p.locator('.sdpanel .sdb.add').count(),3,'three Add tiles');
 await p.click('.sdb.add >> nth=0');await p.click('button[data-a=sdMode][data-v=social]');
 let names=await p.locator('.sdgrid .sdb span:last-child').allInnerTexts();

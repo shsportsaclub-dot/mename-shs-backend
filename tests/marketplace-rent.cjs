@@ -3,7 +3,7 @@ const {chromium}=require('playwright');const fs=require('node:fs'),http=require(
 const b=await chromium.launch();try{const p=await b.newPage({viewport:{width:412,height:900}}),errs=[];p.on('pageerror',e=>errs.push(e.message));
 await p.route('**/*',r=>r.request().url()==='http://127.0.0.1:18999/'?r.continue():r.fulfill({contentType:'application/json',body:'{"ok":false}'}));
 await p.goto('http://127.0.0.1:18999/');
-const as=(n,id)=>p.evaluate(([n,id])=>{UI.stage='app';S.user={name:n,id,role:'scorer',kind:'Scorer',phone:'+91900000000'+id.slice(-1)};S.prefs={...S.prefs,asked:1,welcomed:1};UI.view='market';UI.mk.tab='rent';render()},[n,id]);
+const as=(n,id)=>p.evaluate(([n,id])=>{UI.stage='app';S.user={name:n,id,role:'scorer',kind:'Scorer',phone:'+91900000000'+id.slice(-1)};S.prefs={...S.prefs,asked:1,welcomed:1};UI.view='market';UI.mk.home=false;UI.mk.tab='rent';UI.mk.home=false;render()},[n,id]);
 await as('Owner','u1');
 await p.locator('form[data-f="rentAdd"] input[name="title"]').fill('Bowling machine');await p.locator('form[data-f="rentAdd"] input[name="rate"]').fill('1500');await p.locator('form[data-f="rentAdd"] input[name="deposit"]').fill('5000');await p.locator('form[data-f="rentAdd"] input[name="loc"]').fill('Hapur');
 await p.locator('form[data-f="rentAdd"] button').click();

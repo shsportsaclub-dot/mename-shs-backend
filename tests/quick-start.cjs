@@ -17,10 +17,9 @@ await p.click('details[data-qsd=a] summary');await p.evaluate(()=>{document.quer
 await p.click('button[data-a=qsStep][data-v="1"]');await p.waitForTimeout(150);
 await p.click('button[data-a=ddOpen][data-k=fmt]');await p.click('button[data-a=ddPick][data-k=fmt][data-v=t10]');await p.click('button[data-k=overs][data-v="10"]');await p.click('button[data-k=ball][data-v=tennis]');await p.fill('#qs-venue','Gandhi Ground');
 await p.click('button[data-a=qsStep][data-v="1"]');await p.waitForTimeout(150);
-await p.click('button[data-a=qsStart]');ok(/Flip the coin first/.test(await p.evaluate(()=>document.body.innerText)),'must flip before starting');
-await p.click('button[data-a=qsToss][data-k=tcall]:nth-of-type(1)');await p.click('button[data-a=qsToss][data-k=tside][data-v=H]');await p.click('button[data-a=qsFlip]');await p.waitForTimeout(2200);
-ok(await p.evaluate(()=>/won the toss/.test(document.getElementById('modal').innerText)),'result shown');
-await p.click('button[data-k=dec][data-v=bowl]');
+await p.click('button[data-a=qsStart]');ok(/Select who won the toss/.test(await p.evaluate(()=>document.body.innerText)),'must select toss winner before starting');
+await p.click('button[data-a=qsToss][data-k=tcall]:nth-of-type(1)');await p.click('button[data-a=qsToss][data-k=tside][data-v=H]');await p.click('button[data-a=qsFlip]');await p.waitForTimeout(500);await p.click('button[data-k=toss]:nth-of-type(1)');
+await p.click('button[data-k=dec][data-v=bowl]');ok(await p.evaluate(()=>/won the toss/.test(document.getElementById('modal').innerText)),'result shown');
 await p.click('button[data-a=qsStart]');await p.waitForTimeout(300);
 const r=await p.evaluate(()=>{const m=S.matches[0];return m&&{overs:m.overs,ball:m.ball,venue:m.venue,dec:m.dec,xiA:m.xi.a.length,status:m.status,ready:m.ready,view:UI.view,sc:m.scorer,gender:m.cat&&m.cat.gender,remembered:S.prefs.qs,wiz:S.wiz,audit:(m.audit||[]).map(a=>a.type)}});
 ok(r&&r.overs===10&&r.ball==='tennis'&&r.dec==='bowl'&&/Gandhi Ground/.test(r.venue),'settings applied '+JSON.stringify(r));ok(r&&r.xiA===11&&r.ready&&r.view==='score','lineup + ready '+JSON.stringify(r));

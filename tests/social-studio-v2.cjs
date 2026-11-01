@@ -9,7 +9,7 @@ const { chromium } = require('playwright');
     UI.stage = 'app'; S.user = { id: 'u1', name: 'Admin', role: 'admin' }; S.prefs = { ...S.prefs, asked: 1, welcomed: 1 }; const o = {};
     S.players = [{ id: 'pl1', name: 'Kiran Rao', role: 'BAT', photo: px }];
     S.auc = [{ id: 'a1', name: 'Sky Cup', teams: [{ id: 't1', name: 'Sky Lions', short: 'SKY', purse: 1, players: ['x'] }], players: [{ id: 'x', name: 'Ravi', st: 'sold', team: 't1', price: 1200, cat: 'A' }], pts: 5000, ppt: 11, base: 100, inc: 50 }];
-    UI.view = 'social'; o.n = ST2T.length; o.tpls = {};
+    UI.view='social';UI.st2.open=true; o.n = ST2T.length; o.tpls = {};
     for (const t of ST2T) { A.st2Tpl({ v: t[0] }); await new Promise(r => setTimeout(r, 120)); const cv = document.getElementById('socCv'); const d = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height).data; let n = 0; for (let i = 0; i < d.length; i += 4 * 997) if (d[i] > 40 || d[i + 1] > 40) n++; o.tpls[t[0]] = n > 20 && cv.width === 1080; }
     A.st2Tpl({ v: 'sold' }); C.st2Auc('a1|x'); await new Promise(r => setTimeout(r, 150)); o.sold = JSON.stringify([UI.st2.f.l1, UI.st2.f.l2, UI.st2.f.l3]); o.cap = document.getElementById('socCap').value;
     A.st2Tpl({ v: 'mile' }); C.st2Pl('pl1'); await new Promise(r => setTimeout(r, 150)); o.photo = !!UI.st2.photo && UI.st2.f.l1;

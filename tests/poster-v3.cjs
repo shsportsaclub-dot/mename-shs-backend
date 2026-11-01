@@ -8,7 +8,7 @@ const { chromium } = require('playwright');
     const w = ms => new Promise(r => setTimeout(r, ms)), o = {}; UI.stage = 'app'; S.user = { id: 'u1', name: 'QA', role: 'admin', kind: 'Scorer' }; S.prefs = { ...S.prefs, asked: 1, welcomed: 1 };
     S.teams = [{ id: 'a', name: 'India Lions', short: 'IND', color: '#235bbb', preset: 2, logo: null, players: [] }, { id: 'b', name: 'Sky Hawks', short: 'SKY', color: '#c9a400', preset: 4, logo: null, players: [] }];
     o.tpls = ST2T.some(x => x[0] === 'news') && ST2T.some(x => x[0] === 'article');
-    UI.view = 'social'; UI.st2.tpl = 'result'; UI.st2.f = { title: 'Spring Cup', l1: 'India Lions  182/5', l2: 'Sky Hawks  176/8', note: 'India Lions won by 6 runs' }; UI.st2.size = 'sq'; render(); await w(400);
+    UI.view='social';UI.st2.open=true; UI.st2.tpl = 'result'; UI.st2.f = { title: 'Spring Cup', l1: 'India Lions  182/5', l2: 'Sky Hawks  176/8', note: 'India Lions won by 6 runs' }; UI.st2.size = 'sq'; render(); await w(400);
     const px = () => { const cv = document.getElementById('socCv'), x = cv.getContext('2d'); const d = x.getImageData(0, 0, cv.width, cv.height).data; let n = 0; for (let i = 0; i < d.length; i += 4 * 997) if (d[i] + d[i + 1] + d[i + 2] > 60) n++; return n };
     o.pixels = px() > 50; o.crestImgs = Object.keys(st2Cache).length >= 2; window.__r = document.getElementById('socCv').toDataURL();
     UI.st2.tpl = 'sold'; UI.st2.f = { title: 'Test Cup', l1: 'Virat Test', l2: 'Sky Hawks', l3: 'SOLD FOR 1200 pts', l4: 'Category A' }; render(); await w(400); o.sold = px() > 50; window.__s = document.getElementById('socCv').toDataURL();
