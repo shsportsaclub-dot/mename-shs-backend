@@ -192,3 +192,6 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 ## Default YouTube channel + demo auction
 - Default stream/channel is SH Sports Club (UCEZj3e0XMZJmOQ7VteUM7Vg, https://www.youtube.com/@SHSPORTSCLUB) unless the organiser sets their own; matches without a stream show the channel link/live embed. Tests: default-channel.cjs, master-gap-browser.cjs.
 - Demo auction "Hero Champions League" auto-seeded (8 franchises named after IPL teams, no IPL/BCCI logos, user-supplied HCL logo, 48 demo players); deletable and does not re-seed after delete. Test: auction-demo.cjs.
+
+## Light theme contrast + menu icons
+- Light look (mday) must keep light --bg/--card, a white drawer with dark text, and readable Service Hub pills/cards (the late dark "visual reference" sheet had forced dark panels on every theme). Every drawer item has a line icon (no "•••" placeholders); Service Hub tabs have meaningful icons (no empty squares).
