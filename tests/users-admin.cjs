@@ -11,4 +11,6 @@ const t=await p.evaluate(()=>document.getElementById('app').innerText);
 assert(/Registered users/i.test(t)&&/Hemanth/.test(t)&&/Ravi/.test(t)&&/\+919988402403/.test(t)&&/a@b\.com/.test(t)&&/Hapur/.test(t),'details '+t.slice(0,300));
 await p.evaluate(()=>{UI.ru.f='scorer';render()});assert(!/Hemanth/.test(await p.evaluate(()=>document.querySelector('.ru').innerText)),'filter');
 await p.evaluate(()=>{S.user.role='viewer';UI.view='users';render()});assert(/Admins only/.test(await p.evaluate(()=>document.getElementById('app').innerText)),'blocked');
+await p.evaluate(()=>{S.user.role='admin';UI.ucount=null;S.settings.ucLast=null;S.tok='';UI.view='home';render()});assert(await p.$('.ucnt'),'pill always visible for admin');
+await p.evaluate(()=>{S.user.role='viewer';render()});assert(!(await p.$('.ucnt')),'pill hidden for non admin');
 assert.deepEqual(errs,[]);console.log('PASS users admin');await b.close()})().catch(e=>{console.error('FAIL',e.message);process.exit(1)})
