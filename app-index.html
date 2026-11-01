@@ -12680,7 +12680,7 @@ document.head.appendChild(st);
 
 /* ---- 132 Upgrade an existing profile photo: remove its background and centre the face once, so the SH banner shows behind it ---- */
 {
-const up=async p=>{const U=UI._cutBusy=UI._cutBusy||{};if(U[p.id])return;U[p.id]=1;
+const up=async p=>{const U=UI._cutBusy=UI._cutBusy||{};if(U[p.id]||p.cut||!p.photo)return;U[p.id]=1;
  try{const b=await fetch(p.photo).then(r=>r.blob()),r=await shPrepPhoto(new File([b],'p.jpg',{type:b.type||'image/jpeg'}));
   if(r&&r.cut){p.cut=r.cut;p.photo=r.photo;p.cutTry=0;commit();toast('Your photo now has the Scoring Heroes banner behind it',2500)}else p.cutTry=Date.now()}
  catch(e){p.cutTry=Date.now()}
