@@ -12881,6 +12881,18 @@ Object.assign(A,{aoPrev(d){if(!AO.id)return toast('Choose the auction first');UI
 for(const k of ['auSold','auUns']){const f0=A[k];A[k]=function(){const a=aucOf(UI.au.open),p=a&&a.players.find(x=>x.id===a.cur),t=a&&a.teams.find(x=>x.id===a.bidTeam),bid=a&&a.bid;const r=f0.apply(this,arguments);
  if(a&&p&&(k==='auUns'||t)){a.last={key:p.id+':'+Date.now(),st:k==='auSold'?'sold':'unsold',name:p.name,role:p.skill||p.cat||'',team:t?t.name:'',short:t?t.short:'',price:k==='auSold'?bid:null};commit()}return r}}
 })();
+
+/* 139 fresh start: clear this device's match history, then load one complete demo match (both innings played, result, scorecard, commentary) */
+(function(){
+Object.assign(A,{
+ demoFresh(){const n=S.matches.length,real=S.matches.filter(m=>!isDemo(m)).length;
+  UI.modal={t:'html',html:`<h3>Clear history and load demo</h3><div class="mu sm">This removes the <b>${n}</b> match${n===1?'':'es'} on this phone${real?` (${real} of them not demo)`:''} and then creates one complete demo match. Players, teams, tournaments and settings stay. Matches already published online stay online; delete those from the match page.</div><div class="row" style="gap:6px;margin-top:10px"><button class="btn" data-a="demoFreshGo">Clear and load demo</button><button class="btn ghost" data-a="modalClose">Cancel</button></div>`};renderModal()},
+ demoFreshGo(){UI.modal=null;S.matches=[];S.stream.mid=null;UI.mid=null;UI.sid=null;
+  let m;try{m=demoMatch();let g=0;while(m&&m.status!=='done'&&g++<6){if(m.status==='break'){const i=m.cur+1,inn0=m.innings[0],s2=m.xi[inn0.bowl],b2=m.xi[inn0.bat];if(!m.innings[1])startInnings(m,1,s2[0],s2[1],b2.find(id=>['BOWL','AR'].includes(P(id).role)))}autoPlay(m,600)}}catch(e){toast('Demo could not be built: '+e.message,4000);commit();return}
+  UI.view='match';UI.tab='sum';UI.mid=m&&m.id;commit();renderModal();toast('Old history cleared. Complete demo match loaded',3500)}});
+{const x0=XV.matches;if(x0)XV.matches=function(){const h=x0.apply(this,arguments);return typeof h==='string'&&can()&&!h.includes('data-a="demoFresh"')?h.replace('data-a="demo">Load demo match</button>','data-a="demo">Load demo match</button><button class="btn ghost" data-a="demoFresh">Clear history + full demo</button>'):h}}
+for(const nm of ['vMatches']){try{const v0=window[nm]||eval(nm);const w=function(){const h=v0.apply(this,arguments);return typeof h==='string'&&can()?h.replace('data-a="demo">Load demo match</button>','data-a="demo">Load demo match</button><button class="btn ghost" data-a="demoFresh">Clear history + full demo</button>'):h};try{eval(nm+'=w')}catch(e){window[nm]=w}}catch(e){}}
+})();
 </script>
 </body>
 </html>

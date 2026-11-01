@@ -227,3 +227,6 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 
 ## SH Auction streaming scenes (block 138)
 - OBS Browser Source URLs: ?scene=auclive|aucbid|aucsold|auctable|aucticker&auc=<auction id>#overlay. Fed by the public bid-room feed (GET /api/aucroom/<id>, photo only with ?full=1) plus /api/shared/auc/<id> for team logos, so no login in OBS. Auto SOLD/UNSOLD stamp for 8 s (server-time stamped). Studio page lists the scenes with Preview and Copy URL after choosing the auction. Tests: tests/auction-stream.cjs, tests/auction-room.test.mjs.
+
+## Fresh start: clear history + complete demo (block 139)
+- Matches page button "Clear history + full demo": confirm modal shows the count, then removes this phone's matches (players, teams, tournaments, settings stay) and builds one finished demo match (both innings, result). Published copies stay online. Test: tests/demo-fresh.cjs.
