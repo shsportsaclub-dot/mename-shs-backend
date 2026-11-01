@@ -12749,6 +12749,71 @@ if(n>1){let best=1;for(let k=2;k<=n;k++)if(sz[k]>sz[best])best=k;
  for(let i=0;i<w*h;i++){if(lab[i]!==best){a[i*4]=a[i*4+1]=a[i*4+2]=0}}
  // restore soft edge pixels adjacent to kept region
  x.putImageData(d,0,0)}}catch(e){}return m};window.shSegmentMask.__main=1})();
+
+/* 136 live bid room: owners bid from their own phone with a team code; the server orders the bids; the organiser's app mirrors them */
+(function(){
+const money=n=>n==null?'-':Number(n).toLocaleString('en-IN');
+const base=()=>apiBase();
+const call=async(m,p,b,auth)=>{try{const h={'Content-Type':'application/json'};if(auth&&S.tok)h.Authorization='Bearer '+S.tok;const r=await fetch(base()+p,{method:m,headers:h,body:m==='GET'?undefined:JSON.stringify(b||{})});let j={};try{j=await r.json()}catch(e){}j._s=r.status;return j}catch(e){return{ok:false,error:'No connection',_s:0}}};
+const isOrg=a=>a&&(isAdmin()||a.owner===(S.user&&S.user.id));
+window.shRoomLadder=function(a){let b=a.bid||null,out=[];for(let i=0;i<60;i++){const nb=b?b+au2Step(a,b):(a.cbase||a.base);out.push(nb);b=nb}return out};
+window.shRoomPayload=function(a){const p=a.players.find(x=>x.id===a.cur),nb=au2Nb(a);
+ return{open:!!p,ver:(UI.room&&UI.room.ver)||0,bid:a.bid||null,bidTeam:a.bidTeam||null,ladder:p?shRoomLadder(a):[],
+  cur:p?{id:p.id,name:p.name,role:p.skill||p.cat||'',base:a.cbase||p.base||a.base,photo:(p.photo&&p.photo.length<40000)?p.photo:''}:null,
+  teams:a.teams.map(t=>{const why=p?au2Why(a,t,nb,p):'';return{id:t.id,name:t.name,short:t.short,purse:t.purse,max:aucMax(a,t),ok:!why,why:why||'',left:Math.max(0,(a.ppt||0)-t.players.length)}})}};
+UI.room=UI.room||{ver:0,codes:null,busy:0,hash:''};
+async function tick(){const a=UI.view==='auction'&&UI.au&&UI.au.open&&aucOf(UI.au.open);if(!a||!a.roomOn||!isOrg(a)||UI.room.busy)return;UI.room.busy=1;
+ try{const pend=await call('POST','/api/aucroom/'+a.id+'/pending',{},1);
+  if(pend.ok){UI.room.ver=pend.ver;const ps=(pend.pending||[]).filter(x=>x.pid===a.cur);if(ps.length){const p=a.players.find(x=>x.id===a.cur);ps.forEach(x=>{const t=a.teams.find(y=>y.id===x.team);if(!t||!(x.amt>(a.bid||0)))return;(a.hist=a.hist||[]).push({pid:p.id,tid:t.id,amt:x.amt,prev:a.bid||null,prevTeam:a.bidTeam||null,at:x.at,by:'owner'});a.bid=x.amt;a.bidTeam=t.id});a.hist=a.hist.slice(-200);commit();toast((a.teams.find(y=>y.id===a.bidTeam)||{}).short+' bid '+money(a.bid),2500)}}
+  else if(pend._s===404){a.roomOn=0;toast('Publish this auction first (sign in and sync), then turn the bid room on again',5000)}
+  const pl=shRoomPayload(a),h=JSON.stringify([pl.cur&&pl.cur.id,pl.bid,pl.bidTeam,pl.teams.map(t=>[t.purse,t.max,t.ok])]);
+  if(h!==UI.room.hash||!UI.room.synced){const r=await call('POST','/api/aucroom/'+a.id+'/sync',pl,1);if(r.ok){UI.room.hash=h;UI.room.ver=r.ver;UI.room.codes=r.codes;UI.room.synced=1}else if(r._s===409&&r.room)UI.room.ver=r.room.ver}
+ }finally{UI.room.busy=0}}
+setInterval(()=>{try{tick()}catch(e){}},1500);
+const link=a=>location.origin+location.pathname+'?bid='+a.id;
+function roomModal(a){const codes=UI.room.codes||{};
+ UI.modal={t:'html',html:`<h3>Owner bid room</h3><div class="mu sm">Each owner opens this link on their own phone, picks their team and enters the team code. Bids go to the server first, so two owners can never take the same amount.</div>
+ <div class="item" style="word-break:break-all"><span>${esc(link(a))}</span></div><button class="btn sm" data-a="roomCopy" data-v="${a.id}">Copy link</button>
+ ${a.teams.map(t=>`<div class="item"><b>${esc(t.short)}</b><span>${esc(t.name)}</span><span class="grow"></span><code style="font-size:16px;letter-spacing:.1em">${esc(codes[t.id]||'...')}</code></div>`).join('')}
+ <div class="row" style="gap:6px;margin-top:8px"><button class="btn sm ghost" data-a="roomReset" data-v="${a.id}">New codes</button><button class="btn sm ghost" data-a="roomOff" data-v="${a.id}">Turn off</button><button class="btn sm" data-a="modalClose">Done</button></div>`};renderModal()}
+Object.assign(A,{
+ async roomOpen(d){const a=aucOf(d.v||UI.au.open);if(!a||!isOrg(a))return;if(!a.roomOn){a.roomOn=1;commit();UI.room.synced=0;UI.room.hash=''}
+  await tick();const r=await call('POST','/api/aucroom/'+a.id+'/codes',{},1);if(r.ok)UI.room.codes=r.codes;else if(r._s===404){a.roomOn=0;return toast('Publish this auction first: sign in so it syncs, then try again',5000)}roomModal(a)},
+ roomCopy(d){const a=aucOf(d.v);try{navigator.clipboard.writeText(link(a));toast('Link copied')}catch(e){toast(link(a),6000)}},
+ async roomReset(d){const a=aucOf(d.v);const r=await call('POST','/api/aucroom/'+a.id+'/codes',{reset:1},1);if(r.ok){UI.room.codes=r.codes;roomModal(a)}},
+ roomOff(d){const a=aucOf(d.v);if(a){a.roomOn=0;commit()}UI.modal=null;renderModal();toast('Bid room off')}});
+{const d0=aucDetail;aucDetail=function(a){const h=d0.apply(this,arguments);if(!isOrg(a))return h;return h.replace('<div class="aucsheet">','<div class="aucsheet"><button class="btn sm '+(a.roomOn?'':'ghost')+'" style="margin-bottom:8px" data-a="roomOpen" data-v="'+a.id+'">'+(a.roomOn?'Bid room is ON: codes and link':'Owner bid room (phones)')+'</button>')}}
+/* ---- owner phone ---- */
+const q=new URLSearchParams(location.search).get('bid')||'';
+UI.br=UI.br||{aid:q,room:null,team:'',code:'',msg:'',err:'',busy:0,shown:0};
+try{const sv=JSON.parse(localStorage.getItem('shbr:'+UI.br.aid)||'null');if(sv){UI.br.team=sv.team||'';UI.br.code=sv.code||''}}catch(e){}
+async function pull(){const B=UI.br;if(!B.aid)return;const r=await call('GET','/api/aucroom/'+B.aid);if(r.ok){const old=B.room&&B.room.ver;B.room=r.room;B.err='';if(old!==r.room.ver&&UI.view==='bidroom')render()}else{B.err=r.error||'Not available';if(UI.view==='bidroom'&&!B.room)render()}}
+setInterval(()=>{if(UI.view==='bidroom')pull()},1000);
+XV.bidroom=function(){const B=UI.br,R=B.room,head='<div class="bar"><h2>Bid room</h2></div>';
+ if(!R)return head+`<div class="card"><div class="mu">${esc(B.err||'Loading the auction...')}</div></div>`;
+ const me=R.teams.find(t=>t.id===B.team),joined=me&&B.code,lead=R.teams.find(t=>t.id===R.bidTeam),p=R.cur;
+ const sel=`<div class="card"><div class="b">Join as team owner</div><div class="mu sm">Pick your team and type the code the organiser gave you.</div>
+  <select data-c="brTeam"><option value="">Choose team</option>${R.teams.map(t=>`<option value="${esc(t.id)}" ${B.team===t.id?'selected':''}>${esc(t.name)} (${esc(t.short)})</option>`).join('')}</select>
+  <input data-c="brCode" placeholder="Team code" value="${esc(B.code)}" autocapitalize="characters" style="margin-top:6px;text-transform:uppercase;letter-spacing:.15em"></div>`;
+ const block=!R.open||!p?'<div class="card"><div class="empty">Waiting for the next player to come on the block...</div></div>':
+ `<div class="card" style="text-align:center">${p.photo?`<img src="${esc(p.photo)}" alt="" style="width:120px;height:150px;object-fit:cover;border-radius:12px">`:''}<div class="b" style="font-size:20px">${esc(p.name)}</div><div class="mu">${esc(p.role)} | base ${money(p.base)}</div>
+  <div style="font-size:34px;font-weight:900;margin:6px 0">${R.bid?money(R.bid):'No bid yet'}</div><div class="mu">${lead?'Leading: <b>'+esc(lead.name)+'</b>':'Be the first to bid'}</div></div>`;
+ const can=joined&&R.open&&p&&R.next!=null&&R.bidTeam!==B.team&&me.ok!==false&&me.max>=R.next;
+ const why=!joined?'':!R.open||!p?'':R.bidTeam===B.team?'You are leading':me.ok===false?(me.why||'Your team cannot bid on this player'):R.next==null?'Bidding limit reached':me.max<R.next?'Not enough purse for the next bid':'';
+ const bar=joined?`<div class="card"><div class="row"><div><div class="mu sm">Your purse</div><b>${money(me.purse)}</b></div><span class="grow"></span><div style="text-align:right"><div class="mu sm">Can bid up to</div><b>${money(me.max)}</b></div></div>
+  <button class="btn" style="width:100%;font-size:22px;padding:16px;margin-top:8px" data-a="brBid" ${can?'':'disabled'}>${R.next!=null?'BID '+money(R.next):'BID'}</button>
+  ${why?`<div class="mu sm" style="margin-top:6px">${esc(why)}</div>`:''}${B.msg?`<div class="mu sm" style="margin-top:6px;color:#ff8a8a">${esc(B.msg)}</div>`:''}</div>`:'';
+ const log=(R.log||[]).length?`<div class="card"><div class="b">Latest bids</div>${R.log.slice().reverse().map(x=>`<div class="item"><b>${esc(x.t)}</b><span class="grow"></span>${money(x.a)}</div>`).join('')}</div>`:'';
+ return head+block+(joined?bar:'')+sel+log};
+Object.assign(C,{brTeam(v){UI.br.team=v;try{localStorage.setItem('shbr:'+UI.br.aid,JSON.stringify({team:UI.br.team,code:UI.br.code}))}catch(e){}render()},
+ brCode(v){UI.br.code=String(v||'').trim().toUpperCase();try{localStorage.setItem('shbr:'+UI.br.aid,JSON.stringify({team:UI.br.team,code:UI.br.code}))}catch(e){}render()}});
+Object.assign(A,{async brBid(){const B=UI.br;if(B.busy||!B.room)return;B.busy=1;B.msg='';const r=await call('POST','/api/aucroom/'+B.aid+'/bid',{team:B.team,code:B.code,ver:B.room.ver});B.busy=0;if(r.room)B.room=r.room;if(!r.ok)B.msg=r.error||'Bid failed';else{try{navigator.vibrate&&navigator.vibrate(60)}catch(e){}}render()}});
+{const f0=render;render=function(){if(UI.br.aid&&!UI.br.shown){UI.br.shown=1;UI.stage='app';UI.view='bidroom';pull()}if(!S.user&&UI.br.aid&&UI.view==='bidroom'&&UI.stage==='app'&&location.hash!=='#overlay'){document.getElementById('app').innerHTML=hdrSimple()+'<main>'+XV.bidroom()+'</main>';return}return f0()}}
+if(UI.br.aid){UI.br.shown=1;UI.stage='app';UI.view='bidroom';pull();render()}
+{const f0=render;render=function(){if(UI.stage==='app'&&!S.user&&UI.br.aid&&S.prefs&&!S.prefs.welcomed){S.prefs.welcomed=1}return f0()}}
+})();
+
+/* 137 */document.head.appendChild(Object.assign(document.createElement('style'),{textContent:'body[data-v=bidroom]::before,body[data-v=bidroom]::after{display:none!important}'}));
 </script>
 </body>
 </html>

@@ -2427,6 +2427,56 @@ http.createServer(async (req, res) => {
     }
     return out(405, { ok: false, error: 'Method not allowed' });
   }
+  if (path.startsWith('/api/aucroom/')) {   // live bid room: owners bid with a team code; the server orders bids and checks amount, purse and eligibility; the organiser's app mirrors them
+    const [, , , aid, act] = path.split('/');
+    if (!aid || !/^[\w-]{3,40}$/.test(aid)) return out(400, { ok: false, error: 'Bad auction' });
+    const au = db.shared.auc && db.shared.auc[aid];
+    if (!au) return out(404, { ok: false, error: 'This auction is not published yet' });
+    const bag = (db.aucroom = db.aucroom || {}), room = bag[aid] = bag[aid] || { ver: 0, codes: {}, teams: [], cur: null, ladder: [], idx: 0, bid: null, bidTeam: null, open: false, log: [], updated: Date.now() };
+    const pub = () => ({ ver: room.ver, open: room.open, cur: room.cur, bid: room.bid, bidTeam: room.bidTeam, next: room.ladder[room.idx] == null ? null : room.ladder[room.idx], teams: room.teams.map(t => ({ id: t.id, name: t.name, short: t.short, purse: t.purse, max: t.max, ok: t.ok, left: t.left })), log: room.log.slice(-8), updated: room.updated });
+    if (req.method === 'GET') return out(200, { ok: true, room: pub() });
+    if (req.method !== 'POST') return out(405, { ok: false, error: 'Method not allowed' });
+    let raw = ''; for await (const c of req) { raw += c; if (raw.length > 60000) return out(413, { ok: false, error: 'Too large' }); }
+    let b; try { b = JSON.parse(raw); } catch { return out(400, { ok: false, error: 'Bad body' }); }
+    if (act === 'bid') {
+      const tm = room.teams.find(t => t.id === String(b.team || ''));
+      if (!room.open || !room.cur) return out(409, { ok: false, error: 'No player is on the block right now', room: pub() });
+      if (!tm || !room.codes[tm.id] || String(b.code || '').trim().toUpperCase() !== room.codes[tm.id]) return out(403, { ok: false, error: 'Wrong team code' });
+      if (limited('bid:' + aid + ':' + tm.id, 40, 6e4)) return out(429, { ok: false, error: 'Too fast, wait a moment' });
+      if (b.ver != null && +b.ver !== room.ver) return out(409, { ok: false, error: 'The bid moved, check the new amount', room: pub() });
+      if (room.bidTeam === tm.id) return out(409, { ok: false, error: 'You already lead this bid', room: pub() });
+      const amt = room.ladder[room.idx];
+      if (amt == null) return out(409, { ok: false, error: 'Bidding limit reached', room: pub() });
+      if (tm.ok === false) return out(409, { ok: false, error: tm.why || 'Your team cannot bid on this player', room: pub() });
+      if (!(tm.max >= amt)) return out(409, { ok: false, error: 'Not enough purse for this bid', room: pub() });
+      room.bid = amt; room.bidTeam = tm.id; room.idx++; room.ver++; room.updated = Date.now(); room.pending = (room.pending || []).concat([{ pid: room.cur.id, team: tm.id, amt, at: room.updated }]).slice(-50);
+      room.log.push({ t: tm.short, a: amt, at: room.updated }); room.log = room.log.slice(-30); saveDb();
+      return out(200, { ok: true, room: pub() });
+    }
+    const tok = String(req.headers.authorization || '').replace(/^Bearer\s+/i, ''), phone = readSession(tok), u = phone && db.users[phone];
+    if (!u) return out(401, { ok: false, error: 'Please sign in first' });
+    if (au.owner !== phone && u.role !== 'admin') return out(403, { ok: false, error: 'Only the auction organiser can run the bid room' });
+    if (act === 'codes') {   // organiser reads the team codes to hand them to owners
+      for (const t of room.teams) if (!room.codes[t.id]) room.codes[t.id] = crypto.randomBytes(3).toString('hex').toUpperCase();
+      if (b.reset) { for (const t of room.teams) room.codes[t.id] = crypto.randomBytes(3).toString('hex').toUpperCase(); }
+      saveDb(); return out(200, { ok: true, codes: room.codes, room: pub() });
+    }
+    if (act === 'sync') {   // organiser pushes the state of the block; a bid placed by an owner meanwhile wins unless the organiser has seen it
+      const num = v => Number.isFinite(v) && v >= 0 && v < 1e12;
+      if (!Array.isArray(b.teams) || b.teams.length > 40 || b.teams.some(t => typeof t.id !== 'string' || t.id.length > 40 || !num(t.purse) || !num(t.max))) return out(400, { ok: false, error: 'Bad teams' });
+      if (b.ladder != null && (!Array.isArray(b.ladder) || b.ladder.length > 80 || b.ladder.some(x => !num(x)))) return out(400, { ok: false, error: 'Bad ladder' });
+      const pend = room.pending || [];
+      if (b.ver != null && +b.ver !== room.ver && pend.length) { room.pending = []; return out(409, { ok: false, error: 'Owner bids arrived', pending: pend, room: pub() }); }
+      room.teams = b.teams.map(t => ({ id: t.id, name: String(t.name || '').slice(0, 60), short: String(t.short || '').slice(0, 8), purse: t.purse, max: t.max, ok: t.ok !== false, why: String(t.why || '').slice(0, 80), left: Math.max(0, Math.min(99, +t.left || 0)) }));
+      for (const t of room.teams) if (!room.codes[t.id]) room.codes[t.id] = crypto.randomBytes(3).toString('hex').toUpperCase();
+      const c = b.cur && typeof b.cur === 'object' ? { id: String(b.cur.id || '').slice(0, 40), name: String(b.cur.name || '').slice(0, 60), role: String(b.cur.role || '').slice(0, 30), base: num(b.cur.base) ? b.cur.base : 0, photo: typeof b.cur.photo === 'string' && b.cur.photo.length < 40000 && /^data:image\/(jpeg|png|webp);base64,/.test(b.cur.photo) ? b.cur.photo : '' } : null;
+      room.cur = c; room.open = !!b.open && !!c; room.bid = num(b.bid) ? b.bid : null; room.bidTeam = b.bidTeam ? String(b.bidTeam).slice(0, 40) : null; room.ladder = Array.isArray(b.ladder) ? b.ladder : []; room.idx = 0; room.pending = [];
+      room.ver++; room.updated = Date.now(); if (!c) room.log = []; saveDb();
+      return out(200, { ok: true, ver: room.ver, codes: room.codes });
+    }
+    if (act === 'pending') { const p = room.pending || []; room.pending = []; return out(200, { ok: true, pending: p, ver: room.ver }); }
+    return out(404, { ok: false, error: 'Unknown action' });
+  }
   if (path.startsWith('/api/aucreg/')) {   // auction player registrations: players submit, organiser reviews (server decides status)
     const [, , , aid, rid] = path.split('/');
     const tok = String(req.headers.authorization || '').replace(/^Bearer\s+/i, ''), phone = readSession(tok), u = phone && db.users[phone];
