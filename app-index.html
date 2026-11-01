@@ -12633,6 +12633,50 @@ if(!MENU2.some(g=>g[1].some(i=>i[0]==='logolib'))){const g=MENU2.find(x=>x[0]===
 {const d0=drawer;drawer=function(){const o=d0.apply(this,arguments);return (S.user&&S.user.role==='admin')?o:o.replace(/<button class="mi[^"]*" data-a="go" data-v="logolib">[\s\S]*?<\/button>/,'')}}
 if(window.SH_HELP)SH_HELP.logolib=['Team logo library','Add team logos once; they show automatically wherever the team name matches.',['Open Menu > Account > Team logo library.','Tap Add logos and pick images.','Check the names under each logo (comma separated).'],'Short names such as CSK also match.'];
 }
+
+/* ---- 131 Photo pipeline: whoever uploads a photo gets the face centred (4:5), the background removed to a PNG cut-out when the on-phone model can run, and the SH backdrop behind it ---- */
+{
+const rd=f=>new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=no;r.readAsDataURL(f)});
+const ld=u=>new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=()=>no(new Error('img'));i.src=u});
+const fitC=(im,max)=>{const w=im.naturalWidth||im.width,h=im.naturalHeight||im.height,k=Math.min(1,max/Math.max(w,h)),c=document.createElement('canvas');c.width=Math.max(1,Math.round(w*k));c.height=Math.max(1,Math.round(h*k));c.getContext('2d').drawImage(im,0,0,c.width,c.height);return c};
+const OW=480,OH=600;
+/* where the person and head are: from the segmentation mask when available, else the FaceDetector API, else a safe upper-centre guess */
+async function locate(src,mask){
+ const w=src.width,h=src.height;
+ if(mask){const d=mask.getContext('2d').getImageData(0,0,w,h).data;let x0=w,y0=h,x1=0,y1=0,n=0;
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++)if(d[(y*w+x)*4]>128){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y;n++}
+  if(n>w*h*.02&&x1-x0>w*.08&&y1-y0>h*.15){const hy=y0+(y1-y0)*.24;let sx=0,sn=0;for(let y=y0;y<=hy;y++)for(let x=x0;x<=x1;x++)if(d[(y*w+x)*4]>128){sx+=x;sn++}
+   return {src:'mask',top:y0,bot:y1,hx:sn?sx/sn:(x0+x1)/2,hh:(y1-y0)}}}
+ try{if(window.FaceDetector){const f=await new FaceDetector({fastMode:true,maxDetectedFaces:1}).detect(src);if(f&&f[0]){const b=f[0].boundingBox;return {src:'face',top:Math.max(0,b.y-b.height*.5),bot:Math.min(h,b.y+b.height*5),hx:b.x+b.width/2,hh:Math.min(h,b.height*5.5)}}}}catch(e){}
+ return {src:'guess',top:0,bot:h,hx:w/2,hh:h}}
+function rectFor(L,w,h){let H=Math.min(h,Math.max(L.hh*1.16,h*.45));if(L.src==='guess')H=h;const W=H*OW/OH;
+ let cy=L.top-H*.07;const y=Math.max(0,Math.min(cy,h-H));const x=(L.src==='guess'?w/2:L.hx)-W/2;return {x,y,w:W,h:H}}
+const drawCrop=(ctx,src,R,fillBg)=>{if(fillBg){ctx.save();ctx.filter='blur(22px)';ctx.drawImage(src,0,0,OW,OH);ctx.restore();ctx.fillStyle='rgba(6,18,56,.35)';ctx.fillRect(0,0,OW,OH)}ctx.drawImage(src,R.x,R.y,R.w,R.h,0,0,OW,OH)};
+window.shPrepPhoto=async function(file){
+ const out={photo:'',cut:'',face:'guess'};
+ try{const src=fitC(await ld(await rd(file)),720);let mask=null;
+  try{if(window.shSegmentMask)mask=await window.shSegmentMask(src)}catch(e){mask=null}
+  const L=await locate(src,mask),R=rectFor(L,src.width,src.height);out.face=L.src;
+  const p=document.createElement('canvas');p.width=OW;p.height=OH;drawCrop(p.getContext('2d'),src,R,true);out.photo=p.toDataURL('image/jpeg',.86);
+  if(mask&&L.src==='mask'){const w=src.width,h=src.height,m=mask.getContext('2d').getImageData(0,0,w,h),a=m.data;for(let i=0;i<a.length;i+=4){const v=a[i];a[i+3]=Math.round(Math.max(0,Math.min(1,(v-90)/90))*255);a[i]=a[i+1]=a[i+2]=255}
+   const mc=document.createElement('canvas');mc.width=w;mc.height=h;mc.getContext('2d').putImageData(m,0,0);
+   const full=document.createElement('canvas');full.width=w;full.height=h;const fx=full.getContext('2d');fx.drawImage(src,0,0);fx.globalCompositeOperation='destination-in';fx.filter='blur(1px)';fx.drawImage(mc,0,0);fx.filter='none';
+   const c=document.createElement('canvas');c.width=OW;c.height=OH;drawCrop(c.getContext('2d'),full,R,false);out.cut=c.toDataURL('image/png')}
+ }catch(e){}
+ return out};
+const toBlob=u=>fetch(u).then(r=>r.blob());
+
+/* hook every person-photo upload */
+{const o=C.myPhoto;C.myPhoto=async function(v,el){const f=el&&el.files&&el.files[0];if(!f||!(S.user&&S.user.pid))return;toast('Centring your face...',2500);const r=await shPrepPhoto(f);if(!r.photo){toast('That file could not be read as a photo');return}const p=P(S.user.pid);p.photo=r.photo;p.cut=r.cut||'';try{el.value=''}catch(e){}commit();toast(r.cut?'Photo saved with background removed':'Photo saved, face centred')}}
+{const o=C.rgPhoto;C.rgPhoto=async function(v,el){const f=el&&el.files&&el.files[0];if(!f)return;const r=await shPrepPhoto(f);if(!r.photo){toast('That file is not a picture');return}UI.rg.photo=r.photo;const pv=document.getElementById('rgPrev');if(pv)pv.innerHTML=`<img src="${r.photo}" style="width:80px;height:100px;object-fit:cover;border-radius:10px">`}}
+{const o=F.auPlayer;if(o)F.auPlayer=async function(fd){try{const f=fd.get('photo');if(f instanceof Blob&&f.size&&f.size<=5*1024*1024&&/^image\//.test(f.type)){const r=await shPrepPhoto(f);if(r.photo)fd.set('photo',await toBlob(r.photo),'player.jpg')}}catch(e){}return o.apply(this,arguments)}}
+{const o=C.st2Photo;C.st2Photo=async function(v,el){const f=el&&el.files&&el.files[0];if(!f)return;const r=await shPrepPhoto(f);if(r.photo){UI.st2.photo=r.photo;UI.st2._pi=null;render()}else if(o)o.apply(this,arguments)}}
+
+/* profile hero: SH backdrop behind a cut-out, face-centred photo otherwise */
+const st=document.createElement('style');st.id='sh-photo-css';st.textContent='.shbk{position:absolute;inset:0;z-index:0;background:linear-gradient(160deg,#061238,#0a1f5c 55%,#7a0f22);overflow:hidden}.shbk:before{content:"";position:absolute;inset:0;background:url('+HELMET+') center 38%/82% auto no-repeat;opacity:.17}.shbk:after{content:"SCORING HEROES";position:absolute;left:0;right:0;bottom:7%;text-align:center;font:900 clamp(16px,6vw,30px) var(--dsp,system-ui);letter-spacing:.2em;color:#fff;opacity:.08}.pph .tb{z-index:3}.pphoto img{object-position:50% 22%}.pph{background-position:50% 12%!important;background-size:cover!important}body[data-v=pp]::before,body[data-v=pp]::after{display:none!important}';
+document.head.appendChild(st);
+{const x0=XV.pp;XV.pp=function(){const o=x0.apply(this,arguments);if(typeof o!=='string')return o;const p=P((UI.pp||{}).id);return (p&&p.cut)?o.replace('<div class="pph" style="','<div class="pph" style="background:#061238!important;').replace(/(<div class="pph"[^>]*>)/,'$1<div class="shbk"></div>'):o}}
+}
 </script>
 </body>
 </html>
