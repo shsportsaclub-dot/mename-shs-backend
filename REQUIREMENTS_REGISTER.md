@@ -230,3 +230,6 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 
 ## Fresh start: clear history + complete demo (block 139)
 - Matches page button "Clear history + full demo": confirm modal shows the count, then removes this phone's matches (players, teams, tournaments, settings stay) and builds one finished demo match (both innings, result). Published copies stay online. Test: tests/demo-fresh.cjs.
+
+## Animated commentary stream (block 140)
+- OBS scene ?scene=ccast&mid=<published match id>#overlay: top-down ground where each new ball animates (bowler to batter, shot line to the recorded direction, 4/6/OUT/WIDE flash), live score, batter and bowler, commentary text from the app's own commentary engine, last 6 balls. History is not replayed on load; backlog over 5 balls is skipped. Studio card "Animated commentary stream" (pick match, preview, copy URL). No 3D assets or PC needed. Test: tests/commentary-stream.cjs.

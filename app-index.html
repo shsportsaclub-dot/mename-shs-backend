@@ -12893,6 +12893,65 @@ Object.assign(A,{
 {const x0=XV.matches;if(x0)XV.matches=function(){const h=x0.apply(this,arguments);return typeof h==='string'&&can()&&!h.includes('data-a="demoFresh"')?h.replace('data-a="demo">Load demo match</button>','data-a="demo">Load demo match</button><button class="btn ghost" data-a="demoFresh">Clear history + full demo</button>'):h}}
 for(const nm of ['vMatches']){try{const v0=window[nm]||eval(nm);const w=function(){const h=v0.apply(this,arguments);return typeof h==='string'&&can()?h.replace('data-a="demo">Load demo match</button>','data-a="demo">Load demo match</button><button class="btn ghost" data-a="demoFresh">Clear history + full demo</button>'):h};try{eval(nm+'=w')}catch(e){window[nm]=w}}catch(e){}}
 })();
+
+/* 140 ANIMATED COMMENTARY STREAM: ball-by-ball animated ground + commentary for OBS (?scene=ccast&mid=<match id>#overlay). No 3D assets or PC needed; reads the published match. */
+(function(){
+const H=(typeof HELMET!=='undefined')?HELMET:'';
+const st=document.createElement('style');st.textContent=`.ccs{position:absolute;inset:0;font-family:var(--dsp,system-ui);color:#fff;background:linear-gradient(160deg,#061238,#0a1f5c 55%,#7a0f22)}
+.ccs:before{content:"";position:absolute;inset:0;background:url(${H}) 78% 55%/46% auto no-repeat;opacity:.1}
+.ccs-g{position:absolute;left:3cqw;top:5cqh;height:90cqh;aspect-ratio:1}.ccs-g svg{width:100%;height:100%;overflow:visible}
+.ccs-p{position:absolute;left:calc(3cqw + 90cqh + 3cqw);right:3cqw;top:5cqh;bottom:5cqh;display:flex;flex-direction:column;gap:2cqh}
+.ccs-sc{display:flex;flex-wrap:wrap;align-items:baseline;column-gap:2cqw}.ccs-sc b{white-space:nowrap}.ccs-sc b{font-size:5.6cqw;font-weight:900}.ccs-sc span{font-size:2.4cqw;opacity:.85}
+.ccs-bx{display:grid;grid-template-columns:1fr 1fr;gap:1.2cqw;font-size:2.1cqw}.ccs-bx div{background:#0b1020cc;border-radius:1cqw;padding:1cqw 1.4cqw;border-left:.5cqw solid #c4f000}.ccs-bx i{display:block;font-style:normal;font-size:1.5cqw;opacity:.7;letter-spacing:.15em}
+.ccs-t{flex:1;min-height:0;overflow:hidden;display:flex;align-items:center;font-size:2.5cqw;font-weight:700;line-height:1.3;background:#0b1020d9;border-radius:1.6cqw;padding:2cqw;border-left:.7cqw solid #ffd84d}
+.ccs-d{display:flex;gap:.8cqw}.ccs-d span{width:4cqw;height:4cqw;border-radius:50%;display:grid;place-items:center;font-size:1.9cqw;font-weight:800;background:#ffffff26}.ccs-d .f{background:#c4f000;color:#07182d}.ccs-d .s{background:#ff6b6b}.ccs-d .w{background:#ff2d55}
+.ccs-big{position:absolute;left:3cqw;top:5cqh;height:90cqh;aspect-ratio:1;display:grid;place-items:center;font-size:12cqw;font-weight:900;color:#ffd84d;text-shadow:0 .6cqw 2cqw #000;pointer-events:none;opacity:0;transition:opacity .25s}.ccs-big.on{opacity:1}
+.ccs-wait{inset:0;display:flex;align-items:center;justify-content:center;font-size:4cqw;opacity:.85}`;document.head.appendChild(st);
+const CC=UI.ccst=UI.ccst||{id:'',m:null,teams:{},players:{},shown:null,queue:[],busy:0,playing:0,fetched:0};
+const sceneNow=()=>{if(location.hash!=='#overlay')return UI.view==='stream'&&UI.ovScene==='ccast'?'ccast':'';const p=new URLSearchParams(location.search);if(p.get('scene')==='ccast'){CC.id=p.get('mid')||CC.id;return'ccast'}return''};
+const flat=m=>{const o=[];(m.innings||[]).forEach((inn,i)=>(inn.ev||[]).forEach((e,j)=>o.push({i,j,e})));return o};
+function inject(d){S.rt=S.rt||{teams:{},players:{}};S.rt.teams=S.rt.teams||{};S.rt.players=S.rt.players||{};Object.values(d.teams||{}).forEach(t=>{S.rt.teams[t.id]=t});Object.values(d.players||{}).forEach(p=>{S.rt.players[p.id]=p})}
+const $=id=>document.getElementById(id);
+function text(m,k){try{if(CC.d)inject(CC.d);const L=commentary(m,k.i).filter(x=>x.t==='b').reverse();return(L[k.j]||{}).txt||''}catch(e){return''}}
+function paint(){const m=CC.m;if(!m||!$('ccs'))return;if(CC.d)inject(CC.d);const i=Math.max(0,Math.min(m.innings.length-1,m.cur||0)),inn=m.innings[i];if(!inn)return;const k=calc(m,i);
+ const sc=$('ccs');sc.innerHTML=`<b>${esc(T(inn.bat).short||T(inn.bat).name)} ${k.runs}/${k.wk}</b><span>${Math.floor(k.lg/6)}.${k.lg%6} ov${i===1&&m.target?' | target '+m.target:''}</span>`;
+ const last=(inn.ev||[]).slice(-1)[0]||{};const bt=(inn.cur&&inn.cur.s)||last.bt,bl=(inn.cur&&inn.cur.bl)||last.bl,ns=inn.cur&&inn.cur.n;
+ $('ccb').innerHTML=`<div><i>BATTING</i>${esc(nm(bt)||'-')}${k.bat&&k.bat[bt]?' '+k.bat[bt].r+' ('+k.bat[bt].b+')':''}</div><div><i>BOWLING</i>${esc(nm(bl)||'-')}${k.bowl&&k.bowl[bl]?' '+k.bowl[bl].w+'-'+k.bowl[bl].r:''}</div>`;
+ const dots=(inn.ev||[]).slice(-6).map(e=>{const c=e.w?'w':e.r===6&&!e.x?'s':e.r===4&&!e.x?'f':'';return`<span class="${c}">${e.w?'W':e.x==='wd'?'Wd':e.x==='nb'?'Nb':e.r}</span>`}).join('');$('ccd').innerHTML=dots;const l=$('cct');if(l&&CC.line!=null&&l.textContent!==CC.line)l.textContent=CC.line}
+function say(t){CC.line=t;const e=$('cct');if(e)e.textContent=t}
+const NS='http://www.w3.org/2000/svg';
+function ground(){return `<svg viewBox="0 0 200 200"><defs><radialGradient id="ccgr"><stop offset="0" stop-color="#2f9e44"/><stop offset="1" stop-color="#1b6b2e"/></radialGradient></defs><circle cx="100" cy="100" r="96" fill="url(#ccgr)" stroke="#ffffffcc" stroke-width="1.4"/><circle cx="100" cy="100" r="48" fill="none" stroke="#ffffff55" stroke-dasharray="3 3"/><rect x="95" y="68" width="10" height="64" fill="#d9c28f" rx="1"/><g stroke="#fff" stroke-width="1.2"><path d="M96 70h8M96 130h8"/></g><g id="cctr"></g><circle id="ccb0" cx="100" cy="62" r="3.2" fill="#fff" opacity="0"/><circle id="ccbt" cx="100" cy="128" r="3.6" fill="#ffd84d"/><circle cx="100" cy="68" r="3.6" fill="#ff6b6b"/></svg>`}
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+async function play(k){const e=k.e,svg=document.querySelector('.ccs-g svg'),ball=$('ccb0'),tr=$('cctr');if(!svg||!ball){return}
+ tr.innerHTML='';const big=$('ccbig');const tx=(a,d)=>[100+Math.cos(a)*d*94,100+Math.sin(a)*d*94];
+ const hit=e.ang&&e.r>0&&!['b','lb'].includes(e.x),end=hit?tx(e.ang.a,Math.min(1.02,e.ang.d)):[100+(e.w?0:(e.x==='wd'?14:0)),e.w?124:(e.x?136:118)];
+ say(text(CC.m,k));paint();
+ const mv=(x0,y0,x1,y1,ms)=>new Promise(res=>{const t0=performance.now();ball.setAttribute('opacity','1');(function f(t){const p=Math.min(1,(t-t0)/ms),q=1-Math.pow(1-p,2);ball.setAttribute('cx',x0+(x1-x0)*q);ball.setAttribute('cy',y0+(y1-y0)*q);if(e.r===6&&hit)ball.setAttribute('r',3.2+5*Math.sin(Math.PI*p));if(p<1)requestAnimationFrame(f);else res()})(t0)});
+ await mv(100,62,100,124,650);
+ if(hit){const ln=document.createElementNS(NS,'line');ln.setAttribute('x1',100);ln.setAttribute('y1',124);ln.setAttribute('x2',end[0]);ln.setAttribute('y2',end[1]);ln.setAttribute('stroke',e.r===6?'#ff6b6b':e.r===4?'#ffd84d':'#ffffff99');ln.setAttribute('stroke-width',e.r>=4?2:1.2);ln.setAttribute('stroke-dasharray','3 2');tr.appendChild(ln);await mv(100,124,end[0],end[1],e.r>=4?850:1100)}
+ else await mv(100,124,end[0],end[1],350);
+ const word=e.w?'OUT!':e.x==='wd'?'WIDE':e.x==='nb'?'NO BALL':e.r===6&&hit?'SIX!':e.r===4&&hit?'FOUR!':'';
+ if(word&&big){big.textContent=word;big.classList.add('on')}
+ await wait(word?2200:1600);if(big)big.classList.remove('on');ball.setAttribute('opacity','0');ball.setAttribute('r',3.2);ball.setAttribute('cx',100);ball.setAttribute('cy',62)}
+async function pump(){if(CC.playing)return;CC.playing=1;try{while(CC.queue.length){const k=CC.queue.shift();if(CC.queue.length>5){say(text(CC.m,k));continue}await play(k)}}finally{CC.playing=0}}
+async function poll(){if(!sceneNow()||!CC.id||CC.busy)return;CC.busy=1;try{const j=await (await fetch(apiBase()+'/api/shared/matches/'+encodeURIComponent(CC.id))).json();if(!j.ok||!j.item||!j.item.data||!j.item.data.m)return;const d=j.item.data;CC.d=d;inject(d);CC.m=d.m;
+ const all=flat(d.m);if(CC.shown==null){CC.shown=all.length;render();setTimeout(()=>{if(all.length){say(text(CC.m,all[all.length-1]));paint()}},60);return}
+ if(all.length>CC.shown){CC.queue.push(...all.slice(CC.shown));CC.shown=all.length;pump()}else if(all.length<CC.shown){CC.shown=all.length;CC.queue=[]}}catch(e){}finally{CC.busy=0}}
+setInterval(poll,2000);
+const o0=overlayHTML;overlayHTML=function(prev){if(!sceneNow())return o0.apply(this,arguments);
+ if(!CC.id)return `<div class="ovroot ov" data-t="sh"><div class="ccs"><div class="ccs-wait">Add &amp;mid=MATCH_ID to this URL</div></div></div>`;
+ if(!CC.m){setTimeout(poll,0);return `<div class="ovroot ov" data-t="sh"><div class="ccs"><div class="ccs-wait">Connecting to the match...</div></div></div>`}
+ setTimeout(paint,0);
+ return `<div class="ovroot ov" data-t="sh"><div class="ccs"><div class="ccs-g">${ground()}</div><div class="ccs-big" id="ccbig"></div><div class="ccs-p"><div class="ccs-sc" id="ccs"></div><div class="ccs-bx" id="ccb"></div><div class="ccs-t" id="cct">...</div><div class="ccs-d" id="ccd"></div></div></div></div>`};
+/* studio card */
+{const sx=XV.studio;if(sx)XV.studio=function(){const o=sx.apply(this,arguments);if(typeof o!=='string'||o.includes('Animated commentary stream'))return o;
+ const ms=S.matches.filter(m=>!m.rm).slice().reverse();
+ const bx=`<div class="card"><h3>Animated commentary stream</h3><div class="mu sm" style="margin-bottom:6px">A ball-by-ball animated ground with live commentary, score and last 6 balls. Shows each shot going to where it was scored. Add as an OBS Browser Source (1920x1080). The match must be published (signed in, synced).</div><select data-c="ccPick"><option value="">Choose match</option>${ms.map(m=>`<option value="${esc(m.id)}" ${CC.id===m.id?'selected':''}>${esc((T(m.a)||{}).name)} v ${esc((T(m.b)||{}).name)}</option>`).join('')}</select><div class="row" style="gap:6px;margin-top:8px"><button class="btn sm" data-a="ccOpen">Preview in new tab</button><button class="btn sm ghost" data-a="ccCopy">Copy URL</button></div></div>`;
+ return o.replace(/(<div class="bar"><h2>Broadcast studio<\/h2><\/div>)/,'$1'+bx)}}
+const url=()=>location.href.split('#')[0].split('?')[0]+'?scene=ccast&mid='+encodeURIComponent(CC.id)+'#overlay';
+Object.assign(C,{ccPick(v){CC.id=v;CC.m=null;CC.shown=null;render()}});
+Object.assign(A,{ccCopy(){if(!CC.id)return toast('Choose the match first');try{navigator.clipboard.writeText(url());toast('URL copied')}catch(e){toast(url(),6000)}},ccOpen(){if(!CC.id)return toast('Choose the match first');window.open(url(),'_blank','noopener')}});
+})();
 </script>
 </body>
 </html>
