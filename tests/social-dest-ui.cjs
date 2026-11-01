@@ -23,8 +23,8 @@ await p.evaluate(()=>{S.stream.tick={lines:'Drinks break\nSponsor: Acme',live:tr
 assert.match(await p.locator('.ovprev').innerHTML(),/Drinks break/);
 /* language search */
 await p.evaluate(()=>{UI.view='settings';render()});
-await p.evaluate(()=>{UI.iso='FR';render()});assert.match(await p.locator('.lp .lph').first().innerText(),/Suggested for France/i);assert.equal(await p.locator('.lpl[data-sug] .lpb').first().getAttribute('data-v'),'fr');
+await p.evaluate(()=>{UI.iso='FR';render();document.querySelector('.lpd').open=true});assert.match(await p.locator('.lp .lph').first().innerText(),/Suggested for France/i);assert.equal(await p.locator('.lpl[data-sug] .lpb').first().getAttribute('data-v'),'fr');
 await p.fill('.lp input[data-c=lpQ]','swah');assert.equal(await p.locator('.lp .lpb:visible').count(),1);
 await p.click('.lp .lpb:visible');assert.equal(await p.evaluate(()=>S.prefs.lang),'sw');
-await p.fill('.lp input[data-c=lpQ]','日本');assert.equal(await p.locator('.lp .lpb:visible').count(),1);
+assert.equal(await p.locator('.lpd').evaluate(e=>e.open),false,'closes after choosing');await p.evaluate(()=>{document.querySelector('.lpd').open=true});await p.fill('.lp input[data-c=lpQ]','日本');assert.equal(await p.locator('.lp .lpb:visible').count(),1);
 assert.deepEqual(errs,[]);console.log('PASS social dest, dashboard, language search');await b.close()})().catch(e=>{console.error(e);process.exit(1)})
