@@ -16,7 +16,7 @@ for(const [n,x,y] of spots){
  await p.evaluate(()=>A.fanClose());
 }
 await p.evaluate(()=>A.plus());await p.waitForTimeout(100);await p.click('.fan-it[data-v=academy]');ok(await p.evaluate(()=>UI.view==='academy'&&!UI.fan&&!document.getElementById('fanmenu')),'Academy opens');
-await p.evaluate(()=>A.plus());await p.click('.fan-it[data-v=olx]');ok(await p.evaluate(()=>UI.view==='market'&&UI.mk.tab==='used'),'OLX');
+await p.evaluate(()=>A.plus());await p.click('.fan-it[data-v=auction]');ok(await p.evaluate(()=>UI.view==='auction'&&UI.au.tab==='home'&&!UI.au.open),'Auction');
 await p.evaluate(()=>A.plus());await p.click('.fan-it[data-v=tour]');ok(await p.evaluate(()=>UI.view==='tours'),'tournament');
 await p.evaluate(()=>A.plus());await p.click('.fan-it[data-v=book]');ok(await p.evaluate(()=>UI.view==='book'),'book');
 await p.evaluate(()=>A.plus());await p.click('.fan-it[data-v=match]');ok(await p.evaluate(()=>!!document.querySelector('.modal,#modal,[class*=modal]')||UI.view==='matches'),'start match');
