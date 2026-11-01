@@ -13067,6 +13067,30 @@ const url=()=>location.href.split('#')[0].split('?')[0]+'?scene=ccast&mid='+enco
 Object.assign(C,{ccPick(v){CC.id=v;CC.m=null;CC.shown=null;render()}});
 Object.assign(A,{ccCopy(){if(!CC.id)return toast('Choose the match first');try{navigator.clipboard.writeText(url());toast('URL copied')}catch(e){toast(url(),6000)}},ccOpen(){if(!CC.id)return toast('Choose the match first');window.open(url(),'_blank','noopener')}});
 })();
+
+/* 141 3D LIVE inside the app: any live match can be watched as the 3D avatar stream (the same scene OBS uses), like a live channel */
+(function(){
+const live=()=>(S.matches||[]).filter(m=>m&&!m.rm&&m.status==='live'&&!(typeof isDemo==='function'&&isDemo(m)&&false)).slice().reverse();
+const title=m=>`${esc((T(m.a)||{}).name||'Team A')} v ${esc((T(m.b)||{}).name||'Team B')}`;
+const src=id=>location.href.split('#')[0].split('?')[0]+'?scene=ccast&mid='+encodeURIComponent(id)+'#overlay';
+UI.l3=UI.l3||{id:''};
+const strip=()=>{const L=live();if(!L.length)return'';return `<div class="card" style="border-left:4px solid #ff2d55"><div class="row" style="justify-content:space-between;align-items:center"><b>&#128308; 3D Live</b><span class="mu sm">${L.length} live now</span></div>${L.map(m=>`<div class="item" data-a="live3d" data-id="${esc(m.id)}" style="cursor:pointer"><div style="flex:1"><b>${title(m)}</b><div class="mu sm">Watch as a 3D game stream with commentary</div></div><button class="btn sm" data-a="live3d" data-id="${esc(m.id)}">Watch</button></div>`).join('')}</div>`};
+XV.live3d=function(){const m=S.matches.find(x=>x.id===UI.l3.id);
+ if(!m)return `<div class="bar"><h2>3D Live</h2></div><div class="empty">Pick a live match.</div>${strip()}`;
+ const on=m.status==='live';
+ return `<div class="bar"><button class="btn sm ghost" data-a="go" data-v="matches">&larr;</button><h2 style="flex:1">${title(m)}</h2><span class="mcst ${on?'LIVE':'RESULT'}">${on?'LIVE':'ENDED'}</span></div>
+ <div style="position:relative;width:100%;aspect-ratio:16/9;background:#0a1a3a;border-radius:12px;overflow:hidden"><iframe id="l3f" src="${esc(src(m.id))}" style="position:absolute;inset:0;width:100%;height:100%;border:0" allow="autoplay;fullscreen" allowfullscreen></iframe></div>
+ <div class="row" style="gap:6px;margin:8px 0"><button class="btn sm ghost" data-a="l3Full">Full screen</button><button class="btn sm ghost" data-a="open" data-id="${esc(m.id)}">Scorecard</button></div>
+ <div class="mu sm">Tap the screen once to turn the sound on. The stream follows the scorer ball by ball. If the match is not published online yet, it stays on "Connecting".</div>`};
+Object.assign(A,{live3d(d){UI.l3={id:d.id};UI.view='live3d';UI.drawer=false;render();window.scrollTo&&window.scrollTo(0,0)},
+ l3Full(){const f=document.getElementById('l3f');try{(f.requestFullscreen||f.webkitRequestFullscreen).call(f)}catch(e){toast('Full screen is not available here')}}});
+const wrap=(k)=>{const x0=XV[k];if(!x0)return;XV[k]=function(){const o=x0.apply(this,arguments);if(typeof o!=='string'||o.includes('3D Live'))return o;const b=strip();if(!b)return o;
+  if(k==='match'){const m=curM();return m&&m.status==='live'?`<div class="card" style="border-left:4px solid #ff2d55"><div class="row" style="justify-content:space-between;align-items:center"><b>&#128308; Watch in 3D</b><button class="btn sm" data-a="live3d" data-id="${esc(m.id)}">3D Live</button></div></div>`+o:o}
+  const i=o.indexOf('</div>');return o.replace(/(<div class="bar">[\s\S]*?<\/div>)/,'$1'+b)}};
+wrap('matches');wrap('match');wrap('streamhub');
+try{MENU2[0][1].splice(2,0,['live3d','\u{1F3AE}','3D Live stream'])}catch(e){}
+document.head.appendChild(Object.assign(document.createElement('style'),{textContent:'body[data-v=live3d]::before,body[data-v=live3d]::after{display:none!important}'}));
+})();
 </script>
 </body>
 </html>
