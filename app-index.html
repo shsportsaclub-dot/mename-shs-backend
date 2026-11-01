@@ -11997,7 +11997,7 @@ const SH_ICON='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALAAAACwCAYAAACvt+R
  const LAB={out:'OUT',wide:'WIDE',noball:'NO BALL',bye:'BYE',legbye:'LEG BYE',four:'FOUR',six:'SIX',dead:'DEAD BALL',short:'SHORT RUN',revoke:'DISREGARD LAST SIGNAL'};
  window.shSig=k=>SIG[k]||'';window.shFig=k=>(FIG[k]||['',''])[1];
  const st=document.createElement('style');st.textContent='i.us{--figgap:#16203a;display:inline-block;width:22px;height:28px;vertical-align:-8px;margin-right:4px;font-style:normal}i.us svg{width:100%;height:100%}.shsig{--figgap:#0a0e18;position:fixed;left:50%;top:18%;transform:translateX(-50%);z-index:9999;pointer-events:none;display:flex;align-items:center;gap:12px;padding:10px 18px;border-radius:16px;background:rgba(10,14,24,.88);color:#fff;border:2px solid var(--sp1,#e11d2e);box-shadow:0 8px 28px rgba(0,0,0,.5);animation:shsig 1.7s ease both}.shsig svg{width:56px;height:70px;overflow:visible;color:#ffd43b}.shsig b{font-size:22px;letter-spacing:1px}.shsig small{display:block;font-size:12px;opacity:.8}@keyframes shsig{0%{opacity:0;transform:translateX(-50%) scale(.7)}12%{opacity:1;transform:translateX(-50%) scale(1.05)}20%{transform:translateX(-50%) scale(1)}80%{opacity:1}100%{opacity:0;transform:translateX(-50%) translateY(-10px)}}@media (prefers-reduced-motion:reduce){.shsig{animation:none}}.sgg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.sgg div{text-align:center;font-size:11px;font-weight:700}.sgg svg{width:44px;height:58px;display:block;margin:0 auto 2px}';document.head.appendChild(st);
- const show=(svg,txt,sub)=>{if(S.settings&&S.settings.sigOff)return;const old=document.getElementById('sh-sig');if(old)old.remove();const d=document.createElement('div');d.id='sh-sig';d.className='shsig';d.setAttribute('role','status');d.innerHTML=svg+`<div><b>${esc(txt)}</b>${sub?`<small>${esc(sub)}</small>`:''}</div>`;document.body.appendChild(d);setTimeout(()=>{if(d.parentNode)d.remove()},1750)};
+ const show=(svg,txt,sub)=>{if(S.settings&&S.settings.sigOff)return;if(/^#(overlay|ov)/.test(location.hash)||document.documentElement.dataset.overlay)return;const old=document.getElementById('sh-sig');if(old)old.remove();const d=document.createElement('div');d.id='sh-sig';d.className='shsig';d.setAttribute('role','status');d.innerHTML=svg+`<div><b>${esc(txt)}</b>${sub?`<small>${esc(sub)}</small>`:''}</div>`;document.body.appendChild(d);setTimeout(()=>{if(d.parentNode)d.remove()},1750)};
  const b0=ball;ball=function(m,s){const inn=m&&m.innings&&m.innings[m.cur],n=inn?inn.ev.length:0;let before=0,bt=null;try{bt=s&&s.bt;const c=calc(m,m.cur);const id=inn&&inn.cur&&inn.cur.s;before=id&&c.bat[id]?c.bat[id].r:0;bt=id}catch(e){}
   const r=b0.apply(this,arguments);
   try{const e=inn&&inn.ev.length>n?inn.ev[n]:null;if(e){let k='';if(e.w)k='out';else if(e.x==='wd')k='wide';else if(e.x==='nb')k='noball';else if(e.x==='b')k='bye';else if(e.x==='lb')k='legbye';else if(e.r===6)k='six';else if(e.r===4)k='four';
@@ -12013,6 +12013,28 @@ const SH_ICON='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALAAAACwCAYAAACvt+R
  Object.assign(A,{sigToggle(){S.settings.sigOff=!S.settings.sigOff;commit();toast('Signal pop-up '+(S.settings.sigOff?'off':'on'),2000)},
   sigGuide(){const sg=Object.keys(SIG).map(k=>`<div>${SIG[k]}${LAB[k]}</div>`).join(''),fg=Object.keys(FIG).map(k=>`<div>${FIG[k][1]}${FIG[k][0]}</div>`).join('');
    UI.modal={t:'html',html:`<h3>Umpire signals</h3><div class="sgg">${sg}</div><h3 style="margin-top:14px">Players</h3><div class="sgg">${fg}</div>`};renderModal()}});
+}
+
+/* ---------------- 119 VIDEO + SCORE STRIP: when a stream is playing, show a live score strip under the video (score, overs, run rate, target and last balls) and shrink the video into a small floating player when the viewer scrolls past it ---------------- */
+{
+ const sc0=streamCard;
+ streamCard=function(key,live){
+  const h=sc0.apply(this,arguments);
+  if(!live||h.indexOf('class="swin')<0)return h;
+  const id=String(key).replace(/^[mw]/,''),m=(S.matches||[]).find(x=>x.id===id);if(!m||!m.innings||!m.innings[m.cur])return h;
+  let strip='';
+  try{setFmt(m);const c=calc(m,m.cur),inn=m.innings[m.cur],lg=inn.ev.reduce((n,e)=>n+((e.x==='wd'||e.x==='nb')?0:1),0),ov=lg/BPO,crr=ov>0?(c.runs/ov):0,tm=inn.bat,name=t=>(typeof tn==='function'?tn(t):'')||'';
+   let need='';if(m.cur===1&&m.target){const left=Math.max(0,m.target-c.runs),bl=Math.max(0,Math.round(m.overs*BPO)-lg);need=`<div class="vs-n">${left} needed in ${bl} balls${bl?` · RRR ${(left/(bl/BPO)).toFixed(2)}`:''}</div>`}
+   const L=overList(m,m.cur).slice(-2);
+   strip=`<div class="vstrip"><div class="vs-s"><b>${c.runs}-${c.wk}</b><span>(${fmtOv(lg)})</span><em>CRR ${crr.toFixed(2)}</em></div>${need}<div class="vs-b">${L.map(q=>q.b.map(x=>`<span class="ch ${x.cls}">${x.lab}</span>`).join('')).join('<i></i>')}</div></div>`}catch(e){return h}
+  return h.replace(/(<div class="swin[\s\S]*?<\/div>)/,'$1'+strip)};
+ const st=document.createElement('style');st.textContent='.vstrip{margin-top:6px;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1)}.vs-s{display:flex;align-items:baseline;gap:8px}.vs-s b{font-size:22px}.vs-s span{opacity:.75}.vs-s em{margin-left:auto;font-style:normal;font-size:12px;opacity:.85}.vs-n{font-size:12px;margin-top:2px;color:#ffd43b}.vs-b{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px;align-items:center}.vs-b i{width:6px}.swin.mini{position:fixed;right:10px;bottom:76px;width:46vw;max-width:220px;z-index:60;margin:0;box-shadow:0 6px 22px rgba(0,0,0,.55)}.swph{display:block}';document.head.appendChild(st);
+ const watch=()=>{const w=document.querySelector('.swin');if(!w||w.dataset.vw||!('IntersectionObserver' in window))return;w.dataset.vw='1';
+  const sn=document.createElement('div');sn.className='swph';sn.style.height='1px';w.before(sn);
+  new IntersectionObserver(es=>{es.forEach(e=>{const out=!e.isIntersecting&&e.boundingClientRect.bottom<0;
+   if(out&&!w.classList.contains('mini')){sn.style.height=w.offsetHeight+'px';w.classList.add('mini')}
+   else if(!out&&e.isIntersecting&&w.classList.contains('mini')){w.classList.remove('mini');sn.style.height='1px'}})},{threshold:0}).observe(sn)};
+ const r0=render;render=function(){r0.apply(this,arguments);setTimeout(watch,60)};
 }
 </script>
 </body>

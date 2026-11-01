@@ -169,3 +169,8 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 - Extras buttons (Wide/No ball/Bye/Leg bye) show umpire-signal icons; each scored ball shows a short pop-up (OUT, WIDE, NO BALL, BYE, LEG BYE, FOUR, SIX, FIFTY, HUNDRED) with the signal/figure.
 - Scorer tools: Signals on/off toggle and Signals guide (umpire signals + bowler/batter/keeper/catch/celebration/century figures).
 - Field map: no position names on screen; tap a point and the wagon-wheel input is taken from that point. Corner labels OFF SIDE / LEG SIDE.
+
+## Video + live score strip
+- When a stream is live, a score strip sits under the video: score-wickets, overs, CRR, target needed/RRR (2nd innings) and last two overs of ball chips.
+- Scrolling past the video shrinks it into a small floating player (bottom right); scrolling back restores it. Signal pop-ups are hidden on the OBS overlay page.
+- Test: tests/video-strip.cjs. Known pre-existing failure: tests/stream-modes.cjs (banner text) — not part of this change.
