@@ -199,3 +199,9 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 ## About us, Help centre, Laws and study (owner request 1 Nov 2026)
 - First drawer group "About and help": About us (what the app offers, career benefit per feature, sports list with status, who it is for), Help centre (steps + tips per feature, searchable), Laws, umpiring and study (42 Laws of Cricket in simple words, umpire guidelines, scoring rules, formats, fielding positions, glossary, quiz; official source = MCC Laws / ICC playing conditions).
 - Every screen with help text shows a "? Help" button opening a panel with that feature's steps. Tests: about-help.cjs.
+
+## Schedule, Archives, Videos, Series, registered users (owner request 1 Nov 2026)
+- Top menu Schedule = upcoming matches grouped by day in the viewer's time (live first), filters All / Scoring Heroes / World / series; Archives = results by year with Results, Series and Records tabs (reports, rankings, history). Pattern follows Cricbuzz/ESPNcricinfo schedule and series-archive pages.
+- Every match card (world and SH, any page) opens its match centre when tapped; world cards on Matches had no handler before.
+- Videos page is a landing (SH Sports Club channel, live streams, highlights, reels) instead of a blank screen; Series page lists current/upcoming/completed world series (tap opens Schedule or Archives for that series) above the organiser's own tournaments.
+- Admin-only "Registered users" (drawer > Account, or tap the header users-count pill): name, role, kind, phone/email, location, joined date, SH ID, searchable; server `GET /api/admin/users` (admin session only). Tests: schedule-archive.cjs, users-admin.cjs.

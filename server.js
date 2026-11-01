@@ -1781,6 +1781,18 @@ routes['GET /api/admin/users-count'] = async (req) => {   // admin only: how man
   viewPrune(); const watching = new Set(); for (const m of viewMap.values()) for (const v of m.keys()) watching.add(v);
   return [200, { ok: true, total: all.length, today: all.filter(x => (x.created || 0) > day).length, live: watching.size }];
 };
+routes['GET /api/admin/users'] = async (req) => {   // admin only: details of everyone registered so far (newest first)
+  const phone = readSession((req.headers.authorization || '').replace(/^Bearer /, '')), u = phone && db.users[phone];
+  if (!u) return [401, { ok: false, error: 'Please sign in again' }];
+  promote(u, phone);
+  if (u.role !== 'admin') return [403, { ok: false, error: 'Only an admin can see this' }];
+  const list = Object.entries(db.users).map(([k, x]) => ({
+    id: k, nick: String(x.nick || x.name || ''), kind: String(x.kind || ''), role: promote(x, k).role,
+    phone: k.startsWith('e:') ? '' : String(x.e164 || x.phone || k), email: String(x.email || (k.startsWith('e:') ? k.slice(2) : '')),
+    loc: x.loc || null, age: x.age == null ? '' : x.age, shid: x.shid || '', pid: x.shPid || '', created: x.created || 0, closed: !!x.closed
+  })).sort((a, b) => (b.created || 0) - (a.created || 0));
+  return [200, { ok: true, total: list.length, users: list }];
+};
 routes['GET /api/admin/scorers'] = async (req) => {   // who can score matches: admins see and manage the Scorer list from the app
   const phone = readSession((req.headers.authorization || '').replace(/^Bearer /, '')), u = phone && db.users[phone];
   if (!u) return [401, { ok: false, error: 'Please sign in again' }];

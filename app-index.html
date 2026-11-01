@@ -2291,7 +2291,7 @@ function cbHome(){
   let L=[];if(j&&j.ok){const rec=F2.rec.filter(m=>Date.now()-wTm(m)<21*864e5);L=f==='live'?F2.live:f==='rec'?rec:f==='up'?F2.up:[...F2.live,...F2.up.slice(0,6),...rec.slice(0,8)]}
   const chips=j&&j.ok?[...F2.live,...F2.rec.slice(0,6)].map(m=>`<span data-a="wOpen" data-id="${esc(m.id)}">${esc(cbShortRes(m))}</span>`).join(''):'';
   const N=(UI.news&&UI.news.ok?UI.news.items:[]);
-  const nav=[['home','Live Scores'],['matches','Schedule'],['reports','Archives'],['news','News'],['tours','Series'],['teams','Teams'],['reels','Videos'],['rankings','Rankings'],['epaper','ePaper'],['social','Social'],['market','Market']];
+  const nav=[['home','Live Scores'],['sched','Schedule'],['arch','Archives'],['news','News'],['tours','Series'],['teams','Teams'],['reels','Videos'],['rankings','Rankings'],['epaper','ePaper'],['social','Social'],['market','Market']];
   const lab={all:'ALL',live:'LIVE',rec:'RESULTS',up:'UPCOMING'}[f];
   const feed=!j?'<div class="card mu" style="margin:10px 0">Loading live scores...</div>':!j.ok?`<div class="card mu" style="margin:10px 0">Live feed unavailable: ${esc(j.error||'')}</div>`:L.length?`<div class="cbcar">${L.map(cbCard).join('')}</div>`:'<div class="card mu" style="margin:10px 0">No matches in this filter right now.</div>';
   const lead=N[0],rest=N.slice(1,9);
@@ -10687,7 +10687,7 @@ document.addEventListener('input',e=>{const el=e.target;if(!el||!/^qt-n-[ab]$/.t
 
 /* ---------------- 74 SKY HIGH HOME: same top menu as Light (Live Scores, Schedule, Archives, News, Series, Teams, Videos, Rankings, ePaper, Social, Market) ---------------- */
 {
- const NAV=[['home','Live Scores'],['matches','Schedule'],['reports','Archives'],['news','News'],['tours','Series'],['teams','Teams'],['reels','Videos'],['rankings','Rankings'],['epaper','ePaper'],['social','Social'],['market','Market']];
+ const NAV=[['home','Live Scores'],['sched','Schedule'],['arch','Archives'],['news','News'],['tours','Series'],['teams','Teams'],['reels','Videos'],['rankings','Rankings'],['epaper','ePaper'],['social','Social'],['market','Market']];
  const h0=vHome;
  vHome=function(){const o=h0.apply(this,arguments);if(typeof o!=='string'||window.shTheme()==='mday')return o;
   return `<div class="cbnav shnav">${NAV.map(([k,l])=>`<button class="${k==='home'?'on':''}" data-a="${k==='news'?'cbNews':'go'}" data-v="${k}">${l}</button>`).join('')}</div>`+o};
@@ -11409,7 +11409,7 @@ Object.assign(C,{ovAd(v){S.stream.adText=String(v||'').slice(0,140);save()}});
 
 /* ---------------- 104 ONE DESIGN SYSTEM: same top menu on every page, per-sport accent, one tab/header/card/form style, readable skins ---------------- */
 {
- const NAV=[['home','Live Scores'],['matches','Schedule'],['reports','Archives'],['news','News'],['tours','Series'],['teams','Teams'],['reels','Videos'],['rankings','Rankings'],['epaper','ePaper'],['social','Social'],['market','Market']];
+ const NAV=[['home','Live Scores'],['sched','Schedule'],['arch','Archives'],['news','News'],['tours','Series'],['teams','Teams'],['reels','Videos'],['rankings','Rankings'],['epaper','ePaper'],['social','Social'],['market','Market']];
  const TAB={home:'home',wmatch:'home',matches:'matches',match:'matches',reports:'reports',history:'reports',tours:'tours',tour:'tours',tjoin:'tours',teams:'teams',reels:'reels',rankings:'rankings',players:'rankings',epaper:'epaper',social:'social',studio:'social',market:'market'};
  const SKIP={score:1,aucreg:1,pay:1,pcard:1,stream:1,tdash:1,auth:1};
  const SP={cricket:['#e11d2e','#0a1f5c'],football:['#16a34a','#064e3b'],hockey:['#0ea5e9','#0c4a6e'],kabaddi:['#f97316','#7c2d12'],badminton:['#a3e635','#365314'],volleyball:['#f59e0b','#78350f'],basketball:['#fb7185','#7f1d1d']};
@@ -12413,6 +12413,7 @@ about:['About us','What Scoring Heroes is and what it offers.',['Scroll through 
 helpc:['Help centre','Step-by-step help for each feature.',['Search or open any topic.'],''],
 learn:['Laws and study','Laws of Cricket, umpiring, scoring and quiz.',['Pick a tab.','Try the quiz at the end.'],'Official source: MCC Laws of Cricket and ICC playing conditions.']};
 
+window.SH_HELP=HELP;
 const SPN=r=>{if(window.S&&Array.isArray(S.cat)&&S.cat.length)return S.cat;try{return CAT0.map(r=>({id:r[0],name:r[1],icon:r[2],cat:r[3],fm:r[5].slice(),st:r[6]}))}catch(e){return[]}};
 const stCls=t=>t==='AVAILABLE'?'a':t==='LIMITED'?'l':'c';
 const stTxt=t=>t==='AVAILABLE'?'Full features':t==='LIMITED'?'Scorer and records':'Coming soon';
@@ -12452,7 +12453,7 @@ C.hq=function(v){UI.hq=v;render()};
 /* menu: About us first, then help and study */
 if(!MENU2.some(g=>g[0]==='About and help'))MENU2.unshift(['About and help',[['about','ℹ️','About us'],['helpc','❓','Help centre'],['learn','\u{1F4DA}','Laws, umpiring and study']]]);
 IC.info='<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.2"/>';IC.book='<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2zM4 19V5M8 7h8"/>';
-IC.post='<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 14l4-4 4 4 3-3 5 5M9 8.5v.2"/>';const MI={about:'info',helpc:'help',learn:'book',score:'target',posts:'post'};
+IC.post='<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 14l4-4 4 4 3-3 5 5M9 8.5v.2"/>';const MI={about:'info',helpc:'help',learn:'book',score:'target',posts:'post',users:'users'};
 const hlpDom=()=>{try{
  document.querySelectorAll('.drawer .mi .e').forEach(el=>{const b=el.closest('button'),k=b&&MI[b.dataset.v];if(k&&IC[k])el.innerHTML=ic(k)});
  const old=document.getElementById('sh-hlp');if(old)old.remove();
@@ -12464,6 +12465,126 @@ const hlpDom=()=>{try{
  if(UI.hlp&&HELP[UI.hlp]){const x=HELP[UI.hlp];const d=document.createElement('div');d.id='sh-hlp';d.innerHTML='<div class="pn" role="dialog" aria-label="Help"><h3>'+E(x[0])+'</h3><div class="mu">'+E(x[1])+'</div><ol>'+x[2].map(s=>'<li>'+E(s)+'</li>').join('')+'</ol>'+(x[3]?'<div class="tip">Tip: '+E(x[3])+'</div>':'')+'<div class="row" style="gap:8px;margin-top:12px"><button class="btn ghost" data-a="go" data-v="helpc" style="flex:1">Help centre</button><button class="btn" data-a="hlpClose" style="flex:1">Close</button></div></div>';d.addEventListener('click',e=>{if(e.target===d){UI.hlp=null;render()}});document.body.appendChild(d)}
 }catch(e){}};
 const r2=render;render=function(){const o=r2.apply(this,arguments);hlpDom();return o};
+}
+
+/* ---- 127 Registered users (admin): details of everyone registered so far ---- */
+{
+const E=x=>esc(x==null?'':String(x));
+const st=document.createElement('style');st.id='sh-users-css';st.textContent='.ru{padding:12px 14px 96px}.ru h2{font-family:var(--dsp);margin:4px 0 8px}.rus{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 10px}.rus span{border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:99px;padding:5px 11px;font-size:12.5px;font-weight:700}.rur{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:11px 13px;margin-bottom:8px;color:var(--tx);font-size:13.5px;line-height:1.45}.rur b{font-size:15px}.rur .t{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.rur .r{margin-left:auto;font-size:10.5px;font-weight:800;border:1px solid var(--bd);border-radius:99px;padding:2px 8px;color:var(--mu);text-transform:uppercase}.rur .m{color:var(--mu);font-size:12.5px;overflow-wrap:anywhere}.ucnt{cursor:pointer}';document.head.appendChild(st);
+const fmt=t=>{if(!t)return 'date not recorded';try{return new Date(t).toLocaleString('en-IN',{day:'numeric',month:'short',year:'numeric',hour:'numeric',minute:'2-digit'})}catch(e){return ''}};
+const locTxt=l=>!l?'':typeof l==='string'?l:[l.city,l.district,l.state,l.country].filter(Boolean).join(', ');
+async function pull(){const U=UI.ru||(UI.ru={});if(!S.tok||!apiBase()){U.err='Open the real app link and sign in to see registered users.';U.busy=0;render();return}
+ U.busy=1;U.err='';render();
+ try{const r=await fetch(apiBase()+'/api/admin/users',{headers:{Authorization:'Bearer '+S.tok}});const j=await r.json();if(j&&j.ok){U.list=j.users;U.total=j.total}else U.err=(j&&j.error)||'Could not load users'}catch(e){U.err='Could not reach the server'}
+ U.busy=0;render()}
+XV.users=function(){const adm=S.user&&S.user.role==='admin';if(!adm)return '<div class="ru"><h2>Registered users</h2><div class="empty">Admins only.</div></div>';
+ const U=UI.ru||(UI.ru={}),q=String(U.q||'').toLowerCase(),f=U.f||'all';
+ if(!U.list&&!U.busy&&!U.err&&!U.asked){U.asked=1;setTimeout(pull,0)}
+ let L=(U.list||[]).filter(u=>(f==='all'||u.role===f||u.kind===f)&&(!q||(u.nick+' '+u.phone+' '+u.email+' '+u.shid+' '+locTxt(u.loc)).toLowerCase().includes(q)));
+ const cnt=k=>(U.list||[]).filter(u=>u.role===k).length,day=Date.now()-864e5;
+ return `<div class="ru"><div class="bar" style="padding:0"><h2>Registered users</h2></div>
+ <div class="rus"><span>Total ${U.total==null?'-':U.total}</span><span>Admins ${cnt('admin')}</span><span>Scorers ${cnt('scorer')}</span><span>New today ${(U.list||[]).filter(u=>u.created>day).length}</span></div>
+ <div class="row" style="gap:8px;margin-bottom:8px"><input data-c="ruq" placeholder="Search name, phone, email or SH ID" value="${E(U.q||'')}" style="flex:1"><button class="btn sm ghost" data-a="ruRefresh">Refresh</button></div>
+ <div class="tabs" style="margin-bottom:8px">${[['all','All'],['admin','Admins'],['scorer','Scorers'],['viewer','Others']].map(([k,l])=>`<button class="${f===k?'on':''}" data-a="ruF" data-v="${k}">${l}</button>`).join('')}</div>
+ ${U.busy?'<div class="mu">Loading registered users...</div>':''}${U.err?`<div class="empty">${E(U.err)}</div>`:''}
+ ${L.map(u=>`<div class="rur"><div class="t"><b>${E(u.nick||'No name')}</b><span class="r">${E(u.role)}</span></div><div>${E([u.kind,u.age?('age '+u.age):''].filter(Boolean).join(' · '))}</div><div class="m">${u.phone?'Phone '+E(u.phone):''}${u.phone&&u.email?' · ':''}${u.email?E(u.email):''}</div><div class="m">${E(locTxt(u.loc))}${locTxt(u.loc)?' · ':''}Joined ${E(fmt(u.created))}${u.shid?' · '+E(u.shid):''}${u.closed?' · closed':''}</div></div>`).join('')||(U.busy||U.err?'':'<div class="empty">No users match.</div>')}
+ <div class="mu sm" style="margin-top:8px">Only admins can see this list. Do not share these details.</div></div>`};
+Object.assign(A,{ruRefresh(){pull()},ruF(d){(UI.ru=UI.ru||{}).f=d.v;render()},ruOpen(){UI.view='users';(UI.ru=UI.ru||{}).asked=0;UI.ru.list=null;render();window.scrollTo&&window.scrollTo(0,0)}});
+C.ruq=function(v){(UI.ru=UI.ru||{}).q=v;render()};
+if(!MENU2.some(g=>g[1].some(i=>i[0]==='users'))){const g=MENU2.find(x=>x[0]==='Account');if(g)g[1].push(['users','\u{1F465}','Registered users (admin)'])}
+{const d0=drawer;drawer=function(){const o=d0.apply(this,arguments);return (S.user&&S.user.role==='admin')?o:o.replace(/<button class="mi[^"]*" data-a="go" data-v="users">[\s\S]*?<\/button>/,'')}}
+document.addEventListener('click',e=>{const p=e.target.closest&&e.target.closest('.ucnt');if(p&&S.user&&S.user.role==='admin'){e.preventDefault();A.ruOpen()}});
+}
+
+/* ---- 128 Schedule + Archives pages (Cricbuzz/ESPNcricinfo pattern) and tappable match cards ---- */
+{
+const E=x=>esc(x==null?'':String(x));
+const st=document.createElement('style');st.id='sh-sched-css';st.textContent=
+'.sc2{padding:6px 14px 96px}.sc2 h2{font-family:var(--dsp);margin:6px 0 8px}.sc2 .chips{display:flex;gap:8px;overflow-x:auto;padding:2px 0 10px}.sc2 .chips button{flex:none;border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:99px;padding:7px 13px;font-weight:700;font-size:13px}.sc2 .chips button.on{background:#e11d2e;border-color:#e11d2e;color:#fff}'+
+'.sc2 .dh{font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);margin:14px 0 6px}'+
+'.scr{display:grid;grid-template-columns:64px 1fr auto;gap:2px 12px;align-items:center;background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:11px 12px;margin-bottom:8px;color:var(--tx);cursor:pointer}.scr .tm{font-weight:800;font-size:14px;grid-row:span 2;text-align:center;line-height:1.25}.scr .tm small{display:block;font-weight:600;color:var(--mu);font-size:11px}.scr .nm{font-weight:700;font-size:14.5px;overflow-wrap:anywhere}.scr .sb{color:var(--mu);font-size:12.5px;grid-column:2/4;overflow-wrap:anywhere}.scr .ft{font-size:10.5px;font-weight:800;border:1px solid var(--bd);border-radius:99px;padding:2px 8px;color:var(--mu);text-transform:uppercase;white-space:nowrap}.scr .lv{background:#dc2626;border-color:#dc2626;color:#fff}.scr .rs{grid-column:2/4;font-size:13px;font-weight:700;color:#16a34a;overflow-wrap:anywhere}'+
+'.scr:active{transform:scale(.99)}.cbm[data-mid],.card.cbm:has([data-a=open]){cursor:pointer}';
+document.head.appendChild(st);
+
+/* every match card opens its centre when tapped anywhere (world cards had no handler) */
+document.addEventListener('click',e=>{const t=e.target;if(!t.closest||t.closest('a,button,input,select,textarea,[data-a]'))return;
+ const w=t.closest('[data-mid]');if(w&&w.dataset.mid&&typeof A.wOpen==='function'&&(UI.live&&UI.live.matches||[]).some(m=>m.id===w.dataset.mid)){A.wOpen({id:w.dataset.mid});return}
+ const c=t.closest('.card.cbm');const a=c&&c.querySelector('.ft [data-a=open]');if(a){A.open({id:a.dataset.id})}},false);
+
+const tsW=m=>{try{if(m.time){const t=new Date(m.time+(/Z|\+/.test(m.time)?'':'Z'));if(!isNaN(t))return t.getTime()}if(m.date){const t=new Date(m.date+'T00:00:00');if(!isNaN(t))return t.getTime()}}catch(e){}return 0};
+const tsL=m=>{try{const t=new Date((m.date||'')+'T'+(m.time||'09:00'));if(!isNaN(t))return t.getTime()}catch(e){}return m.createdAt||0};
+const typ=m=>String(m.type||m.cat||'').toUpperCase().slice(0,6);
+const day=t=>{const d=new Date(t),n=new Date(),k=x=>new Date(x.getFullYear(),x.getMonth(),x.getDate()).getTime(),df=Math.round((k(d)-k(n))/864e5);const lab=d.toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'});return df===0?'Today · '+lab:df===1?'Tomorrow · '+lab:df===-1?'Yesterday · '+lab:lab};
+const hm=t=>t?new Date(t).toLocaleTimeString('en-IN',{hour:'numeric',minute:'2-digit'}):'';
+const nameL=m=>{const a=T(m.a),b=T(m.b);return (a&&a.name||'Team A')+' vs '+(b&&b.name||'Team B')};
+function items(kind){ // kind: up | rec
+ const out=[];
+ (S.matches||[]).forEach(m=>{const live=m.status==='live'||m.status==='break',done=m.status==='done';
+  if(kind==='up'&&done)return;if(kind==='rec'&&!done)return;
+  out.push({src:'sh',id:m.id,ts:tsL(m),live,name:nameL(m),sub:[m.cat||'Scoring Heroes match',m.venue].filter(Boolean).join(' · '),fmt:m.overs?m.overs+' ov':'',res:done?(m.result||'Result'):''})});
+ const F=(typeof wFilter==='function')?wFilter():{live:[],up:[],rec:[]};
+ const w=kind==='up'?F.live.concat(F.up):F.rec;
+ w.forEach(m=>{const sp=wSplit(m);out.push({src:'w',id:m.id,ts:tsW(m),live:!!(m.started&&!m.ended),name:sp.teams,sub:[sp.desc,sp.series,m.venue].filter(Boolean).join(' · '),fmt:typ(m),res:kind==='rec'?(m.status||''):'',series:sp.series})});
+ return out}
+const row=x=>`<div class="scr" data-a="${x.src==='sh'?'open':'wOpen'}" data-id="${E(x.id)}"><div class="tm">${x.live?'LIVE':x.ts?E(hm(x.ts)):'TBA'}<small>${x.src==='sh'?'SH':'World'}</small></div><div class="nm">${E(x.name)}</div><span class="ft ${x.live?'lv':''}">${E(x.live?'Live':x.fmt||'Match')}</span><div class="sb">${E(x.sub)}</div>${x.res?`<div class="rs">${E(x.res)}</div>`:''}</div>`;
+
+XV.sched=function(){const U=UI.sch||(UI.sch={f:'all'});let L=items('up').filter(x=>(U.f==='all'||(U.f==='sh')===(x.src==='sh'))&&(!U.s||x.series===U.s));
+ const live=L.filter(x=>x.live),up=L.filter(x=>!x.live).sort((a,b)=>(a.ts||9e15)-(b.ts||9e15)),g={};up.forEach(x=>{const k=x.ts?day(x.ts):'Date to be announced';(g[k]=g[k]||[]).push(x)});
+ const j=UI.live,note=!j?'<div class="mu sm">Loading world fixtures...</div>':!j.ok?`<div class="mu sm">World fixtures unavailable here. Your Scoring Heroes matches still show.</div>`:'';
+ return `<div class="sc2"><h2>Schedule</h2><div class="mu sm" style="margin-bottom:8px">Upcoming matches in your time, day by day. Tap a match to open it.</div>
+ <div class="chips">${[['all','All'],['sh','Scoring Heroes'],['w','World']].map(([k,l])=>`<button class="${U.f===k?'on':''}" data-a="schF" data-v="${k}">${l}</button>`).join('')}${U.s?`<button class="on" data-a="schS" data-v="">${E(U.s)} ✕</button>`:''}${can()?'<button data-a="newMatch">+ New match</button>':''}</div>${note}
+ ${live.length?`<div class="dh">Live now</div>${live.map(row).join('')}`:''}
+ ${Object.keys(g).map(k=>`<div class="dh">${E(k)}</div>${g[k].map(row).join('')}`).join('')}
+ ${!live.length&&!up.length?'<div class="empty">No upcoming matches yet. Create a match to see it here.</div>':''}</div>`};
+
+XV.arch=function(){const U=UI.arc||(UI.arc={t:'res',f:'all'});let L=items('rec');
+ const yrs=[...new Set(L.map(x=>x.ts?new Date(x.ts).getFullYear():0).filter(Boolean))].sort((a,b)=>b-a);if(!U.y||(yrs.length&&!yrs.includes(U.y)))U.y=yrs[0]||new Date().getFullYear();
+ const inY=L.filter(x=>!x.ts||new Date(x.ts).getFullYear()===U.y),ser={};inY.forEach(x=>{const k=x.series||(x.src==='sh'?'Scoring Heroes matches':'Other');(ser[k]=ser[k]||[]).push(x)});
+ let shown=inY.filter(x=>(U.f==='all'||(U.f==='sh')===(x.src==='sh'))&&(!U.s||(x.series||(x.src==='sh'?'Scoring Heroes matches':'Other'))===U.s)).sort((a,b)=>b.ts-a.ts);
+ const g={};shown.forEach(x=>{const k=x.ts?new Date(x.ts).toLocaleDateString('en-IN',{month:'long',year:'numeric'}):'Earlier';(g[k]=g[k]||[]).push(x)});
+ const body=U.t==='ser'?(Object.keys(ser).length?Object.keys(ser).sort((a,b)=>ser[b].length-ser[a].length).map(k=>`<div class="scr" data-a="arS" data-v="${E(k)}"><div class="tm">${ser[k].length}<small>results</small></div><div class="nm">${E(k)}</div><span class="ft">Open</span></div>`).join(''):'<div class="empty">No series in this year.</div>'):
+  U.t==='rec'?`<div class="scr" data-a="go" data-v="reports"><div class="tm">📊</div><div class="nm">Reports and records</div><span class="ft">Open</span><div class="sb">Top run scorers, wicket takers, sixes, match reports, PDF and CSV from your scored matches.</div></div><div class="scr" data-a="go" data-v="rankings"><div class="tm">🏅</div><div class="nm">Player rankings</div><span class="ft">Open</span></div><div class="scr" data-a="go" data-v="history"><div class="tm">📜</div><div class="nm">History</div><span class="ft">Open</span></div>`:
+  (Object.keys(g).map(k=>`<div class="dh">${E(k)}</div>${g[k].map(row).join('')}`).join('')||'<div class="empty">No completed matches in this year yet.</div>');
+ return `<div class="sc2"><h2>Archives</h2><div class="mu sm" style="margin-bottom:8px">Past results by year and series. Tap a match to see its scorecard.</div>
+ <div class="chips">${yrs.length?yrs.map(y=>`<button class="${U.y===y?'on':''}" data-a="arY" data-v="${y}">${y}</button>`).join(''):`<button class="on">${U.y}</button>`}</div>
+ <div class="tabs" style="margin-bottom:8px">${[['res','Results'],['ser','Series'],['rec','Records']].map(([k,l])=>`<button class="${U.t===k?'on':''}" data-a="arT" data-v="${k}">${l}</button>`).join('')}</div>
+ ${U.t==='res'?`<div class="chips">${[['all','All'],['sh','Scoring Heroes'],['w','World']].map(([k,l])=>`<button class="${U.f===k?'on':''}" data-a="arF" data-v="${k}">${l}</button>`).join('')}${U.s?`<button class="on" data-a="arS" data-v="">${E(U.s)} ✕</button>`:''}</div>`:''}${body}</div>`};
+Object.assign(A,{schS(d){(UI.sch=UI.sch||{f:'all'}).s=d.v||'';render()},schF(d){(UI.sch=UI.sch||{}).f=d.v;render()},arY(d){const U=UI.arc=UI.arc||{t:'res',f:'all'};U.y=+d.v;U.s='';render()},arT(d){(UI.arc=UI.arc||{f:'all'}).t=d.v;render()},arF(d){(UI.arc=UI.arc||{t:'res'}).f=d.v;render()},arS(d){const U=UI.arc=UI.arc||{f:'all'};U.s=d.v||'';U.t='res';render()}});
+if(window.SH_HELP){SH_HELP.sched=['Schedule','Upcoming matches in your time, day by day.',['Pick All, Scoring Heroes or World.','Tap a match to open its centre.','Live matches appear first.'],'Create a match from the + New match chip.'];SH_HELP.arch=['Archives','Past results by year and series.',['Pick a year.','Open Results, Series or Records.','Tap a result to see the scorecard.'],'Records opens reports, rankings and history.']}
+}
+
+/* ---- 129 Videos landing page (was blank without reels) + Series list from world feed ---- */
+{
+const E=x=>esc(x==null?'':String(x));
+const CH='https://www.youtube.com/@SHSPORTSCLUB';
+const st=document.createElement('style');st.id='sh-vid-css';st.textContent='.vd{padding:10px 14px 96px}.vd h2{font-family:var(--dsp);margin:6px 0 8px}.vdc{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;margin-bottom:10px;color:var(--tx)}.vdc h3{margin:0 0 4px;font-size:16px}.vdc p{margin:0 0 10px;font-size:13px;line-height:1.45;color:var(--mu)}.vdc .row{gap:8px;flex-wrap:wrap}.vdc a.btn{text-decoration:none;display:inline-block}';document.head.appendChild(st);
+const orig=XV.reels||vReels;
+XV.reels=function(){const R=(typeof reelItems==='function')?reelItems():[];if(R.length&&UI.reelsOpen)return orig.apply(this,arguments);
+ return `<div class="vd"><h2>Videos</h2>
+ <div class="vdc"><h3>SH Sports Club on YouTube</h3><p>Match streams, highlights and tournament coverage from our official channel.</p><div class="row"><a class="btn" href="${CH}" target="_blank" rel="noopener">Open channel</a><button class="btn ghost" data-a="go" data-v="streamhub">Live streams</button></div></div>
+ <div class="vdc"><h3>Match highlights</h3><p>Key moments from matches scored in the app: wickets, fours, sixes and results.</p><button class="btn ghost" data-a="go" data-v="highlights">Open highlights</button></div>
+ <div class="vdc"><h3>Match reels</h3><p>${R.length?'Swipe-up cards made from live and finished matches: '+R.length+' ready now.':'Swipe-up cards appear here automatically when a match is live or finished.'}</p>${R.length?'<button class="btn" data-a="reelsOpen">Open reels</button>':'<button class="btn ghost" data-a="go" data-v="sched">See upcoming matches</button>'}</div>
+ <div class="vdc"><h3>Go live with your match</h3><p>Stream your own match with a score overlay for OBS.</p><button class="btn ghost" data-a="go" data-v="stream">Stream and OBS</button></div></div>`};
+Object.assign(A,{reelsOpen(){UI.reelsOpen=1;UI.view='reels';render()}});
+{const g0=A.go;A.go=function(d){if(d&&d.v==='reels')UI.reelsOpen=0;return g0.apply(this,arguments)}}
+{const r0=A.reelAt;if(r0)A.reelAt=function(){UI.reelsOpen=1;return r0.apply(this,arguments)}}
+if(window.SH_HELP)SH_HELP.reels=['Videos','Channel, live streams, highlights and match reels.',['Open the channel for full videos.','Open Live streams to watch a match.','Open reels when matches are live or finished.'],'Stories on Home also open the reels.'];
+
+/* Series: world series from the feed on top, then your own tournaments */
+const serGroups=()=>{const F=(typeof wFilter==='function')?wFilter():{live:[],up:[],rec:[]},G={};
+ const add=(m,k)=>{const n=wSplit(m).series||'Other';const g=G[n]||(G[n]={name:n,live:0,up:0,rec:0,min:9e15,max:0,fmt:typ2(m)});g[k]++;const t=tsW2(m);if(t){g.min=Math.min(g.min,t);g.max=Math.max(g.max,t)}};
+ F.live.forEach(m=>add(m,'live'));F.up.forEach(m=>add(m,'up'));F.rec.forEach(m=>add(m,'rec'));return Object.values(G)};
+const tsW2=m=>{try{if(m.time){const t=new Date(m.time+(/Z|\+/.test(m.time)?'':'Z'));if(!isNaN(t))return t.getTime()}if(m.date){const t=new Date(m.date+'T00:00:00');if(!isNaN(t))return t.getTime()}}catch(e){}return 0};
+const typ2=m=>String(m.type||'').toUpperCase().slice(0,6);
+const dr=g=>{if(g.min>=9e15)return '';const f=t=>new Date(t).toLocaleDateString('en-IN',{day:'numeric',month:'short'});return f(g.min)+(g.max>g.min?' - '+f(g.max):'')};
+const t0=XV.tours;
+XV.tours=function(){const o=t0.apply(this,arguments),G=serGroups(),j=UI.live;
+ const rank=g=>g.live?0:g.up?1:2;G.sort((a,b)=>rank(a)-rank(b)||b.max-a.max);
+ const html=`<div class="vd" style="padding-bottom:0"><h2>Series</h2><div class="mu sm" style="margin-bottom:8px">Current, upcoming and completed series. Tap one to see its matches.</div>${!j?'<div class="mu sm">Loading world series...</div>':!j.ok?'<div class="mu sm">World series unavailable here.</div>':''}
+ ${G.slice(0,40).map(g=>`<div class="scr" data-a="serOpen" data-v="${E(g.name)}"><div class="tm">${g.live?'LIVE':g.up?g.up:g.rec}<small>${g.live?'now':g.up?'upcoming':'results'}</small></div><div class="nm">${E(g.name)}</div><span class="ft ${g.live?'lv':''}">${E(g.fmt||'Series')}</span><div class="sb">${E(dr(g))}${dr(g)?' · ':''}${g.live+g.up+g.rec} match${g.live+g.up+g.rec===1?'':'es'}</div></div>`).join('')}</div>
+ <div class="vd" style="padding-top:6px"><h3 style="margin:0 0 6px">Your tournaments</h3></div>`;
+ return typeof o==='string'?html+o:o};
+Object.assign(A,{serOpen(d){const G=serGroups().find(g=>g.name===d.v);if(!G)return;if(G.live||G.up){UI.sch={f:'all',s:d.v};UI.view='sched'}else{UI.arc={t:'res',f:'all',s:d.v,y:G.max?new Date(G.max).getFullYear():new Date().getFullYear()};UI.view='arch'}render();window.scrollTo&&window.scrollTo(0,0)}});
 }
 </script>
 </body>
