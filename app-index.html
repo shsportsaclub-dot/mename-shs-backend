@@ -12701,8 +12701,7 @@ const w=im.naturalWidth,h=im.naturalHeight;if(!w||!h||w*h>4e6)return res(src);co
 let tr=0;for(let i=3;i<p.length;i+=4)if(p[i]<10)tr++;if(tr>w*h*.12)return res(src);
 const k=(i)=>{const r=p[i],g=p[i+1],b=p[i+2];return [r,g,b]};
 const cs=[0,(w-1)*4,(h-1)*w*4,((h-1)*w+w-1)*4].map(k);const bg=cs.reduce((a,v)=>[a[0]+v[0]/4,a[1]+v[1]/4,a[2]+v[2]/4],[0,0,0]);
-const sat=Math.max(...bg)-Math.min(...bg);if(sat>40&&!(Math.max(...bg)<70||Math.min(...bg)>200))return res(src);
-const T=46,near=(i)=>Math.abs(p[i]-bg[0])+Math.abs(p[i+1]-bg[1])+Math.abs(p[i+2]-bg[2])<T*1.6;
+const T=46,near=(i)=>cs.some(c=>Math.abs(p[i]-c[0])+Math.abs(p[i+1]-c[1])+Math.abs(p[i+2]-c[2])<T*1.6);
 const seen=new Uint8Array(w*h),q=[];const push=(xx,yy)=>{if(xx<0||yy<0||xx>=w||yy>=h)return;const j=yy*w+xx;if(seen[j])return;if(!near(j*4))return;seen[j]=1;q.push(j)};
 for(let xx=0;xx<w;xx++){push(xx,0);push(xx,h-1)}for(let yy=0;yy<h;yy++){push(0,yy);push(w-1,yy)}
 while(q.length){const j=q.pop(),xx=j%w,yy=(j-xx)/w;push(xx+1,yy);push(xx-1,yy);push(xx,yy+1);push(xx,yy-1)}

@@ -12,4 +12,6 @@ const r=await p.evaluate(async()=>{const n=document.querySelectorAll('img.shlg')
 assert(r.n>=1,'banner class '+JSON.stringify(r));assert(r.corner===0&&r.mid===255,'cut '+JSON.stringify(r));
 await p.screenshot({path:'/tmp/logo-banner.png'});
 await p.evaluate(()=>{UI.au.tab='home';UI.au.cur=null;render()});await p.waitForTimeout(700);await p.screenshot({path:'/tmp/logo-banner2.png'});
+const g=await p.evaluate(async()=>{const c=document.createElement('canvas');c.width=c.height=120;const x=c.getContext('2d');x.fillStyle='#2a9d8f';x.fillRect(0,0,120,120);x.fillStyle='#e63946';x.beginPath();x.arc(60,60,36,0,7);x.fill();const u=await shCutLogo(c.toDataURL('image/png'));const im=new Image();im.src=u;await im.decode();const d=document.createElement('canvas');d.width=d.height=120;const y=d.getContext('2d');y.drawImage(im,0,0);return{corner:y.getImageData(2,2,1,1).data[3],mid:y.getImageData(60,60,1,1).data[3]}});
+assert(g.corner===0&&g.mid===255,'coloured bg '+JSON.stringify(g));
 assert.deepEqual(errs,[]);console.log('PASS logo banner');await b.close()})().catch(e=>{console.error('FAIL',e.message);process.exit(1)})
