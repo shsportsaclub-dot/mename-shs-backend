@@ -2666,7 +2666,7 @@ LOOKS.unshift(['hero','Sky High']);
 '.hh-nav{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;padding:8px;border:1px solid var(--bd);border-radius:14px;background:var(--card);margin-bottom:10px}.hh-nav::-webkit-scrollbar{display:none}'+
 '.hh-nav button{flex:none;min-width:62px;display:flex;flex-direction:column;align-items:center;gap:3px;background:transparent;border:1px solid transparent;border-radius:10px;color:var(--tx);padding:6px 6px;font:600 10.5px var(--ui);letter-spacing:.3px;cursor:pointer;text-transform:uppercase}.hh-nav button i{font-style:normal;font-size:21px;line-height:1}.hh-nav button.on{border-color:var(--ac2);box-shadow:0 0 0 1px var(--ac2) inset,0 0 14px #f5b33540}'+
 '.hh-sports{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:8px;border:1px solid var(--bd);border-radius:14px;background:var(--card);margin-bottom:10px}.hh-sports::-webkit-scrollbar{display:none}'+
-'.hh-sports button{flex:none;min-width:74px;display:flex;flex-direction:column;align-items:center;gap:4px;background:transparent;border:1px solid transparent;border-radius:10px;color:var(--tx);padding:8px 6px;font:600 10.5px var(--ui);letter-spacing:.4px;text-transform:uppercase;cursor:pointer}.hh-sports button i{font-style:normal;font-size:26px;line-height:1}.hh-sports button.on{border-color:var(--ac2);background:linear-gradient(180deg,#f5b33522,transparent)}'+
+'.hh-sports button{flex:none;min-width:60px;display:flex;flex-direction:column;align-items:center;gap:4px;background:transparent;border:1px solid transparent;border-radius:10px;color:var(--tx);padding:8px 6px;font:600 10.5px var(--ui);letter-spacing:.4px;text-transform:uppercase;cursor:pointer}.hh-sports button i{font-style:normal;font-size:26px;line-height:1}.hh-sports button.on{border-color:var(--ac2);background:linear-gradient(180deg,#f5b33522,transparent)}'+
 '.hh-fil{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:8px}.hh-fil label{display:block;font:600 10px var(--ui);letter-spacing:.8px;color:var(--mu);text-transform:uppercase;border:1px solid var(--bd);border-radius:10px;background:var(--card);padding:6px 10px}.hh-fil select{display:block;width:100%;margin-top:3px;background:transparent;border:0;color:var(--tx);font:600 14px var(--ui);padding:0;outline:0}.hh-fil select option{background:#0c1333;color:#fff}'+
 '.hh-tabs{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid var(--bd);margin-bottom:12px}.hh-tabs::-webkit-scrollbar{display:none}.hh-tabs button{flex:none;background:transparent;border:0;border-bottom:3px solid transparent;color:var(--mu);padding:10px 12px;font:700 11.5px var(--ui);letter-spacing:.6px;text-transform:uppercase;cursor:pointer}.hh-tabs button.on{color:var(--tx);border-bottom-color:var(--ac)}'+
 '.hh-grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:12px}@media(max-width:900px){.hh-grid{grid-template-columns:1fr}}'+
@@ -12079,6 +12079,113 @@ const SH_ICON='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALAAAACwCAYAAACvt+R
   return `<button type="button" class="hubb" data-a="socHome">‹ Social studio</button><div class="hubn"><b>${cur[1]} ${esc(cur[2])}</b> — ${esc(SD[cur[0]]||'')} Fill the details, then use Download or Share below.</div>`+h};
  A.socGo=function(d){UI.st2.open=true;A.st2Tpl({v:d.v});window.scrollTo(0,0)};
  A.socHome=function(){UI.st2.open=false;render();window.scrollTo(0,0)};
+}
+
+/* ---------------- 122 SH LIVE 3D TEAM BUILD-UP (V-shape formation): every committed SOLD adds one player to the buying franchise's V-shaped squad. Captain front-centre, highest-priced non-captain buy on the first viewer-left place, the rest alternate along both wings, everyone faces the camera. Avatars are the player's photo (or the SH helmet) on a team-colour kit bust until approved 3D avatar files exist ---------------- */
+{
+ UI.fm=UI.fm||{tid:'',tab:'3d',sel:'',labels:1,zoom:1,rm:0,cele:null};
+ const tcol=t=>(t&&t.color)||`hsl(${aucHue((t&&t.name)||'')} 60% 42%)`;
+ const acqOf=p=>p.acq||'Auction';
+ /* pure formation: returns {center, slots:[{id,side,k,badges}]}, never duplicates a player */
+ window.shFormation=function(a,t){
+  const sq=(t.players||[]).map((id,i)=>{const p=a.players.find(x=>x.id===id);return p?{p,i,price:+p.price||0}:null}).filter(Boolean);
+  if(!sq.length)return {center:null,left:[],right:[],all:[]};
+  const cap=t.captain&&sq.find(x=>x.p.id===t.captain);
+  const center=cap||sq[0];
+  const rest=sq.filter(x=>x!==center);
+  const buyers=sq.filter(x=>x.price>0).sort((x,y)=>y.price-x.price||x.i-y.i);
+  const topAll=buyers[0]||null;
+  const topNonCap=buyers.find(x=>x!==center)||null;
+  const left=[],right=[];
+  const badges={};const bd=(id,b)=>(badges[id]=(badges[id]||[]).concat(b));
+  if(cap)bd(center.p.id,'CAPTAIN');
+  /* Top buy: captain keeps both badges; otherwise it takes the first viewer-left place */
+  let reservedL1=null;
+  if(cap){if(topAll===center)bd(center.p.id,'TOP BUY');if(topNonCap){reservedL1=topNonCap;if(topAll===center){}else bd(topNonCap.p.id,'TOP BUY')}}
+  else{ if(topAll===center)bd(center.p.id,'TOP BUY'); else if(topAll){reservedL1=topAll;bd(topAll.p.id,'TOP BUY')} }
+  if(cap&&topAll===center&&topNonCap)reservedL1=topNonCap; /* next highest takes viewer-left (no extra badge) */
+  if(reservedL1)left.push(reservedL1);
+  const others=rest.filter(x=>x!==reservedL1).sort((x,y)=>x.i-y.i);
+  /* remaining players: first viewer-right, then next viewer-left farther back, alternating */
+  let nextRight=true;
+  others.forEach(x=>{
+   if(!reservedL1&&!left.length&&right.length&&false){}
+   if(nextRight){right.push(x)}else{left.push(x)}
+   nextRight=!nextRight});
+  /* if L1 was not reserved the first "left" arrival is the first viewer-left place; fine */
+  const mk=(x,side,k)=>({id:x.p.id,side,k,badges:badges[x.p.id]||[]});
+  const L=left.map((x,i)=>mk(x,'L',i+1)),R=right.map((x,i)=>mk(x,'R',i+1)),C=mk(center,'C',0);
+  return {center:C,left:L,right:R,all:[C].concat(L,R)};
+ };
+ const money=(a,n)=>typeof auAmount==='function'?auAmount(a,n):String(n);
+ const headOf=(p)=>p.photo?`<img src="${esc(p.photo)}" alt="">`:`<img src="${HELMET}" alt="" style="background:#0b1730">`;
+ window.shFmStage=function(a,t,o){o=o||{};const F=shFormation(a,t),col=tcol(t);
+  if(!F.center)return `<div class="fmstage empty"><div class="fmfloor"></div><div class="fmempty"><b>${esc(t.name)}</b><span>Your team formation begins with your first player</span></div></div>`;
+  const mk=Math.max(F.left.length,F.right.length,1),dx=Math.min(19,45/mk),dy=Math.min(14,58/mk);
+  const z=UI.fm.zoom||1;
+  const one=(e)=>{const p=a.players.find(x=>x.id===e.id);if(!p)return '';
+   const k=e.k,x=50+(e.side==='L'?-1:e.side==='R'?1:0)*k*dx,y=88-k*dy,sc=Math.max(.5,1-k*(.46/Math.max(mk,3)));
+   const hi=(UI.fm.sel===p.id||o.hi===p.id),ent=o.enter===p.id;
+   return `<button type="button" class="fmav ${hi?'hi':''} ${ent?'enter':''} ${o.hi&&o.hi!==p.id?'clap':''}" data-a="fmSel" data-k="av" data-id="${esc(p.id)}" style="left:${x.toFixed(1)}%;top:${y.toFixed(1)}%;--s:${sc.toFixed(2)};z-index:${100-k};--kit:${col}" aria-label="${esc(p.name)}">
+    ${e.badges.length?`<span class="fmbd">${e.badges.map(b=>`<i class="${b==='CAPTAIN'?'c':'t'}">${b}</i>`).join('')}</span>`:''}
+    <span class="fmhd">${headOf(p)}</span><span class="fmbody">${esc(t.short||'')}</span>
+    ${UI.fm.labels?`<span class="fmn">${esc(p.name)}</span>${(+p.price)?`<small>${esc(money(a,p.price))}</small>`:''}`:''}</button>`};
+  return `<div class="fmstage ${UI.fm.rm?'rm':''}" style="--kit:${col}"><div class="fmlights"></div><div class="fmfloor"></div><div class="fminner" style="transform:scale(${z});transform-origin:50% 88%">${F.all.map(one).join('')}</div></div>`;
+ };
+ const roleOf=p=>p.skill||p.role||'Player';
+ const list=(a,t)=>{const F=shFormation(a,t);if(!F.all.length)return '<div class="aucmu">No players yet.</div>';
+  return `<div class="fmlist">${F.all.map(e=>{const p=a.players.find(x=>x.id===e.id);return `<div class="fmli ${UI.fm.sel===p.id?'on':''}" data-a="fmSel" data-id="${esc(p.id)}"><span class="fmth">${headOf(p)}</span><div style="min-width:0;flex:1"><div class="b">${esc(p.name)} ${e.badges.map(b=>`<i class="fmtag ${b==='CAPTAIN'?'c':'t'}">${b}</i>`).join('')}</div><div class="mu sm">${esc(roleOf(p))} | ${esc(acqOf(p))}</div></div><b>${(+p.price)?esc(money(a,p.price)):'—'}</b></div>`}).join('')}</div>`};
+ const hist=(a,t)=>{const rows=(t.players||[]).map((id,i)=>({p:a.players.find(x=>x.id===id),i})).filter(x=>x.p).sort((x,y)=>(x.p.seq||x.i)-(y.p.seq||y.i));
+  return rows.length?`<div class="fmlist">${rows.map((r,n)=>`<div class="fmli"><b style="width:22px">${n+1}</b><div style="flex:1;min-width:0"><div class="b">${esc(r.p.name)}</div><div class="mu sm">${esc(acqOf(r.p))}</div></div><b>${(+r.p.price)?esc(money(a,r.p.price)):'—'}</b></div>`).join('')}</div>`:'<div class="aucmu">No purchases yet.</div>'};
+ const roles=(a,t)=>{const m={};(t.players||[]).forEach(id=>{const p=a.players.find(x=>x.id===id);if(p)(m[roleOf(p)]=m[roleOf(p)]||[]).push(p.name)});const E=Object.entries(m);return E.length?`<div class="fmlist">${E.map(([r,n])=>`<div class="fmli"><b style="min-width:92px">${esc(r)}</b><div class="mu sm" style="flex:1">${n.map(esc).join(', ')}</div><b>${n.length}</b></div>`).join('')}</div>`:'<div class="aucmu">No players yet.</div>'};
+ window.shFmPanel=function(a,adm){
+  const U=UI.fm;let t=a.teams.find(x=>x.id===U.tid)||a.teams[0];if(!t)return '<div class="aucmu">Add teams first.</div>';U.tid=t.id;
+  const chips=`<div class="aucseg" style="overflow-x:auto;flex-wrap:nowrap">${a.teams.map(x=>`<button class="${x.id===t.id?'on':''}" data-a="fmTeam" data-v="${x.id}">${esc(x.short||x.name)}</button>`).join('')}</div>`;
+  const left=Math.max(0,(a.ppt||0)-(t.players||[]).length);
+  const head=`<div class="fmhead">${aucCrestT(t,44)}<div style="flex:1;min-width:0"><div class="b" style="font-size:18px">${esc(t.name)}</div><div class="mu sm">${(t.players||[]).length} players | ${left} slots left | purse ${esc(money(a,t.purse))}</div></div></div>`;
+  const tabs=`<div class="aucseg">${[['3d','3D Team'],['list','Squad List'],['roles','Roles'],['hist','Purchase History']].map(([k,l])=>`<button class="${U.tab===k?'on':''}" data-a="fmTab" data-v="${k}">${l}</button>`).join('')}</div>`;
+  const ctl=`<div class="fmctl"><button class="btn sm ghost" data-a="fmLbl">Labels ${U.labels?'on':'off'}</button><button class="btn sm ghost" data-a="fmZoom" data-v="-1">−</button><button class="btn sm ghost" data-a="fmZoom" data-v="1">+</button><button class="btn sm ghost" data-a="fmRm">Reduced motion ${U.rm?'on':'off'}</button><button class="btn sm ghost" data-a="fmReplay" ${t.lastSeq?'':'disabled'}>Replay welcome</button></div>`;
+  const capSel=adm&&(t.players||[]).length?`<label class="fmcap">Captain<select data-c="fmCap"><option value="">Not confirmed</option>${(t.players||[]).map(id=>{const p=a.players.find(x=>x.id===id);return p?`<option value="${esc(id)}" ${t.captain===id?'selected':''}>${esc(p.name)}</option>`:''}).join('')}</select></label><div class="mu sm">Captain is chosen from this squad only. It never buys or assigns a player.</div>`:'';
+  let body='';
+  if(U.tab==='3d')body=shFmStage(a,t)+ctl+list(a,t)+capSel;
+  else if(U.tab==='list')body=list(a,t)+capSel;else if(U.tab==='roles')body=roles(a,t);else body=hist(a,t);
+  /* latest unseen purchase: play once, then mark seen */
+  if(U.tab==='3d'&&t.lastSeq&&t.lastSeq>(t.seenSeq||0)&&!U.cele){const p=a.players.find(x=>x.seq===t.lastSeq);if(p)setTimeout(()=>shFmCele(a,t,p,1),50)}
+  return `<div class="fmwrap">${chips}${head}${tabs}${body}<div class="mu sm" style="margin-top:8px">Avatars use the player photo or the SH helmet on the team kit. Approved 3D avatar files are not connected yet; the formation rules are the same when they are.</div></div>`};
+ /* sale celebration overlay (only after a committed SOLD) */
+ window.shFmCele=function(a,t,p,fromPanel){
+  const U=UI.fm;if(U.cele)return;U.cele={aid:a.id,tid:t.id,pid:p.id};t.seenSeq=t.lastSeq;
+  const secs=Math.max(3,Math.min(15,+(a.soldSecs||7)));
+  const d=document.createElement('div');d.id='sh-fmc';d.className='fmc'+(U.rm?' rm':'');
+  const sc=Array.from({length:14},(_,i)=>`<i style="left:${(i*7+3)%100}%;animation-delay:${(i%7)*.12}s;background:${i%3?'#ffd43b':tcol(t)}"></i>`).join('');
+  d.innerHTML=`<div class="fmcin"><div class="fmsold"><b>SOLD</b><div class="row" style="justify-content:center;gap:12px;margin-top:8px"><span class="fmhd big">${headOf(p)}</span><div style="text-align:left"><div class="b" style="font-size:18px">${esc(p.name)}</div><div>${aucCrestT(t,26)} ${esc(t.name)}</div><div class="fmprice">${esc(money(a,p.price))}</div></div></div></div>
+   <div class="fmwel">WELCOME TO ${esc(t.name.toUpperCase())}</div>${shFmStage(a,t,{hi:p.id,enter:p.id})}<div class="fmconf">${sc}</div>
+   <div class="mu sm" style="text-align:center">Virtual celebration</div><button type="button" class="btn" data-a="fmClose" style="margin-top:8px;width:100%">Back to Live Bidding</button></div>`;
+  document.body.appendChild(d);U.cele.timer=setTimeout(()=>window.shFmClose(),secs*1000);try{save&&save()}catch(e){}};
+ window.shFmClose=function(){const U=UI.fm;if(U.cele&&U.cele.timer)clearTimeout(U.cele.timer);U.cele=null;const d=document.getElementById('sh-fmc');if(d)d.remove()};
+ /* sale hook: runs after the original SOLD has committed */
+ const sold0=A.auSold;A.auSold=function(){const a=aucOf(UI.au.open),cur=a&&a.players.find(x=>x.id===a.cur),tm=a&&a.teams.find(x=>x.id===a.bidTeam);
+  const n0=a?a.players.filter(x=>x.st==='sold').length:0,r=sold0.apply(this,arguments);
+  if(a&&cur&&tm&&cur.st==='sold'&&cur.team===tm.id&&a.players.filter(x=>x.st==='sold').length===n0+1){a.seq=(a.seq||0)+1;cur.seq=a.seq;cur.acq=cur.acq||'Auction';tm.lastSeq=a.seq;try{commit()}catch(e){}shFmCele(a,tm,cur)}
+  return r};
+ Object.assign(A,{
+  fmTeam(d){UI.fm.tid=d.v;UI.fm.sel='';render()},fmTab(d){UI.fm.tab=d.v;render()},fmLbl(){UI.fm.labels=UI.fm.labels?0:1;render()},fmRm(){UI.fm.rm=UI.fm.rm?0:1;render()},
+  fmZoom(d){UI.fm.zoom=Math.max(.7,Math.min(1.6,(UI.fm.zoom||1)+(+d.v)*.15));render()},
+  fmSel(d){const U=UI.fm,a=aucOf(UI.au.open);U.sel=U.sel===d.id&&d.k!=='av'?'':d.id;render();
+   if(d.k==='av'&&a){const p=a.players.find(x=>x.id===d.id),t=p&&a.teams.find(x=>x.id===p.team);if(p)UI.modal={t:'html',html:`<h3>${esc(p.name)}</h3><div class="row" style="gap:12px"><span class="fmhd big">${headOf(p)}</span><div><div>${esc(roleOf(p))}${p.cat?' | Category '+esc(p.cat):''}</div><div class="mu sm">${esc(acqOf(p))}${t?' | '+esc(t.name):''}</div><div class="b" style="font-size:18px">${(+p.price)?esc(money(a,p.price)):'No purchase price'}</div></div></div><button class="btn" data-a="closeModal" style="margin-top:10px;width:100%">Close</button>`};renderModal&&renderModal()}},
+  fmReplay(){const a=aucOf(UI.au.open),t=a&&a.teams.find(x=>x.id===UI.fm.tid);if(!t||!t.lastSeq)return;const p=a.players.find(x=>x.seq===t.lastSeq);if(p){UI.fm.cele=null;shFmCele(a,t,p)}},
+  fmClose(){shFmClose()}});
+ Object.assign(C,{fmCap(v){const a=aucOf(UI.au.open),t=a&&a.teams.find(x=>x.id===UI.fm.tid);if(!t)return;if(v&&!(t.players||[]).includes(v))return toast('Captain must be in the squad');t.captain=v||'';commit()}});
+ /* new auction tab "3D Teams" + owner hero */
+ const ad0=aucDetail;aucDetail=function(a){let h=ad0.apply(this,arguments);const d=UI.au.dtab,adm=isAdmin()||a.owner===(S.user&&S.user.id);
+  h=h.replace(/(<button class="[^"]*" data-a="auD" data-v="res">Results<\/button>)/,`<button class="${d==='fm'?'on':''}" data-a="auD" data-v="fm">3D Teams</button>$1`);
+  if(d==='fm'){h=h.replace(/(<div class="aucseg">[\s\S]*?<\/div>)([\s\S]*)$/,(m,seg)=>seg+shFmPanel(a,adm)+(adm?'</div></div>':'</div></div>'))}
+  else if(d==='teams'){const mail=((S.user&&S.user.email)||'').toLowerCase(),mine=mail&&a.teams.find(x=>(x.email||'').toLowerCase()===mail);
+   if(mine)h=h.replace(/(<div class="aucseg">[\s\S]*?<\/div>)/,`$1<div class="card" style="margin:8px 0"><div class="b">MY 3D TEAM</div>${shFmStage(a,mine)}<div class="mu sm">${(mine.players||[]).length} players | purse ${esc(money(a,mine.purse))}</div><button class="btn sm" data-a="fmOpen" data-v="${mine.id}">Open team stage</button></div>`)}
+  return h};
+ A.fmOpen=function(d){UI.fm.tid=d.v;UI.fm.tab='3d';UI.au.dtab='fm';render()};
+ const css='.fmwrap{display:block}.fmhead{display:flex;gap:10px;align-items:center;margin:8px 0}.fmstage{position:relative;width:100%;height:min(104vw,440px);border-radius:16px;overflow:hidden;background:radial-gradient(120% 90% at 50% 0%,#12305f 0%,#0a1428 60%,#050a15 100%);border:1px solid rgba(255,255,255,.12);margin:8px 0}.fmstage.empty{display:grid;place-items:center}.fmempty{position:relative;text-align:center;color:#dfe8ff;padding:0 24px}.fmempty b{display:block;font-size:18px;margin-bottom:6px}.fmlights{position:absolute;inset:0;background:conic-gradient(from 200deg at 50% -10%,transparent 0 10%,rgba(255,255,255,.08) 12% 16%,transparent 18% 32%,rgba(255,255,255,.06) 34% 38%,transparent 40%)}.fmfloor{position:absolute;left:-10%;right:-10%;bottom:-18%;height:62%;border-radius:50%;background:radial-gradient(closest-side,color-mix(in srgb,var(--kit,#2a6df4) 55%,#000) 0%,rgba(0,0,0,0) 72%);opacity:.8}.fminner{position:absolute;inset:0}.fmav{position:absolute;transform:translate(-50%,-100%) scale(var(--s,1));transform-origin:50% 100%;width:60px;display:flex;flex-direction:column;align-items:center;background:none;border:0;color:#fff;padding:0;cursor:pointer;animation:fmidle 3.2s ease-in-out infinite}.fmav:nth-child(odd){animation-delay:-1.4s}.fmstage.rm .fmav,.fmc.rm .fmav{animation:none}.fmhd{display:block;width:38px;height:38px;border-radius:50%;overflow:hidden;border:2px solid #fff;background:#0b1730;z-index:2}.fmhd.big{width:64px;height:64px;flex:none}.fmhd img{width:100%;height:100%;object-fit:cover;display:block}.fmbody{margin-top:-5px;width:52px;height:32px;border-radius:18px 18px 8px 8px;background:linear-gradient(180deg,var(--kit),color-mix(in srgb,var(--kit) 60%,#000));border:1px solid rgba(255,255,255,.35);font-size:11px;font-weight:800;display:flex;align-items:flex-end;justify-content:center;padding-bottom:3px;letter-spacing:.5px}.fmn{font-size:9px;font-weight:700;margin-top:2px;max-width:76px;text-align:center;line-height:1.1;text-shadow:0 1px 3px #000}.fmav small{font-size:9px;color:#ffd43b;font-weight:800}.fmbd{position:absolute;top:-16px;display:flex;gap:2px;z-index:3}.fmbd i,.fmtag{font-style:normal;font-size:8px;font-weight:900;padding:1px 4px;border-radius:6px;letter-spacing:.4px}.fmbd i.c,.fmtag.c{background:#ffd43b;color:#3a2a00}.fmbd i.t,.fmtag.t{background:#e11d2e;color:#fff}.fmtag{margin-left:4px}.fmav.hi .fmhd{border-color:#ffd43b;box-shadow:0 0 0 3px rgba(255,212,59,.45),0 0 18px #ffd43b}.fmav.clap{animation:fmclap .7s ease-in-out 3}.fmav.enter{animation:fmin 1.4s cubic-bezier(.2,.8,.2,1) both}@keyframes fmidle{0%,100%{transform:translate(-50%,-100%) scale(var(--s,1))}50%{transform:translate(-50%,calc(-100% - 3px)) scale(var(--s,1))}}@keyframes fmclap{0%,100%{transform:translate(-50%,-100%) scale(var(--s,1))}50%{transform:translate(-50%,calc(-100% - 7px)) scale(calc(var(--s,1)*1.04))}}@keyframes fmin{from{opacity:0;transform:translate(calc(-50% + 160px),-100%) scale(var(--s,1))}to{opacity:1;transform:translate(-50%,-100%) scale(var(--s,1))}}.fmctl{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 10px}.fmlist{display:flex;flex-direction:column;gap:6px;margin:8px 0}.fmli{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);cursor:pointer}.fmli.on{border-color:#ffd43b;background:rgba(255,212,59,.12)}.fmth{display:block;width:34px;height:34px;border-radius:50%;overflow:hidden;flex:none}.fmth img{width:100%;height:100%;object-fit:cover}.fmcap{display:block;margin-top:8px}.fmc{position:fixed;inset:0;z-index:9998;background:rgba(2,6,16,.9);display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:16px;animation:fmfade .3s both}.fmcin{width:100%;max-width:440px}.fmsold{text-align:center;color:#fff}.fmsold>b{display:block;font-size:46px;letter-spacing:6px;color:#ffd43b;text-shadow:0 0 22px rgba(255,212,59,.6);animation:fmpop .7s both}.fmprice{font-size:26px;font-weight:900;color:#ffd43b}.fmwel{text-align:center;font-weight:900;letter-spacing:1.5px;margin:10px 0 0;color:#fff;animation:fmfade .6s .9s both}.fmconf{position:relative;height:0}.fmconf i{position:absolute;top:-300px;width:7px;height:11px;border-radius:2px;opacity:.9;animation:fmfall 2.4s ease-in 2}.fmc.rm .fmconf{display:none}@keyframes fmfall{from{transform:translateY(0) rotate(0)}to{transform:translateY(420px) rotate(540deg);opacity:0}}@keyframes fmpop{0%{transform:scale(.4);opacity:0}60%{transform:scale(1.15);opacity:1}100%{transform:scale(1)}}@keyframes fmfade{from{opacity:0}to{opacity:1}}@media (prefers-reduced-motion:reduce){.fmav,.fmconf i,.fmsold>b{animation:none!important}.fmconf{display:none}}';
+ const st=document.createElement('style');st.textContent=css;document.head.appendChild(st);
 }
 </script>
 </body>
