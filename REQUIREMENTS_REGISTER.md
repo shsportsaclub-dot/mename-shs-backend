@@ -216,3 +216,6 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 
 ## Universal logo rule (block 133)
 - Any team/auction/franchise logo (img.aucc, img.logo, data-lg) gets its solid black/white background removed (edge flood-fill, client-side, cached) and always sits on the SH banner (gradient + helmet). Applies to auction card/detail, crests, streaming. HCL demo logo pre-cut to transparent WebP. Test: tests/logo-banner.cjs.
+
+## Any image: cut + SH banner (block 134)
+- Person photos (register, auction player, social poster) are background-cut with the same segmentation as profile and composed onto the SH banner (shBannerCompose), face-centred. Logos: block 133. Test: tests/photo-banner.cjs.

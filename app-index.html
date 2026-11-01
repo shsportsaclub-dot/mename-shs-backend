@@ -12719,6 +12719,23 @@ scan(document.body);
 /* clean uploads at the source */
 try{const u0=C.au2Logo;if(u0)C.au2Logo=function(v,el){return u0.apply(this,arguments)}}catch(e){}
 })();
+
+/* 134 any person photo: background cut, SH banner composed behind, face centred (auction player, register, social) */
+(function(){
+const OW=480,OH=600;
+const li=u=>new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=no;i.src=u});
+window.shBannerCompose=async function(r){
+ if(!r||!r.cut)return r&&r.photo;
+ const c=document.createElement('canvas');c.width=OW;c.height=OH;const x=c.getContext('2d');
+ const g=x.createLinearGradient(0,0,OW,OH);g.addColorStop(0,'#061238');g.addColorStop(.55,'#0a1f5c');g.addColorStop(1,'#7a0f22');x.fillStyle=g;x.fillRect(0,0,OW,OH);
+ try{const h=await li(HELMET);x.globalAlpha=.17;const hw=OW*.82,hh=hw*h.height/h.width;x.drawImage(h,(OW-hw)/2,OH*.38-hh/2,hw,hh);x.globalAlpha=1}catch(e){}
+ x.fillStyle='rgba(255,255,255,.08)';x.font='900 30px system-ui,sans-serif';x.textAlign='center';x.fillText('SCORING HEROES',OW/2,OH*.93);
+ const p=await li(r.cut);x.drawImage(p,0,0,OW,OH);
+ return c.toDataURL('image/jpeg',.88)};
+{const o=C.rgPhoto;C.rgPhoto=async function(v,el){const f=el&&el.files&&el.files[0];if(!f)return;const r=await shPrepPhoto(f);if(!r.photo){toast('That file is not a picture');return}const ph=await shBannerCompose(r);UI.rg.photo=ph;const pv=document.getElementById('rgPrev');if(pv)pv.innerHTML=`<img src="${ph}" style="width:80px;height:100px;object-fit:cover;border-radius:10px">`}}
+{const o=C.st2Photo;C.st2Photo=async function(v,el){const f=el&&el.files&&el.files[0];if(!f)return;const r=await shPrepPhoto(f);if(r.photo){UI.st2.photo=await shBannerCompose(r);UI.st2._pi=null;render()}else if(o)o.apply(this,arguments)}}
+{const o=F.auPlayer;if(o)F.auPlayer=async function(fd){try{const f=fd.get('photo');if(f instanceof Blob&&f.size&&f.size<=5*1024*1024&&/^image\//.test(f.type)){const r=await shPrepPhoto(f);const ph=await shBannerCompose(r);if(ph)fd.set('photo',await fetch(ph).then(q=>q.blob()),'player.jpg')}}catch(e){}return o.apply(this,arguments)}}
+})();
 </script>
 </body>
 </html>
