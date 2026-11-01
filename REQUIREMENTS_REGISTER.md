@@ -213,3 +213,6 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 
 ## Photo upload pipeline (owner request 1 Nov 2026)
 - Any person photo uploaded (profile photo, registration, auction player, Social studio photo) is processed on the phone: face centred in a 4:5 frame (person mask, else FaceDetector, else upper-centre guess), background removed to a transparent PNG cut-out when the on-phone model can run (stored as `cut` on the profile), SH backdrop (helmet, rays, wordmark) drawn behind the cut-out in the profile hero. Without a cut-out the face-centred photo is shown. The page watermark is hidden on the profile page so it never covers the photo. Test: photo-face.cjs (segmentation stubbed; real model needs the phone's internet to load).
+
+## Universal logo rule (block 133)
+- Any team/auction/franchise logo (img.aucc, img.logo, data-lg) gets its solid black/white background removed (edge flood-fill, client-side, cached) and always sits on the SH banner (gradient + helmet). Applies to auction card/detail, crests, streaming. HCL demo logo pre-cut to transparent WebP. Test: tests/logo-banner.cjs.
