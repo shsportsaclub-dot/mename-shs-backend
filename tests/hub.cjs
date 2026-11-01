@@ -17,7 +17,7 @@ const { chromium } = require('playwright');
   ok(/LIVE FEATURE/.test(await p.innerText('.hub')), 'auction marked live');
   await p.click('.hubp button'); await p.waitForTimeout(400);
   ok(await p.evaluate(() => UI.view) === 'auction', 'open button navigates to real auction view');
-  const menu = await p.evaluate(() => MENU2[0][0]); ok(menu === 'All features', 'menu entry');
+  const menu = await p.evaluate(() => MENU2.map(g=>g[0]).filter(x=>x!=='About and help')[0]); ok(menu === 'All features', 'menu entry');
   ok(!errs.length, errs.join(';'));
   await b.close(); if (!process.exitCode) console.log('PASS: all-features hub');
 })();

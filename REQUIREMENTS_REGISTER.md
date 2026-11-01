@@ -195,3 +195,7 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 
 ## Light theme contrast + menu icons
 - Light look (mday) must keep light --bg/--card, a white drawer with dark text, and readable Service Hub pills/cards (the late dark "visual reference" sheet had forced dark panels on every theme). Every drawer item has a line icon (no "•••" placeholders); Service Hub tabs have meaningful icons (no empty squares).
+
+## About us, Help centre, Laws and study (owner request 1 Nov 2026)
+- First drawer group "About and help": About us (what the app offers, career benefit per feature, sports list with status, who it is for), Help centre (steps + tips per feature, searchable), Laws, umpiring and study (42 Laws of Cricket in simple words, umpire guidelines, scoring rules, formats, fielding positions, glossary, quiz; official source = MCC Laws / ICC playing conditions).
+- Every screen with help text shows a "? Help" button opening a panel with that feature's steps. Tests: about-help.cjs.

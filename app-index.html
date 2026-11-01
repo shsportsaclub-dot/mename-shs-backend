@@ -12246,6 +12246,225 @@ const M={home:'home',matches:'calendar',match:'tv',score:'target',newMatch:'plus
 const paint=()=>{document.querySelectorAll('.drawer .mi .e').forEach(el=>{const b=el.closest('button');if(!b)return;const k=M[b.dataset.v||(b.dataset.a==='logout'?'logout':'')];if(k&&IC[k])el.innerHTML=ic(k)})};
 const r1=render;render=function(){const o=r1.apply(this,arguments);try{paint()}catch(e){}return o};
 if(Array.isArray(HUB_TI)){HUB_TI.unshift([/facilit|ground|venue|stadium|pitch/i,'\u{1F3DF}️'],[/booking|reserv/i,'\u{1F4DD}'],[/maint|repair|service/i,'\u{1F6E0}️'],[/visitor|guest|crowd|spectator/i,'\u{1F465}'],[/refund|cancel|return/i,'↩️'],[/corporate|series|company/i,'\u{1F3E2}'])}}
+
+/* ---- 126 About us, Help centre, Laws and study material, per-feature help ---- */
+{
+const E=x=>esc(x==null?'':String(x));
+const st=document.createElement('style');st.id='sh-about-css';st.textContent=
+'.ab{padding:12px 14px 96px}.ab h2{font-family:var(--dsp);margin:4px 0 6px}.ab .lead{font-size:15px;line-height:1.5;color:var(--tx)}'+
+'.abh{border-radius:16px;padding:16px;margin:8px 0 14px;background:linear-gradient(135deg,rgba(225,29,46,.22),rgba(60,90,200,.18));border:1px solid var(--bd)}.abh b{display:block;font-size:20px;margin-bottom:6px}'+
+'.abg{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}.abc{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;color:var(--tx)}.abc h4{margin:0 0 4px;font-size:15px;display:flex;gap:8px;align-items:center}.abc p{margin:0 0 6px;font-size:13px;line-height:1.45}.abc .cr{font-size:12.5px;color:var(--mu);line-height:1.45}.abc .cr b{color:var(--tx)}'+
+'.abt{font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);margin:18px 0 8px}'+
+'.abs{display:inline-block;font-size:10px;font-weight:800;border-radius:99px;padding:2px 8px;border:1px solid;margin-left:auto}.abs.a{color:#16a34a;border-color:#16a34a}.abs.l{color:#d97706;border-color:#d97706}.abs.c{color:#6b7280;border-color:#6b7280}'+
+'.lnk{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}.lnk button{flex:1;min-width:130px}'+
+'.hd{background:var(--card);border:1px solid var(--bd);border-radius:12px;margin-bottom:8px;color:var(--tx)}.hd summary{padding:12px 14px;font-weight:700;cursor:pointer;list-style:none;display:flex;gap:8px;align-items:center}.hd summary::-webkit-details-marker{display:none}.hd summary:after{content:"+";margin-left:auto;font-size:18px;color:var(--mu)}.hd[open] summary:after{content:"\\2212"}.hd .bd{padding:0 14px 14px;font-size:13.5px;line-height:1.5}.hd ol,.hd ul{margin:6px 0 6px 18px;padding:0}.hd .tip{margin-top:6px;padding:8px 10px;border-radius:10px;background:rgba(245,166,35,.14);font-size:12.5px}'+
+'.hlpb{margin-left:auto;flex:none;border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:99px;padding:5px 11px;font-weight:700;font-size:12px;cursor:pointer}.hlprow{display:flex;justify-content:flex-end;padding:6px 14px 0}'+
+'#sh-hlp{position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center}#sh-hlp .pn{width:100%;max-width:560px;max-height:82vh;overflow:auto;background:var(--card);color:var(--tx);border-radius:18px 18px 0 0;padding:16px 16px calc(24px + env(safe-area-inset-bottom,0px));border:1px solid var(--bd)}#sh-hlp h3{margin:0 0 6px;font-size:18px}#sh-hlp ol{margin:6px 0 6px 18px;padding:0}#sh-hlp .tip{margin-top:8px;padding:8px 10px;border-radius:10px;background:rgba(245,166,35,.16);font-size:12.5px}'+
+'.lw{display:grid;grid-template-columns:34px 1fr;gap:4px 10px;padding:10px 12px;border-bottom:1px solid var(--bd);font-size:13.5px;line-height:1.45;color:var(--tx)}.lw i{font-style:normal;font-weight:800;color:var(--ac)}.lw b{display:block}'+
+'.lq button{display:block;width:100%;text-align:left;margin:6px 0;padding:10px 12px;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--tx)}.lq button.ok{border-color:#16a34a;background:#16a34a22}.lq button.no{border-color:#dc2626;background:#dc262622}'+
+'.gl{display:grid;grid-template-columns:minmax(90px,30%) 1fr;gap:4px 10px;font-size:13.5px;line-height:1.45}.gl b{color:var(--tx)}.gl span{color:var(--mu)}';
+document.head.appendChild(st);
+
+/* ---------- content ---------- */
+const FEAT=[
+['\u{1F3AF}','Live scoring','Ball-by-ball scorer for cricket (runs, extras, wickets, undo, bowler and batter changes) with powerplay, DLS and revised-target support. Football, tennis and other scorers are added by status below.','Every match you play leaves a verified scorecard, so your runs, wickets and records are proven, not just claimed.'],
+['\u{1F4FA}','Match centre and scorecards','Live score, full scorecard, overs, graphs, commentary and result for each match, shareable with one link.','Selectors, coaches and sponsors can open your performance any time.'],
+['\u{1F4C5}','Matches, tournaments and series','Create fixtures, groups, points tables and knockouts. Organisers run a whole league from the phone.','Organisers build a name; players get a proper stage with standings and finals.'],
+['\u{1F464}','Players, teams and rankings','Player ID, profile, career stats, team pages and rankings from real scored matches.','A growing career record you can show to academies and recruiters.'],
+['\u{1F451}','Team 11 (fantasy)','Pick your best XI from a real match and track points as it is scored.','Builds game understanding: roles, form and match-ups.'],
+['\u{1F528}','SH Auction','Run a player auction for your league: teams, purse, bidding, sold and unsold lists, 3D team build-up view.','Gives club leagues a professional auction night and gives players visibility.'],
+['\u{1F4E1}','Live streams and broadcast','Show a YouTube or camera stream with a score strip and overlays (OBS ready).','Your match reaches family, fans and sponsors live.'],
+['\u{1F4F8}','Social studio, reels and news','Make posters for results, players of the match and fixtures; ePaper and news stay in one place.','Grow your fan base and sponsorship value with ready-to-share posts.'],
+['\u{1F6D2}','Marketplace and shops','Buy, sell or rent cricket gear with the seller clearly shown.','Affordable kit for players; income for local sellers.'],
+['\u{1F393}','Academy','Coaching batches, students and attendance for academies.','Coaches run their business; students keep a training history.'],
+['\u{1F3DF}️','Ground bookings and UPI collection','Find grounds, see slots, book and collect fees by UPI with organiser confirmation.','Less chasing money; grounds fill their slots.'],
+['\u{1F9D1}‍⚖️','Umpires and officials','Official profiles, match appointments, umpire signal guide and law study material.','Umpires and scorers build a record and learn the laws properly.'],
+['\u{1F4CA}','Reports','Match, team and tournament reports for organisers and boards.','Clear numbers for sponsors and associations.']];
+const ROLES=[
+['Player','Keep verified stats, join teams and tournaments, appear in rankings and auctions, learn the laws.'],
+['Scorer','Score live matches accurately, get appointed, and build a scoring record that organisers trust.'],
+['Umpire / official','Use the signals guide, laws and study material; get listed for match appointments.'],
+['Organiser / owner','Run tournaments, auctions, bookings and payments from one app and publish professional results.'],
+['Coach / academy','Manage batches and see each student\'s match record.'],
+['Fan','Follow live scores, watch streams, play Team 11 and read news.']];
+const LAWS=[
+['Players','Each side has up to 11 players, one of them the captain. A fielding side may not have more than 11 on the field. Playing conditions can allow more nominated players or substitutes.'],
+['Umpires','Two umpires control the match, decide fair play and signal. Their decisions are final unless a review system is agreed in the match conditions.'],
+['Scorers','Two scorers record runs, wickets and overs, and accept the umpires\' signals. They check totals with each other at every interval.'],
+['The Ball','A cricket ball has set weight and size. It can be changed if lost or damaged, and the replacement must be of similar wear.'],
+['The Bat','Wood blade with limits on size and a maximum width and depth, so no one gets an unfair advantage.'],
+['The Pitch','The strip is 22 yards (20.12 m) long between the stumps and is the same for both ends.'],
+['The Creases','Bowling, popping (batting) and return creases mark where the bowler must step and where batters are safe.'],
+['The Wickets','Three stumps and two bails at each end, standard height and width.'],
+['Preparation and maintenance of the playing area','Mowing, rolling and marking rules; the umpires decide if the ground is fit.'],
+['Covering the pitch','When and how covers are used for rain.'],
+['Intervals','Lunch, tea, drinks and innings breaks and how their length is agreed.'],
+['Start of play; cessation of play','When play starts, stops for light or rain, and how time lost is handled.'],
+['Innings','Each side bats once or twice as agreed. The toss decides who bats or bowls first; an innings ends when 10 are out, time or overs end, or a declaration.'],
+['The follow-on','In multi-day matches a side far behind may be asked to bat again straight away (lead needed depends on match length).'],
+['Declaration and forfeiture','A captain can end his or her own innings early (declare) or give up an innings.'],
+['The result','Win, tie, draw or no result, and when a match is awarded for conduct.'],
+['The over','Six valid balls, then the bowling end changes. A bowler cannot bowl two overs in a row.'],
+['Scoring runs','Runs come from running between the wickets, boundaries and penalties. Short runs are not counted.'],
+['Boundaries','A ball reaching or crossing the boundary is four if it touches the ground first, six if it clears it in the air.'],
+['Dead ball','Ball is dead when it settles, a wicket falls, a boundary is hit or umpire calls it; no runs or dismissals after that.'],
+['No ball','Illegal delivery: front-foot or other foot fault, high full toss, ball bouncing more than twice or rolling, fielders in wrong place, or running on the pitch. One run is added and the ball is bowled again.'],
+['Wide ball','A ball that passes too wide of the striker to be reasonably hit. One run is added and it is bowled again.'],
+['Bye and leg bye','Byes are runs when the ball misses the bat and body; leg byes are runs off the body (not the bat). They are not charged to the bowler.'],
+['Fielder\'s absence; substitutes','A substitute may field but not bat, bowl or keep wicket (except concussion or approved replacements under match rules).'],
+['Batter\'s innings; runners','A batter\'s innings runs from taking guard until out. Runners are not allowed in most modern match conditions; check your event\'s rules.'],
+['Practice on the field','No bowling practice or batting practice on the square during play, except as the umpires allow.'],
+['The wicket-keeper','The only fielder who can wear gloves and leg guards. Must stay behind the stumps until the ball is delivered.'],
+['The fielder','Fielders cannot use any aid to field and cannot deliberately obstruct a batter.'],
+['The wicket is down','A wicket is down when a bail is removed from the top of the stumps by the ball, hand or glove holding the ball, or a stump is struck out of the ground.'],
+['Batter out of the ground','A batter is out of the ground if no part of the bat or body is grounded behind the popping crease.'],
+['Appeals','A fielding side must appeal ("How\'s that?") before the umpire can give a batter out. The umpire cannot give someone out unasked.'],
+['Bowled','The ball hits the wicket and takes off a bail, delivered by the bowler (even after touching the bat or body).'],
+['Caught','A fielder catches the ball on the full before it touches the ground, within the field of play, off the bat or glove holding the bat.'],
+['Hit the ball twice','A batter may hit the ball a second time only to protect the wicket (with bat); otherwise out.'],
+['Hit wicket','The batter dislodges the wicket with the bat or body while playing at the ball or setting off for a run.'],
+['Leg before wicket (LBW)','Out if the ball is a fair delivery, does not pitch on the leg side, hits the batter\'s body (not the bat) and would have gone on to hit the stumps. If the batter played a shot, the ball must hit in line between the wickets; if no shot was offered, it may hit outside the off stump line.'],
+['Obstructing the field','A batter may not intentionally obstruct the fielder, including by touching the ball with a hand not holding the bat after hitting it.'],
+['Run out','Out if the fielding side breaks the wicket before the batter reaches the crease while running or after the ball is in play. Under the 2022 Laws, the old "Mankad" run out at the non-striker\'s end is now plainly a run out.'],
+['Stumped','Wicket-keeper breaks the wicket while the batter is out of the crease and not running.'],
+['Timed out','A new batter must be ready to face within the set time (3 minutes in the Laws and Tests; ICC limited-overs matches use 2 minutes), or may be given out.'],
+['Unfair play','Umpires act against ball tampering, time wasting, dangerous or unfair bowling, damaging the pitch, and unfair movement by fielders.'],
+['Players\' conduct','Spirit of Cricket: players must respect the umpires, opponents and the game. Serious conduct breaches can lead to penalty runs, suspension or a banned player.']];
+const UMP=[
+['Before the match','Inspect the pitch, boundary, creases, stumps and ball. Agree with the captains on playing conditions, overs, boundary size, powerplay and fielding restrictions. Confirm who is scorer and check the match sheet.'],
+['During each over','Count six legal balls. Watch the bowler\'s front foot and the batter at the crease. Call and signal no ball, wide, dead ball and boundaries clearly to the scorers.'],
+['Making decisions','Decide only on an appeal. Keep your eyes on the ball and the action. If in doubt, the benefit goes to the batter. Be consistent for both sides.'],
+['Teaming with the other umpire','Check wides and no-balls with signals, share boundary decisions, and move to the correct end after every over. Use short, quiet conversations to resolve doubts.'],
+['Dealing with players','Be calm, polite and firm. A captain may ask for an explanation, but you do not argue. Report serious breaches in writing after the match.'],
+['Fair play and safety','Stop play for dangerous bowling, a damaged ball, or unfit light. Give first and final warnings to fast bowlers for dangerous full tosses or high bouncers.'],
+['After the match','Confirm the final score with both scorers, sign the scoresheet, and record any incident.']];
+const SCORE=[
+['Runs off the bat','Credit to the batter and to the bowler\'s figures.'],
+['Wide','1 run to the team extras plus any runs run; all charged to the bowler. Ball does not count as a legal ball.'],
+['No ball','1 run penalty plus runs off the bat to the batter. Byes and leg byes on a no ball go to extras. The bowler is charged for the penalty and bat runs. Next ball is a free hit in limited-overs formats.'],
+['Bye and leg bye','Run counted to the team but not to the batter or the bowler. A legal ball.'],
+['Wickets credited to the bowler','Bowled, caught, LBW, stumped and hit wicket.'],
+['Wickets not credited to the bowler','Run out, obstructing the field, hit the ball twice, timed out and retired out.'],
+['End of over','Six legal balls. Rotate strike when batters cross on odd runs; the non-striker faces the next over.'],
+['Powerplay and fielding limits','Check the match format: T20 first 6 overs powerplay with at most 2 fielders outside the circle; ODIs have three powerplay blocks. The app applies the match\'s powerplay settings.'],
+['Revised target','If rain shortens a chase, use DLS. The app has a DLS calculator and shows the revised target.']];
+const FORM=[
+['Test','Played over up to 5 days, two innings each side, 90 overs a day, red ball. Follow-on possible.'],
+['ODI','50 overs each. Three powerplays. Each bowler up to 10 overs.'],
+['T20','20 overs each. Powerplay first 6 overs. Each bowler up to 4 overs.'],
+['T10','10 overs each. Each bowler up to 2 overs. Fast, short-match format.'],
+['The Hundred','100 balls each, bowled in sets of 5 or 10 balls, with a 25-ball powerplay.']];
+const GLOS=[['Over','Six legal balls from one end.'],['Maiden','An over with no runs scored off the bat or from wides and no-balls.'],['Strike rate','Batter: runs per 100 balls. Bowler: balls per wicket.'],['Economy','Runs conceded per over.'],['Average','Batter: runs per dismissal. Bowler: runs per wicket.'],['Powerplay','Early overs with fielding limits.'],['Free hit','Next ball after a no ball in limited overs; batter can only be run out.'],['DRS','Decision Review System: umpire\'s decision can be reviewed with ball tracking and sensors.'],['DLS','Duckworth-Lewis-Stern method for fair targets when rain cuts overs.'],['Extras','Runs not scored off the bat: wides, no balls, byes, leg byes and penalties.'],['Crease','White lines on the pitch showing safe ground and bowling limits.'],['Innings','A team\'s turn to bat.'],['Follow-on','Asking a team far behind to bat again immediately.'],['Declaration','Captain ends own innings early.'],['Dot ball','A ball with no run scored.'],['Boundary','Four or six runs when the ball reaches the edge of the field.'],['Run rate','Runs per over.'],['Required rate','Runs per over needed to win a chase.'],['Duck','A batter dismissed for zero.']];
+const FIELD=[['Slip','Behind the batter on the off side, catches edges.'],['Gully','Wide of the slips, catches fast edges.'],['Point','Square on the off side.'],['Cover','Between point and mid-off, saves drives.'],['Mid-off / Mid-on','Straight, near the bowler on each side.'],['Mid-wicket','On the leg side, square-ish and forward.'],['Square leg','Level with the batter on the leg side.'],['Fine leg','Behind square on the leg side near the boundary.'],['Third man','Behind point near the boundary.'],['Long-on / Long-off','Deep boundary fielders straight down the ground.'],['Short leg / Silly point','Close catching positions on each side.'],['Wicket-keeper','Behind the stumps, catches, stumps and run outs.']];
+const QUIZ=[
+['How many legal balls are in a standard over?',['4','6','8'],1],
+['A ball that passes too wide of the batter to be hit is called…',['No ball','Bye','Wide'],2],
+['Who can wear gloves and leg guards while fielding?',['Any fielder','Only the wicket-keeper','The captain'],1],
+['Which dismissal is NOT credited to the bowler?',['Bowled','Run out','LBW'],1],
+['How long is the pitch between the stumps?',['20 yards','22 yards','24 yards'],1],
+['In T20, how many overs can one bowler bowl?',['2','4','5'],1],
+['What happens after a no ball in limited overs?',['Free hit','Over ends','Batter is out'],0],
+['An umpire gives a batter out only when…',['Fielders appeal','The ball hits pads','The scorer asks'],0],
+['Byes are runs when…',['Ball hits the bat','Ball misses the bat and body','Ball hits the helmet'],1],
+['What does DLS help decide?',['Toss','Revised target after rain','Player of the match']]];
+QUIZ[9][2]=1;
+const HELP={
+home:['Home','See live matches, upcoming fixtures and results at a glance.',['Tap a match card to open the match centre.','Use the sport chips to switch sport.','Use the bottom bar for Matches, Videos, News, Deals and Shop.'],'Pull down to refresh the live scores.'],
+matches:['Matches and schedule','Browse live, upcoming and completed matches.',['Pick Live, Schedule, Archives or Series tabs.','Tap any match to see its centre.'],'Use Archives to find old results.'],
+match:['Match centre','Everything about one match: score, scorecard, overs, graphs, squads and stream.',['Open a match from Matches.','Swipe through the tabs: Live, Scorecard, Squads, Overs.','Use Share to send the match link.'],'If a match was interrupted, the profile shows where scoring stopped.'],
+score:['Scorer','Score a match ball by ball.',['Start a match (teams, overs, toss).','Tap runs, wide, no-ball, bye, wicket after every ball.','Use Undo to fix a mistake.','Change bowler or batter when prompted.','End innings and publish the result.'],'Keep the umpire signal guide handy (Scorer tools).'],
+tours:['Tournaments and series','Create and manage a tournament.',['Tap Create, enter name, format and teams.','Add fixtures or auto-generate groups.','Score matches; the points table updates itself.'],'Share the tournament link with captains.'],
+teams:['Teams','Create teams and add players.',['Tap Create team.','Add players by Player ID or invite.','Set captain and vice captain.'],'A team logo makes the scorecard and posters look professional.'],
+players:['Players and rankings','See player profiles and rankings.',['Search a player.','Open the profile for career stats.'],'Rankings come only from scored matches.'],
+dream:['Team 11','Pick your best XI for a match.',['Open a match.','Pick 11 players within the credit limit.','Choose captain and vice captain.','Track points live.'],'Check the toss and playing XI before locking your team.'],
+auction:['SH Auction','Run a player auction.',['Create an auction (money or points).','Add teams with purse, then players.','Start the auction: bid, then Sold or Unsold.','Open the team view to see squads form.'],'The Hero Champions League demo auction shows how it works.'],
+epaper:['ePaper and news','Read match reports and news.',['Open an article to read.','Tap Share to send it.'],'Add your own stories in the studio if you are an organiser.'],
+reels:['Reels','Short videos and highlights.',['Swipe to watch.','Upload clips from your matches.'],'Keep clips under one minute.'],
+social:['Social studio','Make posters for WhatsApp, Instagram and Facebook.',['Pick a design.','The data fills from your real match.','Download or share.'],'Posters use your match data, so check the match is final first.'],
+stream:['Stream and OBS','Show your live stream and overlays.',['Paste your YouTube link or use the default channel.','Open the overlay link in OBS.','Choose a scene.'],'Test the stream before the match starts.'],
+streamhub:['Live streams','Watch live matches on the SH channel or other streams.',['Open a stream.','Rotate the phone for full screen.'],'Streams need a good data connection.'],
+market:['Marketplace and shops','Buy, sell or rent gear.',['Open the Market page.','Search or browse a category.','Tap a listing to see the seller.','Contact the seller.'],'Meet in public places and check gear before paying.'],
+academy:['Academy','Manage coaching batches.',['Create a batch.','Add students.','Mark attendance.'],'Link students to their Player ID.'],
+book:['Ground bookings','Book a ground.',['Explore grounds.','Pick a slot.','Pay by UPI; the organiser confirms.'],'Check the cancellation rules before you pay.'],
+boards:['Boards and leagues','Find boards, states and leagues.',['Open a board to see its tournaments.'],'Use this to find official tournaments near you.'],
+collect:['Collect payments (UPI)','Collect fees from teams.',['Create a payment request.','Players pay by UPI.','You confirm each payment.'],'Payments are confirmed manually by the organiser.'],
+reports:['Reports','Match, team and tournament reports.',['Choose the report type.','Pick the period.','View or share.'],'Reports use only scored matches.'],
+profile:['My profile','Your player card.',['Edit name, photo and role.','Share your Player ID and QR.'],'Keep your details true; they appear on scorecards.'],
+settings:['Settings','App look, language, notifications and defaults.',['Choose theme and language.','Set your default stream channel.','Turn signals and tips on or off.'],'Settings are saved on this phone.'],
+mycricket:['My Cricket','Your matches, teams and stats in one place.',['Open a tab.','Continue scoring from My matches.'],'Interrupted matches appear at the top.'],
+search:['Search','Find players, teams, matches and tournaments.',['Type a name.','Tap a result.'],'Try the Player ID for exact results.'],
+rankings:['Player rankings','Top batters, bowlers and all-rounders.',['Pick a format and sport.','Tap a name to see the profile.'],'Rankings come only from scored matches.'],
+history:['History','Past results and records.',['Pick a year.','Open a match.'],'Useful for finding old head-to-head records.'],
+drs:['LBW review (DRS)','Learn and practise the three LBW checks.',['Pick pitching, impact and hitting.','See the verdict.'],'Original umpire call is explained in the Laws study.'],
+dlstool:['DLS calculator','Revised targets after rain.',['Enter overs, wickets and runs.','Read the new target.'],'Official DLS tables may differ slightly.'],
+tests:['Test and multi-day matches','Score matches with more than one innings.',['Start a multi-day match.','Switch innings and days.'],'Use for club two-day games.'],
+highlights:['Match highlights','Watch key moments.',['Open a match highlight.'],'Highlights come from marked events.'],
+officials:['Umpires and officials','Official profiles and appointments.',['Open a profile.','Appoint to a match.'],'Open Laws and study to learn rules.'],
+directory:['Boards and states','Browse boards and their states.',['Pick a country.','Open a state board.'],'Info is taken from the board listings.'],
+sgames:['Other sports scorers','Football, tennis and more.',['Pick a sport.','Start a match.','Score events.'],'Only sports marked Available or Limited have scorers.'],
+mysports:['My sports and country','Choose the sports you follow.',['Pick sports.','Choose a primary sport.'],'The primary sport becomes your scorer default.'],
+hub:['All features','Every module and tab.',['Open a card.','Tabs show real features or "not built yet".'],'Look for LIVE FEATURE to know it works.'],
+support:['Help and support','Contact us and read policies.',['Pick a tab.','Call or email us.'],'We reply by phone or email.'],
+rewards:['Rewards and achievements','Badges for activity.',['Open Rewards.','See progress.'],'Badges are earned from real activity.'],
+gground:['Grounds (GPS)','Find grounds near you.',['Allow location.','Pick a ground.'],'Grounds use map listings.'],
+import:['Import and QR','Add players by file or QR.',['Pick a file.','Check the preview.','Confirm.'],'Always check duplicate names.'],
+studio:['Broadcast studio','Create scenes and overlays.',['Pick a scene.','Edit text.','Publish.'],'Use short text so it fits on small screens.'],
+about:['About us','What Scoring Heroes is and what it offers.',['Scroll through the features.','Open Help or Laws from the buttons.'],''],
+helpc:['Help centre','Step-by-step help for each feature.',['Search or open any topic.'],''],
+learn:['Laws and study','Laws of Cricket, umpiring, scoring and quiz.',['Pick a tab.','Try the quiz at the end.'],'Official source: MCC Laws of Cricket and ICC playing conditions.']};
+
+const SPN=r=>{if(window.S&&Array.isArray(S.cat)&&S.cat.length)return S.cat;try{return CAT0.map(r=>({id:r[0],name:r[1],icon:r[2],cat:r[3],fm:r[5].slice(),st:r[6]}))}catch(e){return[]}};
+const stCls=t=>t==='AVAILABLE'?'a':t==='LIMITED'?'l':'c';
+const stTxt=t=>t==='AVAILABLE'?'Full features':t==='LIMITED'?'Scorer and records':'Coming soon';
+const spBlurb=(r)=>r.st==='AVAILABLE'?'Live scorer, scorecards, stats, tournaments, streams, auction and more. Your record builds into a career profile.':r.st==='LIMITED'?'Match scorer and records are available. More tools are being added.':'Listed so players can follow. The scorer is not built yet.';
+
+XV.about=function(){const cat=SPN();
+ return `<div class="ab"><h2>About us</h2><div class="abh"><b>Scoring Heroes · SH Sports Sky High</b><div class="lead">One free app to score matches, build your sports record, run tournaments and auctions, stream live and learn the rules of the game. Cricket first, with more sports being added.</div></div>
+ <div class="lnk"><button class="btn" data-a="go" data-v="helpc">Help centre</button><button class="btn ghost" data-a="go" data-v="learn">Laws and study</button></div>
+ <div class="abt">What we offer and how it helps you</div><div class="abg">${FEAT.map(f=>`<div class="abc"><h4><span>${f[0]}</span>${E(f[1])}</h4><p>${E(f[2])}</p><div class="cr"><b>Career benefit:</b> ${E(f[3])}</div></div>`).join('')}</div>
+ <div class="abt">Games and sports on the list</div><div class="abg">${cat.length?cat.map(r=>`<div class="abc"><h4><span>${E(r.icon)}</span>${E(r.name)}<span class="abs ${stCls(r.st)}">${stTxt(r.st)}</span></h4><p>${E(spBlurb(r))}</p><div class="cr">${(r.fm&&r.fm.length)?'<b>Formats:</b> '+r.fm.map(E).join(', '):''}</div></div>`).join(''):'<div class="mu">Sports list will appear here.</div>'}</div>
+ <div class="abt">Who it is for</div><div class="abg">${ROLES.map(r=>`<div class="abc"><h4>${E(r[0])}</h4><p>${E(r[1])}</p></div>`).join('')}</div>
+ <div class="abt">Contact</div><div class="abc"><p>Phone: <a href="tel:+919988402403">+91 9988402403</a><br>Email: <a href="mailto:help@scoringheroes.com">help@scoringheroes.com</a></p></div></div>`};
+
+XV.helpc=function(){const q=(UI.hq||'').toLowerCase(),keys=Object.keys(HELP).filter(k=>k!=='about'&&k!=='helpc');
+ const list=keys.filter(k=>!q||(HELP[k][0]+' '+HELP[k][1]).toLowerCase().includes(q));
+ return `<div class="ab"><h2>Help centre</h2><div class="mu sm" style="margin-bottom:8px">Every feature has simple steps. Tap a topic to open it. You can also tap the ? Help button at the top of any screen.</div>
+ <input data-c="hq" placeholder="Search help, then press Enter (auction, scorer, stream)" value="${E(UI.hq||'')}" style="margin-bottom:10px">
+ ${list.map(k=>{const h=HELP[k];return `<details class="hd"><summary>${E(h[0])}</summary><div class="bd"><p>${E(h[1])}</p><ol>${h[2].map(x=>`<li>${E(x)}</li>`).join('')}</ol>${h[3]?`<div class="tip">Tip: ${E(h[3])}</div>`:''}</div></details>`}).join('')||'<div class="mu">No topic found.</div>'}
+ <div class="abt">Learn the game</div><div class="lnk"><button class="btn ghost" data-a="go" data-v="learn">Laws of Cricket</button><button class="btn ghost" data-a="sigGuide">Umpire signals</button></div>
+ <div class="abt">Still stuck?</div><div class="abc"><p>Phone: <a href="tel:+919988402403">+91 9988402403</a><br>Email: <a href="mailto:help@scoringheroes.com">help@scoringheroes.com</a></p></div></div>`};
+
+const LT=[['laws','Laws'],['ump','Umpiring'],['score','Scoring'],['form','Formats'],['field','Fielding'],['gl','Glossary'],['quiz','Quiz']];
+XV.learn=function(){const t=UI.lt||'laws';let b='';
+ if(t==='laws')b=`<div class="mu sm" style="margin-bottom:8px">The 42 Laws of Cricket (MCC, 2017 Code, 3rd edition 2022) explained in simple words. For disputes, read the official text at lords.org and the ICC playing conditions for your match.</div><div class="card" style="padding:0">${LAWS.map((l,i)=>`<div class="lw"><i>${i+1}</i><div><b>${E(l[0])}</b>${E(l[1])}</div></div>`).join('')}</div>`;
+ else if(t==='ump')b=`<div class="card" style="padding:0">${UMP.map((l,i)=>`<div class="lw"><i>${i+1}</i><div><b>${E(l[0])}</b>${E(l[1])}</div></div>`).join('')}</div><div class="lnk"><button class="btn" data-a="sigGuide">Open umpire signals guide</button></div><div class="mu sm">Umpire guidelines are general good practice. Your board or association may add its own rules.</div>`;
+ else if(t==='score')b=`<div class="card" style="padding:0">${SCORE.map((l,i)=>`<div class="lw"><i>${i+1}</i><div><b>${E(l[0])}</b>${E(l[1])}</div></div>`).join('')}</div>`;
+ else if(t==='form')b=`<div class="card" style="padding:0">${FORM.map((l,i)=>`<div class="lw"><i>${i+1}</i><div><b>${E(l[0])}</b>${E(l[1])}</div></div>`).join('')}</div><div class="mu sm">Match conditions can vary by tournament. Always follow the playing conditions given by your organiser.</div>`;
+ else if(t==='field')b=`<div class="card"><div class="gl">${FIELD.map(l=>`<b>${E(l[0])}</b><span>${E(l[1])}</span>`).join('')}</div></div>`;
+ else if(t==='gl')b=`<div class="card"><div class="gl">${GLOS.map(l=>`<b>${E(l[0])}</b><span>${E(l[1])}</span>`).join('')}</div></div>`;
+ else{const Q=UI.lq||(UI.lq={i:0,s:0,a:null});const q=QUIZ[Q.i];
+  b=Q.i>=QUIZ.length?`<div class="card"><h3>Score: ${Q.s} / ${QUIZ.length}</h3><button class="btn" data-a="lqReset">Try again</button></div>`:`<div class="card lq"><div class="mu sm">Question ${Q.i+1} of ${QUIZ.length}</div><h3 style="margin:6px 0">${E(q[0])}</h3>${q[1].map((o,j)=>`<button class="${Q.a==null?'':j===q[2]?'ok':j===Q.a?'no':''}" data-a="lqPick" data-v="${j}">${E(o)}</button>`).join('')}${Q.a!=null?`<button class="btn" data-a="lqNext" style="margin-top:8px">${Q.i+1>=QUIZ.length?'See score':'Next'}</button>`:''}</div>`}
+ return `<div class="ab"><h2>Laws and study</h2><div class="tabs">${LT.map(([k,l])=>`<button class="${t===k?'on':''}" data-a="ltTab" data-v="${k}">${l}</button>`).join('')}</div>${b}</div>`};
+Object.assign(A,{ltTab(d){UI.lt=d.v;render()},lqPick(d){const Q=UI.lq||(UI.lq={i:0,s:0,a:null});if(Q.a!=null)return;Q.a=+d.v;if(Q.a===QUIZ[Q.i][2])Q.s++;render()},lqNext(){const Q=UI.lq;Q.i++;Q.a=null;render()},lqReset(){UI.lq={i:0,s:0,a:null};render()},
+ hlpOpen(d){UI.hlp=d.v;render()},hlpClose(){UI.hlp=null;render()}});
+C.hq=function(v){UI.hq=v;render()};
+
+/* menu: About us first, then help and study */
+if(!MENU2.some(g=>g[0]==='About and help'))MENU2.unshift(['About and help',[['about','ℹ️','About us'],['helpc','❓','Help centre'],['learn','\u{1F4DA}','Laws, umpiring and study']]]);
+IC.info='<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.2"/>';IC.book='<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2zM4 19V5M8 7h8"/>';
+IC.post='<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 14l4-4 4 4 3-3 5 5M9 8.5v.2"/>';const MI={about:'info',helpc:'help',learn:'book',score:'target',posts:'post'};
+const hlpDom=()=>{try{
+ document.querySelectorAll('.drawer .mi .e').forEach(el=>{const b=el.closest('button'),k=b&&MI[b.dataset.v];if(k&&IC[k])el.innerHTML=ic(k)});
+ const old=document.getElementById('sh-hlp');if(old)old.remove();
+ const v=UI.view,h=HELP[v];
+ if(h&&!UI.drawer&&UI.stage==='app'&&v!=='home'&&!document.querySelector('.hlpb')){
+  const main=document.querySelector('#app main');if(main){const bar=main.querySelector('.bar,h2');
+   const btn='<button class="hlpb" type="button" data-a="hlpOpen" data-v="'+v+'">? Help</button>';
+   if(bar&&bar.classList.contains('bar')){bar.insertAdjacentHTML('beforeend',btn)}else main.insertAdjacentHTML('afterbegin','<div class="hlprow">'+btn+'</div>')}}
+ if(UI.hlp&&HELP[UI.hlp]){const x=HELP[UI.hlp];const d=document.createElement('div');d.id='sh-hlp';d.innerHTML='<div class="pn" role="dialog" aria-label="Help"><h3>'+E(x[0])+'</h3><div class="mu">'+E(x[1])+'</div><ol>'+x[2].map(s=>'<li>'+E(s)+'</li>').join('')+'</ol>'+(x[3]?'<div class="tip">Tip: '+E(x[3])+'</div>':'')+'<div class="row" style="gap:8px;margin-top:12px"><button class="btn ghost" data-a="go" data-v="helpc" style="flex:1">Help centre</button><button class="btn" data-a="hlpClose" style="flex:1">Close</button></div></div>';d.addEventListener('click',e=>{if(e.target===d){UI.hlp=null;render()}});document.body.appendChild(d)}
+}catch(e){}};
+const r2=render;render=function(){const o=r2.apply(this,arguments);hlpDom();return o};
+}
 </script>
 </body>
 </html>
