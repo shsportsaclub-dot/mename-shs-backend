@@ -219,3 +219,4 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 
 ## Any image: cut + SH banner (block 134)
 - Person photos (register, auction player, social poster) are background-cut with the same segmentation as profile and composed onto the SH banner (shBannerCompose), face-centred. Logos: block 133. Test: tests/photo-banner.cjs.
+- Block 135: segmentation mask keeps only the largest person (people behind in selfies are dropped). Test: tests/photo-main-person.cjs.

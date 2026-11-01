@@ -12736,6 +12736,19 @@ window.shBannerCompose=async function(r){
 {const o=C.st2Photo;C.st2Photo=async function(v,el){const f=el&&el.files&&el.files[0];if(!f)return;const r=await shPrepPhoto(f);if(r.photo){UI.st2.photo=await shBannerCompose(r);UI.st2._pi=null;render()}else if(o)o.apply(this,arguments)}}
 {const o=F.auPlayer;if(o)F.auPlayer=async function(fd){try{const f=fd.get('photo');if(f instanceof Blob&&f.size&&f.size<=5*1024*1024&&/^image\//.test(f.type)){const r=await shPrepPhoto(f);const ph=await shBannerCompose(r);if(ph)fd.set('photo',await fetch(ph).then(q=>q.blob()),'player.jpg')}}catch(e){}return o.apply(this,arguments)}}
 })();
+
+/* 135 selfie with people behind: keep only the main (largest) person in the segmentation mask */
+(function(){const m0=window.shSegmentMask;if(!m0||m0.__main)return;
+window.shSegmentMask=async function(src){const m=await m0(src);try{const w=m.width,h=m.height,x=m.getContext('2d'),d=x.getImageData(0,0,w,h),a=d.data,lab=new Int32Array(w*h),sz=[0];let n=0;
+const st=new Int32Array(w*h);
+for(let i=0;i<w*h;i++){if(lab[i]||a[i*4]<128)continue;n++;let sp=0,c=0;st[sp++]=i;lab[i]=n;while(sp){const j=st[--sp];c++;const xx=j%w,yy=(j-xx)/w;
+ if(xx>0&&!lab[j-1]&&a[(j-1)*4]>=128){lab[j-1]=n;st[sp++]=j-1}if(xx<w-1&&!lab[j+1]&&a[(j+1)*4]>=128){lab[j+1]=n;st[sp++]=j+1}
+ if(yy>0&&!lab[j-w]&&a[(j-w)*4]>=128){lab[j-w]=n;st[sp++]=j-w}if(yy<h-1&&!lab[j+w]&&a[(j+w)*4]>=128){lab[j+w]=n;st[sp++]=j+w}}sz.push(c)}
+if(n>1){let best=1;for(let k=2;k<=n;k++)if(sz[k]>sz[best])best=k;
+ // grow the kept region slightly so soft edges survive
+ for(let i=0;i<w*h;i++){if(lab[i]!==best){a[i*4]=a[i*4+1]=a[i*4+2]=0}}
+ // restore soft edge pixels adjacent to kept region
+ x.putImageData(d,0,0)}}catch(e){}return m};window.shSegmentMask.__main=1})();
 </script>
 </body>
 </html>
