@@ -12453,7 +12453,7 @@ C.hq=function(v){UI.hq=v;render()};
 /* menu: About us first, then help and study */
 if(!MENU2.some(g=>g[0]==='About and help'))MENU2.unshift(['About and help',[['about','ℹ️','About us'],['helpc','❓','Help centre'],['learn','\u{1F4DA}','Laws, umpiring and study']]]);
 IC.info='<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.2"/>';IC.book='<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2zM4 19V5M8 7h8"/>';
-IC.post='<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 14l4-4 4 4 3-3 5 5M9 8.5v.2"/>';const MI={about:'info',helpc:'help',learn:'book',score:'target',posts:'post',users:'users',logolib:'camera'};
+IC.post='<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 14l4-4 4 4 3-3 5 5M9 8.5v.2"/>';const MI={about:'info',helpc:'help',learn:'book',score:'target',posts:'post',users:'users',logolib:'camera',live3d:'tv'};
 const hlpDom=()=>{try{
  document.querySelectorAll('.drawer .mi .e').forEach(el=>{const b=el.closest('button'),k=b&&MI[b.dataset.v];if(k&&IC[k])el.innerHTML=ic(k)});
  const old=document.getElementById('sh-hlp');if(old)old.remove();
