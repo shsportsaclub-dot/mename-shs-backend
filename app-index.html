@@ -12453,7 +12453,7 @@ C.hq=function(v){UI.hq=v;render()};
 /* menu: About us first, then help and study */
 if(!MENU2.some(g=>g[0]==='About and help'))MENU2.unshift(['About and help',[['about','ℹ️','About us'],['helpc','❓','Help centre'],['learn','\u{1F4DA}','Laws, umpiring and study']]]);
 IC.info='<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.2"/>';IC.book='<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2zM4 19V5M8 7h8"/>';
-IC.post='<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 14l4-4 4 4 3-3 5 5M9 8.5v.2"/>';const MI={about:'info',helpc:'help',learn:'book',score:'target',posts:'post',users:'users'};
+IC.post='<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 14l4-4 4 4 3-3 5 5M9 8.5v.2"/>';const MI={about:'info',helpc:'help',learn:'book',score:'target',posts:'post',users:'users',logolib:'camera'};
 const hlpDom=()=>{try{
  document.querySelectorAll('.drawer .mi .e').forEach(el=>{const b=el.closest('button'),k=b&&MI[b.dataset.v];if(k&&IC[k])el.innerHTML=ic(k)});
  const old=document.getElementById('sh-hlp');if(old)old.remove();
@@ -12585,6 +12585,51 @@ XV.tours=function(){const o=t0.apply(this,arguments),G=serGroups(),j=UI.live;
  <div class="vd" style="padding-top:6px"><h3 style="margin:0 0 6px">Your tournaments</h3></div>`;
  return typeof o==='string'?html+o:o};
 Object.assign(A,{serOpen(d){const G=serGroups().find(g=>g.name===d.v);if(!G)return;if(G.live||G.up){UI.sch={f:'all',s:d.v};UI.view='sched'}else{UI.arc={t:'res',f:'all',s:d.v,y:G.max?new Date(G.max).getFullYear():new Date().getFullYear()};UI.view='arch'}render();window.scrollTo&&window.scrollTo(0,0)}});
+}
+
+/* ---- 130 Branded backdrop everywhere + team logo library that matches names automatically ---- */
+{
+const E=x=>esc(x==null?'':String(x));
+/* 1. page backdrop: faint SH helmet with light rays and the SCORING HEROES wordmark under it, behind every screen */
+const st=document.createElement('style');st.id='sh-backdrop-css';
+st.textContent='body:not(.ovpage)::before{content:"";position:fixed;inset:0;z-index:1;pointer-events:none;background:url('+HELMET+') center 46%/min(82vw,540px) auto no-repeat;opacity:.085}'+
+'body:not(.ovpage)::after{content:"SCORING  HEROES";position:fixed;left:0;right:0;top:calc(46% + min(40vw,262px));z-index:1;pointer-events:none;text-align:center;font:900 clamp(20px,6.5vw,38px) var(--dsp,system-ui);letter-spacing:.18em;color:#fff;opacity:.05;white-space:nowrap}'+
+'html[data-theme=mday] body:not(.ovpage)::before{opacity:.07}html[data-theme=mday] body:not(.ovpage)::after{color:#0a1f5c;opacity:.06}'+
+'@media print{body::before,body::after{display:none!important}}'+
+'html[data-theme=mday] .aucwrap .aucsheet{background:linear-gradient(180deg,#ffffff,#eef1f4);color:#10161c;border-color:#d6dce3}html[data-theme=mday] .aucwrap .aucsheet h3,html[data-theme=mday] .aucwrap .aucsheet h4,html[data-theme=mday] .aucwrap .aucsheet .b{color:#10161c}html[data-theme=mday] .aucwrap .aucsheet input,html[data-theme=mday] .aucwrap .aucsheet select,html[data-theme=mday] .aucwrap .aucsheet textarea{background:#fff;color:#10161c;border-color:#c5ccd6}html[data-theme=mday] .aucbar{background:#fff;border-top-color:#d6dce3}html[data-theme=mday] .aucbar button{color:#10161c}html[data-theme=mday] .aucbar button.on{color:#e11d2e}html[data-theme=mday] .aucwrap .auccard{background:linear-gradient(135deg,#ffffff,#e8edf7);color:#10161c;border-color:#d6dce3}';
+document.head.appendChild(st);
+/* posters made in Social studio get the same backdrop */
+const hm=new Image();hm.src=HELMET;
+try{const d0=st2Deco;st2Deco=function(c,W,H,u,gold){d0.apply(this,arguments);try{if(hm.complete&&hm.naturalWidth){c.save();c.globalAlpha=.13;const w=W*.74,h=w*hm.naturalHeight/hm.naturalWidth;c.drawImage(hm,W/2-w/2,H*.5-h*.55,w,h);c.globalAlpha=.1;c.fillStyle='#fff';c.font='900 '+Math.round(W/20)+'px Inter,Arial,sans-serif';c.textAlign='center';c.fillText('SCORING  HEROES',W/2,H*.5+h*.55+W/14);c.restore()}}catch(e){}}}catch(e){}
+
+/* 2. team logo library */
+const nk=x=>String(x||'').toLowerCase().replace(/[’']/g,'').replace(/[^a-z0-9]+/g,' ').trim();
+const all=()=>(S.logoLib||[]).concat(UI.srvLogos||[]);
+const hit=(L,n)=>{n=nk(n);if(n.length<2)return false;return (L.names||[]).some(a=>{a=nk(a);if(!a)return false;if(a===n)return true;if(a.length>=4&&(' '+n+' ').includes(' '+a+' '))return true;return n.length>=4&&(' '+a+' ').includes(' '+n+' ')})};
+const find=n=>{const L=all().find(l=>hit(l,n));return L?L.img:''};
+window.shLibLogo=find;
+const f0=window.shLogoFor;window.shLogoFor=function(n){return find(n)||(f0?f0(n):'')};
+try{const e0=embOf;embOf=function(t){const n=t&&(t.name||t.teamName),f=n&&(find(n)||(t.short&&find(t.short)));return f||e0(t)}}catch(e){}
+try{const c0=aucCrestT;aucCrestT=function(t,sz){if(t&&!t.logo){const f=find(t.name)||find(t.short);if(f){sz=sz||40;return `<img class="aucc" src="${E(f)}" alt="" style="width:${sz}px;height:${sz}px;object-fit:contain;background:#fff">`}}return c0.apply(this,arguments)}}catch(e){}
+async function pullLogos(){try{const b=(typeof apiBase==='function')&&apiBase();if(!b)return;const j=await (await fetch(b+'/api/shared/logos')).json();if(j&&j.ok){const n=(j.items||[]).map(i=>i.data&&i.data.l).filter(x=>x&&x.img);const old=(UI.srvLogos||[]).length;UI.srvLogos=n;if(n.length!==old)render()}}catch(e){}}
+setTimeout(pullLogos,2500);setInterval(pullLogos,300000);
+const toPng=(file)=>new Promise(res=>{const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,192/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.max(1,Math.round(im.width*k));c.height=Math.max(1,Math.round(im.height*k));c.getContext('2d').drawImage(im,0,0,c.width,c.height);res(c.toDataURL('image/png'))};im.onerror=()=>res('');im.src=r.result};r.onerror=()=>res('');r.readAsDataURL(file)});
+const guess=n=>String(n||'').replace(/\.[a-z0-9]+$/i,'').replace(/[-_]+/g,' ').replace(/\s+/g,' ').trim();
+async function put(l){try{const b=apiBase();if(!b||!S.tok)return false;const r=await fetch(b+'/api/shared/logos/'+l.id,{method:'PUT',headers:{'Content-Type':'application/json',Authorization:'Bearer '+S.tok},body:JSON.stringify({data:{l}})});const j=await r.json();return !!(j&&j.ok)}catch(e){return false}}
+async function del(id){try{const b=apiBase();if(!b||!S.tok)return;await fetch(b+'/api/shared/logos/'+id,{method:'DELETE',headers:{Authorization:'Bearer '+S.tok}})}catch(e){}}
+const css2=document.createElement('style');css2.textContent='.lgl{padding:12px 14px 96px}.lgl h2{font-family:var(--dsp);margin:4px 0 8px}.lgr{display:grid;grid-template-columns:56px 1fr auto;gap:10px;align-items:center;background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:10px;margin-bottom:8px;color:var(--tx)}.lgr img{width:56px;height:56px;object-fit:contain;background:#fff;border-radius:10px}.lgr input{width:100%}';document.head.appendChild(css2);
+XV.logolib=function(){if(!(S.user&&S.user.role==='admin'))return '<div class="lgl"><h2>Team logo library</h2><div class="empty">Admins only.</div></div>';
+ const L=S.logoLib||[],sv=(UI.srvLogos||[]).filter(x=>!L.some(l=>l.id===x.id));
+ const row=(l,mine)=>`<div class="lgr"><img src="${E(l.img)}" alt=""><div><input data-c="lgNames" data-id="${E(l.id)}" value="${E((l.names||[]).join(', '))}" ${mine?'':'readonly'} aria-label="Names this logo matches"><div class="mu sm">Names it matches, separated by commas</div></div>${mine?`<button class="btn sm ghost" data-a="lgDel" data-v="${E(l.id)}">Delete</button>`:'<span class="mu sm">shared</span>'}</div>`;
+ return `<div class="lgl"><h2>Team logo library</h2><div class="mu sm" style="margin-bottom:10px">Add a logo once with the team names it should match (for example Chennai Super Kings, CSK). After that, any team with that name shows this logo automatically: auctions, matches, posters. Use only logos you have the right to use.</div>
+ <label class="btn" style="display:inline-block;margin-bottom:12px">+ Add logos<input type="file" accept="image/*" multiple data-c="lgUp" style="display:none"></label>
+ ${L.map(l=>row(l,1)).join('')}${sv.map(l=>row(l,0)).join('')}${!L.length&&!sv.length?'<div class="empty">No logos yet. Tap Add logos and pick images. The file name becomes the team name; you can edit it.</div>':''}</div>`};
+Object.assign(C,{async lgUp(v,el){const fs=[...(el.files||[])].slice(0,30);if(!fs.length)return;S.logoLib=S.logoLib||[];let n=0,srv=0;for(const f of fs){if(f.size>6e6)continue;const img=await toPng(f);if(!img)continue;const nm=guess(f.name)||'Team',l={id:'lg'+Math.random().toString(36).slice(2,10),names:[nm],img};S.logoLib.push(l);n++;if(await put(l))srv++}el.value='';commit();toast(n?('Added '+n+' logo'+(n>1?'s':'')+(srv?' (shared with everyone)':' on this phone')):'Could not read those images')},
+ async lgNames(v,el){const l=(S.logoLib||[]).find(x=>x.id===el.dataset.id);if(!l)return;const names=String(v||'').split(',').map(x=>x.trim()).filter(Boolean).slice(0,10);if(!names.length){toast('Enter at least one team name');return}l.names=names;commit();put(l)}});
+Object.assign(A,{lgDel(d){S.logoLib=(S.logoLib||[]).filter(l=>l.id!==d.v);UI.srvLogos=(UI.srvLogos||[]).filter(l=>l.id!==d.v);del(d.v);commit()}});
+if(!MENU2.some(g=>g[1].some(i=>i[0]==='logolib'))){const g=MENU2.find(x=>x[0]==='Account');if(g)g[1].push(['logolib','\u{1F5BC}️','Team logo library (admin)'])}
+{const d0=drawer;drawer=function(){const o=d0.apply(this,arguments);return (S.user&&S.user.role==='admin')?o:o.replace(/<button class="mi[^"]*" data-a="go" data-v="logolib">[\s\S]*?<\/button>/,'')}}
+if(window.SH_HELP)SH_HELP.logolib=['Team logo library','Add team logos once; they show automatically wherever the team name matches.',['Open Menu > Account > Team logo library.','Tap Add logos and pick images.','Check the names under each logo (comma separated).'],'Short names such as CSK also match.'];
 }
 </script>
 </body>

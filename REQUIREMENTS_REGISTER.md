@@ -205,3 +205,8 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 - Every match card (world and SH, any page) opens its match centre when tapped; world cards on Matches had no handler before.
 - Videos page is a landing (SH Sports Club channel, live streams, highlights, reels) instead of a blank screen; Series page lists current/upcoming/completed world series (tap opens Schedule or Archives for that series) above the organiser's own tournaments.
 - Admin-only "Registered users" (drawer > Account, or tap the header users-count pill): name, role, kind, phone/email, location, joined date, SH ID, searchable; server `GET /api/admin/users` (admin session only). Tests: schedule-archive.cjs, users-admin.cjs.
+
+## Branded backdrop + automatic team logos (owner request 1 Nov 2026)
+- Every screen carries the faint Scoring Heroes helmet backdrop with the SCORING HEROES wordmark under it (light and dark looks); Social studio posters draw the same backdrop; the player hero card already does.
+- Team logo library (admin: Menu > Account > Team logo library): add logos once with the names they match; any team whose name or short code matches shows the logo automatically (auction crests, match cards, posters). Shared with all users through server collection `logos` (admin write). No IPL/BCCI logos are bundled: supply logos you have the right to use. Test: logo-library-auto.cjs.
+- Light look: auction pages and bottom tab bar made readable.

@@ -2265,7 +2265,7 @@ http.createServer(async (req, res) => {
     return out(405, { ok: false, error: 'Method not allowed' });
   }
   if (path.startsWith('/api/shared/')) {   // shared public data: matches, tournaments, auctions (anyone reads, the owner writes)
-    const [, , , col, id] = path.split('/'), COLS = ['matches', 'sports', 'tours', 'auc', 'grounds', 'market', 'teams', 'players'];
+    const [, , , col, id] = path.split('/'), COLS = ['matches', 'sports', 'tours', 'auc', 'grounds', 'market', 'teams', 'players', 'logos'];
     if (!COLS.includes(col)) return out(404, { ok: false, error: 'Unknown collection' });
     const bag = db.shared[col] = db.shared[col] || {};
     if (req.method === 'GET' && !id) {
@@ -2276,6 +2276,7 @@ http.createServer(async (req, res) => {
     if (req.method === 'GET') return bag[id] ? out(200, { ok: true, item: bag[id] }) : out(404, { ok: false, error: 'Not found' });
     const tok = String(req.headers.authorization || '').replace(/^Bearer\s+/i, ''), phone = readSession(tok), u = phone && db.users[phone];
     if (!u) return out(401, { ok: false, error: 'Please sign in again' });
+    if (col === 'logos' && u.role !== 'admin') return out(403, { ok: false, error: 'Only an admin can change the team logo library' });
     if (col === 'sports' && !['admin','scorer'].includes(u.role)) return out(403, { ok: false, error: 'Only an authorised scorer can publish or change sport matches' });
     if (!id || !/^[\w-]{3,40}$/.test(id)) return out(400, { ok: false, error: 'Bad id' });
     const cur = bag[id];
@@ -2288,6 +2289,11 @@ http.createServer(async (req, res) => {
       const c = b.data && b.data.c, str = (v, n) => v == null || (typeof v === 'string' && v.length <= n), num = v => v == null || (Number.isFinite(v) && v >= 0 && v < 1e6);
       if (!c || c.id !== id || typeof c.name !== 'string' || !c.name.trim() || !str(c.name, 60) || !str(c.role, 20) || !str(c.team, 60) || !str(c.city, 60) || !str(c.shid, 16) || !str(c.bat, 40) || !str(c.bowl, 40) || !num(c.m) || !num(c.r) || !num(c.w) || !num(c.hs) || !num(c.f50) || !num(c.f100)) return out(400, { ok: false, error: 'Invalid player card' });
       b.data = { c: { id, name: c.name.trim(), role: c.role || '', team: c.team || '', city: c.city || '', shid: c.shid || '', bat: c.bat || '', bowl: c.bowl || '', m: c.m || 0, r: c.r || 0, w: c.w || 0, hs: c.hs || 0, f50: c.f50 || 0, f100: c.f100 || 0, at: Date.now() } };
+    }
+    if (col === 'logos' && req.method === 'PUT') {   // team logo library: admin adds a small image plus the names it matches
+      const l = b.data && b.data.l, okN = Array.isArray(l && l.names) && l.names.length > 0 && l.names.length <= 10 && l.names.every(n => typeof n === 'string' && n.trim() && n.length <= 60);
+      if (!l || l.id !== id || !okN || typeof l.img !== 'string' || !/^data:image\/(png|webp|jpeg);base64,/.test(l.img) || l.img.length > 150000) return out(400, { ok: false, error: 'Invalid logo' });
+      b.data = { l: { id, names: l.names.map(n => n.trim()), img: l.img } };
     }
     if (col === 'sports') {
       const m = b.data && b.data.m;
