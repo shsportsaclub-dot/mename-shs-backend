@@ -1,0 +1,12 @@
+import fs from 'node:fs';
+import vm from 'node:vm';
+const read=p=>fs.readFileSync(new URL('../'+p,import.meta.url),'utf8');
+const plain=s=>s.replace(/export (function|class) /g,'$1 ');
+const core=plain(read('scripts/original-cricket/core.mjs'));
+const runtime=read('scripts/original-cricket/runtime.js');
+const feed=plain(read('virtual-live-feed.mjs').replace(/^import .*;\n/m,''));
+const connect=read('scripts/original-cricket/connect.js');
+const script=core+'\n'+runtime+'\n'+feed+'\n'+connect;
+new vm.Script(script,{filename:'original-virtual-live.html'});
+const html=read('scripts/original-cricket/template.html').replace('/*__CORE__*/',core).replace('/*__RUNTIME__*/',runtime+'\n'+feed+'\n'+connect);
+fs.writeFileSync(new URL('../public/original-virtual-live.html',import.meta.url),html);

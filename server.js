@@ -2184,6 +2184,21 @@ http.createServer(async (req, res) => {
     try { const html = fs.readFileSync(new URL('./public/install.html', import.meta.url)); res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache' }); return res.end(html); }
     catch { return out(404, { ok: false, error: 'Install page not available' }); }
   }
+  // Existing scorer/OBS links now use our original, read-only 3D viewer.
+  if (req.method === 'GET' && (path === '/' || path === '/index.html')) {
+    const q = new URL(req.url, 'http://x').searchParams, mid = q.get('mid') || '';
+    if (q.get('scene') === 'ccast' && /^[\w-]{3,40}$/.test(mid)) {
+      res.writeHead(302, { location: '/virtual-live?mid=' + encodeURIComponent(mid) + '&embed=1', 'cache-control': 'no-store' });
+      return res.end();
+    }
+  }
+  if (req.method === 'GET' && (path === '/virtual-live' || path === '/virtual-live.html')) {
+    try {
+      const html = fs.readFileSync(new URL('./public/original-virtual-live.html', import.meta.url));
+      res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' });
+      return res.end(html);
+    } catch { return out(404, { ok: false, error: 'Original virtual viewer unavailable' }); }
+  }
   if (req.method === 'GET' && path === '/live-studio') {
     try { const html = fs.readFileSync(new URL('./public/live-studio.html', import.meta.url)); res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' }); return res.end(html); }
     catch { return out(404, { ok: false, error: 'Live studio not installed' }); }

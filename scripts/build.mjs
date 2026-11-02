@@ -1,3 +1,4 @@
+import './build-original-cricket.mjs';
 import fs from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import vm from 'node:vm';
