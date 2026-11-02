@@ -256,3 +256,7 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 - The in-app 3D Live player lists the latest 8 moments with Share poster, Share reel and Save. Posting uses the phone share sheet; no social API keys, nothing is posted without the user tapping Share. Fully automatic posting to accounts needs each platform's API credentials and is not built.
 - Test: tests/moments.cjs.
 - 3D humans safety: on a real device, if the 3D layer runs slower than about 9 fps for 60 of 90 frames, it switches itself off and the flat figures take over, so a weak phone never freezes the stream.
+
+## Virtual match viewer uses the real 3D humans too (block 144 + shV3dOpen)
+- The in-app "Virtual match" screen (provider matches) now draws the same animated 3D human models for striker, non-striker, bowler, fielders and umpire, in the same camera, with a bat in the striker's hand. The button reads "Players: 3D" and switches to the older flat photo figures ("Players: Photo"). If WebGL or the model is unavailable, or the device is slow, it uses the flat figures automatically.
+- Tests: tests/v3d-3d-humans.cjs.
