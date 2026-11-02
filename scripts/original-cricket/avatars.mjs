@@ -12,7 +12,7 @@ export function solveAvatarJoint(start,target,upper,lower,pole=[0,0,1]){
  bend=avNorm(bend);const along=(upper*upper-lower*lower+d*d)/(2*d),height=Math.sqrt(Math.max(0,upper*upper-along*along));
  return {joint:avAdd(start,avAdd(avScale(axis,along),avScale(bend,height))),end:avAdd(start,avScale(axis,d))};
 }
-function avatarSurface(rows,columns,point,invert=false){
+export function avatarSurface(rows,columns,point,invert=false){
  const p=[],n=[],i=[];for(let y=0;y<=rows;y++)for(let x=0;x<=columns;x++){p.push(...point(y/rows,x/columns));n.push(0,0,0);}
  for(let y=0;y<rows;y++)for(let x=0;x<columns;x++){const a=y*(columns+1)+x,b=a+columns+1;i.push(...(invert?[a,b,a+1,a+1,b,b+1]:[a,a+1,b,a+1,b+1,b]));}
  for(let k=0;k<i.length;k+=3){const ids=i.slice(k,k+3),a=p.slice(ids[0]*3,ids[0]*3+3),b=p.slice(ids[1]*3,ids[1]*3+3),c=p.slice(ids[2]*3,ids[2]*3+3),normal=avCross(avSub(b,a),avSub(c,a));for(const index of ids)for(let j=0;j<3;j++)n[index*3+j]+=normal[j];}
