@@ -7,7 +7,7 @@ import vm from 'node:vm';
 function harness(){
  const elements=new Map(),created=[];
  const gl=new Proxy({FRAMEBUFFER_COMPLETE:1,checkFramebufferStatus:()=>1,getShaderParameter:()=>true,getProgramParameter:()=>true,getParameter:()=> 'stub WebGL2'}, {get:(o,k)=>k in o?o[k]:/^[A-Z_0-9]+$/.test(k)?0:()=>({})});
- const el=()=>({style:{},children:[],textContent:'',value:'RIGHT',clientWidth:640,clientHeight:425,classList:{add(){}},append(x){this.children.push(x)},appendChild(x){this.children.push(x)},setAttribute(){},replaceChildren(){this.children=[]},add(){},getContext:()=>gl});
+ const el=()=>({style:{},children:[],textContent:'',value:'RIGHT',clientWidth:640,clientHeight:425,classList:{add(){}},append(x){this.children.push(x)},appendChild(x){this.children.push(x)},setAttribute(){},addEventListener(){},replaceChildren(){this.children=[]},add(){},getContext:()=>gl});
  const get=s=>{if(!elements.has(s))elements.set(s,el());return elements.get(s)};let callback;
  const ctx={console,URLSearchParams,AbortSignal,location:{search:'?mid=test-match'},devicePixelRatio:1,requestAnimationFrame:f=>{callback=f},setTimeout:()=>0,setInterval:()=>0,clearInterval(){},Option:function(t,v){this.text=t;this.value=v},EventSource:class{close(){}},fetch:async()=>({ok:false,status:404}),document:{querySelector:get,querySelectorAll:()=>[],createElement:()=>{const x=el();created.push(x);return x},body:el(),head:el()},addEventListener(){}};
  ctx.window=ctx;ctx.speechSynthesis={cancel(){}};vm.createContext(ctx);
@@ -48,4 +48,14 @@ test('original avatar rigs draw every action with finite instance transforms',()
   assert.equal(h.run('Object.values(meshes).every(m=>m.list.every(Number.isFinite))'),true,mode+' '+t);
  }
  assert.ok(h.run("meshes.head0.count>1000&&meshes.jersey.count>1000"));
+});
+
+test('source body pose changes the mapped rig without changing score; baseline and invalid pose release it',()=>{
+ const h=harness();const p=Array.from({length:33},()=>({x:0,y:0,z:0,visibility:1}));for(const [i,xyz]of Object.entries({11:[.2,-.5,0],12:[-.2,-.5,0],13:[.5,-.5,0],14:[-.5,-.5,0],15:[.8,-.5,0],16:[-.8,-.5,0],23:[.1,0,0],24:[-.1,0,0],25:[.1,.4,0],26:[-.1,.4,0],27:[.1,.8,0],28:[-.1,.8,0]}))Object.assign(p[i],{x:xyz[0],y:xyz[1],z:xyz[2]});
+ h.ctx.SHCricket.registerPlayer({id:'hema',height:1.85});const before=JSON.stringify(h.ctx.SHCricket.getState().score);assert.equal(h.ctx.SHCricket.applyTrackedPose('hema',p).accepted,true);assert.equal(h.ctx.SHCricket.getState().tracking.playerId,'hema');
+ h.run("for(const m of Object.values(meshes))m.list=[];posePlayer(registry.get('hema'),[0,0,0],0,'idle',0,'RIGHT',false)");
+ const observed=h.run('meshes.sphere.list.some((_,i,a)=>i%21===0&&Math.abs(a[i+12]-.865)<1e-5&&Math.abs(a[i+13]-1.32)<1e-5)');assert.equal(observed,true);
+ h.ctx.SHCricket.setSourceCaption('FOUR! Hemanth through cover');assert.equal(h.get('#commentary').textContent,'FOUR! Hemanth through cover');assert.equal(JSON.stringify(h.ctx.SHCricket.getState().score),before);assert.equal(h.ctx.SHCricket.getState().active,null);h.ctx.SHCricket.setView('auto');assert.equal(h.ctx.SHCricket.getState().camera.shot,'BATTER REACTION');h.ctx.SHCricket.setSourceCaption('');assert.notEqual(h.get('#commentary').textContent,'FOUR! Hemanth through cover');
+ assert.equal(h.ctx.SHCricket.applyTrackedPose('hema',[]).accepted,false);assert.equal(h.ctx.SHCricket.getState().tracking,null);
+ h.ctx.SHCricket.applyTrackedPose('hema',p);h.ctx.SHCricket.syncBaseline({runs:1,wickets:0,legalBalls:1},{bpo:6,roster:[],fieldingXI:[],currentPlayers:{striker:'hema',nonStriker:'runner',bowler:'ravi'},title:'test'});assert.equal(h.ctx.SHCricket.getState().tracking,null);
 });
