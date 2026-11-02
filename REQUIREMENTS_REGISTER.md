@@ -238,3 +238,9 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 
 ## 3D Live inside the app (block 141)
 - Any live match shows a "3D Live" strip on Matches and Live streams pages, a "Watch in 3D" button in Match centre, and a menu item. View live3d embeds the same 3D game scene (block 140) in a 16:9 player with Full screen and Scorecard buttons. It is an in-app live view of the published match, not an RTMP push to YouTube (that still needs OBS with the scene URL). Test: tests/live3d.cjs.
+
+## Universal sports game stream (block 142/143)
+- Every sport gets the same video-game stream as cricket: football, basketball, rugby, kabaddi, volleyball, beach volleyball, badminton, tennis, table tennis, pickleball. Each has its own venue (pitch, court, table), markings, goals/hoops/posts/net, crowd, ad boards.
+- Scene: ?scene=sgame&mid=<published sports match id>#overlay. Score changes from the scorer become a scoring scene (goal, basket, try, point), commentary text and voice, crowd cheer and confetti. Idle play (passing or rallies) runs between events.
+- In-app 3D Live lists cricket, sports and auctions with the bid room on, with the right scene per kind (ccast, sgame, auclive).
+- Tests: tests/sports-game.cjs, tests/live3d-all.cjs.

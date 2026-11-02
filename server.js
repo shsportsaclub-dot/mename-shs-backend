@@ -2297,7 +2297,7 @@ http.createServer(async (req, res) => {
     }
     if (col === 'sports') {
       const m = b.data && b.data.m;
-      if (!m || m.id !== id || !['football','kabaddi','bd','bd15','vb','vbb'].includes(m.sport) ||
+      if (!m || m.id !== id || !['football','kabaddi','bd','bd15','vb','vbb','tennis','basketball','rugby','tt','pb'].includes(m.sport) ||
           !Array.isArray(m.tn) || m.tn.length !== 2 || m.tn.some(n => typeof n !== 'string' || !n.trim() || n.length > 100) ||
           (m.ev != null && !Array.isArray(m.ev)) || (m.log != null && !Array.isArray(m.log))) {
         return out(400, { ok: false, error: 'Invalid sport match' });
