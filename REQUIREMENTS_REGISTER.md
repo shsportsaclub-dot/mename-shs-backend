@@ -270,3 +270,8 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 
 ## Night stadium look (cricket scene)
 - Dusk-to-night sky with stars, floodlight glow, soft light pool and edge vignette on the turf; drawn in code.
+
+## 3D stadium + hero close-up + faces (cricket scene)
+- public/vendor/shstadium.js builds the stadium in code: sky with clouds, striped turf with blade layer, pitch with creases, stumps, ad boards, two-tier crowd stands, roof canopy with struts, big screen, floodlight towers, sun shadows. Falls back to the flat 2D stadium if WebGL is unavailable.
+- Humans get a stylised face (brows, eyes, nose, beard, hair); each ball starts with a short low-angle hero close-up of the batter.
+- Honest limit: stylised game look, not photoreal.

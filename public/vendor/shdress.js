@@ -25,6 +25,15 @@ function helmet(T,col){const g=new T.Group(),m=M(T,col,.35),d=new T.Mesh(new T.S
  for(const s of[-1,1]){const c=new T.Mesh(new T.BoxGeometry(.012,.07,.08),m);c.position.set(s*.125,-.03,.06);g.add(c)}return g}
 function hat(T){const g=new T.Group(),m=M(T,'#2b2e33',.8);const cr=new T.Mesh(new T.CylinderGeometry(.1,.115,.1,18),m);cr.position.y=.1;g.add(cr);const br=new T.Mesh(new T.CylinderGeometry(.24,.24,.012,24),m);br.position.y=.04;g.add(br);return g}
 /* root: cloned skinned model, g: the person group. returns {update(o)} */
+/* stylised face built from primitives: brows, eyes, nose, beard, hair; front is +z of the head bone */
+function faceGroup(T,skin,beard,hair){const g=new T.Group(),mat=(c,r)=>new T.MeshStandardMaterial({color:c,roughness:r||.8});
+ const eye=(sx)=>{const e=new T.Group(),w=new T.Mesh(new T.SphereGeometry(.014,10,8),mat('#f4f1ea',.4));w.scale.set(1.3,.8,.6);const i=new T.Mesh(new T.SphereGeometry(.0075,8,6),mat('#2a1a10',.3));i.position.z=.007;e.add(w,i);e.position.set(sx*.036,.012,.092);return e};
+ g.add(eye(-1),eye(1));
+ for(const sx of[-1,1]){const b=new T.Mesh(new T.BoxGeometry(.04,.008,.01),mat('#1b1410'));b.position.set(sx*.037,.036,.097);b.rotation.z=sx*-.12;g.add(b)}
+ const nose=new T.Mesh(new T.SphereGeometry(.014,10,8),mat(skin,.7));nose.scale.set(.9,1.3,1.2);nose.position.set(0,-.012,.106);g.add(nose);
+ if(beard){const bd=new T.Mesh(new T.SphereGeometry(.094,18,10,Math.PI*.15,Math.PI*1.7,Math.PI*.6,Math.PI*.22),mat('#17110d',1));bd.scale.set(1,1,1.02);bd.position.set(0,-.012,.006);g.add(bd);const mo=new T.Mesh(new T.BoxGeometry(.05,.008,.01),mat('#17110d',1));mo.position.set(0,-.03,.1);g.add(mo)}
+ if(hair){const h=new T.Mesh(new T.SphereGeometry(.102,18,10,Math.PI*.5,Math.PI,0,Math.PI*.5),mat(hair,.9));h.position.set(0,.002,-.006);g.add(h)}
+ g.scale.setScalar(1.22);return g}
 export function dress(T,gl,root,g,o){const pal=palette(T,o),kit=o.kit||'field';
  const shirtMat=matCache.get('s')||(matCache.set('s',new T.MeshStandardMaterial({color:0xffffff,vertexColors:true,roughness:.62,metalness:.04})),matCache.get('s'));
  let names=null;root.traverse(m=>{if(m.isSkinnedMesh&&!names)names=m.skeleton.bones.map(b=>b.name)});
@@ -37,6 +46,7 @@ export function dress(T,gl,root,g,o){const pal=palette(T,o),kit=o.kit||'field';
  if(kit==='bat')add('head',helmet(T,hcol));
  else if(kit==='bowl'||kit==='field'||kit==='wk')add('head',cap(T,hcol));
  else if(kit==='ump')add('head',hat(T));
+ {const sk=pal.skin.getStyle?'#'+pal.skin.getHexString():'#c68a5a';const bd=(o.name||'').length%3!==1;add('face',faceGroup(T,sk,bd,(kit==='bat'||kit==='ump')?null:'#1a1410'))}
  if(kit==='bat'||kit==='wk'){for(const s of['l','r']){const p=new T.Mesh(new T.BoxGeometry(.13,.5,.07),M(T,kit==='wk'?'#e9e4d2':'#f5f5f2',.7));add('pad'+s,p)}}
  if(kit==='bat'||kit==='wk')for(const s of['l','r']){const gv=new T.Mesh(new T.SphereGeometry(kit==='wk'?.075:.06,10,8),M(T,kit==='wk'?'#d8c9a0':'#f2f2f2',.8));add('gl'+s,gv)}
  let plane=null;if(o.name&&kit!=='ump'){const t=nameTex(T,o.name,'#ffffff');plane=new T.Mesh(new T.PlaneGeometry(.4,.15),new T.MeshBasicMaterial({map:t,transparent:true,depthWrite:false}));plane.rotation.y=Math.PI;K.add(plane)}
@@ -44,6 +54,7 @@ export function dress(T,gl,root,g,o){const pal=palette(T,o),kit=o.kit||'field';
  const loc=(b,out)=>{b.getWorldPosition(out);return g.worldToLocal(out)};
  return{update(){g.updateMatrixWorld(true);g.getWorldQuaternion(gq);gq.invert();
   if(parts.head&&bn.hd){loc(bn.hd,v);bn.hd.getWorldQuaternion(q);q.premultiply(gq);parts.head.position.copy(v).add(new T.Vector3(0,.115,.015).applyQuaternion(q));parts.head.quaternion.copy(q)}
+  if(parts.face&&bn.hd){loc(bn.hd,v);bn.hd.getWorldQuaternion(q);q.premultiply(gq);parts.face.position.copy(v).add(new T.Vector3(0,.115,.015).applyQuaternion(q));parts.face.quaternion.copy(q)}
   for(const s of['l','r']){const p=parts['pad'+s];if(p){const a=loc(s==='l'?bn.lk:bn.rk,v).clone(),b=loc(s==='l'?bn.la:bn.ra,w).clone(),d=b.clone().sub(a),len=d.length();p.scale.set(1,len*1.02/.5,1);p.position.copy(a).add(b).multiplyScalar(.5).add(new T.Vector3(0,0,.045));q.setFromUnitVectors(up,d.normalize());p.quaternion.copy(q)}
    const gv=parts['gl'+s];if(gv){loc(s==='l'?bn.lh:bn.rh,v);gv.position.copy(v)}}
   if(plane&&bn.sp){loc(bn.sp,v);bn.sp.getWorldQuaternion(q);q.premultiply(gq);const off=new T.Vector3(0,-.01,-.135).applyQuaternion(q);plane.position.copy(v).add(off);plane.quaternion.copy(q).multiply(new T.Quaternion().setFromAxisAngle(up,Math.PI))}}}}

@@ -35,7 +35,7 @@ export function build(T,o){
   for(let i=0;i<n;i++){const a0=i/n*Math.PI*2,a1=(i+1)/n*Math.PI*2,am=(a0+a1)/2,len=2*Math.PI*(R+2.2)/n+.05;const m=new T.Mesh(new T.PlaneGeometry(len,1.05),new T.MeshStandardMaterial({map:ts[(i>>1)%4],roughness:.5,emissive:0x222222}));
    m.position.set(Math.cos(am)*(R+2.2),.55,CZ+Math.sin(am)*(R+2.2));m.rotation.y=-am-Math.PI/2;g.add(m)}}
  /* stands: crowd texture on raked rings (lower bowl, upper bowl), concourse band, roof ring with struts */
- const crowd=(()=>{const c=cv(1024,256),x=c.getContext('2d');x.fillStyle='#1b2236';x.fillRect(0,0,1024,256);const cols=['#f4c20d','#f4c20d','#f4c20d','#1d4fd8','#ffffff','#e9ecf5','#c0392b','#2a2f45','#1d4fd8','#f4c20d'],sk=['#c68a5a','#a8693f','#e0b08a','#8a5532'];
+ const crowd=(()=>{const c=cv(1024,256),x=c.getContext('2d');x.fillStyle='#1b2236';x.fillRect(0,0,1024,256);const cols=['#2a58c9','#2a58c9','#3a6bdc','#ffffff','#e9ecf5','#d9def0','#1d3fa0','#2a2f45','#2a58c9','#c8cde0','#f2c230','#8a98c8'],sk=['#c68a5a','#a8693f','#e0b08a','#8a5532'];
   for(let r=0;r<32;r++){const y=r*8+6;for(let i=0;i<150;i++){const px=i*6.8+(r%2)*3+rnd()*2;if(rnd()<.06)continue;x.fillStyle=cols[rnd()*cols.length|0];x.fillRect(px,y+1,5,6);x.fillStyle=sk[rnd()*sk.length|0];x.fillRect(px+1,y-2,3,3)}x.fillStyle='rgba(0,0,0,.28)';x.fillRect(0,r*8+7,1024,1.2)}return c})();
  const ring=(pts,mat,seg)=>{const m=new T.Mesh(new T.LatheGeometry(pts.map(p=>new T.Vector2(p[0],p[1])),seg||96),mat);m.position.set(0,0,CZ);return m};
  const crowdMat=(rx,ry)=>new T.MeshStandardMaterial({map:tex(crowd,rx,ry),roughness:.9,side:T.DoubleSide,emissive:0x0c0f1a,color:0x9fa4b4});
@@ -46,8 +46,8 @@ export function build(T,o){
  /* front facia under lower bowl and walls */
  g.add(ring([[R+3.8,0],[R+3.8,1.3]],new T.MeshStandardMaterial({color:0x1d2a55,side:T.DoubleSide})));
  /* roof canopy */
- {const roofM=new T.MeshStandardMaterial({color:0x3a4256,roughness:.7,metalness:.2,side:T.DoubleSide});g.add(ring([[R+16,33.2],[R+40,38],[R+40,39],[R+16,34.4]],roofM));
-  const strut=new T.MeshStandardMaterial({color:0x545c70,metalness:.4,roughness:.5}),n=36;for(let i=0;i<n;i++){const a=(i+.5)/n*Math.PI*2,r0=R+20,r1=R+40,x0=Math.cos(a)*r0,z0=CZ+Math.sin(a)*r0,x1=Math.cos(a)*r1,z1=CZ+Math.sin(a)*r1;const len=Math.hypot(r1-r0,5);const s=new T.Mesh(new T.BoxGeometry(.5,.6,len),strut);s.position.set((x0+x1)/2,35.4,(z0+z1)/2);s.rotation.y=-a+Math.PI/2;s.rotation.x=0;g.add(s)}
+ {const roofM=new T.MeshStandardMaterial({color:0x3a4256,roughness:.7,metalness:.1,side:T.DoubleSide});roofM.color.set(0xd5dae4);g.add(ring([[R+16,33.2],[R+40,38],[R+40,39],[R+16,34.4]],roofM));
+  const strut=new T.MeshStandardMaterial({color:0xe2e6ee,metalness:.2,roughness:.5}),n=36;for(let i=0;i<n;i++){const a=(i+.5)/n*Math.PI*2,r0=R+20,r1=R+40,x0=Math.cos(a)*r0,z0=CZ+Math.sin(a)*r0,x1=Math.cos(a)*r1,z1=CZ+Math.sin(a)*r1;const len=Math.hypot(r1-r0,5);const s=new T.Mesh(new T.BoxGeometry(.5,.6,len),strut);s.position.set((x0+x1)/2,35.4,(z0+z1)/2);s.rotation.y=-a+Math.PI/2;s.rotation.x=0;g.add(s)}
   const trim=ring([[R+40,38.5],[R+40.3,38.5],[R+40.3,39.3],[R+40,39.3]],new T.MeshStandardMaterial({color:0xe8ecf4}));g.add(trim)}
  /* big screen on the far stand (canvas redrawn from scoreboard text) */
  {const c=cv(512,288),x=c.getContext('2d');const t=tex(c,-1,1);t.offset.set(1,0);const scr=new T.Mesh(new T.PlaneGeometry(22,12.4),new T.MeshBasicMaterial({map:t,toneMapped:false}));const a=-Math.PI/2+.28,r=R+15.5;scr.position.set(Math.cos(a)*r,24,CZ+Math.sin(a)*r);scr.lookAt(0,10,CZ);g.add(scr);
