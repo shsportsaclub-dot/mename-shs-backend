@@ -12,13 +12,16 @@ export function solveAvatarJoint(start,target,upper,lower,pole=[0,0,1]){
  bend=avNorm(bend);const along=(upper*upper-lower*lower+d*d)/(2*d),height=Math.sqrt(Math.max(0,upper*upper-along*along));
  return {joint:avAdd(start,avAdd(avScale(axis,along),avScale(bend,height))),end:avAdd(start,avScale(axis,d))};
 }
-export function avatarSurface(rows,columns,point,invert=false){
+export function avatarSurface(rows,columns,point,invert=false,periodic=true){
  const p=[],n=[],i=[];for(let y=0;y<=rows;y++)for(let x=0;x<=columns;x++){p.push(...point(y/rows,x/columns));n.push(0,0,0);}
  for(let y=0;y<rows;y++)for(let x=0;x<columns;x++){const a=y*(columns+1)+x,b=a+columns+1;i.push(...(invert?[a,b,a+1,a+1,b,b+1]:[a,a+1,b,a+1,b+1,b]));}
  for(let k=0;k<i.length;k+=3){const ids=i.slice(k,k+3),a=p.slice(ids[0]*3,ids[0]*3+3),b=p.slice(ids[1]*3,ids[1]*3+3),c=p.slice(ids[2]*3,ids[2]*3+3),normal=avCross(avSub(b,a),avSub(c,a));for(const index of ids)for(let j=0;j<3;j++)n[index*3+j]+=normal[j];}
  // The longitude seam is shared geometrically; average normals across it.
- for(let y=0;y<=rows;y++){const a=y*(columns+1)*3,b=a+columns*3;for(let j=0;j<3;j++){const v=n[a+j]+n[b+j];n[a+j]=v;n[b+j]=v;}}
- for(let k=0;k<n.length;k+=3){const unit=avNorm(n.slice(k,k+3));n.splice(k,3,...unit);}return {p,n,i};
+ if(periodic)for(let y=0;y<=rows;y++){const a=y*(columns+1)*3,b=a+columns*3;for(let j=0;j<3;j++){const v=n[a+j]+n[b+j];n[a+j]=v;n[b+j]=v;}}
+ for(let k=0;k<n.length;k+=3){let unit=avNorm(n.slice(k,k+3));
+  // Open lip corners collapse to a point: evaluate the nearby surface limit.
+  if(Math.hypot(...unit)<.5){const index=k/3,u=Math.max(.001,Math.min(.999,Math.floor(index/(columns+1))/rows)),v=Math.max(.001,Math.min(.999,(index%(columns+1))/columns)),dv=avSub(point(u,v+.0001),point(u,v-.0001)),du=avSub(point(u+.0001,v),point(u-.0001,v));unit=avNorm(avScale(avCross(dv,du),invert?-1:1));}
+  n.splice(k,3,...unit);}return {p,n,i};
 }
 export function avatarFaceProfile(variant=0){const v=((variant%6)+6)%6;return {width:.094+v*.002,jaw:.69+(v%3)*.055,nose:.027+(v%4)*.0025,brow:.005+(v%2)*.002};}
 export function originalAvatarMeshes(){
