@@ -323,3 +323,9 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 
 ## Score bar styles (OBS overlay)
 - Six broadcast score bar designs drawn in code: Pro hexagon (default; team-logo circles, blue batters panel, centre hexagon, magenta bowler panel), Full-width strip, Glass card, Corner card, Mini score, Classic. Picker in Stream and OBS ("Score bar style", `S.stream.bug`); the default overlay and OBS bug scene use the chosen style. Test: tests/bug-styles.cjs. Not yet applied to the 3D game scene (its own HUD).
+
+## Graphics studio (animated OBS graphics)
+- 18 graphic kinds with transparent backgrounds: FOUR, SIX, bowled, caught, LBW, stumped, run out, hit wicket, DRS review taken (batter / bowler side), DRS result (OUT / NOT OUT / umpire's call), fifty, hundred (batter celebration figure), hat-trick, batter record (career + vs current bowler), bowler record (career + vs current batter). All drawn in code (SVG/CSS).
+- Style = shape (8) x palette (12) x motion (7) x font (3) = 2016 combinations; "Random every time" mixes them. Streamers pick per graphic in Stream and OBS > Graphics studio (gallery of 12, "More styles"), preview on a checkerboard, "Send to OBS now".
+- Fires automatically from live scoring: new ball (four, six, each wicket type), milestones, hat-trick, DRS log entries (review then result), new batter / new bowler (records). `?scene=fx#overlay` = graphics only.
+- Premium: shapes burst/glass/neon, 4 palettes, flip/bounce motions are premium; locked unless admin or unlocked by an admin per phone (`S.settings.fxPremium`). Payment is taken manually by the admin. Test: tests/fx-studio.cjs.

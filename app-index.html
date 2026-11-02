@@ -13218,6 +13218,148 @@ const v0=vStream;vStream=function(){const o=v0.apply(this,arguments),cur=S.strea
 Object.assign(A,{bugStyle(d){S.stream.bug=d.v;commit()}});
 })();
 
+/* GRAPHICS STUDIO: transparent animated broadcast graphics (boundaries, every dismissal type, DRS reviews, milestones, batter and bowler records), drawn in code. A style = shape x palette x motion x font, so there are thousands of combinations and "Random" mixes them. Premium styles are flagged for a manual-payment unlock. */
+(function(){
+const KINDS=[['four','FOUR'],['six','SIX'],['bowled','Bowled'],['caught','Caught out'],['lbw','LBW'],['stumped','Stumped'],['runout','Run out'],['hitwkt','Hit wicket'],['drs_bat','DRS: batter review'],['drs_bowl','DRS: bowler review'],['drs_out','DRS: OUT'],['drs_not','DRS: NOT OUT'],['drs_um',"DRS: umpire's call"],['fifty','Fifty'],['hundred','Hundred'],['hattrick','Hat-trick'],['rec_bat','Batter record'],['rec_bowl','Bowler record']];
+const SHAPES=[['slab',0],['hex',0],['ribbon',0],['pill',0],['diag',0],['burst',1],['glass',1],['neon',1]];
+const PALS=[['#0b2a86','#1b55dc','#ffd84d',0],['#8a0f1f','#e0243a','#ffe08a',0],['#0d5c2e','#27b35a','#e8ff5a',0],['#4b1a8f','#a52fd1','#ffd1f6',0],['#c24a00','#ff8a1a','#fff2d1',0],['#0b4f5e','#18b5c9','#ffffff',0],['#111827','#374151','#ffd84d',0],['#7a0f3c','#d6203f','#ffe14d',0],['#0a0a0a','#2a2a2a','#f5c542',1],['#0f2027','#2c5364','#7dffcb',1],['#1d1d1d','#8e9eab','#ffffff',1],['#5a1c9e','#d6203f','#ffe14d',1]];
+const MOTS=[['slide',0],['zoom',0],['drop',0],['rise',0],['wipe',0],['flip',1],['bounce',1]];
+const NF=3;
+const parse=id=>{const a=String(id||'').split('-').map(Number);return{s:a[0]||0,p:a[1]||0,m:a[2]||0,f:a[3]||0}};
+const isPrem=id=>{const q=parse(id);return !!((SHAPES[q.s]||[])[1]||(PALS[q.p]||[])[3]||(MOTS[q.m]||[])[1])};
+const entitled=()=>{const u=S.user;return !!(u&&(u.role==='admin'||((S.settings.fxPremium||{})[u.phone])))};
+const rnd=(pool)=>{const f=()=>pool?0:1;for(let t=0;t<30;t++){const q={s:Math.random()*SHAPES.length|0,p:Math.random()*PALS.length|0,m:Math.random()*MOTS.length|0,f:Math.random()*NF|0},id=[q.s,q.p,q.m,q.f].join('-');if(pool||!isPrem(id))return id}return'0-0-0-0'};
+let seed=1;const sr=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296};
+const seeded=(sd,pool)=>{seed=sd>>>0||1;const out=[];while(out.length<12){const id=[sr()*SHAPES.length|0,sr()*PALS.length|0,sr()*MOTS.length|0,sr()*NF|0].join('-');if((pool||!isPrem(id))&&!out.includes(id))out.push(id)}return out};
+const CSS=`.fxhost{position:fixed;inset:0;container-type:size;pointer-events:none;z-index:99999;overflow:hidden}
+.fxw{position:absolute;left:0;right:0;display:flex;justify-content:center;font-family:var(--dsp,system-ui,sans-serif);color:#fff;--dur:4.4s}.fxp-c{top:14cqh}.fxp-l{top:auto;bottom:16cqh;left:3cqw;right:auto;justify-content:flex-start}
+.fxm{animation:var(--an) var(--dur) both}.fxloop .fxm{animation-iteration-count:infinite}
+.fxm-slide{--an:fxslide}.fxm-zoom{--an:fxzoom}.fxm-drop{--an:fxdrop}.fxm-rise{--an:fxrise}.fxm-wipe{--an:fxwipe}.fxm-flip{--an:fxflip}.fxm-bounce{--an:fxbounce}
+@keyframes fxslide{0%{transform:translateX(-70cqw);opacity:0}12%{transform:none;opacity:1}86%{transform:none;opacity:1}100%{transform:translateX(70cqw);opacity:0}}
+@keyframes fxzoom{0%{transform:scale(.15);opacity:0}12%{transform:scale(1);opacity:1}86%{transform:scale(1);opacity:1}100%{transform:scale(1.35);opacity:0}}
+@keyframes fxdrop{0%{transform:translateY(-45cqh);opacity:0}10%{transform:translateY(0);opacity:1}14%{transform:translateY(-2cqh)}18%,86%{transform:none;opacity:1}100%{transform:translateY(-30cqh);opacity:0}}
+@keyframes fxrise{0%{transform:translateY(35cqh);opacity:0}12%{transform:none;opacity:1}86%{transform:none;opacity:1}100%{transform:translateY(35cqh);opacity:0}}
+@keyframes fxwipe{0%{clip-path:inset(0 100% 0 0);opacity:1}14%,84%{clip-path:inset(0 0 0 0);opacity:1}100%{clip-path:inset(0 0 0 100%);opacity:1}}
+@keyframes fxflip{0%{transform:perspective(60cqw) rotateX(90deg);opacity:0}12%{transform:perspective(60cqw) rotateX(0);opacity:1}86%{transform:perspective(60cqw) rotateX(0);opacity:1}100%{transform:perspective(60cqw) rotateX(-90deg);opacity:0}}
+@keyframes fxbounce{0%{transform:scale(0);opacity:0}10%{transform:scale(1.18);opacity:1}15%{transform:scale(.94)}19%,86%{transform:scale(1);opacity:1}100%{transform:scale(0);opacity:0}}
+.fxb{display:flex;align-items:center;gap:2cqw;padding:1.5cqw 3.6cqw;background:linear-gradient(90deg,var(--c1),var(--c2));text-shadow:0 .2cqw .5cqw #000a;box-shadow:0 .8cqw 2.4cqw #0008;max-width:92cqw}
+.fxic{flex:none;width:9cqw;height:9cqw;color:var(--c3);filter:drop-shadow(0 .3cqw .5cqw #0009)}.fxav{flex:none;width:9cqw;height:9cqw;border-radius:50%;object-fit:cover;border:.3cqw solid var(--c3);background:#0006}
+.fxtx{display:flex;flex-direction:column;gap:.5cqw;min-width:0}.fxt{font-size:6cqw;font-weight:900;line-height:1;white-space:nowrap}.fxs{font-size:2.3cqw;font-weight:700;line-height:1.25;color:var(--c3)}.fxs2{font-size:2cqw;font-weight:600;line-height:1.25;opacity:.95}.fxn{font-size:3.2cqw;font-weight:900;color:var(--c3)}
+.fxp-l .fxt{font-size:4cqw}
+.fxf-1 .fxt{font-style:italic;letter-spacing:.2cqw;text-transform:uppercase}.fxf-2 .fxt{font-family:Impact,'Arial Narrow',sans-serif;font-weight:400;letter-spacing:.3cqw;text-transform:uppercase}
+.fxs-slab .fxb{transform:skewX(-8deg);border-left:1cqw solid var(--c3)}.fxs-slab .fxic,.fxs-slab .fxav,.fxs-slab .fxtx{transform:skewX(8deg)}
+.fxs-hex .fxb{clip-path:polygon(6% 0,94% 0,100% 50%,94% 100%,6% 100%,0 50%);padding:1.8cqw 6cqw;box-shadow:none;filter:drop-shadow(0 .6cqw 1.2cqw #000a)}
+.fxs-ribbon .fxb{clip-path:polygon(0 0,100% 0,96% 50%,100% 100%,0 100%,4% 50%);padding:1.6cqw 6cqw}
+.fxs-pill .fxb{border-radius:99px;border:.4cqw solid var(--c3);padding:1.2cqw 4.5cqw 1.2cqw 2.4cqw}
+.fxs-diag .fxb{clip-path:polygon(7% 0,100% 0,93% 100%,0 100%);padding:1.6cqw 7cqw}
+.fxs-burst .fxb{background:repeating-conic-gradient(from 0deg,var(--c1) 0 6deg,var(--c2) 6deg 12deg);border-radius:50%/60%;padding:2.2cqw 7cqw;box-shadow:0 0 3cqw var(--c3),0 .8cqw 2.4cqw #000a;border:.4cqw solid var(--c3)}
+.fxs-glass .fxb{background:linear-gradient(135deg,#ffffff38,#ffffff12);backdrop-filter:blur(12px) saturate(1.4);-webkit-backdrop-filter:blur(12px) saturate(1.4);border:.2cqw solid #ffffff90;border-radius:1.8cqw;box-shadow:0 1cqw 3cqw #0007,inset 0 0 2cqw #ffffff30}.fxs-glass .fxt{color:#fff}
+.fxs-neon .fxb{background:#05070fe6;border:.3cqw solid var(--c3);border-radius:1.2cqw;box-shadow:0 0 2cqw var(--c3),inset 0 0 1.6cqw var(--c3)}.fxs-neon .fxt{color:var(--c3);text-shadow:0 0 1.2cqw var(--c3)}
+.fxw .bl1{animation:fxb1 var(--dur) both;transform-origin:30px 26px}.fxw .bl2{animation:fxb2 var(--dur) both;transform-origin:70px 26px}
+@keyframes fxb1{0%,16%{transform:none}30%,100%{transform:translate(-22px,-34px) rotate(-70deg)}}@keyframes fxb2{0%,16%{transform:none}30%,100%{transform:translate(26px,-28px) rotate(80deg)}}
+.fxw .ball{animation:fxbl var(--dur) both}@keyframes fxbl{0%{transform:translateY(-30px)}16%,100%{transform:none}}
+.fxw .arm{animation:fxarm 1s ease-in-out infinite alternate;transform-origin:62px 42px}@keyframes fxarm{from{transform:rotate(-8deg)}to{transform:rotate(10deg)}}
+.fxst .row2{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}.fxst .row2 button{border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:10px;padding:7px 10px;font-weight:700;font-size:12.5px}.fxst .row2 button.on{background:var(--ac,#c4f000);color:#07182d;border-color:transparent}
+.fxprev{position:relative;aspect-ratio:16/9;width:100%;border-radius:10px;border:1px solid var(--bd);background:repeating-conic-gradient(#2a3a6a 0 25%,#1a2750 0 50%) 0 0/24px 24px;container-type:size;overflow:hidden}
+.fxgal{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:8px}.fxth{position:relative;aspect-ratio:16/9;border-radius:8px;border:2px solid transparent;background:repeating-conic-gradient(#2a3a6a 0 25%,#1a2750 0 50%) 0 0/16px 16px;container-type:size;overflow:hidden;cursor:pointer;padding:0}.fxth.sel{border-color:var(--ac,#c4f000)}.fxth .lk{position:absolute;right:4px;top:4px;font-size:10px;font-weight:800;background:#ffd84d;color:#222;border-radius:6px;padding:1px 5px;z-index:2}
+.fxth .fxw{top:30cqh;--dur:3.8s}.fxth .fxp-l{left:4cqw;bottom:20cqh;top:auto}.fxth .fxb{transform-origin:center}`;
+const st0=document.createElement('style');st0.textContent=CSS;document.head.appendChild(st0);
+/* icons */
+const IC={
+ ball:'<svg class="fxic" viewBox="0 0 100 100"><g class="ball"><circle cx="50" cy="50" r="40" fill="#d7263d"/><path d="M18 35C40 50 40 50 18 65M82 35C60 50 60 50 82 65" stroke="#fff" stroke-width="4" fill="none" stroke-dasharray="6 5"/></g></svg>',
+ stumps:'<svg class="fxic" viewBox="0 0 100 100"><rect x="28" y="32" width="7" height="58" rx="2" fill="#f1d9a0"/><rect x="46.5" y="32" width="7" height="58" rx="2" fill="#f1d9a0"/><rect x="65" y="32" width="7" height="58" rx="2" fill="#f1d9a0"/><rect class="bl1" x="28" y="25" width="22" height="5" rx="2" fill="currentColor"/><rect class="bl2" x="50" y="25" width="22" height="5" rx="2" fill="currentColor"/></svg>',
+ hand:'<svg class="fxic" viewBox="0 0 100 100"><rect x="44" y="8" width="12" height="42" rx="6" fill="#ffd9b0"/><rect x="30" y="44" width="40" height="36" rx="10" fill="#ffd9b0"/><rect x="20" y="50" width="14" height="24" rx="7" fill="#ffd9b0" transform="rotate(-25 27 62)"/><rect x="30" y="78" width="40" height="14" rx="3" fill="currentColor"/></svg>',
+ catch:'<svg class="fxic" viewBox="0 0 100 100"><g class="ball"><circle cx="50" cy="38" r="15" fill="#d7263d"/></g><path d="M12 52C12 90 88 90 88 52L74 52C74 72 26 72 26 52Z" fill="#ffd9b0"/></svg>',
+ pad:'<svg class="fxic" viewBox="0 0 100 100"><rect x="38" y="8" width="26" height="76" rx="9" fill="#f4f4f4" stroke="#9aa" stroke-width="3"/><rect x="38" y="28" width="26" height="4" fill="#bbb"/><rect x="38" y="48" width="26" height="4" fill="#bbb"/><g class="ball"><circle cx="20" cy="56" r="11" fill="#d7263d"/></g></svg>',
+ run:'<svg class="fxic" viewBox="0 0 100 100"><rect x="62" y="30" width="6" height="52" rx="2" fill="#f1d9a0"/><rect x="74" y="30" width="6" height="52" rx="2" fill="#f1d9a0"/><rect x="86" y="30" width="6" height="52" rx="2" fill="#f1d9a0"/><rect class="bl1" x="62" y="24" width="15" height="5" rx="2" fill="currentColor"/><path d="M6 78H50M38 64L54 78L38 92" stroke="currentColor" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+ drs:'<svg class="fxic" viewBox="0 0 100 100"><rect x="8" y="16" width="84" height="56" rx="7" fill="#0a1230" stroke="currentColor" stroke-width="4"/><text x="50" y="55" text-anchor="middle" font-size="30" font-weight="900" fill="currentColor" font-family="system-ui">DRS</text><rect x="42" y="74" width="16" height="9" fill="#889"/><rect x="28" y="84" width="44" height="6" rx="3" fill="#889"/></svg>',
+ tick:'<svg class="fxic" viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" fill="none" stroke="currentColor" stroke-width="8"/><path d="M28 52L44 68L74 34" stroke="currentColor" stroke-width="9" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+ call:'<svg class="fxic" viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" fill="none" stroke="currentColor" stroke-width="8"/><text x="50" y="68" text-anchor="middle" font-size="56" font-weight="900" fill="currentColor" font-family="system-ui">?</text></svg>',
+ n50:'<svg class="fxic" viewBox="0 0 100 100"><text x="50" y="68" text-anchor="middle" font-size="60" font-weight="900" fill="currentColor" font-family="system-ui">50</text></svg>',
+ fig:'<svg class="fxic" viewBox="0 0 100 100"><circle cx="46" cy="22" r="10" fill="#ffd9b0"/><path d="M36 22A10 10 0 0 1 56 22Z" fill="currentColor"/><rect x="36" y="34" width="20" height="32" rx="6" fill="currentColor"/><rect x="38" y="64" width="7" height="28" rx="3" fill="#eee"/><rect x="47" y="64" width="7" height="28" rx="3" fill="#eee"/><g class="arm"><rect x="56" y="36" width="8" height="26" rx="4" fill="#ffd9b0" transform="rotate(-150 60 38)"/><rect x="66" y="-4" width="9" height="34" rx="3" fill="#e6c27a" transform="rotate(25 70 30)"/></g><rect x="30" y="38" width="8" height="24" rx="4" fill="#ffd9b0" transform="rotate(20 34 38)"/></svg>',
+ hat:'<svg class="fxic" viewBox="0 0 100 100"><circle cx="20" cy="52" r="15" fill="#d7263d"/><circle cx="50" cy="52" r="15" fill="#d7263d"/><circle cx="80" cy="52" r="15" fill="#d7263d"/><text x="50" y="92" text-anchor="middle" font-size="16" font-weight="900" fill="currentColor" font-family="system-ui">3 IN 3</text></svg>',
+ avatar:'<svg class="fxic" viewBox="0 0 100 100"><circle cx="50" cy="38" r="18" fill="currentColor" opacity=".9"/><path d="M14 94C14 66 86 66 86 94Z" fill="currentColor" opacity=".9"/></svg>'};
+const ICON={four:'ball',six:'ball',bowled:'stumps',caught:'catch',lbw:'pad',stumped:'stumps',runout:'run',hitwkt:'stumps',drs_bat:'drs',drs_bowl:'drs',drs_out:'hand',drs_not:'tick',drs_um:'call',fifty:'n50',hundred:'fig',hattrick:'hat',rec_bat:'avatar',rec_bowl:'avatar'};
+const POS=k=>/^rec_/.test(k)?'l':'c';
+function html(kind,d,id,o){o=o||{};const q=parse(id),sh0=SHAPES[q.s]||SHAPES[0],pl=PALS[q.p]||PALS[0],mo=MOTS[q.m]||MOTS[0];d=d||{};
+ const ic=d.photo?`<img class="fxav" src="${esc(d.photo)}" alt="">`:IC[ICON[kind]]||'';
+ return `<div class="fxw fxp-${POS(kind)} fxs-${sh0[0]} fxf-${q.f} ${o.loop?'fxloop':''}" data-k="${kind}" style="--c1:${pl[0]};--c2:${pl[1]};--c3:${pl[2]};--dur:${o.dur||(POS(kind)==='l'?6.2:4.4)}s"><div class="fxm fxm-${mo[0]}"><div class="fxb">${ic}<div class="fxtx"><div class="fxt">${esc(d.title||'')}</div>${d.sub?`<div class="fxs">${esc(d.sub)}</div>`:''}${d.sub2?`<div class="fxs2">${esc(d.sub2)}</div>`:''}${d.n?`<div class="fxn">${esc(d.n)}</div>`:''}</div></div></div></div>`}
+/* data builders */
+const NB=['Run out','Obstructing the field','Hit the ball twice','Timed out','Retired out'];
+function h2h(bt,bl){const o={r:0,b:0,w:0};S.matches.forEach(m=>m.innings.forEach(inn=>(inn.ev||[]).forEach(e=>{if(e.bt!==bt||e.bl!==bl)return;if(e.x!=='wd')o.b++;if(e.x===''||e.x==='nb')o.r+=e.r;if(e.w&&e.out===bt&&!NB.includes(e.w))o.w++})));return o}
+function careerOf(id){try{return career()[id]||null}catch(e){return null}}
+function ph(id){try{const p=P(id);return p&&p.photo&&/^(data:image|https:)/.test(p.photo)?p.photo:''}catch(e){return''}}
+function dataFor(kind,m,ctx){ctx=ctx||{};const s=m?st(m):null,c=(s&&s.inn.cur)||{},e=ctx.e||{};
+ const bt=ctx.bt||e.bt||c.s,bl=ctx.bl||e.bl||c.bl,out=e.out||bt,bn=bt?nm(bt):'Batter',wn=bl?nm(bl):'Bowler',B=s&&bt&&s.k.bat[bt]?s.k.bat[bt]:{r:0,b:0};
+ const tm=ctx.team||'';
+ switch(kind){
+  case'four':return{title:'FOUR',sub:bn,sub2:'vs '+wn,n:B.r+' ('+B.b+')'};
+  case'six':return{title:'SIX!',sub:bn,sub2:'vs '+wn,n:B.r+' ('+B.b+')'};
+  case'bowled':return{title:'BOWLED!',sub:nm(out)+' b '+sh(bl||out),sub2:'wicket for '+wn};
+  case'caught':return{title:'CAUGHT!',sub:nm(out)+' c '+(e.fld||'fielder')+' b '+sh(bl||out)};
+  case'lbw':return{title:'LBW!',sub:nm(out)+' lbw b '+sh(bl||out)};
+  case'stumped':return{title:'STUMPED!',sub:nm(out)+' st '+(e.fld||'keeper')+' b '+sh(bl||out)};
+  case'runout':return{title:'RUN OUT!',sub:nm(out)+(e.fld?' ('+e.fld+')':'')};
+  case'hitwkt':return{title:'HIT WICKET',sub:nm(out)+' b '+sh(bl||out)};
+  case'drs_bat':return{title:'REVIEW TAKEN',sub:'Batter review',sub2:ctx.team||bn};
+  case'drs_bowl':return{title:'REVIEW TAKEN',sub:'Fielding side review',sub2:ctx.team||wn};
+  case'drs_out':return{title:ctx.title||'OUT!',sub:'Decision: OUT',sub2:ctx.note||''};
+  case'drs_not':return{title:ctx.title||'NOT OUT',sub:'Decision: NOT OUT',sub2:ctx.note||''};
+  case'drs_um':return{title:ctx.title||"UMPIRE'S CALL",sub:'Original decision stays',sub2:ctx.note||''};
+  case'fifty':return{title:'FIFTY',sub:bn,n:B.r+' ('+B.b+')'};
+  case'hundred':return{title:'CENTURY!',sub:bn,n:B.r+' ('+B.b+')'};
+  case'hattrick':return{title:'HAT-TRICK!',sub:wn,sub2:'three wickets in three balls'};
+  case'rec_bat':{const c0=careerOf(bt)||{},a=c0.inn-c0.no>0?(c0.r/(c0.inn-c0.no)).toFixed(1):'-',h=bt&&bl?h2h(bt,bl):{r:0,b:0,w:0};
+   return{title:bn,photo:ph(bt),sub:'CAREER  '+(c0.m?c0.m.size:0)+' M · '+(c0.r||0)+' R · HS '+(c0.hs||0)+' · AVG '+a+' · SR '+(c0.b?(c0.r*100/c0.b).toFixed(0):'-'),sub2:'vs '+wn+': '+h.r+' ('+h.b+')'+(h.w?' · out '+h.w+'x':'')}}
+  case'rec_bowl':{const c0=careerOf(bl)||{},h=bt&&bl?h2h(bt,bl):{r:0,b:0,w:0};
+   return{title:wn,photo:ph(bl),sub:'CAREER  '+(c0.w||0)+' W · ECON '+(c0.ob?(c0.or*6/c0.ob).toFixed(1):'-')+' · BEST '+(c0.bbw?c0.bbw+'/'+c0.bbr:'-'),sub2:'vs '+bn+': conceded '+h.r+' in '+h.b+' balls'+(h.w?' · took '+h.w+'x':'')}}}
+ return{title:String(kind).toUpperCase()}}
+/* playing */
+function fxHost(){let h=document.getElementById('fxhost');if(!h){h=document.createElement('div');h.id='fxhost';h.className='fxhost';document.body.appendChild(h)}return h}
+function pickStyle(kind){const z=S.stream.fx||{};if(z.mode==='random')return rnd(!!z.pr);return (z.sel&&z.sel[kind])||'1-0-0-0'}
+function play(kind,d,id,host,o){const h=host||fxHost(),w=document.createElement('div');w.innerHTML=html(kind,d,id||pickStyle(kind),o);const n=w.firstChild;h.appendChild(n);const ms=((o&&o.dur)||(POS(kind)==='l'?6.2:4.4))*1000+200;setTimeout(()=>{try{n.remove()}catch(e){}},ms);return ms}
+const Q=[];let busy=0;
+function enqueue(kind,d){if(Q.length>=5)Q.shift();Q.push({kind,d});pump()}
+function pump(){if(busy||!Q.length)return;const j=Q.shift();busy=1;const ms=play(j.kind,j.d);setTimeout(()=>{busy=0;pump()},Math.min(ms,5200)-300)}
+window.shFx={html,play,enqueue,KINDS,isPrem,rnd,dataFor,parse};window.shFxWatch=()=>watch();
+/* watcher (OBS / overlay page): new balls, reviews, new batter or bowler, and graphics fired from the studio */
+function watch(){try{
+ const z=S.stream.fx||{};if(z.on===false)return;const m=ovMatch();if(!m)return;const s=st(m);if(!s)return;const W=UI.fxw=UI.fxw||{};const key=m.id+':'+s.i,ev=s.inn.ev||[],D=(m.drs&&m.drs.log)||[],cur=s.inn.cur||{};
+ if(W.key!==key){W.key=key;W.n=ev.length;W.d=new Set(D.map(x=>x.id));W.s=cur.s;W.b=cur.bl;W.q=S.stream.fxq&&S.stream.fxq.id;return}
+ if(ev.length>W.n){const nw=ev.slice(W.n);W.n=ev.length;nw.slice(-3).forEach((e,ix,arr)=>{
+   const k=e.w?({Bowled:'bowled',Caught:'caught',LBW:'lbw',Stumped:'stumped','Run out':'runout','Hit wicket':'hitwkt'})[e.w]:(e.x===''&&e.r===6)?'six':(e.x===''&&e.r===4&&!e.ot)?'four':'';
+   if(k)enqueue(k,dataFor(k,m,{e}));
+   if(ix===arr.length-1){const kk=s.k,b=kk.bat[e.bt],off=(e.x===''||e.x==='nb')?e.r:0;if(b&&off){const pv=b.r-off;if(pv<100&&b.r>=100)enqueue('hundred',dataFor('hundred',m,{e}));else if(pv<50&&b.r>=50)enqueue('fifty',dataFor('fifty',m,{e}))}
+    const lastW=ev.slice(-3);if(lastW.length===3&&lastW.every(x=>x.bl===e.bl&&x.w&&!NB.includes(x.w)))enqueue('hattrick',dataFor('hattrick',m,{e}))}})}
+ D.forEach(x=>{if(W.d.has(x.id))return;W.d.add(x.id);const bat=x.team===s.inn.bat,final=x.res==='call'?'drs_um':x.res==='over'?(x.onf==='Out'?'drs_not':'drs_out'):(x.onf==='Out'?'drs_out':'drs_not'),tname=(T(x.team)||{}).short||'';
+   enqueue(bat?'drs_bat':'drs_bowl',dataFor(bat?'drs_bat':'drs_bowl',m,{team:tname}));
+   const tl=x.res==='nb'?'NO BALL':x.res==='tech'?'TECH FAILURE':'';enqueue(tl?'drs_um':final,dataFor(tl?'drs_um':final,m,{title:tl||undefined,note:x.kind}))});
+ if(cur.s!=null&&W.s!=null&&cur.s!==W.s&&!(ev.length&&ev[ev.length-1].w&&false)){enqueue('rec_bat',dataFor('rec_bat',m,{bt:cur.s,bl:cur.bl}))}W.s=cur.s;
+ if(cur.bl!=null&&W.b!=null&&cur.bl!==W.b){enqueue('rec_bowl',dataFor('rec_bowl',m,{bt:cur.s,bl:cur.bl}))}W.b=cur.bl;
+ const fq=S.stream.fxq;if(fq&&fq.id&&fq.id!==W.q){W.q=fq.id;if(Date.now()-(fq.t||0)<20000)enqueue(fq.kind,fq.d||dataFor(fq.kind,m,{}))}
+}catch(e){}}
+try{const sc=new URLSearchParams(location.search).get('scene');if(location.hash==='#overlay'&&(!sc||sc==='bug'||sc==='fx')){if(sc==='fx')document.addEventListener('DOMContentLoaded',()=>{const a=document.getElementById('app');if(a)a.style.visibility='hidden'});setInterval(watch,1200)}}catch(e){}
+/* studio card in Stream and OBS */
+const v0=vStream;vStream=function(){const o=v0.apply(this,arguments);
+ const z=S.stream.fx=S.stream.fx||{on:true,mode:'fixed',sel:{},pr:0},k=UI.fxk||'four',pool=entitled(),sel=(z.sel&&z.sel[k])||'1-0-0-0',list=seeded((UI.fxseed||7)*7919+KINDS.findIndex(x=>x[0]===k)*131,pool),m=ovMatch(),sd=dataFor(k,m,{});
+ const gal=[sel].concat(list.filter(x=>x!==sel)).slice(0,12).map(id=>`<button class="fxth ${id===sel?'sel':''}" data-a="fxPick" data-v="${id}">${isPrem(id)?'<span class="lk">PREMIUM</span>':''}${html(k,sd,id,{loop:1})}</button>`).join('');
+ const admin=isAdmin()?`<form data-f="fxGrant" class="row" style="gap:6px;margin-top:8px"><input name="ph" placeholder="Phone to unlock premium" style="flex:1"><select name="op"><option value="add">Unlock</option><option value="del">Lock</option></select><button class="btn sm">Save</button></form><div class="mu sm">Unlocked: ${Object.keys(S.settings.fxPremium||{}).filter(x=>S.settings.fxPremium[x]).map(esc).join(', ')||'none'}. Payment is taken manually; unlock after you receive it.</div>`:'';
+ const card=`<div class="card fxst"><h3>Graphics studio</h3><div class="mu sm">Animated graphics with a transparent background for OBS: boundaries, every dismissal, DRS reviews, milestones, batter and bowler records. They fire by themselves on the live scoring.</div>
+ <div class="row2"><button class="${z.on!==false?'on':''}" data-a="fxOn">${z.on!==false?'Graphics ON':'Graphics OFF'}</button><button class="${z.mode!=='random'?'on':''}" data-a="fxMode" data-v="fixed">My chosen styles</button><button class="${z.mode==='random'?'on':''}" data-a="fxMode" data-v="random">Random every time</button></div>
+ <div class="row2">${KINDS.map(x=>`<button class="${x[0]===k?'on':''}" data-a="fxKind" data-v="${x[0]}">${x[1]}</button>`).join('')}</div>
+ <div class="fxprev" id="fxprev"></div>
+ <div class="row2"><button data-a="fxPrev">Preview</button><button data-a="fxFire">Send to OBS now</button><button data-a="fxMore">More styles</button></div>
+ <div class="mu sm">Tap a style to use it for "${esc((KINDS.find(x=>x[0]===k)||[])[1]||k)}". ${pool?'':'Premium styles are locked; ask the admin to unlock (payment is manual).'}</div><div class="fxgal">${gal}</div>${admin}
+ <div class="mu sm" style="margin-top:6px">OBS: use the normal overlay link, or <code>?scene=fx#overlay</code> for graphics only (transparent).</div></div>`;
+ const i=o.indexOf('</div>')+6;return o.slice(0,i)+card+o.slice(i)};
+const keep=()=>{const z=S.stream.fx=S.stream.fx||{on:true,mode:'fixed',sel:{},pr:0};z.sel=z.sel||{};z.pr=entitled()?1:0;return z};
+Object.assign(A,{fxOn(){const z=keep();z.on=z.on===false;commit()},fxMode(d){const z=keep();z.mode=d.v;commit()},fxKind(d){UI.fxk=d.v;render()},fxMore(){UI.fxseed=(UI.fxseed||7)+1;render()},
+ fxPick(d){const z=keep();if(isPrem(d.v)&&!entitled())return toast('Premium style: ask the admin to unlock it (payment is manual)',4500);z.sel[UI.fxk||'four']=d.v;z.mode='fixed';commit()},
+ fxPrev(){const h=document.getElementById('fxprev');if(!h)return;h.innerHTML='';const k=UI.fxk||'four';play(k,dataFor(k,ovMatch(),{}),(S.stream.fx.sel||{})[k]||'1-0-0-0',h)},
+ fxFire(){const z=keep(),k=UI.fxk||'four';S.stream.fxq={id:uid(),kind:k,t:Date.now(),d:dataFor(k,ovMatch(),{})};commit();toast('Sent to the overlay')}});
+Object.assign(F,{fxGrant(fd){if(!isAdmin())return;const p=String(fd.get('ph')||'').trim();if(!p)return;S.settings.fxPremium=S.settings.fxPremium||{};if(fd.get('op')==='del')delete S.settings.fxPremium[p];else S.settings.fxPremium[p]=true;commit();toast('Saved')}});
+})();
+
 /* 141 3D LIVE inside the app: any live match can be watched as the 3D avatar stream (the same scene OBS uses), like a live channel */
 (function(){
 const live=()=>(S.matches||[]).filter(m=>m&&m.status==='live'&&!(typeof isDemo==='function'&&isDemo(m)&&false)).slice().reverse();
