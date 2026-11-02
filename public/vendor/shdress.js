@@ -15,6 +15,7 @@ export function palette(T,o){const sh=new T.Color(o.shirt||'#2563eb'),dk=(c,f)=>
 function paint(T,mesh,names,pal){const k=mesh.name+'|'+pal.key;let g=geoCache.get(k);if(g)return g;g=mesh.geometry.clone();const si=g.attributes.skinIndex,sw=g.attributes.skinWeight,n=g.attributes.position.count,col=new Float32Array(n*3),gr=names.map(groupOf);
  for(let i=0;i<n;i++){let r=0,gg=0,b=0,t=0;for(let j=0;j<4;j++){const w=sw.getComponent(i,j);if(w<=0)continue;const c=pal[gr[si.getComponent(i,j)]]||pal.skin;r+=c.r*w;gg+=c.g*w;b+=c.b*w;t+=w}if(t>0){r/=t;gg/=t;b/=t}else{r=pal.skin.r;gg=pal.skin.g;b=pal.skin.b}col[i*3]=r;col[i*3+1]=gg;col[i*3+2]=b}
  g.setAttribute('color',new T.BufferAttribute(col,3));geoCache.set(k,g);return g}
+function logoTex(T,col){const k='logo|'+col;let t=texCache.get(k);if(t)return t;const c=document.createElement('canvas');c.width=128;c.height=64;const x=c.getContext('2d');x.fillStyle=col;x.font='900 40px Arial Black,Arial,sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText('SH',64,24);x.font='700 11px Arial,sans-serif';x.fillText('SCORING HEROES',64,52);t=new T.CanvasTexture(c);t.colorSpace=T.SRGBColorSpace;texCache.set(k,t);return t}
 function nameTex(T,name,col){const k=name+'|'+col;let t=texCache.get(k);if(t)return t;const c=document.createElement('canvas');c.width=256;c.height=96;const x=c.getContext('2d');x.clearRect(0,0,256,96);x.fillStyle=col;x.font='900 44px Arial Black,Arial,sans-serif';x.textAlign='center';x.textBaseline='middle';let s=String(name).toUpperCase();while(x.measureText(s).width>240&&s.length>3)s=s.slice(0,-1);x.fillText(s,128,48);t=new T.CanvasTexture(c);t.colorSpace=T.SRGBColorSpace;texCache.set(k,t);return t}
 const M=(T,c,r)=>new T.MeshStandardMaterial({color:c,roughness:r==null?.6:r,metalness:.05});
 function cap(T,col){const g=new T.Group(),m=M(T,col,.7),d=new T.Mesh(new T.SphereGeometry(.125,16,10,0,Math.PI*2,0,Math.PI*.55),m);g.add(d);const pk=new T.Mesh(new T.BoxGeometry(.2,.012,.12),m);pk.position.set(0,.03,.14);pk.rotation.x=.12;g.add(pk);return g}
@@ -31,7 +32,7 @@ function faceGroup(T,skin,beard,hair){const g=new T.Group(),mat=(c,r)=>new T.Mes
  g.add(eye(-1),eye(1));
  for(const sx of[-1,1]){const b=new T.Mesh(new T.BoxGeometry(.04,.008,.01),mat('#1b1410'));b.position.set(sx*.037,.036,.097);b.rotation.z=sx*-.12;g.add(b)}
  const nose=new T.Mesh(new T.SphereGeometry(.014,10,8),mat(skin,.7));nose.scale.set(.9,1.3,1.2);nose.position.set(0,-.012,.106);g.add(nose);
- if(beard){const bd=new T.Mesh(new T.SphereGeometry(.094,18,10,Math.PI*.15,Math.PI*1.7,Math.PI*.6,Math.PI*.22),mat('#17110d',1));bd.scale.set(1,1,1.02);bd.position.set(0,-.012,.006);g.add(bd);const mo=new T.Mesh(new T.BoxGeometry(.05,.008,.01),mat('#17110d',1));mo.position.set(0,-.03,.1);g.add(mo)}
+ if(beard){const bd=new T.Mesh(new T.SphereGeometry(.026,10,8),mat('#2a1c14',1));bd.scale.set(1,.7,.7);bd.position.set(0,-.1,.07);g.add(bd);const mo=new T.Mesh(new T.BoxGeometry(.046,.007,.008),mat('#2a1c14',1));mo.position.set(0,-.028,.1);g.add(mo)}
  if(hair){const h=new T.Mesh(new T.SphereGeometry(.102,18,10,Math.PI*.5,Math.PI,0,Math.PI*.5),mat(hair,.9));h.position.set(0,.002,-.006);g.add(h)}
  g.scale.setScalar(1.22);return g}
 /* the player's real photo wrapped on the front of the head (used when the data provider supplies a usable picture) */
@@ -43,7 +44,7 @@ export function dress(T,gl,root,g,o){const pal=palette(T,o),kit=o.kit||'field';
  let names=null;root.traverse(m=>{if(m.isSkinnedMesh&&!names)names=m.skeleton.bones.map(b=>b.name)});
  const src=gl.scene;const srcMesh={};src.traverse(m=>{if(m.isSkinnedMesh)srcMesh[m.name]=m});
  root.traverse(m=>{if(m.isSkinnedMesh){m.frustumCulled=false;const s=srcMesh[m.name]||m;m.geometry=paint(T,s,m.skeleton.bones.map(b=>b.name),pal);m.material=shirtMat}});
- const B=n=>root.getObjectByName('mixamorig'+n),bn={hd:B('Head'),lk:B('LeftLeg'),rk:B('RightLeg'),la:B('LeftFoot'),ra:B('RightFoot'),lh:B('LeftHand'),rh:B('RightHand'),sp:B('Spine2')};
+ const B=n=>root.getObjectByName('mixamorig'+n),bn={hd:B('Head'),lk:B('LeftLeg'),rk:B('RightLeg'),la:B('LeftFoot'),ra:B('RightFoot'),lh:B('LeftHand'),rh:B('RightHand'),sp:B('Spine2'),la2:B('LeftArm'),ra2:B('RightArm'),lf:B('LeftForeArm'),rf:B('RightForeArm')};
  const K=new T.Group();g.add(K);const parts={};
  const add=(k,obj)=>{K.add(obj);parts[k]=obj;return obj};
  const hcol=new T.Color(o.shirt||'#2563eb').multiplyScalar(.75);
@@ -53,6 +54,9 @@ export function dress(T,gl,root,g,o){const pal=palette(T,o),kit=o.kit||'field';
  {const sk=pal.skin.getStyle?'#'+pal.skin.getHexString():'#c68a5a';const bd=(o.name||'').length%3!==1;add('face',o.photo?photoCap(T,o.photo):faceGroup(T,sk,bd,(kit==='bat'||kit==='ump')?null:'#1a1410'))}
  if(kit==='bat'||kit==='wk'){for(const s of['l','r']){const p=new T.Mesh(new T.BoxGeometry(.13,.5,.07),M(T,kit==='wk'?'#e9e4d2':'#f5f5f2',.7));add('pad'+s,p)}}
  if(kit==='bat'||kit==='wk')for(const s of['l','r']){const gv=new T.Mesh(new T.SphereGeometry(kit==='wk'?.075:.06,10,8),M(T,kit==='wk'?'#d8c9a0':'#f2f2f2',.8));add('gl'+s,gv)}
+ const GOLD=M(T,'#d4af37',.35),showKit=kit==='bat'||kit==='bowl'||kit==='field'||kit==='wk'||kit==='soccer';
+ if(showKit){const col=new T.Mesh(new T.TorusGeometry(.082,.013,8,20),GOLD);col.rotation.x=Math.PI/2;add('collar',col);for(const s of['l','r']){const b=new T.Mesh(new T.TorusGeometry(.046,.007,6,16),GOLD);add('band'+s,b)}
+  const lg=new T.Mesh(new T.PlaneGeometry(.1,.05),new T.MeshBasicMaterial({map:logoTex(T,'#e8cf7a'),transparent:true,depthWrite:false}));add('logo',lg)}
  let plane=null;if(o.name&&kit!=='ump'){const t=nameTex(T,o.name,'#ffffff');plane=new T.Mesh(new T.PlaneGeometry(.4,.15),new T.MeshBasicMaterial({map:t,transparent:true,depthWrite:false}));plane.rotation.y=Math.PI;K.add(plane)}
  const v=new T.Vector3(),w=new T.Vector3(),q=new T.Quaternion(),gq=new T.Quaternion(),up=new T.Vector3(0,1,0),fw=new T.Vector3(0,0,1);
  const loc=(b,out)=>{b.getWorldPosition(out);return g.worldToLocal(out)};
@@ -61,4 +65,7 @@ export function dress(T,gl,root,g,o){const pal=palette(T,o),kit=o.kit||'field';
   if(parts.face&&bn.hd){loc(bn.hd,v);bn.hd.getWorldQuaternion(q);q.premultiply(gq);parts.face.position.copy(v).add(new T.Vector3(0,.115,.015).applyQuaternion(q));parts.face.quaternion.copy(q)}
   for(const s of['l','r']){const p=parts['pad'+s];if(p){const a=loc(s==='l'?bn.lk:bn.rk,v).clone(),b=loc(s==='l'?bn.la:bn.ra,w).clone(),d=b.clone().sub(a),len=d.length();p.scale.set(1,len*1.02/.5,1);p.position.copy(a).add(b).multiplyScalar(.5).add(new T.Vector3(0,0,.045));q.setFromUnitVectors(up,d.normalize());p.quaternion.copy(q)}
    const gv=parts['gl'+s];if(gv){loc(s==='l'?bn.lh:bn.rh,v);gv.position.copy(v)}}
+  if(parts.collar&&bn.sp){loc(bn.sp,v);bn.sp.getWorldQuaternion(q);q.premultiply(gq);parts.collar.position.copy(v).add(new T.Vector3(0,.17,.01).applyQuaternion(q));parts.collar.quaternion.copy(q).multiply(new T.Quaternion().setFromAxisAngle(new T.Vector3(1,0,0),Math.PI/2))}
+  if(parts.logo&&bn.sp){loc(bn.sp,v);bn.sp.getWorldQuaternion(q);q.premultiply(gq);parts.logo.position.copy(v).add(new T.Vector3(.07,.045,.14).applyQuaternion(q));parts.logo.quaternion.copy(q)}
+  for(const s of['l','r']){const bd=parts['band'+s];if(bd){const a=loc(s==='l'?bn.la2:bn.ra2,v).clone(),b=loc(s==='l'?bn.lf:bn.rf,w).clone(),d=b.clone().sub(a);bd.position.copy(a).addScaledVector(d,.8);q.setFromUnitVectors(new T.Vector3(0,0,1),d.normalize());bd.quaternion.copy(q)}}
   if(plane&&bn.sp){loc(bn.sp,v);bn.sp.getWorldQuaternion(q);q.premultiply(gq);const off=new T.Vector3(0,-.01,-.135).applyQuaternion(q);plane.position.copy(v).add(off);plane.quaternion.copy(q).multiply(new T.Quaternion().setFromAxisAngle(up,Math.PI))}}}}

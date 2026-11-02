@@ -279,3 +279,6 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 ## Real player faces on 3D heads
 - Virtual match: when the data provider supplies a usable photo (not the CRICKET DATA badge, loaded with CORS), it is wrapped on the front of the 3D head (shdress photoCap); otherwise the stylised face is used. Test: v3d-face-photo.
 - Limit: the provider has no photos for many players; those keep the stylised face and initials.
+
+## Kit detail (code only)
+- Gold collar ring, gold sleeve bands, chest logo (SH / SCORING HEROES) on every kitted player; chin beard instead of cheek patches.
