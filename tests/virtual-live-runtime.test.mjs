@@ -40,3 +40,12 @@ test('match intro and published XI cards cannot delay or duplicate a live ball',
  h.ctx.SHCricket.seek(6);assert.equal(h.get('#score').textContent,'4 / 0');
  h.ctx.SHCricket.syncBaseline({runs:0,wickets:0,legalBalls:0},context);assert.equal(h.ctx.SHCricket.getState().presentation,null);assert.equal(h.ctx.SHCricket.getState().active,null);
 });
+
+test('original avatar rigs draw every action with finite instance transforms',()=>{
+ const h=harness();
+ for(const mode of ['idle','walk','run','bowl','shot','catch','field','out'])for(const t of [0,.3,.7,1.6,2,3])for(const hand of ['RIGHT','LEFT']){
+  h.run(`for(const m of Object.values(meshes))m.list=[];posePlayer(registry.get('hema'),[0,0,0],.7,${JSON.stringify(mode)},${t},${JSON.stringify(hand)},true);`);
+  assert.equal(h.run('Object.values(meshes).every(m=>m.list.every(Number.isFinite))'),true,mode+' '+t);
+ }
+ assert.ok(h.run("meshes.head0.count>1000&&meshes.jersey.count>1000"));
+});

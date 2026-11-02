@@ -8,5 +8,5 @@ export function cricketIntro(context,elapsed,kind='intro'){
  const walkTime=t-walkStart,index=Math.floor(walkTime/4);if(index>=usable.length)return null;
  const team=usable[index],progress=(walkTime%4)/4;
  const ids=team.captain?[team.captain,...team.xi.filter(id=>id!==team.captain)]:team.xi;
- return {phase:'TEAM WALKOUT',actors:ids.slice(0,11).map((id,i)=>({id,p:[i===0?0:((i%2)?-1:1)*(.8+Math.floor((i-1)/2)*.4),0,-Math.ceil(i/2)*1.1-5+progress*4],yaw:0,mode:'run'})),eye:[4.8,2.6,6],target:[0,1,-2],title:team.name,caption:'Playing XI · '+ids.length+' players'+(team.captain?' · captain leads':'')};
+ return {phase:'TEAM WALKOUT',actors:ids.slice(0,11).map((id,i)=>({id,p:[i===0?0:((i%2)?-1:1)*(.8+Math.floor((i-1)/2)*.4),0,-Math.ceil(i/2)*1.1-5+progress*4],yaw:0,mode:'walk'})),eye:[4.8,2.6,6],target:[0,1,-2],title:team.name,caption:'Playing XI · '+ids.length+' players'+(team.captain?' · captain leads':'')};
 }
