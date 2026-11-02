@@ -20,6 +20,11 @@ test('combined bundle connects, updates idle roles, plays a real event and resyn
  h.ctx.SHCricket.syncBaseline({runs:4,wickets:0,legalBalls:5},context);assert.equal(h.get('#overs').textContent,'1.0 overs');assert.equal(h.ctx.SHCricket.getState().active,null);
  context.currentPlayers={striker:'p1',nonStriker:'p2',bowler:'b1'};h.ctx.SHLiveFeed.cursor.viewer.applyContext(context);assert.equal(h.get('#batterName').textContent,'First');assert.equal(h.created.find(e=>e.className==='feedMask').style.display,'none');
  h.ctx.SHCricket.pushBall({eventId:'test-match-b1',players:context.currentPlayers,batRuns:0,wicketType:'RUN_OUT',dismissedPlayer:'p2',commentary:'Second run out',score:{runs:4,wickets:1,legalBalls:6}});
+ h.ctx.SHCricket.seek(.2);assert.equal(h.ctx.SHCricket.getState().camera.shot,'BOWLER CLOSE-UP');
+ h.ctx.SHCricket.seek(1.5);assert.equal(h.ctx.SHCricket.getState().camera.shot,'BOWLING END');
+ h.ctx.SHCricket.seek(2.6);assert.equal(h.ctx.SHCricket.getState().camera.shot,'BATTING CONTACT');
+ h.ctx.SHCricket.setView('wide');h.ctx.SHCricket.seek(3.5);assert.equal(h.ctx.SHCricket.getState().camera.shot,'STADIUM');
+ h.ctx.SHCricket.setView('auto');assert.equal(h.ctx.SHCricket.getState().camera.shot,'BALL FOLLOW');
  h.ctx.SHCricket.seek(9);assert.equal(h.ctx.SHCricket.getState().active.players.nonStriker,'p2');assert.equal(h.get('#score').textContent,'4 / 1');
  assert.equal(h.run("active.e.dismissedPlayer===active.e.players.nonStriker"),true);
  h.ctx.SHCricket.syncBaseline({runs:4,wickets:0,legalBalls:5},context);assert.equal(h.ctx.SHCricket.getState().active,null);assert.equal(h.ctx.SHCricket.getState().queued,0);assert.equal(h.get('#score').textContent,'4 / 0');
