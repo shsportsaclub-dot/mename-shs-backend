@@ -267,3 +267,6 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 
 ## Virtual match broadcast player cards
 - When a new batter/bowler comes on, a card (provider photo or initials, role, runs/balls or figures) slides over the pitch for ~3 s; built in code. Test: v3d-3d-humans asserts it shows.
+
+## Night stadium look (cricket scene)
+- Dusk-to-night sky with stars, floodlight glow, soft light pool and edge vignette on the turf; drawn in code.

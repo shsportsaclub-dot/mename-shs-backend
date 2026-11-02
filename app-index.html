@@ -12958,7 +12958,8 @@ function ring(r0,r1,a0,a1,y,fill){const n=Math.max(2,Math.ceil((a1-a0)/0.12)),pt
 const rnd=(i)=>{const x=Math.sin(i*127.1+311.7)*43758.5453;return x-Math.floor(x)};
 const CROWD=['#e63946','#ffd84d','#ffffff','#2a9d8f','#4cc9f0','#f4a261','#9d4edd','#ffffff'];
 function drawStadium(){
- const g=ctx.createLinearGradient(0,0,0,Hh*0.55);g.addColorStop(0,'#0a1f5c');g.addColorStop(1,'#3a5fa8');ctx.fillStyle=g;ctx.fillRect(0,0,W,Hh);
+ const g=ctx.createLinearGradient(0,0,0,Hh*0.5);g.addColorStop(0,'#040a22');g.addColorStop(.5,'#13296e');g.addColorStop(.85,'#3f5fae');g.addColorStop(1,'#c9835f');ctx.fillStyle=g;ctx.fillRect(0,0,W,Hh);
+ for(let k=0;k<70;k++){const sx=rnd(k*31+1)*W,sy=rnd(k*17+5)*Hh*.26;ctx.fillStyle='rgba(255,255,255,'+(.25+rnd(k*7)*.5)+')';ctx.fillRect(sx,sy,1.4,1.4)}
  ctx.fillStyle='#2f9e44';ctx.fillRect(0,Hh*0.42,W,Hh);
  // outfield with mowing stripes
  ring(0,R+6,0,Math.PI*2,0,'#1f7a35');for(let k=0;k<9;k++)if(k%2)ring(k*7,k*7+7,0,Math.PI*2,0.01,'#278b3d');
@@ -12974,6 +12975,9 @@ function drawStadium(){
  }
  // floodlight towers
  for(let k=0;k<4;k++){const a=Math.PI/4+k*Math.PI/2,x=Math.cos(a)*(R+34),z=CZ+Math.sin(a)*(R+34),A=pr(x,0,z),B=pr(x,44,z);if(A&&B){ctx.strokeStyle='#cbd5e1';ctx.lineWidth=Math.max(1.5,A.s*.5);ctx.beginPath();ctx.moveTo(A.x,A.y);ctx.lineTo(B.x,B.y);ctx.stroke();ctx.fillStyle='#fff8d6';ctx.fillRect(B.x-A.s*3,B.y-A.s*1.4,A.s*6,A.s*2.6)}}
+ // floodlight glow + light pool on the turf (screen blend so the stadium looks lit at night)
+ ctx.save();ctx.globalCompositeOperation='lighter';for(let k=0;k<4;k++){const a=Math.PI/4+k*Math.PI/2,x=Math.cos(a)*(R+34),z=CZ+Math.sin(a)*(R+34),B=pr(x,44,z);if(B){const rad=Math.max(30,B.s*14),gr=ctx.createRadialGradient(B.x,B.y,0,B.x,B.y,rad);gr.addColorStop(0,'rgba(255,244,200,.75)');gr.addColorStop(.3,'rgba(255,236,170,.25)');gr.addColorStop(1,'rgba(255,230,150,0)');ctx.fillStyle=gr;ctx.fillRect(B.x-rad,B.y-rad,rad*2,rad*2)}}ctx.restore();
+ {const P0=pr(0,0,CZ);if(P0){const rad=Math.max(80,P0.s*R*.9),gr=ctx.createRadialGradient(P0.x,P0.y,rad*.15,P0.x,P0.y,rad);gr.addColorStop(0,'rgba(255,255,220,.10)');gr.addColorStop(.6,'rgba(0,0,0,0)');gr.addColorStop(1,'rgba(0,10,0,.30)');ctx.save();ctx.beginPath();ctx.rect(0,Hh*.4,W,Hh);ctx.clip();ctx.fillStyle=gr;ctx.fillRect(P0.x-rad,P0.y-rad,rad*2,rad*2);ctx.restore()}}
  // pitch
  poly([[-1.5,0.02,-1.5],[1.5,0.02,-1.5],[1.5,0.02,21.6],[-1.5,0.02,21.6]],'#cdb98a');poly([[-1.3,0.03,-1.2],[1.3,0.03,-1.2],[1.3,0.03,21.3],[-1.3,0.03,21.3]],'#d8c797');
  for(const z of [0,20.12]){poly([[-1.3,0.04,z-1.22],[1.3,0.04,z-1.22],[1.3,0.04,z-1.18],[-1.3,0.04,z-1.18]],'#fff')}
