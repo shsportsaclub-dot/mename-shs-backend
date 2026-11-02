@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+torch
+diffusers
+transformers
+accelerate
+safetensors
+pillow
+rembg
+onnxruntime-gpu

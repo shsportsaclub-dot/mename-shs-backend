@@ -1131,6 +1131,36 @@ routes['GET /api/faces'] = async (req, body) => {
   const out = {}; String(body.names || '').split('|').slice(0, 60).forEach(n => { const k = faceKey(n), f = db.faces && db.faces[k]; if (f) out[k] = f.img; });
   return [200, { ok: true, faces: out }];
 };
+// AI-generated player avatars. The image comes from our own GPU worker (gpu-worker/, open-source models we run ourselves) or is uploaded by an admin. One image per player name, shown on cards, Profile avatar and the match screen.
+const AV_MAX = 380000, avOk = i => /^data:image\/(png|webp|jpeg);base64,[A-Za-z0-9+\/=]+$/.test(i) && i.length <= AV_MAX;
+const avPut = (name, img, by) => { const k = faceKey(name); db.avatars = db.avatars || {}; if (!db.avatars[k] && Object.keys(db.avatars).length >= 300) return false; db.avatars[k] = { img, name: String(name).slice(0, 60), t: Date.now(), by }; saveDb(); return true; };
+routes['POST /api/avatars/save'] = async (req, body) => {
+  const s = grUser(req); if (!s || s.u.role !== 'admin') return [403, { ok: false, error: 'Only an admin can add avatars' }];
+  if (faceKey(body.name).length < 2) return [400, { ok: false, error: 'Give the player name' }];
+  const img = String(body.img || ''); if (!avOk(img)) return [400, { ok: false, error: 'Send a PNG, WebP or JPEG image under about 280 KB' }];
+  return avPut(body.name, img, s.phone) ? [200, { ok: true }] : [409, { ok: false, error: 'Avatar limit reached' }];
+};
+routes['POST /api/avatars/generate'] = async (req, body) => {
+  const s = grUser(req); if (!s || s.u.role !== 'admin') return [403, { ok: false, error: 'Only an admin can generate avatars' }];
+  if (faceKey(body.name).length < 2) return [400, { ok: false, error: 'Give the player name' }];
+  const url = process.env.AVATAR_GPU_URL; if (!url) return [503, { ok: false, error: 'The avatar GPU worker is not connected yet (set AVATAR_GPU_URL and AVATAR_GPU_KEY)' }];
+  const photo = String(body.photo || ''); if (!/^data:image\/jpeg;base64,[A-Za-z0-9+\/=]+$/.test(photo) || photo.length > 90000) return [400, { ok: false, error: 'Send the profile photo as a small JPEG' }];
+  try {
+    const ac = new AbortController(), tm = setTimeout(() => ac.abort(), 150000);
+    const r = await fetch(url.replace(/\/$/, '') + '/generate', { method: 'POST', signal: ac.signal, headers: { 'content-type': 'application/json', authorization: 'Bearer ' + (process.env.AVATAR_GPU_KEY || '') }, body: JSON.stringify({ photo, colour: String(body.colour || '').slice(0, 20), team: String(body.team || '').slice(0, 40), name: String(body.name).slice(0, 60) }) });
+    clearTimeout(tm); const j = await r.json().catch(() => ({}));
+    if (!r.ok || !j.img || !avOk(String(j.img))) return [502, { ok: false, error: (j && j.error) || 'The GPU worker did not return an avatar' }];
+    return avPut(body.name, j.img, s.phone) ? [200, { ok: true, img: j.img }] : [409, { ok: false, error: 'Avatar limit reached' }];
+  } catch (e) { return [504, { ok: false, error: 'The GPU worker did not answer in time' }]; }
+};
+routes['POST /api/avatars/delete'] = async (req, body) => {
+  const s = grUser(req); if (!s || s.u.role !== 'admin') return [403, { ok: false, error: 'Only an admin can remove avatars' }];
+  if (db.avatars) delete db.avatars[faceKey(body.name)]; saveDb(); return [200, { ok: true }];
+};
+routes['GET /api/avatars'] = async (req, body) => {
+  const out = {}; String(body.names || '').split('|').slice(0, 40).forEach(n => { const k = faceKey(n), f = db.avatars && db.avatars[k]; if (f) out[k] = f.img; });
+  return [200, { ok: true, avatars: out }];
+};
 routes['GET /api/grounds'] = async (req, body) => {
   const p = grLL(body), all = Object.values(grBag());
   if (!p) return [200, { ok: true, items: all.slice(-30).reverse().map(g => grPub(g)) }];
@@ -2635,7 +2665,7 @@ http.createServer(async (req, res) => {
   const h = routes[req.method + ' ' + pth];
   if (!h) return out(404, { ok: false, error: 'Not found' });
   let raw = '';
-  for await (const c of req) { raw += c; if (raw.length > (pth === '/api/paper' ? 300000 : pth === '/api/admin/home-config' ? 400000 : pth === '/api/grounds/photo' ? 330000 : pth === '/api/faces' ? 130000 : pth === '/api/editorial' ? 120000 : 20000)) return out(413, { ok: false, error: 'Too large' }); }
+  for await (const c of req) { raw += c; if (raw.length > (pth === '/api/paper' ? 300000 : pth === '/api/admin/home-config' ? 400000 : pth === '/api/grounds/photo' ? 330000 : pth === '/api/faces' ? 130000 : pth === '/api/avatars/save' ? 420000 : pth === '/api/avatars/generate' ? 130000 : pth === '/api/editorial' ? 120000 : 20000)) return out(413, { ok: false, error: 'Too large' }); }
   let body = {};
   try { body = raw ? (raw.trim().startsWith('{') ? JSON.parse(raw) : Object.fromEntries(new URLSearchParams(raw))) : {}; } catch { return out(400, { ok: false, error: 'Bad body' }); }
   if (req.method === 'GET') body = { ...Object.fromEntries(new URL(req.url, 'http://x').searchParams), ...body };

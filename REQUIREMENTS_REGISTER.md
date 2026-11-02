@@ -305,3 +305,6 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 
 ## Avatar generated from the profile photo
 - shAvatar.fromImg(photo) reads the player's profile photo in the browser (skin tone from cheeks, hair colour/length from top and sides, beard from chin/moustache area, face width) and returns options for the cartoon avatar. Virtual match 3D heads, Profile avatar and cards use this generated avatar; players without a photo get a name-based avatar. Heuristic (no ML): works best on front-facing headshots with a plain background.
+
+## Own avatar generator (GPU worker)
+- gpu-worker/ (FastAPI, Stable Diffusion XL + IP-Adapter + rembg, open-source) generates a stylised 3D-render avatar PNG from the profile photo; needs a rented NVIDIA GPU (see gpu-worker/README.md). Server: POST /api/avatars/generate (admin, forwards to AVATAR_GPU_URL with AVATAR_GPU_KEY), /api/avatars/save (admin upload), /api/avatars/delete, GET /api/avatars?names=. App: Profile avatar has Generate with AI and Upload avatar image for admins. Tested with a mock worker; the worker itself is untested on a GPU.
