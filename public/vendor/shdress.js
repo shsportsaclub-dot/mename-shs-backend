@@ -19,6 +19,7 @@ function logoTex(T,col){const k='logo|'+col;let t=texCache.get(k);if(t)return t;
 function nameTex(T,name,col){const k=name+'|'+col;let t=texCache.get(k);if(t)return t;const c=document.createElement('canvas');c.width=256;c.height=96;const x=c.getContext('2d');x.clearRect(0,0,256,96);x.fillStyle=col;x.font='900 44px Arial Black,Arial,sans-serif';x.textAlign='center';x.textBaseline='middle';let s=String(name).toUpperCase();while(x.measureText(s).width>240&&s.length>3)s=s.slice(0,-1);x.fillText(s,128,48);t=new T.CanvasTexture(c);t.colorSpace=T.SRGBColorSpace;texCache.set(k,t);return t}
 const M=(T,c,r)=>new T.MeshStandardMaterial({color:c,roughness:r==null?.6:r,metalness:.05});
 function cap(T,col){const g=new T.Group(),m=M(T,col,.7),d=new T.Mesh(new T.SphereGeometry(.125,16,10,0,Math.PI*2,0,Math.PI*.55),m);g.add(d);const pk=new T.Mesh(new T.BoxGeometry(.2,.012,.12),m);pk.position.set(0,.03,.14);pk.rotation.x=.12;g.add(pk);return g}
+function hairShell(T,col){const g=new T.Group(),m=M(T,col,.9),A=new T.Mesh(new T.SphereGeometry(.134,20,10,0,Math.PI*2,0,Math.PI*.3),m),B=new T.Mesh(new T.SphereGeometry(.134,20,10,Math.PI/2+.95,Math.PI*2-1.9,Math.PI*.3,Math.PI*.3),m);A.scale.set(1,1,1.08);B.scale.set(1,1,1.08);g.add(A,B);return g}
 function helmet(T,col){const g=new T.Group(),m=M(T,col,.35),d=new T.Mesh(new T.SphereGeometry(.132,18,12,0,Math.PI*2,0,Math.PI*.66),m);d.scale.set(1,1,1.1);g.add(d);const mt=M(T,'#9aa3ad',.3);
  const pk=new T.Mesh(new T.BoxGeometry(.2,.012,.09),m);pk.position.set(0,.045,.15);g.add(pk);
  for(const x of[-.06,-.02,.02,.06]){const c=new T.Mesh(new T.CylinderGeometry(.004,.004,.1),mt);c.position.set(x,-.02,.155);g.add(c)}
@@ -53,6 +54,7 @@ export function dress(T,gl,root,g,o){const pal=palette(T,o),kit=o.kit||'field';
  else if(kit==='bowl'||kit==='field'||kit==='wk')add('head',cap(T,hcol));
  else if(kit==='ump')add('head',hat(T));
  {const sk=pal.skin.getStyle?'#'+pal.skin.getHexString():'#c68a5a';const bd=(o.name||'').length%3!==1;add('face',o.photo?photoCap(T,o.photo):faceGroup(T,sk,bd,(kit==='bat'||kit==='ump')?null:'#1a1410'))}
+ if(kit==='bat'&&o.nohelm)add('head',hairShell(T,'#1d1612'));
  if(kit==='bat'||kit==='wk'){for(const s of['l','r']){const p=new T.Mesh(new T.BoxGeometry(.13,.5,.07),M(T,kit==='wk'?'#e9e4d2':'#f5f5f2',.7));add('pad'+s,p)}}
  if(kit==='bat'||kit==='wk')for(const s of['l','r']){const gv=new T.Mesh(new T.SphereGeometry(kit==='wk'?.075:.06,10,8),M(T,kit==='wk'?'#d8c9a0':'#f2f2f2',.8));add('gl'+s,gv)}
  const GOLD=M(T,'#d4af37',.35),showKit=kit==='bat'||kit==='bowl'||kit==='field'||kit==='wk'||kit==='soccer';
