@@ -13314,7 +13314,7 @@ let T,SU,ren,scene,cam,gl,gm=new Map(),mats=new Map(),cur=0,hemi,sun;
 const base=()=>apiBase()+'/vendor/';
 X.load=async function(){if(X.loading||X.ready||X.fail)return;X.loading=1;try{
  T=await import(base()+'three.module.js');const GL=await import(base()+'GLTFLoader.js');SU=await import(base()+'SkeletonUtils.js');
- gl=await new GL.GLTFLoader().loadAsync(base()+'Xbot.glb');X.D=await import(base()+'shdress.js');try{X.S=await import(base()+'shstadium.js')}catch(e){console.warn('shx stadium',e&&e.message)}
+ gl=await new GL.GLTFLoader().loadAsync(base()+'Xbot.glb');X.D=await import(base()+'shdress.js');try{const SB=await import(base()+'shbody.js'),bs=gl.scene.getObjectByName('Beta_Surface'),bj=gl.scene.getObjectByName('Beta_Joints');if(bs&&bj&&!window.SH_OLDBODY){const ng=SB.build(T,bs);bs.geometry=ng;bj.geometry=SB.tiny(T);X.body=ng.attributes.position.count}}catch(e){console.warn('shx body',e&&e.message)}try{X.S=await import(base()+'shstadium.js')}catch(e){console.warn('shx stadium',e&&e.message)}
  const cv=document.createElement('canvas');cv.id='shx3';cv.width=1280;cv.height=720;cv.style.cssText='position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none';X.cv=cv;
  ren=new T.WebGLRenderer({canvas:cv,alpha:true,antialias:true});ren.shadowMap.enabled=true;ren.shadowMap.type=T.PCFSoftShadowMap;ren.setPixelRatio(1);ren.setSize(1280,720,false);ren.setClearColor(0x000000,0);
  scene=new T.Scene();hemi=new T.HemisphereLight(0xffffff,0x4a5a40,1.9);scene.add(hemi);sun=new T.DirectionalLight(0xffffff,2.4);sun.position.set(-20,40,-10);scene.add(sun);

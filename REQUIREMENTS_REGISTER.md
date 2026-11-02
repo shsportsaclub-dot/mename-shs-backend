@@ -290,3 +290,6 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 ## 3D arenas for the other sports
 - shstadium.js buildArena: every sport scene (football, rugby, basketball, kabaddi, volleyball, beach volleyball, badminton, tennis, table tennis, pickleball) now has a code-built 3D venue: textured striped floor with real court/pitch lines, goals/posts/hoops/nets/table, crowd banks, ad boards, floodlights, sun shadows, 3D ball. Falls back to the flat venue when WebGL is not available.
 - Test: humans3d.cjs (SP=<sport>) waits for the arena and screenshots it.
+
+## Original athlete body (shbody.js)
+- Own character mesh built in code (no downloaded assets): torso with waist/chest/shoulders, thigh/calf, upper arm/forearm, palm and finger tubes, boots, neck, skull with jaw, nose, ears. Skinned to the Xbot skeleton so all clips, stroke pose, grip IK and kit paint keep working. Fallback to the old mesh: `window.SH_OLDBODY=1`.
