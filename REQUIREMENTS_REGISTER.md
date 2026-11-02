@@ -286,3 +286,7 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 ## Admin-uploaded player face photos
 - Admin: Virtual match -> "Face photo" -> pick player, choose a picture; it is cropped to a small JPEG and saved on the server (POST /api/faces, admin only, max 600 players, 90 KB each). Everyone then sees it on the 3D head and player card (GET /api/faces?names=). Tests: player-faces.test.mjs, v3d-face-upload.cjs.
 - Photos are only those an admin uploads; nothing is scraped from other sites.
+
+## 3D arenas for the other sports
+- shstadium.js buildArena: every sport scene (football, rugby, basketball, kabaddi, volleyball, beach volleyball, badminton, tennis, table tennis, pickleball) now has a code-built 3D venue: textured striped floor with real court/pitch lines, goals/posts/hoops/nets/table, crowd banks, ad boards, floodlights, sun shadows, 3D ball. Falls back to the flat venue when WebGL is not available.
+- Test: humans3d.cjs (SP=<sport>) waits for the arena and screenshots it.
