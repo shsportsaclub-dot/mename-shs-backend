@@ -302,3 +302,6 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 
 ## Cartoon player avatars (shAvatar, block 145)
 - Vector portrait avatars generated in code (skin, hair style/colour, eyes, brows, beard, collar jersey in team colour, team logo and name). Deterministic from the player name, so each player keeps the same avatar. Used in the Virtual match player cards when no provider photo exists, and as the "Avatar" tab of Profile avatar (real photo shown as a small round badge when available).
+
+## Avatar generated from the profile photo
+- shAvatar.fromImg(photo) reads the player's profile photo in the browser (skin tone from cheeks, hair colour/length from top and sides, beard from chin/moustache area, face width) and returns options for the cartoon avatar. Virtual match 3D heads, Profile avatar and cards use this generated avatar; players without a photo get a name-based avatar. Heuristic (no ML): works best on front-facing headshots with a plain background.
