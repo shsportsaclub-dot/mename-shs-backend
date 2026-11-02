@@ -13339,7 +13339,7 @@ function strokePose(B,t,H){const rc=1-sm(1.3,1.9,t),bk=(sm(.2,.6,t)-sm(.6,.8,t))
  P(B.hp,'y',-.3*bk+.55*sw+.3*ft);P(B.hp,'x',.12*cr+.1*sw);
  for(const s of[B.s0,B.sp,B.s2]){P(s,'y',-.2*bk+.3*sw+.3*ft);P(s,'x',.06*cr+.05*sw)}
  P(B.nk,'y',.2*bk-.25*sw);P(B.hd,'y',.15*sw-.1*ft);
- P(B.lu,'x',-(.45*cr+.4*sw));P(B.ll,'x',.7*cr+.5*sw);P(B.ru,'x',-.3*cr);P(B.rl,'x',.55*cr);
+ P(B.lu,'x',-(.45*cr+.4*sw));P(B.ll,'x',.7*cr+.5*sw);P(B.ru,'x',-.12*cr);P(B.rl,'x',.2*cr);
  P(B.la,'x',-(.7*bk)+.9*sw);P(B.ra,'x',-(.7*bk)+.9*sw);P(B.la,'z',.4*ft);P(B.ra,'z',-.4*ft)}
 const qd=(ax,a)=>new T.Quaternion().setFromAxisAngle(new T.Vector3(ax==='x'?1:0,ax==='y'?1:0,ax==='z'?1:0),a);
 X.begin=()=>{X.list.length=0};
