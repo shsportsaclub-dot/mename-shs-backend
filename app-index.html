@@ -12998,7 +12998,7 @@ function frame(t){if(!ctx||!cv||!document.body.contains(cv)){ctx=null;cv=$('ccg'
  L.push({z:-3,f:()=>human(0,0,-3.2,{c:G.bowl.c,pads:1,cap:1,ph:4,catchUp:G.wk&&G.wk.catch})});
  L.push({z:19.8,f:()=>human(2.4,0,21.8,{c:'#111827',signal:G.sig,ph:5})});
  fs.forEach((p,n)=>L.push({z:p.z,f:()=>human(p.x,0,p.z,{c:G.bowl.c,cap:1,run:p.run,ph:n+6,catchUp:p.catch,name:p.name,tag:'#ff6b6b'})}));
- window.shx&&shx.begin();L.sort((a,b)=>b.z-a.z);L.forEach(o=>o.f());ballDraw();if(window.shx&&shx.on())shx.flush(G.cam,52,dt,cv,0);else window.dispatchEvent(new Event('shx-need'));
+ window.shx&&shx.begin();L.sort((a,b)=>b.z-a.z);L.forEach(o=>o.f());ballDraw();if(window.shx&&shx.on())shx.flush(G.cam,52,dt,cv,0);else window.dispatchEvent(new Event('shx-need'));window.shMoment&&shMoment.tick();
  // fx
  G.fx=G.fx.filter(f=>(f.life-=dt)>0);G.fx.forEach(f=>{const P=pr(f.x,f.y+=f.vy*dt,f.z);if(P){ctx.globalAlpha=Math.min(1,f.life);ctx.fillStyle=f.c;ctx.fillRect(P.x,P.y,5,5);ctx.globalAlpha=1}f.vy-=9*dt;f.x+=f.vx*dt;f.z+=f.vz*dt});
  G.raf=requestAnimationFrame(frame)}
@@ -13008,7 +13008,7 @@ const wait=ms=>new Promise(r=>setTimeout(r,ms));
 const tween=(ms,fn)=>new Promise(res=>{const t0=performance.now();(function f(t){const p=Math.min(1,(t-t0)/ms);fn(p);if(p<1)requestAnimationFrame(f);else res()})(t0)});
 const ease=p=>1-Math.pow(1-p,2);
 function confetti(n,c){for(let i=0;i<n;i++)G.fx.push({x:(Math.random()-.5)*30,y:12+Math.random()*8,z:CZ+(Math.random()-.5)*30,vx:(Math.random()-.5)*8,vy:Math.random()*6,vz:(Math.random()-.5)*8,life:2.5,c:c[i%c.length]})}
-async function play(k){const e=k.e,m=CC.m;layout();startLoop();const names=G.names;names.bat=nm(e.bt)||'';names.bowl=nm(e.bl)||'';
+async function play(k){const e=k.e,m=CC.m;layout();startLoop();{const w=e.w?'WICKET!':e.r===6?'SIX!':e.r===4?'FOUR!':'';if(w&&window.shMoment)shMoment.begin({word:w})}const names=G.names;names.bat=nm(e.bt)||'';names.bowl=nm(e.bl)||'';
  const hit=e.ang&&e.r>0&&!['b','lb'].includes(e.x)&&!e.w,dirA=e.ang?e.ang.a:-Math.PI/2,dd=e.ang?Math.min(1.02,e.ang.d):.3;
  const tx=Math.cos(dirA)*dd*R,tz=CZ+(-Math.sin(dirA))*dd*R;
  const line=text(m,k);say(line);speakLine(line);paint();G.sig=0;G.wk=0;G.swing=0;G.fieldPos=field.map(f=>({x:f[0],z:f[2]}));G.batX=-.55;G.batZ=-.5;G.nsX=0;G.nsZ=19.6;G.ball.on=0;
@@ -13184,7 +13184,7 @@ function carrierBall(dt){const c=E.pl[E.poss][E.car];if(!c||sp.kind==='net'||E.f
 function frame(t){if(!ctx||!cv||!document.body.contains(cv)){ctx=null;cv=$('sgc');if(!cv||!sp){E.raf=0;return}ctx=cv.getContext('2d')}
  const dt=Math.min(.05,(t-(E.last||t))/1000);E.last=t;E.t+=dt;E.cheer=Math.max(0,E.cheer-dt*.45);const c=E.cam,fol=sp.kind==='goal'||sp.kind==='try'||sp.kind==='hoop',bx0=Math.max(-sp.L*.36,Math.min(sp.L*.36,E.ball.x)),tc=fol?(sp.kind==='hoop'?{x:bx0*.8,y:9.5,z:-15,lx:bx0*.8,ly:0,lz:1}:{x:bx0*.85,y:15,z:-31,lx:bx0*.85,ly:0,lz:3}):(E.tc||{x:sp.cam[0],y:sp.cam[1],z:sp.cam[2],lx:sp.cam[3],ly:sp.cam[4],lz:sp.cam[5]}),k=1-Math.pow(.03,dt);for(const q of['x','y','z','lx','ly','lz'])c[q]+=(tc[q]-c[q])*k;basis();
  playersUpdate(dt);carrierBall(dt);venue();
- const L=[];[0,1].forEach(sd=>E.pl[sd].forEach((p,i)=>L.push({z:-p.z,f:()=>person(p.x,0,p.z,tcol(sd),{id:sd+'_'+i,run:p.run,ph:p.ph,up:p.up,racket:sp.kind==='net'&&sp.n<=2&&!sp.table&&sp.icon!=='\u{1F3D0}',name:p.name,hair:sd?'#3b2a1a':'#111'})})));window.shx&&shx.begin();L.sort((a,b)=>b.z-a.z);L.forEach(o=>o.f());if(window.shx&&shx.on())shx.flush(E.cam,50,dt,cv,0);else window.dispatchEvent(new Event('shx-need'));
+ const L=[];[0,1].forEach(sd=>E.pl[sd].forEach((p,i)=>L.push({z:-p.z,f:()=>person(p.x,0,p.z,tcol(sd),{id:sd+'_'+i,run:p.run,ph:p.ph,up:p.up,racket:sp.kind==='net'&&sp.n<=2&&!sp.table&&sp.icon!=='\u{1F3D0}',name:p.name,hair:sd?'#3b2a1a':'#111'})})));window.shx&&shx.begin();L.sort((a,b)=>b.z-a.z);L.forEach(o=>o.f());if(window.shx&&shx.on())shx.flush(E.cam,50,dt,cv,0);else window.dispatchEvent(new Event('shx-need'));window.shMoment&&shMoment.tick();
  const b=E.ball,sh=pr(b.x,sp.table?.76:.03,b.z),B=pr(b.x,b.y,b.z);if(sh){ctx.fillStyle='#00000055';ctx.beginPath();ctx.ellipse(sh.x,sh.y,Math.max(2,sh.s*.18),Math.max(1,sh.s*.06),0,0,7);ctx.fill()}
  if(B){const r=Math.max(3,B.s*(sp.shuttle?.13:sp.kind==='try'?.28:sp.kind==='hoop'?.24:sp.n<=2&&sp.kind==='net'&&!sp.table?.1:.22));ctx.fillStyle=sp.kind==='try'?'#7a3b12':sp.kind==='hoop'?'#e06a1b':sp.shuttle?'#fff':sp.icon==='\u{1F3BE}'?'#d7f03a':'#fff';ctx.strokeStyle='#111';ctx.lineWidth=1.2;ctx.beginPath();if(sp.kind==='try')ctx.ellipse(B.x,B.y,r*1.3,r*.8,.3,0,7);else ctx.arc(B.x,B.y,r,0,7);ctx.fill();ctx.stroke()}
  E.fx=E.fx.filter(f=>(f.life-=dt)>0);E.fx.forEach(f=>{f.y+=f.vy*dt;f.vy-=9*dt;f.x+=f.vx*dt;f.z+=f.vz*dt;const P=pr(f.x,Math.max(0,f.y),f.z);if(P){ctx.globalAlpha=Math.min(1,f.life);ctx.fillStyle=f.c;ctx.fillRect(P.x,P.y,5,5);ctx.globalAlpha=1}});
@@ -13203,7 +13203,7 @@ async function rallyHit(fromSide,final,winner){if(E.rallying&&!final)return;E.ra
  await tween(t0,p=>{const x0=from.x===0&&from.z===0&&from.y<.3?sx:from.x,z0=from.z||sz;E.ball.x=x0+(tx-x0)*p;E.ball.z=z0+(tz-z0)*p;E.ball.y=Math.max(sp.table?.78:.05,hy*(1-p)+(sp.table?.35:sp.shuttle?3.2:3.6)*4*p*(1-p)*(1))});
  E.rallying=0;if(final){E.ball.y=sp.table?.78:.05}}
 /* a scored point/goal as a scene */
-async function scoreScene(ev){E.busy=1;E.free=1;const side=ev.side,sg=side?-1:1,L=sp.L,Wd=sp.W,pl=E.pl[side];SG.say&&SG.say(ev.text);
+async function scoreScene(ev){E.busy=1;E.free=1;window.shMoment&&shMoment.begin({word:ev.word,sub:ev.text,snapMs:2600});const side=ev.side,sg=side?-1:1,L=sp.L,Wd=sp.W,pl=E.pl[side];SG.say&&SG.say(ev.text);
  E.tc={x:sp.cam[0],y:sp.cam[1],z:sp.cam[2],lx:sp.cam[3],ly:sp.cam[4],lz:sp.cam[5]};
  if(sp.kind==='net'){let hs=side?0:1;const hits=3+Math.floor(Math.random()*4);for(let i=0;i<hits;i++){await rallyHit(hs,false);hs=hs?0:1;await wait(40)}
   // final ball lands in the loser's half
@@ -13321,6 +13321,40 @@ X.flush=(c,fovDeg,dt,host,y0)=>{if(!X.on())return false;if(!X.cv.parentNode||X.c
 X.reset=()=>{for(const[k,H]of gm)scene&&scene.remove(H.g);gm.clear()};
 if(location.hash==='#overlay'||/[?&]scene=/.test(location.search))X.load();
 window.addEventListener('shx-need',()=>X.load());
+})();
+
+/* 145 MOMENTS: key events (SIX, FOUR, WICKET, GOAL, POINT) become a branded poster and a short reel clip, captured from the 3D scene. The in-app 3D Live player lists them with Share / Save. Posting is done from the phone share sheet (no social API keys needed). */
+(function(){
+const isScene=()=>/[?&]scene=(ccast|sgame)\b/.test(location.search)&&location.hash==='#overlay';
+const M=window.shMoment={q:[],cur:null,comp:null,cx:null};
+const $=id=>document.getElementById(id);
+const mime=()=>{try{for(const t of(M.pref||['video/webm;codecs=vp9','video/webm','video/mp4;codecs=avc1','video/mp4'])){if(window.MediaRecorder&&MediaRecorder.isTypeSupported(t))return t}}catch(e){}return''};
+function ensure(){if(!M.comp){M.comp=document.createElement('canvas');M.comp.width=1280;M.comp.height=720;M.cx=M.comp.getContext('2d')}}
+function banner(c,w,t,sub){const g=c.createLinearGradient(0,380,0,720);g.addColorStop(0,'rgba(5,12,38,0)');g.addColorStop(1,'rgba(5,12,38,.92)');c.fillStyle=g;c.fillRect(0,380,1280,340);
+ c.fillStyle='#c4f000';c.font='900 96px Inter,Arial,sans-serif';c.textAlign='left';c.textBaseline='alphabetic';c.fillText(String(w||'').toUpperCase().slice(0,22),40,620);
+ c.fillStyle='#fff';c.font='700 32px Inter,Arial,sans-serif';const L=[];let line='';String(sub||'').split(/\s+/).forEach(x=>{const q=line?line+' '+x:x;if(c.measureText(q).width>1000&&line){L.push(line);line=x}else line=q});if(line)L.push(line);L.slice(0,2).forEach((l,i)=>c.fillText(l,40,665+i*38));
+ c.fillStyle='rgba(255,255,255,.75)';c.font='800 24px Inter,Arial,sans-serif';c.textAlign='right';c.fillText('SCORING HEROES  |  SH SPORTS SKY HIGH',1240,44);c.textAlign='left'}
+M.begin=function(o){if(!isScene()||M.cur)return;ensure();const cur=M.cur={id:'m'+Date.now(),word:o.word,sub:o.sub,t0:performance.now(),snapAt:performance.now()+(o.snapMs||2300),poster:'',chunks:[],rec:null};
+ try{const mt=mime();if(mt&&M.comp.captureStream){const rec=new MediaRecorder(M.comp.captureStream(30),{mimeType:mt,videoBitsPerSecond:2500000});rec.ondataavailable=e=>{if(e.data&&e.data.size)cur.chunks.push(e.data)};rec.onstop=()=>fin(cur,mt);rec.start(250);cur.rec=rec;cur.stopAt=performance.now()+(o.clipMs||7000)}}catch(e){cur.rec=null}
+ if(!cur.rec)cur.stopAt=cur.snapAt+300};
+function fin(cur,mt){const out={id:cur.id,word:cur.word,sub:cur.sub||'',poster:cur.poster,mime:mt||'',video:cur.chunks.length?new Blob(cur.chunks,{type:(mt||'video/webm').split(';')[0]}):null,ts:Date.now()};M.q.unshift(out);M.q.length=Math.min(M.q.length,8);M.cur=null;
+ try{if(window.parent&&window.parent!==window)window.parent.postMessage({shMoment:out},location.origin)}catch(e){try{window.parent.postMessage({shMoment:{...out,video:null}},location.origin)}catch(x){}}}
+M.tick=function(){const cur=M.cur;if(!cur)return;ensure();const c=M.cx,now=performance.now(),g=$('ccg')||$('sgc'),h=$('shx3');
+ if(g)c.drawImage(g,0,0,1280,720);if(h&&h.parentNode)try{c.drawImage(h,0,0,1280,720)}catch(e){}
+ const sub=cur.sub||(($('cct')||$('sgt')||{}).textContent||'');banner(c,cur.word,sub);
+ if(!cur.poster&&now>=cur.snapAt){cur.poster=M.comp.toDataURL('image/jpeg',.9);cur.sub=sub}
+ if(now>=cur.stopAt&&!cur.done){cur.done=1;if(cur.rec&&cur.rec.state!=='inactive')cur.rec.stop();else fin(cur,'')}};
+/* ---- parent app: collects moments from the 3D Live iframe ---- */
+UI.mom=UI.mom||[];
+const row=m=>`<div class="item" style="flex-wrap:wrap;gap:8px;align-items:flex-start"><img src="${m.poster}" style="width:150px;max-width:44%;border-radius:8px"><div style="flex:1;min-width:140px"><b>${esc(m.word)}</b><div class="mu sm">${esc(m.sub)}</div><div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap"><button class="btn sm" data-a="momShare" data-id="${esc(m.id)}" data-k="p">Share poster</button>${m.video?`<button class="btn sm" data-a="momShare" data-id="${esc(m.id)}" data-k="v">Share reel</button>`:''}<button class="btn sm ghost" data-a="momSave" data-id="${esc(m.id)}" data-k="p">Save</button></div></div></div>`;
+const html=()=>UI.mom.length?`<div class="card"><b>Moments for social media</b><div class="mu sm" style="margin-bottom:6px">Posters and short reels are made automatically for sixes, fours, wickets, goals and points. Tap Share to post from your phone.</div>${UI.mom.map(row).join('')}</div>`:`<div class="mu sm" style="margin-top:6px">Poster and reel clips appear here after the next six, four, wicket, goal or point.</div>`;
+window.addEventListener('message',e=>{if(e.origin!==location.origin||!e.data||!e.data.shMoment)return;const m=e.data.shMoment;if(UI.mom.some(x=>x.id===m.id))return;UI.mom.unshift(m);UI.mom.length=Math.min(UI.mom.length,8);const b=document.getElementById('momx');if(b)b.innerHTML=html()});
+const f=async(m,k)=>{if(k==='v'&&m.video)return{blob:m.video,name:m.id+(/mp4/.test(m.mime)?'.mp4':'.webm')};const r=await fetch(m.poster);return{blob:await r.blob(),name:m.id+'.jpg'}};
+Object.assign(A,{async momShare(d){const m=UI.mom.find(x=>x.id===d.id);if(!m)return;const {blob,name}=await f(m,d.k),file=new File([blob],name,{type:blob.type}),text=m.word+' '+m.sub+' #ScoringHeroes #SHSportsSkyHigh';
+  try{if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],text,title:'Scoring Heroes'});return}}catch(e){if(e&&e.name==='AbortError')return}
+  A.momSave(d);toast('Saved. Open your social app and attach it.')},
+ async momSave(d){const m=UI.mom.find(x=>x.id===d.id);if(!m)return;const {blob,name}=await f(m,d.k),u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{a.remove();URL.revokeObjectURL(u)},4000)}});
+const l0=XV.live3d;XV.live3d=function(){const o=l0.apply(this,arguments);return typeof o==='string'&&o.includes('id="l3f"')&&!o.includes('id="momx"')?o+'<div id="momx">'+html()+'</div>':o};
 })();
 </script>
 </body>
