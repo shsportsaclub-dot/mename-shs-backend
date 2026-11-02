@@ -1,3 +1,4 @@
+import {matchBroadcastSummary} from './scripts/original-cricket/broadcast.mjs';
 import {normalizeBall} from './scripts/original-cricket/core.mjs';
 // Read-only adapter for the existing /api/shared/matches/:id scorer format.
 const liveId=v=>typeof v==='string'&&/^[A-Za-z0-9_-]{1,100}$/.test(v);
@@ -36,10 +37,11 @@ export function scorerSnapshot(data,matchId){
   if(fielderMatches.length===1)ids.fielder=fielderMatches[0];
   const region=liveRegion(e.ang,hand),batter=String(playerData[e.bt]?.name||e.bt||'Batter'),bowler=String(playerData[e.bl]?.name||e.bl||'Bowler');
   const commentary=String(e.commentary||e.text||'').trim().slice(0,2000)||`${bowler} to ${batter}. ${e.w?e.w+' — wicket.':boundary==='FOUR'?'FOUR!':boundary==='SIX'?'SIX!':x==='wd'?'Wide.':x==='nb'?'No ball. '+r+' bat runs.':r?r+' run'+(r===1?'':'s')+'.':'No run.'}${region==='UNKNOWN'?'':' Toward '+region.toLowerCase().replaceAll('_',' ')+'.'}`;
-  const event={eventId:`${matchId}-i${index}-b${j}`,players:ids,batRuns,boundary,extraType,extraRuns,wicketType:wk||'NONE',...(wk?{dismissedPlayer:dismissed}:{}),shotRegion:region,hand,commentary,score:{...score},inning:index+1};
+  const event={savedWicketLabel:String(e.w||''),eventId:`${matchId}-i${index}-b${j}`,players:ids,batRuns,boundary,extraType,extraRuns,wicketType:wk||'NONE',...(wk?{dismissedPlayer:dismissed}:{}),shotRegion:region,hand,commentary,score:{...score},inning:index+1};
   try{normalizeBall(event);}catch{supported=false;}
   records.push({key:liveStable(e),event,supported,reason:supported?'':'This saved action needs unsupported details or complete player IDs'});
  }
+ context.broadcast=matchBroadcastSummary(records,context,score);
  return {matchId,epoch:liveStable([index,bpo,nbp,dis,pen]),records,score:{...score},context};
 }
 export class FeedCursor{
