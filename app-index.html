@@ -13226,7 +13226,7 @@ const PALS=[['#0b2a86','#1b55dc','#ffd84d',0],['#8a0f1f','#e0243a','#ffe08a',0],
 const MOTS=[['slide',0],['zoom',0],['drop',0],['rise',0],['wipe',0],['flip',1],['bounce',1]];
 const NF=3;try{if(!document.getElementById('fxfonts')){const l=document.createElement('link');l.id='fxfonts';l.rel='stylesheet';l.href='https://fonts.googleapis.com/css2?family=Teko:wght@500;600&family=Rajdhani:wght@600;700&family=Barlow+Condensed:ital,wght@0,700;0,800;1,800&display=swap';document.head.appendChild(l)}}catch(e){}
 const parse=id=>{const a=String(id||'').split('-').map(Number);return{s:a[0]||0,p:a[1]||0,m:a[2]||0,f:a[3]||0}};
-const isPrem=id=>{const q=parse(id);return !!((SHAPES[q.s]||[])[1]||(PALS[q.p]||[])[3]||(MOTS[q.m]||[])[1])};
+const isPrem=id=>{const q=parse(id);return !!((SHAPES[q.s]||[])[1]||(PALS[q.p]||[])[3])};
 const entitled=()=>{const u=S.user;return !!(u&&(u.role==='admin'||((S.settings.fxPremium||{})[u.phone])))};
 const rnd=(pool)=>{const f=()=>pool?0:1;for(let t=0;t<30;t++){const q={s:Math.random()*SHAPES.length|0,p:Math.random()*PALS.length|0,m:Math.random()*MOTS.length|0,f:Math.random()*NF|0},id=[q.s,q.p,q.m,q.f].join('-');if(pool||!isPrem(id))return id}return'0-0-0-0'};
 let seed=1;const sr=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296};
@@ -13282,7 +13282,31 @@ const CSS=`.fxhost{position:fixed;inset:0;container-type:size;pointer-events:non
 @keyframes fxpt{0%{transform:translate(0,0) scale(0);opacity:0}8%{opacity:1;transform:translate(0,0) scale(1)}100%{transform:translate(var(--x),var(--y)) scale(.3);opacity:0}}
 .fxshake .fxb{animation:fxshk .5s linear 0.55s 1}@keyframes fxshk{0%,100%{transform:translate(0)}20%{transform:translate(-.6cqw,.3cqw)}40%{transform:translate(.6cqw,-.3cqw)}60%{transform:translate(-.4cqw,-.2cqw)}80%{transform:translate(.4cqw,.2cqw)}}
 .fxth .fxw{top:30cqh;--dur:3.8s}.fxth .fxp-l{left:4cqw;bottom:20cqh;top:auto}.fxth .fxb{transform-origin:center}`;
-const st0=document.createElement('style');st0.textContent=CSS;document.head.appendChild(st0);
+
+/* LOCKED SIGNATURE MOTIONS: every graphic kind owns one entrance/exit that no other kind shares */
+const KSIG={
+four:['#2aa7ff',['0%{transform:translateX(-85cqw) skewX(-28deg);opacity:0}','11%{transform:translateX(3cqw) skewX(6deg);opacity:1}','15%,86%{transform:none;opacity:1}','100%{transform:translateX(85cqw) skewX(28deg);opacity:0}']],
+six:['#a95cff',['0%{transform:scale(.08) rotate(-220deg);opacity:0}','14%{transform:scale(1.22) rotate(9deg);opacity:1}','19%,86%{transform:none;opacity:1}','100%{transform:scale(2.2);opacity:0}']],
+bowled:['#ff3b3b',['0%{transform:translateY(-55cqh) rotate(-14deg);opacity:0}','9%{transform:translateY(2cqh) rotate(5deg);opacity:1}','13%,84%{transform:none;opacity:1}','100%{transform:translateY(70cqh) rotate(22deg);opacity:0}']],
+caught:['#ff8a1f',['0%{transform:translate(-45cqw,45cqh) scale(.4);opacity:0}','7%{transform:translate(-18cqw,-16cqh) scale(.8);opacity:1}','13%,86%{transform:none;opacity:1}','100%{transform:translateY(-50cqh);opacity:0}']],
+lbw:['#ffd21f',['0%{clip-path:inset(0 50% 0 50%);opacity:1}','13%,84%{clip-path:inset(0);opacity:1}','100%{clip-path:inset(50% 0 50% 0);opacity:1}']],
+stumped:['#ff4fa0',['0%{transform:perspective(70cqw) rotateY(95deg);opacity:0}','13%,86%{transform:perspective(70cqw) rotateY(0);opacity:1}','100%{transform:perspective(70cqw) rotateY(-95deg);opacity:0}']],
+runout:['#19d3b5',['0%{transform:translateX(95cqw) skewX(32deg);opacity:0}','7%{transform:translateX(-2cqw) skewX(-8deg);opacity:1}','11%,86%{transform:none;opacity:1}','100%{transform:translateX(-95cqw) skewX(-32deg);opacity:0}']],
+hitwkt:['#c4122f',['0%{transform:scale(1.9);filter:blur(16px);opacity:0}','12%{transform:scale(1);filter:blur(0);opacity:1}','86%{transform:none;filter:none;opacity:1}','100%{transform:scale(.5);filter:blur(12px);opacity:0}']],
+drs_bat:['#35e0ff',['0%{clip-path:inset(0 0 100% 0);opacity:1}','14%,84%{clip-path:inset(0);opacity:1}','100%{clip-path:inset(100% 0 0 0);opacity:1}']],
+drs_bowl:['#9be21b',['0%{clip-path:inset(100% 0 0 0);opacity:1}','14%,84%{clip-path:inset(0);opacity:1}','100%{clip-path:inset(0 0 100% 0);opacity:1}']],
+drs_out:['#ff2a2a',['0%{opacity:0}2%{opacity:1}4%{opacity:0}6%{opacity:1}8%{opacity:0}10%,86%{opacity:1}90%{opacity:0}93%{opacity:1}96%{opacity:0}100%{opacity:0}']],
+drs_not:['#2ee66b',['0%{transform:scale(.25);opacity:0}24%,86%{transform:none;opacity:1}100%{transform:scale(.25);opacity:0}']],
+drs_um:['#f5a623',['0%{transform:rotate(-360deg) scale(.15);opacity:0}15%{transform:none;opacity:1}86%{transform:none;opacity:1}100%{transform:rotate(360deg) scale(.15);opacity:0}']],
+fifty:['#ffc928',['0%{clip-path:circle(0% at 50% 50%);opacity:1}15%,84%{clip-path:circle(80% at 50% 50%);opacity:1}100%{clip-path:circle(0% at 50% 50%);opacity:1}']],
+hundred:['#fff1a8',['0%{transform:translateY(45cqh) scale(.5);opacity:0}12%{transform:translateY(-3cqh) scale(1.14);opacity:1}20%{transform:none;opacity:1}40%{transform:scale(1.045)}55%{transform:none}70%{transform:scale(1.045)}84%{transform:none;opacity:1}100%{transform:scale(1.7);opacity:0}']],
+hattrick:['#ff5a00',['0%{transform:scale(0);opacity:0}6%{transform:scale(1.15);opacity:1}10%{transform:scale(.78)}16%{transform:scale(1.22)}20%{transform:scale(.84)}26%{transform:scale(1.3)}31%,86%{transform:none;opacity:1}100%{transform:scale(0);opacity:0}']],
+rec_bat:['#5aa0ff',['0%{transform:translateX(-75cqw);opacity:0}12%{transform:none;opacity:1}86%{transform:none;opacity:1}100%{transform:translateY(32cqh);opacity:0}']],
+rec_bowl:['#ff6a6a',['0%{transform:perspective(60cqw) rotateX(-95deg);transform-origin:50% 100%;opacity:0}13%,86%{transform:perspective(60cqw) rotateX(0);transform-origin:50% 100%;opacity:1}100%{transform:perspective(60cqw) rotateX(95deg);transform-origin:50% 100%;opacity:0}']]};
+window.SH_KSIG=KSIG;
+const KCSS=Object.keys(KSIG).map(k=>`.fxw[data-k=${k}] .fxm{--an:fxk_${k}}.fxw[data-k=${k}] .fxb{border-bottom:.55cqw solid ${KSIG[k][0]}}@keyframes fxk_${k}{${KSIG[k][1].join('')}}`).join('\n');
+
+const st0=document.createElement('style');st0.textContent=CSS+KCSS;document.head.appendChild(st0);
 /* icons */
 const IC={
  ball:'<svg class="fxic" viewBox="0 0 100 100"><g class="ball"><circle cx="50" cy="50" r="40" fill="#d7263d"/><path d="M18 35C40 50 40 50 18 65M82 35C60 50 60 50 82 65" stroke="#fff" stroke-width="4" fill="none" stroke-dasharray="6 5"/></g></svg>',

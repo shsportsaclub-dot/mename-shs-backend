@@ -334,3 +334,7 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 - Graphics studio animations got gloss, sheen sweep, glow flare, text reveal, broadcast fonts (Rajdhani/Barlow Condensed/Teko), particle bursts on 4/6/50/100/hat-trick and a wicket shake.
 - Each score bar design has its own OBS link: `?bug=<id>#overlay` overrides the saved style, so different OBS sources can show different designs. Copy buttons in Stream and OBS > Score bar style.
 - Tests: tests/fx-studio.cjs, tests/bug-styles.cjs.
+
+## Locked unique graphic motions
+- Each of the 18 graphic kinds owns one locked entrance/exit animation (`SH_KSIG`, keyframes `fxk_<kind>`) and one accent colour; no two kinds share either. Style picker (shape/palette/font) cannot change a kind's motion; premium no longer depends on motion.
+- Test: tests/fx-unique.cjs (18 distinct bodies, 18 distinct colours, 18 keyframes registered).
