@@ -13320,7 +13320,7 @@ X.load=async function(){if(X.loading||X.ready||X.fail)return;X.loading=1;try{
 const tint=(hex)=>{let m=mats.get(hex);if(!m){m=gl.scene.getObjectByName('Beta_Surface').material.clone();m.color=new T.Color(hex).multiplyScalar(1.15);m.roughness=.55;m.metalness=.05;const j=gl.scene.getObjectByName('Beta_Joints').material.clone();j.color=new T.Color(hex).multiplyScalar(.45);m=[m,j];mats.set(hex,m)}return m};
 function cssToHex(c){const t=document.createElement('canvas').getContext('2d');t.fillStyle=c||'#2563eb';return t.fillStyle}
 function mk(id,o){const root=SU.clone(gl.scene),g=new T.Group();g.add(root);const mx=new T.AnimationMixer(root),acts={};for(const n of['idle','walk','run']){const a=mx.clipAction(gl.animations.find(c=>c.name===n),root);a.play();a.setEffectiveWeight(n==='idle'?1:0);acts[n]=a}
- const b=n=>root.getObjectByName('mixamorig'+n);const H={g,root,mx,acts,x:0,z:0,yaw:0,sp:0,w:{idle:1,walk:0,run:0},up:0,col:o.c,key:keyOf(o),ph:Math.random()*5,bn:{la:b('LeftArm'),ra:b('RightArm'),sp:b('Spine1'),hd:b('Head'),rh:b('RightHand'),fa:b('RightForeArm')},prop:null,propK:''};
+ const b=n=>root.getObjectByName('mixamorig'+n);const H={g,root,mx,acts,x:0,z:0,yaw:0,sp:0,w:{idle:1,walk:0,run:0},up:0,col:o.c,key:keyOf(o),ph:Math.random()*5,bn:{la:b('LeftArm'),ra:b('RightArm'),sp:b('Spine1'),hd:b('Head'),rh:b('RightHand'),fa:b('RightForeArm'),hp:b('Hips'),s0:b('Spine'),s2:b('Spine2'),nk:b('Neck'),lf:b('LeftForeArm'),lu:b('LeftUpLeg'),ll:b('LeftLeg'),ru:b('RightUpLeg'),rl:b('RightLeg')},prop:null,propK:''};
  const k=.98;root.scale.setScalar(k);scene.add(g);try{H.dress=X.D.dress(T,gl,root,g,{shirt:cssToHex(o.c),pants:o.pants?cssToHex(o.pants):undefined,kit:o.kit||'field',name:o.nm,photo:o.photo||null})}catch(e){console.warn('shx dress',e&&e.message)}g.traverse(m=>{if(m.isMesh)m.castShadow=true});return H}
 const keyOf=o=>[o.c,o.kit||'',o.nm||'',o.pants||'',o.photo?'p'+(o.photo.__k||''):''].join('|');
 const safeImg=im=>{try{const c=document.createElement('canvas');c.width=c.height=256;const x=c.getContext('2d'),s=Math.min(im.naturalWidth||im.width,im.naturalHeight||im.height),sx=((im.naturalWidth||im.width)-s)/2;x.drawImage(im,sx,0,s,s,0,0,256,256);x.getImageData(0,0,1,1);c.__k=String(im.src||'').length+'';return c}catch(e){return null}};
@@ -13329,6 +13329,15 @@ function prop(H,kind){if(H.propK===kind)return;if(H.prop){H.bn.rh.remove(H.prop)
  if(kind==='bat'){const bl=new T.Mesh(new T.BoxGeometry(.11,.7,.045),new T.MeshStandardMaterial({color:0xd9b26a,roughness:.7}));bl.position.set(0,-.2,0);const hd=new T.Mesh(new T.CylinderGeometry(.018,.018,.28),new T.MeshStandardMaterial({color:0x222}));hd.position.set(0,.3,0);g.add(bl,hd);g.scale.setScalar(1.6)}
  else{const f=new T.Mesh(new T.TorusGeometry(.16,.014,8,24),new T.MeshStandardMaterial({color:0xeeeeee}));f.scale.set(.8,1,1);f.position.set(0,.34,0);const h=new T.Mesh(new T.CylinderGeometry(.02,.02,.4),new T.MeshStandardMaterial({color:0x222}));h.position.set(0,.04,0);g.add(f,h);g.scale.setScalar(1.7)}
  H.root.updateMatrixWorld(true);const ws=new T.Vector3();H.bn.rh.getWorldScale(ws);g.scale.multiplyScalar(1/(ws.x||.01)*H.root.scale.x);g.rotation.set(0,0,kind==='bat'?Math.PI/2:-Math.PI/2);H.bn.rh.add(g);H.prop=g}
+/* original cricket stroke clip (right-hander, front-foot drive), t in seconds: ready 0-.2, backlift .2-.6, swing .6-.82 (contact at .8), follow-through .82-1.3, recovery 1.3-1.9. Whole body moves together: feet stay planted, hips lead, spine follows, both hands stay on the bat. */
+const sm=(a,b,x)=>{x=Math.max(0,Math.min(1,(x-a)/(b-a)));return x*x*(3-2*x)};
+function strokePose(B,t){const rc=1-sm(1.3,1.9,t),bk=(sm(.2,.6,t)-sm(.6,.8,t))*rc,sw=sm(.6,.82,t)*rc,ft=sm(.82,1.15,t)*rc,cr=sm(0,.2,t)*rc;
+ const P=(b,ax,ang)=>{if(b&&ang)b.quaternion.premultiply(qd(ax,ang))};
+ P(B.hp,'y',-.28*bk+.5*sw+.25*ft);P(B.hp,'x',.1*cr+.12*sw);
+ for(const s of[B.s0,B.sp,B.s2]){P(s,'y',-.18*bk+.28*sw+.3*ft);P(s,'x',.08*cr+.06*sw)}
+ P(B.nk,'y',.2*bk-.25*sw);P(B.hd,'y',.15*sw-.1*ft);
+ P(B.lu,'x',-.5*cr-.35*sw);P(B.ll,'x',.75*cr+.55*sw);P(B.ru,'x',-.35*cr);P(B.rl,'x',.6*cr);
+ P(B.la,'x',-.9*bk+1.1*sw);P(B.ra,'x',-.9*bk+1.1*sw);P(B.la,'z',-.5*ft);P(B.ra,'z',.5*ft)}
 const qd=(ax,a)=>new T.Quaternion().setFromAxisAngle(new T.Vector3(ax==='x'?1:0,ax==='y'?1:0,ax==='z'?1:0),a);
 X.begin=()=>{X.list.length=0};
 /* id: stable per person. o: {c colour, face:[x,z], run, up(0..1), swing(0..1), bat, racket, arm(0..1), k scale} */
@@ -13354,6 +13363,7 @@ X.flush=(c,fovDeg,dt,host,y0,opt)=>{if(!X.on())return false;if(!navigator.webdri
   if(o.bat){const s=o.swing||0;B.la.quaternion.premultiply(qd('x',-1.0));B.ra.quaternion.premultiply(qd('x',-1.0));if(B.sp)B.sp.quaternion.premultiply(qd('y',-1.3*s+.25))}
   if(o.racket&&!o.up){B.ra.quaternion.premultiply(qd('x',-.9))}
   if(o.arm){B.ra.quaternion.premultiply(qd('x',-3.4*Math.min(1,o.arm)))}
+  {const st=X.dbg!=null&&o.bat?X.dbg:o.stroke;if(st!=null&&o.bat)strokePose(B,st)}
   prop(H,o.bat?'bat':o.racket?'racket':'');
   if(H.dress)H.dress.update();
   H.g.visible=true}
