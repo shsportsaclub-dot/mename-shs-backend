@@ -4,6 +4,7 @@ const read=p=>fs.readFileSync(new URL('../'+p,import.meta.url),'utf8');
 const plain=s=>s.replace(/export (function|class) /g,'$1 ');
 const core=plain(read('scripts/original-cricket/core.mjs'));
 const hybrid=plain(read('scripts/original-cricket/hybrid.mjs'));
+const chase=plain(read('scripts/original-cricket/boundary-chase.mjs'));
 const camera=plain(read('scripts/original-cricket/camera.mjs'));
 const presentation=plain(read('scripts/original-cricket/presentation.mjs'));
 const avatars=plain(read('scripts/original-cricket/avatars.mjs'));
@@ -20,13 +21,13 @@ const runtime=read('scripts/original-cricket/runtime.js')+'\n'+read('scripts/ori
 const feed=plain(read('virtual-live-feed.mjs').replace(/^import .*;\n/gm,''));
 const studio='const HYBRID_TRACKER_WORKER='+JSON.stringify(read('scripts/original-cricket/hybrid-worker.js'))+';\n'+read('scripts/original-cricket/hybrid-studio.js');
 const connect=read('scripts/original-cricket/connect.js');
-const script=core+'\n'+hybrid+'\n'+camera+'\n'+presentation+'\n'+avatars+'\n'+avatarStudy+'\n'+avatarModel+'\n'+expressions+'\n'+equipment+'\n'+motion+'\n'+motionSkin+'\n'+scenery+'\n'+broadcast+'\n'+post+'\n'+runtime+'\n'+feed+'\n'+connect+'\n'+studio;
+const script=core+'\n'+hybrid+'\n'+chase+'\n'+camera+'\n'+presentation+'\n'+avatars+'\n'+avatarStudy+'\n'+avatarModel+'\n'+expressions+'\n'+equipment+'\n'+motion+'\n'+motionSkin+'\n'+scenery+'\n'+broadcast+'\n'+post+'\n'+runtime+'\n'+feed+'\n'+connect+'\n'+studio;
 new vm.Script(script,{filename:'original-virtual-live.html'});
-const html=read('scripts/original-cricket/template.html').replace('/*__CORE__*/',core).replace('/*__RUNTIME__*/',hybrid+'\n'+camera+'\n'+presentation+'\n'+avatars+'\n'+avatarStudy+'\n'+avatarModel+'\n'+expressions+'\n'+equipment+'\n'+motion+'\n'+motionSkin+'\n'+scenery+'\n'+broadcast+'\n'+post+'\n'+runtime+'\n'+feed+'\n'+connect+'\n'+studio);
+const html=read('scripts/original-cricket/template.html').replace('/*__CORE__*/',core).replace('/*__RUNTIME__*/',hybrid+'\n'+chase+'\n'+camera+'\n'+presentation+'\n'+avatars+'\n'+avatarStudy+'\n'+avatarModel+'\n'+expressions+'\n'+equipment+'\n'+motion+'\n'+motionSkin+'\n'+scenery+'\n'+broadcast+'\n'+post+'\n'+runtime+'\n'+feed+'\n'+connect+'\n'+studio);
 fs.writeFileSync(new URL('../public/original-virtual-live.html',import.meta.url),html);
 
 // The one-character asset study has no source tracker or scorer adapter.
-const avatarScript='window.SH_AVATAR_STUDY=true;\n'+core+'\n'+hybrid+'\n'+camera+'\n'+presentation+'\n'+avatars+'\n'+avatarStudy+'\n'+avatarModel+'\n'+expressions+'\n'+equipment+'\n'+motion+'\n'+motionSkin+'\n'+scenery+'\n'+broadcast+'\n'+post+'\n'+runtime+'\n'+read('scripts/original-cricket/avatar-study-ui.js');
+const avatarScript='window.SH_AVATAR_STUDY=true;\n'+core+'\n'+hybrid+'\n'+chase+'\n'+camera+'\n'+presentation+'\n'+avatars+'\n'+avatarStudy+'\n'+avatarModel+'\n'+expressions+'\n'+equipment+'\n'+motion+'\n'+motionSkin+'\n'+scenery+'\n'+broadcast+'\n'+post+'\n'+runtime+'\n'+read('scripts/original-cricket/avatar-study-ui.js');
 new vm.Script(avatarScript,{filename:'original-avatar.html'});
 const avatarHtml=read('scripts/original-cricket/template.html').replace('/*__CORE__*/',avatarScript).replace('/*__RUNTIME__*/','').replace('</head>',read('scripts/original-cricket/avatar-study-style.html')+'</head>').replace(/<title>[^<]*<\/title>/,'<title>Scoring Heroes · One Original Avatar</title>');
 fs.writeFileSync(new URL('../public/original-avatar.html',import.meta.url),avatarHtml);
