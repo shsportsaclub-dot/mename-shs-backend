@@ -8,7 +8,7 @@ await p.evaluate(()=>{window.pullLive=async()=>{};window.fetch=()=>new Promise((
  const img=c.toDataURL('image/png');window.__img=img;
  const bt=(id,n)=>({batsman:{id,name:n,playerImg:img},r:12,b:30,'4s':1,'6s':0,sr:40,'dismissal-text':'batting'});
  const bbb=[[1,0],[4,0]].map(([r],i)=>({inning:1,over:3,ball:i+1,runs:r,bruns:r,batRuns:r,batsman:'Shadman Islam',bowler:'Justin Greaves'}));
- UI.wm={m:{id:'a1',name:'BAN v WI',started:true,ended:false,type:'test',teams:[{name:'Bangladesh',short:'BAN'},{name:'West Indies',short:'WI'}],score:[{inning:'Bangladesh Inning 1',r:36,w:1,o:3.2}],status:'Live'},mi:{},sc:{scorecard:[{inning:'Bangladesh Inning 1',batting:[bt('p1','Shadman Islam'),bt('p2','Mominul Haque')],bowling:[{bowler:{id:'p3',name:'Justin Greaves',playerImg:img},o:1,m:0,r:4,w:0}]}]},bb:{bbb},tab:'live'};UI.view='wmatch';render();shV3dOpen()});
+ UI.wm={m:{id:'a1',name:'BAN v WI',started:true,ended:false,type:'test',teams:[{name:'Bangladesh',short:'BAN'},{name:'West Indies',short:'WI'}],score:[{inning:'Bangladesh Inning 1',r:36,w:1,o:3.2}],status:'Live'},mi:{},sc:{scorecard:[{inning:'Bangladesh Inning 1',batting:[bt('p1','Shadman Islam'),Object.assign(bt('p2','Mominul Haque'),{batsman:{id:'p2',name:'Mominul Haque',playerImg:img+'#other'}})],bowling:[{bowler:{id:'p3',name:'Justin Greaves',playerImg:img},o:1,m:0,r:4,w:0}]}]},bb:{bbb},tab:'live'};UI.view='wmatch';render();shV3dOpen()});
 await p.waitForTimeout(1500);
 const r=await p.evaluate(()=>{const im=document.querySelector('#v3dcards img');return {src:im?im.src.slice(0,30):'',same:im?im.src===window.__img:null,btn:document.getElementById('v3dtn').textContent}});
 ok(/^data:image\/png/.test(r.src)&&r.same===false,'illustrated card '+JSON.stringify(r));
