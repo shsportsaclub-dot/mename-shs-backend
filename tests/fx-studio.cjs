@@ -10,11 +10,11 @@ await p.evaluate(()=>{const m=demoMatch();S.matches=[m];S.stream.mid=m.id;const 
 await p.waitForTimeout(300);await p.screenshot({path:'/tmp/fx-sheet.png',fullPage:true});
 // 2) watcher
 await p.reload();await p.waitForTimeout(500);
-await p.evaluate(()=>{const m=window.__m=demoMatch();S.matches=[m];S.stream.mid=m.id;S.stream.fx={on:true,mode:'fixed',sel:{},pr:0,big:'off'}});
+await p.evaluate(()=>{const m=window.__m=demoMatch();S.matches=[m];S.stream.mid=m.id;S.stream.fx={on:true,mode:'fixed',sel:{},pr:0,d3:false};S.stream.gfx={rules:{six:{kind:'six'},four:{kind:'four'},bowled:{kind:'bowled'}}}});
 await p.evaluate(()=>shFxWatch());
-const fire=async(patch,kind)=>{await p.evaluate(patch=>{S.matches=[window.__m];S.stream.mid=window.__m.id;const m=ovMatch(),s=st(m),e0=s.inn.ev[s.inn.ev.length-1];s.inn.ev.push(Object.assign({},e0,patch));shFxWatch()},patch);await p.waitForSelector('#fxhost .fxw[data-k="'+kind+'"]',{timeout:5000});await p.waitForTimeout(400)};
+const fire=async(patch,kind)=>{await p.evaluate(patch=>{S.stream.fx=Object.assign({on:true,mode:'fixed',sel:{},pr:0},S.stream.fx,{d3:false});S.stream.gfx=Object.assign({},S.stream.gfx,{rules:{six:{kind:'six'},four:{kind:'four'},bowled:{kind:'bowled'}}});S.matches=[window.__m];S.stream.mid=window.__m.id;const m=ovMatch(),s=st(m),e0=s.inn.ev[s.inn.ev.length-1];s.inn.ev.push(Object.assign({},e0,patch));shFxWatch()},patch);await p.waitForSelector('#fxhost .fxw[data-k="'+kind+'"]',{timeout:12000});await p.waitForTimeout(400)};
 await fire({r:6,x:'',w:undefined,out:undefined},'six');await p.screenshot({path:'/tmp/fx-six.png'});
-await p.waitForTimeout(4600);
+await p.waitForTimeout(6500);
 await fire({r:0,x:'',w:'Bowled',out:await p.evaluate(()=>{S.matches=[window.__m];S.stream.mid=window.__m.id;const s=st(ovMatch());return s.inn.ev[s.inn.ev.length-1].bt})},'bowled');await p.screenshot({path:'/tmp/fx-bowled.png'});
 assert(await p.evaluate(()=>shFx.isPrem('5-0-0-0')&&!shFx.isPrem('1-2-3-0')),'premium flags');
 assert.deepEqual(errs.filter(e=>!/at render/.test(e)),[]);console.log('PASS fx studio');await b.close()})().catch(e=>{console.error('FAIL',e.message);process.exit(1)})

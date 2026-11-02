@@ -5,5 +5,5 @@ const r=await pg.evaluate(()=>{const K=window.SH_KSIG,ks=Object.keys(K);const bo
 const css=[...document.styleSheets].flatMap(s=>{try{return [...s.cssRules]}catch(e){return[]}}).filter(x=>x.type===7||x.name).map(x=>x.name);
 return{n:ks.length,uniqBody:new Set(bodies).size,uniqCol:new Set(cols).size,kf:ks.filter(k=>css.includes('fxk_'+k)).length}});
 console.log(JSON.stringify(r));
-if(r.n!==31||r.uniqBody!==31||r.uniqCol!==31||r.kf!==31){console.log('FAIL');process.exit(1)}
+if(r.n!==47||r.uniqBody!==47||r.uniqCol!==47||r.kf!==47){console.log('FAIL');process.exit(1)}
 console.log('PASS fx unique');await b.close()})();

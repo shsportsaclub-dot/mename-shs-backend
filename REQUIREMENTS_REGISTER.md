@@ -348,3 +348,11 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 - Player cards (batter at 50/100, bowler at 3rd and 5th wicket), stat cards (batter/bowler figures), Top-5 leaderboards (runs, wickets, sixes) built from the live match, and a yellow 3D REPLAY stinger. Every kind keeps a locked unique motion (31 total, tests/fx-unique.cjs).
 - Countdown timer: studio card starts it on the overlay, or its own link `?scene=timer&min=3&label=INNINGS%20BREAK&look=ring|digital|bar#overlay`.
 - Not built from shutterstock clips (previews cannot be viewed here); everything is original code.
+
+## Graphics control engine, 3D titles, pack library
+- 3D metallic titles (`shglyph.js`, `shfx3d.js`) with CSS fallback when WebGL missing.
+- Event bus -> rules -> templates/themes -> queue -> overlay (see docs/GRAPHICS_ARCHITECTURE.md).
+- Control API: `/api/gfx/take`, `/api/gfx/poll` (tests/gfx-api.test.mjs).
+- Animation pack library + PNG-sequence packs (`public/packs/sh_png_v1`).
+- New kinds: panel_win, panel_h2h, stat_part, g3_toss/vs/intro/result, lb_*, stat_bat/bowl; 47 locked unique motions.
+- Tests: fx-studio, fx-unique, bug-styles, gfx-api all PASS.

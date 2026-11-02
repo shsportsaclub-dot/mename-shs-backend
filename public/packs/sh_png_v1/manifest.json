@@ -1,0 +1,54 @@
+{
+  "version": "1.0.0",
+  "format": "RGBA PNG sequence",
+  "fps": 12,
+  "canvas": [
+    960,
+    540
+  ],
+  "background": "transparent",
+  "packs": [
+    {
+      "id": "SH_BND_001",
+      "name": "Boundary Ribbon",
+      "label": "FOUR",
+      "frames": 18,
+      "path": "SH_BND_001/frame_%03d.png"
+    },
+    {
+      "id": "SH_SIX_001",
+      "name": "Orbit Six",
+      "label": "SIX",
+      "frames": 18,
+      "path": "SH_SIX_001/frame_%03d.png"
+    },
+    {
+      "id": "SH_WKT_001",
+      "name": "Stump Shatter",
+      "label": "WICKET",
+      "frames": 18,
+      "path": "SH_WKT_001/frame_%03d.png"
+    },
+    {
+      "id": "SH_DRS_001",
+      "name": "DRS Scanner",
+      "label": "REVIEW",
+      "frames": 18,
+      "path": "SH_DRS_001/frame_%03d.png"
+    },
+    {
+      "id": "SH_100_001",
+      "name": "Century Rise",
+      "label": "CENTURY",
+      "frames": 18,
+      "path": "SH_100_001/frame_%03d.png"
+    },
+    {
+      "id": "SH_VS_001",
+      "name": "Versus Split",
+      "label": "TEAM A  VS  TEAM B",
+      "frames": 18,
+      "path": "SH_VS_001/frame_%03d.png"
+    }
+  ]
+}

@@ -1154,6 +1154,35 @@ routes['POST /api/avatars/generate'] = async (req, body) => {
   } catch (e) { return [504, { ok: false, error: 'The GPU worker did not answer in time' }]; }
 };
 // Batch mode for a GPU that cannot be reached from outside (e.g. a free Lightning AI Studio): an admin queues players here, the Studio runs gpu-worker/batch.py, which reads the queue and pushes finished avatars back, both authenticated with the shared AVATAR_GPU_KEY.
+// Graphics control API (Flowics-style operator control): external tools queue graphics per stream key, the overlay polls them.
+const GFX = new Map();
+const gfxOk = k => /^[A-Za-z0-9_-]{8,64}$/.test(String(k || ''));
+const gfxStr = (v, n) => String(v == null ? '' : v).slice(0, n);
+const gfxData = d => {
+  const o = {}; if (!d || typeof d !== 'object') return o;
+  for (const f of ['title', 'sub', 'sub2', 'n', 'num', 'word', 'label', 'team', 'vs', 'head']) if (d[f] != null) o[f] = gfxStr(d[f], 80);
+  if (d.photo && /^https:\/\//.test(String(d.photo)) && String(d.photo).length < 500) o.photo = String(d.photo);
+  if (Array.isArray(d.cols)) o.cols = d.cols.slice(0, 6).map(c => [gfxStr(c && c[0], 12), gfxStr(c && c[1], 16)]);
+  if (Array.isArray(d.rows)) o.rows = d.rows.slice(0, 8).map(r => ({ n: gfxStr(r && r.n, 40), v: gfxStr(r && r.v, 16), sub: gfxStr(r && r.sub, 40) }));
+  return o;
+};
+routes['POST /api/gfx/take'] = routes['GET /api/gfx/take'] = async (req, body) => {
+  const k = String(body.k || ''), kind = String(body.kind || '');
+  if (!gfxOk(k)) return [403, { ok: false, error: 'Bad key' }];
+  if (!/^[a-z0-9_]{2,24}$/.test(kind)) return [400, { ok: false, error: 'Bad kind' }];
+  let q = GFX.get(k); if (!q) { if (GFX.size > 500) GFX.delete(GFX.keys().next().value); q = { seq: 0, items: [], hits: [] }; GFX.set(k, q); }
+  const now = Date.now(); q.hits = q.hits.filter(t => now - t < 10000); if (q.hits.length >= 20) return [429, { ok: false, error: 'Too fast' }]; q.hits.push(now);
+  let data = body.data; if (typeof data === 'string') { try { data = JSON.parse(data); } catch { data = {}; } }
+  if (!data || typeof data !== 'object') data = {}; for (const f of ['title', 'sub', 'sub2', 'n', 'num', 'word', 'label']) if (body[f] != null && data[f] == null) data[f] = body[f];
+  q.items.push({ id: ++q.seq, kind, data: gfxData(data), style: /^\d{1,2}-\d{1,2}-\d-\d$/.test(String(body.style || '')) ? String(body.style) : '', t: now });
+  q.items = q.items.filter(i => now - i.t < 120000).slice(-30);
+  return [200, { ok: true, id: q.seq }];
+};
+routes['GET /api/gfx/poll'] = async (req, body) => {
+  const k = String(body.k || ''); if (!gfxOk(k)) return [403, { ok: false }];
+  const q = GFX.get(k) || { seq: 0, items: [] }, after = body.after === '' || body.after == null ? null : +body.after;
+  return [200, { ok: true, seq: q.seq, items: after == null ? [] : q.items.filter(i => i.id > after) }];
+};
 const avKey = req => { const k = process.env.AVATAR_GPU_KEY; return !!k && String(req.headers['x-avatar-key'] || '') === k; };
 routes['POST /api/avatars/queue'] = async (req, body) => {
   const s = grUser(req); if (!s || s.u.role !== 'admin') return [403, { ok: false, error: 'Only an admin can queue avatars' }];
@@ -2228,12 +2257,19 @@ http.createServer(async (req, res) => {
         url: f.url, type: f.type === 'mp4' ? 'video/mp4' : 'application/vnd.apple.mpegurl' }));
     return out(200, { ok: true, matchId, territory, feeds, reason: feeds.length ? null : 'No authorized stream configured for this match and territory' });
   }
-  if (req.method === 'GET' && /^\/vendor\/(three\.core\.js|three\.module\.js|GLTFLoader\.js|SkeletonUtils\.js|BufferGeometryUtils\.js|shdress\.js|shstadium\.js|shbody\.js|shbat\.js|Xbot\.glb)$/.test(path)) {   // 3D engine and the animated human model used by the game streams
+  if (req.method === 'GET' && /^\/vendor\/(three\.core\.js|three\.module\.js|GLTFLoader\.js|SkeletonUtils\.js|BufferGeometryUtils\.js|shdress\.js|shstadium\.js|shbody\.js|shbat\.js|shglyph\.js|shfx3d\.js|Xbot\.glb)$/.test(path)) {   // 3D engine and the animated human model used by the game streams
     try {
       const f = path.slice('/vendor/'.length), body = fs.readFileSync(new URL('./public/vendor/' + f, import.meta.url));
       res.writeHead(200, { 'content-type': f.endsWith('.glb') ? 'model/gltf-binary' : 'text/javascript; charset=utf-8', 'cache-control': 'public, max-age=604800', 'access-control-allow-origin': '*', 'x-content-type-options': 'nosniff' });
       return res.end(body);
     } catch { return out(404, { ok: false, error: 'Asset unavailable' }); }
+  }
+  if (req.method === 'GET' && /^\/packs\/[a-z0-9_]{3,32}\/(manifest\.json|[A-Z0-9_]{3,24}\/frame_\d{3}\.png)$/.test(path)) {   // drop-in transparent PNG sequence packs
+    try {
+      const f = path.slice('/packs/'.length), body = fs.readFileSync(new URL('./public/packs/' + f, import.meta.url));
+      res.writeHead(200, { 'content-type': f.endsWith('.json') ? 'application/json' : 'image/png', 'cache-control': 'public, max-age=86400', 'access-control-allow-origin': '*', 'x-content-type-options': 'nosniff' });
+      return res.end(body);
+    } catch { return out(404, { ok: false, error: 'Pack file unavailable' }); }
   }
   if (req.method === 'GET' && path === '/broadcast-demo') {
     try {
