@@ -21,7 +21,7 @@ export function cricketCamera({mode='auto',time=0,active=false,event={},resolve=
    const p=camMix(fieldStart,fieldEnd,camClamp(fieldTime/flight));return shot('FIELDING',camAdd(p,[7,4,8*handed]),camAdd(ball,[0,.5,0]),.9);
   }
   const a=(event.angle||0)*Math.PI/180;
-  return shot(event.lofted?'AERIAL BALL FOLLOW':'BALL FOLLOW',camAdd(ball,[-Math.cos(a)*13,event.lofted?6:4,-Math.sin(a)*13+8*handed]),ball,.9);
+  const u=camClamp((time-2.9)/.40),blend=u*u*(3-2*u),eye=camAdd(ball,[-Math.cos(a)*13,event.lofted?6:4,-Math.sin(a)*13+8*handed]);return shot(event.lofted?'AERIAL BALL FOLLOW':'BALL FOLLOW',camMix(camAdd(batter,[2.8,1.9,4.8*handed]),eye,blend),camMix(camAdd(batter,[.8,1,0]),ball,blend),.85+.05*blend);
  }
  const resultTime=time-resolve;
  if(event.wicketType&&event.wicketType!=='NONE'){
@@ -32,3 +32,6 @@ export function cricketCamera({mode='auto',time=0,active=false,event={},resolve=
  if(event.outcome==='DOT')return portrait('BOWLER REACTION',bowler,-1);
  return portrait('BATTER REACTION',batter,handed);
 }
+
+// Explicit diagnostic views, all rendered from one original demonstration delivery.
+export function cricketStudyCamera(index,{batter,bowler,fieldEnd}){const close=(name,p,offset,target=[0,1,0],fov=.65)=>({name,eye:camAdd(p,offset),target:camAdd(p,target),fov});if(index<2)return close(index===0?'01 RUN-UP':'02 RELEASE',bowler,[-4,1.65,5.1],[0,1.05,0],.68);if(index<5)return close(['','','03 FOOTWORK','04 CONTACT','05 FOLLOW-THROUGH'][index],batter,[3.1,1.45,4.7],[.30,1.0,0],.60);return close('06 FIELDING',fieldEnd,[4.4,1.65,5.4],[0,.78,0],.62);}

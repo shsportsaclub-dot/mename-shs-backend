@@ -9,7 +9,7 @@ export function cricketEquipment(height=1.85){
  return {units:'metres',ballSize:1,ballRadius:.2265/(2*Math.PI),ballCircumference:.2265,batLength:.86*scale,handleLength:.25*scale,bladeLength:.61*scale,bladeWidth:Math.min(.108,.104*scale),bladeDepth:.035*scale,handleRadius:.0155*scale,handWidth:.078*scale,gripSpacing:.084*scale};
 }
 export function bowlingHandTarget(t){const a=Math.max(-.45,Math.min(.6,t-2))*Math.PI*2.4;return [.25,1.38+Math.cos(a)*.58,Math.sin(a)*.58];}
-export function fitBatToHands({grip,tip,height=1.85,hand='RIGHT',oneHand=false}){
+export function fitBatToHands({grip,tip,height=1.85,hand='RIGHT',oneHand=false,shoulders=[[-.205,1.32,0],[.205,1.32,0]]}){
  const equipment=cricketEquipment(height),h=height/1.85,local={};for(const key of ['batLength','handleLength','bladeLength','bladeWidth','bladeDepth','handleRadius','gripSpacing'])local[key]=equipment[key]/h;
  const axis=gearUnit(gearSub(tip,grip)),preferred=[0,0,1];let front=gearSub(preferred,gearMul(axis,gearDot(axis,preferred)));if(Math.hypot(...front)<1e-5)front=gearSub([0,1,0],gearMul(axis,axis[1]));front=gearUnit(front);const side=gearUnit(gearCross(front,axis));
  const palmOffset=local.handleRadius+.010,order=hand==='LEFT'?1:-1,offsets=oneHand?[null,0]:[order*local.gripSpacing/2,-order*local.gripSpacing/2];let center=grip.slice();
@@ -17,7 +17,7 @@ export function fitBatToHands({grip,tip,height=1.85,hand='RIGHT',oneHand=false})
  // Project the shared grip into both arm reach spheres. Both palms remain on
  // the same handle, rather than independently clamping and leaving it floating.
  for(let iteration=0;iteration<32;iteration++)for(let i=0;i<2;i++){
-  const target=targets()[i];if(!target)continue;const shoulder=[i?.205:-.205,1.32,0],delta=gearSub(target,shoulder),length=Math.hypot(...delta),reach=.659;
+  const target=targets()[i];if(!target)continue;const shoulder=shoulders[i],delta=gearSub(target,shoulder),length=Math.hypot(...delta),reach=.659;
   if(length>reach)center=gearAdd(center,gearMul(delta,reach/length-1));
  }
  const palms=targets(),butt=gearSub(center,gearMul(axis,local.handleLength*.44)),bladeStart=gearAdd(butt,gearMul(axis,local.handleLength)),toe=gearAdd(butt,gearMul(axis,local.batLength)),bladeCenter=gearAdd(bladeStart,gearMul(axis,local.bladeLength*.6));

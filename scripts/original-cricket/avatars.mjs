@@ -31,9 +31,9 @@ export function originalAvatarMeshes(){
    return [x,y,z];
   },true);
  }
- const profile=[[.79,.145,.102],[.86,.155,.106],[.98,.147,.101],[1.10,.171,.115],[1.22,.205,.128],[1.32,.218,.119],[1.38,.192,.105],[1.46,.078,.068]];
+ const profile=[[.84,.170,.118],[.92,.165,.116],[1.04,.147,.101],[1.17,.171,.115],[1.32,.205,.128],[1.43,.218,.119],[1.47,.192,.105],[1.52,.078,.068]];
  result.jersey=avatarSurface(30,32,(u,v)=>{const pos=u*(profile.length-1),index=Math.min(profile.length-2,Math.floor(pos)),f=pos-index,a=profile[index],b=profile[index+1],y=a[0]+(b[0]-a[0])*f,rx=a[1]+(b[1]-a[1])*f,rz=a[2]+(b[2]-a[2])*f,angle=v*Math.PI*2,fold=.0025*Math.sin(angle*9+y*43)*Math.sin(u*Math.PI);return [Math.sin(angle)*(rx+fold),y,Math.cos(angle)*(rz+fold)];});
- result.neck=avatarSurface(12,32,(u,v)=>{const a=v*Math.PI*2,r=.061+Math.max(0,.35-u)*.03;return [Math.sin(a)*r,1.36+u*.20,Math.cos(a)*r*.9];});
+ result.neck=avatarSurface(12,32,(u,v)=>{const a=v*Math.PI*2,r=.061+Math.max(0,.35-u)*.03;return [Math.sin(a)*r,1.46+u*.13,Math.cos(a)*r*.9];});
  result.helmet=avatarSurface(16,36,(u,v)=>{const a=.01+u*Math.PI/2,b=v*Math.PI*2;return [Math.sin(b)*Math.sin(a)*.125,Math.cos(a)*.154,Math.cos(b)*Math.sin(a)*.133];},true);
  result.hair=avatarSurface(14,32,(u,v)=>{const a=.01+u*Math.PI*.56,b=v*Math.PI*2,ripple=.0015*Math.sin(b*23+a*11);return [Math.sin(b)*Math.sin(a)*(.1+ripple),Math.cos(a)*.15,Math.cos(b)*Math.sin(a)*(.104+ripple)];},true);
  return result;
