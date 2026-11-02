@@ -342,3 +342,9 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 ## Original score bar themes (no shared template)
 - Replaced the near-identical strip/glass/corner/mini bars. Score bar themes now: hex (reference), neon, heritage, dial, ladder, news, stumps, chase, led, split, duo, island, classic. Each has its own structure, palette, typeface, entrance animation and own link `?bug=<id>#overlay`. Old saved ids fall back to hex.
 - Animations are time-anchored (`--el`) so periodic overlay re-renders do not restart them.
+
+## Big moments pack (from the user's reference screenshots)
+- 4 and 6 now fire as huge animated numerals in 5 original looks (speed lines, comic burst, sticker, umpire board with crossed arms, ball crash); random per boundary or locked by the admin; palette-themeable. Toggle back to banner bars in Graphics studio.
+- Player cards (batter at 50/100, bowler at 3rd and 5th wicket), stat cards (batter/bowler figures), Top-5 leaderboards (runs, wickets, sixes) built from the live match, and a yellow 3D REPLAY stinger. Every kind keeps a locked unique motion (31 total, tests/fx-unique.cjs).
+- Countdown timer: studio card starts it on the overlay, or its own link `?scene=timer&min=3&label=INNINGS%20BREAK&look=ring|digital|bar#overlay`.
+- Not built from shutterstock clips (previews cannot be viewed here); everything is original code.
