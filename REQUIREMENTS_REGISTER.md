@@ -338,3 +338,7 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 ## Locked unique graphic motions
 - Each of the 18 graphic kinds owns one locked entrance/exit animation (`SH_KSIG`, keyframes `fxk_<kind>`) and one accent colour; no two kinds share either. Style picker (shape/palette/font) cannot change a kind's motion; premium no longer depends on motion.
 - Test: tests/fx-unique.cjs (18 distinct bodies, 18 distinct colours, 18 keyframes registered).
+
+## Original score bar themes (no shared template)
+- Replaced the near-identical strip/glass/corner/mini bars. Score bar themes now: hex (reference), neon, heritage, dial, ladder, news, stumps, chase, led, split, duo, island, classic. Each has its own structure, palette, typeface, entrance animation and own link `?bug=<id>#overlay`. Old saved ids fall back to hex.
+- Animations are time-anchored (`--el`) so periodic overlay re-renders do not restart them.
