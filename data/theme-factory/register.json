@@ -113,5 +113,73 @@
   "source": "public/themes/src/royal-shield-v6/ (user-supplied flat stills)",
   "sample": "docs/sample_RS_mh.png",
   "status": "BUILT_PROTOTYPE (CSS-3D real-time, verified headless; NOT 4K rendered, NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-SCR-021",
+  "name": "Batting Scorecard",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield.html?screen=sc",
+  "events": [
+   "SCORECARD_SHOWN"
+  ],
+  "states": [
+   "ENTER",
+   "HOLD",
+   "EXIT",
+   "UPDATE via data()"
+  ],
+  "sample": "docs/sample_RS_sc.png",
+  "status": "BUILT_PROTOTYPE (CSS-3D real-time, verified headless; NOT 4K rendered, NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-SCR-022",
+  "name": "Partnership",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield.html?screen=pt",
+  "events": [
+   "PARTNERSHIP_UPDATE"
+  ],
+  "states": [
+   "ENTER",
+   "HOLD",
+   "EXIT",
+   "UPDATE via data()"
+  ],
+  "sample": "docs/sample_RS_pt.png",
+  "status": "BUILT_PROTOTYPE (CSS-3D real-time, verified headless; NOT 4K rendered, NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-SCR-023",
+  "name": "Innings Summary",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield.html?screen=is",
+  "events": [
+   "INNINGS_ENDED"
+  ],
+  "states": [
+   "ENTER",
+   "HOLD",
+   "EXIT",
+   "UPDATE via data()"
+  ],
+  "sample": "docs/sample_RS_is.png",
+  "status": "BUILT_PROTOTYPE (CSS-3D real-time, verified headless; NOT 4K rendered, NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-SCR-024",
+  "name": "Match Result",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield.html?screen=rs",
+  "events": [
+   "MATCH_RESULT"
+  ],
+  "states": [
+   "ENTER",
+   "HOLD",
+   "EXIT",
+   "UPDATE via data()"
+  ],
+  "sample": "docs/sample_RS_rs.png",
+  "status": "BUILT_PROTOTYPE (CSS-3D real-time, verified headless; NOT 4K rendered, NOT approved)"
  }
 ]
