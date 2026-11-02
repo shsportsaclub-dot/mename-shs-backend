@@ -299,3 +299,6 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 
 ## Profile avatar view (virtual match)
 - "Profile avatar" button in the Virtual match screen opens a 3-tab live 3D view of the batter on strike: Face likeness (no helmet, provider/admin photo on the head when available), Full body + kit, Batting action (looping stroke). Built in code; uses each player's own photo.
+
+## Cartoon player avatars (shAvatar, block 145)
+- Vector portrait avatars generated in code (skin, hair style/colour, eyes, brows, beard, collar jersey in team colour, team logo and name). Deterministic from the player name, so each player keeps the same avatar. Used in the Virtual match player cards when no provider photo exists, and as the "Avatar" tab of Profile avatar (real photo shown as a small round badge when available).
