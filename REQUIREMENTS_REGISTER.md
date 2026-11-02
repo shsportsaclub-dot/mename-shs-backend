@@ -275,3 +275,7 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 - public/vendor/shstadium.js builds the stadium in code: sky with clouds, striped turf with blade layer, pitch with creases, stumps, ad boards, two-tier crowd stands, roof canopy with struts, big screen, floodlight towers, sun shadows. Falls back to the flat 2D stadium if WebGL is unavailable.
 - Humans get a stylised face (brows, eyes, nose, beard, hair); each ball starts with a short low-angle hero close-up of the batter.
 - Honest limit: stylised game look, not photoreal.
+
+## Real player faces on 3D heads
+- Virtual match: when the data provider supplies a usable photo (not the CRICKET DATA badge, loaded with CORS), it is wrapped on the front of the 3D head (shdress photoCap); otherwise the stylised face is used. Test: v3d-face-photo.
+- Limit: the provider has no photos for many players; those keep the stylised face and initials.

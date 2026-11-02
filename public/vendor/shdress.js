@@ -34,6 +34,10 @@ function faceGroup(T,skin,beard,hair){const g=new T.Group(),mat=(c,r)=>new T.Mes
  if(beard){const bd=new T.Mesh(new T.SphereGeometry(.094,18,10,Math.PI*.15,Math.PI*1.7,Math.PI*.6,Math.PI*.22),mat('#17110d',1));bd.scale.set(1,1,1.02);bd.position.set(0,-.012,.006);g.add(bd);const mo=new T.Mesh(new T.BoxGeometry(.05,.008,.01),mat('#17110d',1));mo.position.set(0,-.03,.1);g.add(mo)}
  if(hair){const h=new T.Mesh(new T.SphereGeometry(.102,18,10,Math.PI*.5,Math.PI,0,Math.PI*.5),mat(hair,.9));h.position.set(0,.002,-.006);g.add(h)}
  g.scale.setScalar(1.22);return g}
+/* the player's real photo wrapped on the front of the head (used when the data provider supplies a usable picture) */
+function photoCap(T,img){window.__shPhoto=(window.__shPhoto||0)+1;const t=new T.CanvasTexture(img);t.colorSpace=T.SRGBColorSpace;t.anisotropy=4;
+ const w=img.width||256,h=img.height||256,side=Math.min(w,h);t.repeat.set(side/w*.86,side/h*.9);t.offset.set((1-t.repeat.x)/2,Math.max(0,(1-t.repeat.y)*.4));
+ const m=new T.Mesh(new T.SphereGeometry(.125,28,18,Math.PI/2-.55,1.1,Math.PI*.3,Math.PI*.4),new T.MeshStandardMaterial({map:t,roughness:.85,metalness:0,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2}));return m}
 export function dress(T,gl,root,g,o){const pal=palette(T,o),kit=o.kit||'field';
  const shirtMat=matCache.get('s')||(matCache.set('s',new T.MeshStandardMaterial({color:0xffffff,vertexColors:true,roughness:.62,metalness:.04})),matCache.get('s'));
  let names=null;root.traverse(m=>{if(m.isSkinnedMesh&&!names)names=m.skeleton.bones.map(b=>b.name)});
@@ -46,7 +50,7 @@ export function dress(T,gl,root,g,o){const pal=palette(T,o),kit=o.kit||'field';
  if(kit==='bat')add('head',helmet(T,hcol));
  else if(kit==='bowl'||kit==='field'||kit==='wk')add('head',cap(T,hcol));
  else if(kit==='ump')add('head',hat(T));
- {const sk=pal.skin.getStyle?'#'+pal.skin.getHexString():'#c68a5a';const bd=(o.name||'').length%3!==1;add('face',faceGroup(T,sk,bd,(kit==='bat'||kit==='ump')?null:'#1a1410'))}
+ {const sk=pal.skin.getStyle?'#'+pal.skin.getHexString():'#c68a5a';const bd=(o.name||'').length%3!==1;add('face',o.photo?photoCap(T,o.photo):faceGroup(T,sk,bd,(kit==='bat'||kit==='ump')?null:'#1a1410'))}
  if(kit==='bat'||kit==='wk'){for(const s of['l','r']){const p=new T.Mesh(new T.BoxGeometry(.13,.5,.07),M(T,kit==='wk'?'#e9e4d2':'#f5f5f2',.7));add('pad'+s,p)}}
  if(kit==='bat'||kit==='wk')for(const s of['l','r']){const gv=new T.Mesh(new T.SphereGeometry(kit==='wk'?.075:.06,10,8),M(T,kit==='wk'?'#d8c9a0':'#f2f2f2',.8));add('gl'+s,gv)}
  let plane=null;if(o.name&&kit!=='ump'){const t=nameTex(T,o.name,'#ffffff');plane=new T.Mesh(new T.PlaneGeometry(.4,.15),new T.MeshBasicMaterial({map:t,transparent:true,depthWrite:false}));plane.rotation.y=Math.PI;K.add(plane)}
