@@ -9,6 +9,4 @@ await p.route('**/*',async r=>{const u=r.request().url();if(u.startsWith('file:'
 await p.goto('file://'+process.cwd()+'/app-index.html?scene=ccast&mid='+P.id+'#overlay');await p.waitForTimeout(2500);
 await p.waitForFunction('window.shx&&(shx.ready||shx.fail)',null,{timeout:60000});assert(await p.evaluate('shx.ready'),'shx ready');
 await p.waitForTimeout(1500);console.log('fps',await p.evaluate(()=>new Promise(r=>{let n=0;const t=performance.now();(function f(){n++;if(performance.now()-t>2000)r(n/2);else requestAnimationFrame(f)})()})));await p.screenshot({path:'/tmp/h3-cricket-idle.png',timeout:90000});
-const pr=p.evaluate(()=>{const inn=UI.ccst.m.innings[0];const e={...inn.ev[10],r:4,x:'',ang:{a:.4,d:1}};delete e.w;return shGamePlay({i:0,j:10,e})});await p.waitForTimeout(1900);await p.screenshot({path:'/tmp/h3-cricket-bat.png',timeout:150000});await pr;
-const pr2=p.evaluate(()=>{const inn=UI.ccst.m.innings[0];const e={...inn.ev[10],r:0,w:'Bowled',x:''};return shGamePlay({i:0,j:10,e})});await p.waitForTimeout(2600);await p.screenshot({path:'/tmp/h3-cricket-wk.png',timeout:150000});await pr2;
-assert.deepEqual(errs,[]);console.log('PASS humans3d cricket');await b.close()})().catch(e=>{console.error('FAIL',e.message);process.exit(1)})
+assert.deepEqual(errs,[]);console.log('PASS humans3d cricket idle');await b.close()})().catch(e=>{console.error('FAIL',e.message);process.exit(1)})

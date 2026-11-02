@@ -260,3 +260,7 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 ## Virtual match viewer uses the real 3D humans too (block 144 + shV3dOpen)
 - The in-app "Virtual match" screen (provider matches) now draws the same animated 3D human models for striker, non-striker, bowler, fielders and umpire, in the same camera, with a bat in the striker's hand. The button reads "Players: 3D" and switches to the older flat photo figures ("Players: Photo"). If WebGL or the model is unavailable, or the device is slow, it uses the flat figures automatically.
 - Tests: tests/v3d-3d-humans.cjs.
+
+## In-code player kit (no purchased assets)
+- public/vendor/shdress.js builds jerseys (team colour via vertex colours), helmet+grill, caps, umpire hat, pads, gloves, surname name-plate on back, all from code on the open Xbot rig.
+- Used by cricket, all-sports streams and Virtual match via shx; tests: humans3d*, v3d-3d-humans.
