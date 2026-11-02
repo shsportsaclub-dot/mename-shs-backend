@@ -282,3 +282,7 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 
 ## Kit detail (code only)
 - Gold collar ring, gold sleeve bands, chest logo (SH / SCORING HEROES) on every kitted player; chin beard instead of cheek patches.
+
+## Admin-uploaded player face photos
+- Admin: Virtual match -> "Face photo" -> pick player, choose a picture; it is cropped to a small JPEG and saved on the server (POST /api/faces, admin only, max 600 players, 90 KB each). Everyone then sees it on the 3D head and player card (GET /api/faces?names=). Tests: player-faces.test.mjs, v3d-face-upload.cjs.
+- Photos are only those an admin uploads; nothing is scraped from other sites.

@@ -1113,6 +1113,24 @@ const grAvg = g => { const r = g.revs || []; return r.length ? Math.round(r.redu
 const grNm = v => String(v || '').replace(/[<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, 60);
 const grUser = req => { const phone = readSession((req.headers.authorization || '').replace(/^Bearer /, '')), u = phone && db.users[phone]; if (u) promote(u, phone); return u ? { phone, u } : null; };
 const grLL = b => { const lat = +b.lat, lng = +b.lng; return Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180 && !(lat === 0 && lng === 0) ? { lat: +lat.toFixed(6), lng: +lng.toFixed(6) } : null; };
+// Player face photos uploaded by an admin (never scraped). Shown on the 3D player's head and player card in the virtual match. One small JPEG per player name.
+const faceKey = n => String(n || '').toLowerCase().replace(/[^a-z ]/g, '').replace(/\s+/g, ' ').trim().slice(0, 60);
+routes['POST /api/faces'] = async (req, body) => {
+  const s = grUser(req); if (!s || s.u.role !== 'admin') return [403, { ok: false, error: 'Only an admin can add player photos' }];
+  const k = faceKey(body.name); if (k.length < 2) return [400, { ok: false, error: 'Give the player name' }];
+  const img = String(body.img || ''); if (!/^data:image\/jpeg;base64,[A-Za-z0-9+\/=]+$/.test(img)) return [400, { ok: false, error: 'Send a JPEG photo' }];
+  if (img.length > 90000) return [413, { ok: false, error: 'Photo is too large, try a smaller one' }];
+  db.faces = db.faces || {}; if (!db.faces[k] && Object.keys(db.faces).length >= 600) return [409, { ok: false, error: 'Photo limit reached' }];
+  db.faces[k] = { img, name: String(body.name).slice(0, 60), t: Date.now(), by: s.phone }; saveDb(); return [200, { ok: true, n: Object.keys(db.faces).length }];
+};
+routes['POST /api/faces/delete'] = async (req, body) => {
+  const s = grUser(req); if (!s || s.u.role !== 'admin') return [403, { ok: false, error: 'Only an admin can remove player photos' }];
+  if (db.faces) delete db.faces[faceKey(body.name)]; saveDb(); return [200, { ok: true }];
+};
+routes['GET /api/faces'] = async (req, body) => {
+  const out = {}; String(body.names || '').split('|').slice(0, 60).forEach(n => { const k = faceKey(n), f = db.faces && db.faces[k]; if (f) out[k] = f.img; });
+  return [200, { ok: true, faces: out }];
+};
 routes['GET /api/grounds'] = async (req, body) => {
   const p = grLL(body), all = Object.values(grBag());
   if (!p) return [200, { ok: true, items: all.slice(-30).reverse().map(g => grPub(g)) }];
@@ -2617,7 +2635,7 @@ http.createServer(async (req, res) => {
   const h = routes[req.method + ' ' + pth];
   if (!h) return out(404, { ok: false, error: 'Not found' });
   let raw = '';
-  for await (const c of req) { raw += c; if (raw.length > (pth === '/api/paper' ? 300000 : pth === '/api/admin/home-config' ? 400000 : pth === '/api/grounds/photo' ? 330000 : pth === '/api/editorial' ? 120000 : 20000)) return out(413, { ok: false, error: 'Too large' }); }
+  for await (const c of req) { raw += c; if (raw.length > (pth === '/api/paper' ? 300000 : pth === '/api/admin/home-config' ? 400000 : pth === '/api/grounds/photo' ? 330000 : pth === '/api/faces' ? 130000 : pth === '/api/editorial' ? 120000 : 20000)) return out(413, { ok: false, error: 'Too large' }); }
   let body = {};
   try { body = raw ? (raw.trim().startsWith('{') ? JSON.parse(raw) : Object.fromEntries(new URLSearchParams(raw))) : {}; } catch { return out(400, { ok: false, error: 'Bad body' }); }
   if (req.method === 'GET') body = { ...Object.fromEntries(new URL(req.url, 'http://x').searchParams), ...body };
