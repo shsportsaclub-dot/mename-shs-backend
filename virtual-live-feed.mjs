@@ -9,10 +9,12 @@ export function scorerSnapshot(data,matchId){
  const bpo=Number(m.bpo)||6,nbp=Number(m.nbp)||1,index=Number.isInteger(m.cur)?m.cur:0,inn=m.innings[index];
  if(!Number.isInteger(bpo)||bpo<1||bpo>12||!Number.isInteger(nbp)||nbp<1||nbp>7)throw new Error('Unsupported match format');
  const playerData=data.players||{},batTeam=inn?.bat,fieldTeam=inn?.bowl,fieldingXI=(m.xi?.[fieldTeam]||[]).map(String),battingXI=(m.xi?.[batTeam]||[]).map(String);
- const roster=Object.entries(playerData).filter(([id])=>liveId(id)).map(([id,p])=>({id,name:String(p?.name||id).slice(0,100),team:fieldingXI.includes(id)?'field':'bat',number:Number(p?.jersey)||undefined,role:String(p?.role||''),hand:/left/i.test(p?.bat||'')?'LEFT':'RIGHT'}));
- const keeper=fieldingXI.find(id=>/^(wk|wicket.?keeper)$/i.test(playerData[id]?.role||''))||null;
+ const roster=Object.entries(playerData).filter(([id])=>liveId(id)).map(([id,p])=>({id,name:String(p?.name||id).slice(0,100),team:fieldingXI.includes(id)?'field':'bat',number:Number(p?.jersey)||undefined,role:String(p?.role||''),bowlingStyle:String(p?.bowl||'').slice(0,100),hand:/left/i.test(p?.bat||'')?'LEFT':'RIGHT'}));
+ const keeper=fieldingXI.includes(m.keeper?.[fieldTeam])?m.keeper[fieldTeam]:fieldingXI.find(id=>/^(wk|wicket.?keeper)$/i.test(playerData[id]?.role||''))||null;
  const cur=inn?.cur||{};const currentPlayers=[cur.s,cur.n,cur.bl].every(liveId)?{striker:cur.s,nonStriker:cur.n,bowler:cur.bl}:null;
- const context={matchId,title:[data.teams?.[m.a]?.name||m.a,data.teams?.[m.b]?.name||m.b].join(' vs '),venue:String(m.venue||''),status:String(m.status||''),bpo,inning:index+1,roster,fieldingXI,keeper,currentPlayers};
+ const teams=[m.a,m.b].map(tid=>{const xi=(m.xi?.[tid]||[]).map(String).filter(liveId);return {id:tid,name:String(data.teams?.[tid]?.name||tid||'Team').slice(0,100),xi,captain:xi.includes(m.cap?.[tid])?m.cap[tid]:null};});
+ const toss=teams.some(t=>t.id===m.toss)&&['bat','bowl'].includes(m.dec)?{winner:m.toss,decision:m.dec}:null;
+ const context={teams,toss,matchId,title:[data.teams?.[m.a]?.name||m.a,data.teams?.[m.b]?.name||m.b].join(' vs '),venue:String(m.venue||''),status:String(m.status||''),bpo,inning:index+1,roster,fieldingXI,keeper,currentPlayers};
  const score={runs:0,wickets:0,legalBalls:0},records=[];
  const dis=Array.isArray(inn?.dis)?inn.dis:[],pen=Array.isArray(inn?.pen)?inn.pen:[];
  for(const p of pen)score.runs+=Math.max(0,Number(p.r)||0);
