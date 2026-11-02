@@ -320,3 +320,6 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 
 ## Virtual match TV camera
 - Virtual match 3D default camera is now a TV broadcast view (high, behind the bowler's end, batter facing the camera); hero close-ups still blend in on each ball. Button "Camera: TV / Batter" switches back to the old behind-the-batter view.
+
+## Score bar styles (OBS overlay)
+- Six broadcast score bar designs drawn in code: Pro hexagon (default; team-logo circles, blue batters panel, centre hexagon, magenta bowler panel), Full-width strip, Glass card, Corner card, Mini score, Classic. Picker in Stream and OBS ("Score bar style", `S.stream.bug`); the default overlay and OBS bug scene use the chosen style. Test: tests/bug-styles.cjs. Not yet applied to the 3D game scene (its own HUD).

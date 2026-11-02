@@ -904,6 +904,7 @@ function overlayHTML(prev){
     bug=`<div class="ovbug"><div class="ovr1"><div>${logo(s.bat,34)}<span class="ovtm">${esc(s.bat.short)}</span></div><div class="ovsc"><span>${k.runs}-${k.wk}</span><span class="ovov" style="color:var(--oc)">${fmtOv(k.lg)}</span></div><div class="ovov">${s.i===1?'NEED '+Math.max(0,s.need)+' FROM '+s.left:'CRR '+s.crr.toFixed(2)}</div></div>
     <div class="ovr2"><span>${c.s!=null?bt(c.s)+' *':''}${c.n!=null?' &nbsp; '+bt(c.n):''}</span><span>${c.bl&&bw?esc(sh(c.bl))+' '+fmtOv(bw.b)+'-'+bw.m+'-'+bw.r+'-'+bw.w+(thisO?' | '+thisO:''):''}</span></div></div>`}
   else bug=`<div class="ovbug"><div class="ovr1"><div><span class="ovtm">${esc(A.short)} v ${esc(B.short)}</span></div><div class="ovsc">${ovl(m,1)}</div></div></div>`;
+  if(window.shBug&&s){const bs=S.stream.bug||'hex';if(bs!=='classic'){const h=window.shBug(m,bs);if(h)bug=h}}
   let gfx='';
   if(z.gfx&&s){const k=s.k;
     const G={bat:()=>`<h4>${esc(s.bat.name)} batting</h4>`+s.inn.used.filter(id=>!k.bat[id].out).map(id=>`<div class="l"><span>${esc(nm(id))}</span><b>${k.bat[id].r} (${k.bat[id].b})</b></div>`).join(''),
@@ -13146,6 +13147,75 @@ const o0=overlayHTML;overlayHTML=function(prev){if(!sceneNow())return o0.apply(t
 const url=()=>location.href.split('#')[0].split('?')[0]+'?scene=ccast&mid='+encodeURIComponent(CC.id||'auto')+'#overlay';
 Object.assign(C,{ccPick(v){CC.id=v==='auto'?'':v;CC.m=null;CC.shown=null;render()}});
 Object.assign(A,{ccCopy(){try{navigator.clipboard.writeText(url());toast('URL copied')}catch(e){toast(url(),6000)}},ccOpen(){window.open(url(),'_blank','noopener')}});
+})();
+
+/* SCORE BAR STYLES: several broadcast designs, all drawn in code (no downloaded art). S.stream.bug picks one; the default overlay and OBS bug scene use it. */
+(function(){
+const css=document.createElement('style');css.textContent=`
+.bgx{position:absolute;font-family:var(--dsp,system-ui);color:#fff;text-shadow:0 1px 2px #0009}
+.bgc{flex:none;width:9cqw;height:9cqw;border-radius:50%;background:#050b22;border:.45cqw solid #f2c14e;box-shadow:0 0 0 .25cqw #0b2a86 inset,0 .5cqw 1.4cqw #000a;display:grid;place-items:center;overflow:hidden;z-index:3;font-weight:900;font-size:2.2cqw}
+.bgc.r{border-color:#ff5a6a;box-shadow:0 0 0 .25cqw #7a0f3c inset,0 .5cqw 1.4cqw #000a}
+.bgc img,.bgc svg{width:72%;height:72%;object-fit:contain}
+.bgx-hex{left:2.5cqw;right:2.5cqw;bottom:3.2cqw;height:9.5cqw;display:flex;align-items:center}
+.bgx-hex .bgp{flex:1;min-width:0;margin-left:-1.4cqw;margin-right:-.8cqw;height:7cqw;padding:0 4cqw 0 3cqw;display:flex;flex-direction:column;justify-content:center;gap:.5cqw;overflow:hidden;background:linear-gradient(90deg,#0a2478,#1b55dc);clip-path:polygon(0 0,98% 0,100% 50%,98% 100%,0 100%);border-top:.2cqw solid #7fa6ff;border-bottom:.2cqw solid #7fa6ff}
+.bgx-hex .bgw{margin-left:-.8cqw;margin-right:-1.4cqw;padding:0 3cqw 0 4cqw;background:linear-gradient(90deg,#5a1c9e,#b5157c 60%,#d6203f);clip-path:polygon(2% 0,100% 0,100% 100%,2% 100%,0 50%);display:grid;grid-template-columns:1.2fr 1fr;gap:.3cqw 2cqw;align-content:center}
+.bgx-hex .bgp,.bgx-hex .bgw{box-shadow:inset 0 0 3cqw #0006}
+.bgn{display:flex;align-items:center;gap:1.4cqw;font-size:1.75cqw;font-weight:800;text-transform:uppercase;white-space:nowrap}
+.bgn b{background:linear-gradient(90deg,#ffb300,#ff8a00);color:#1b1200;text-shadow:none;transform:skew(-14deg);padding:.25cqw 1.8cqw;min-width:13cqw;flex:none}
+.bgn b i{font-style:normal;display:inline-block;transform:skew(14deg)}
+.bgn span{opacity:.95}
+.bgh{flex:none;width:11.4cqw;height:11.4cqw;position:relative;z-index:4;background:#f2c14e;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);display:grid;place-items:center;filter:drop-shadow(0 .4cqw .8cqw #000a)}
+.bgh:before{content:"";position:absolute;inset:.45cqw;background:linear-gradient(#143aa8,#071445);clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%)}
+.bgh>div{position:relative;text-align:center;line-height:1.12}
+.bgh .s{font-size:2.8cqw;font-weight:900}.bgh .y{color:#ffe14d;font-weight:900;font-size:1.5cqw}.bgh .o{font-size:1.45cqw;font-weight:800}.bgh .t{font-size:1.1cqw;white-space:nowrap;font-weight:700;opacity:.9;text-transform:uppercase;max-width:9cqw;margin:0 auto}
+.bgw .a{font-size:1.75cqw;font-weight:800;text-transform:uppercase;white-space:nowrap}.bgw .a.y{color:#ffe14d;overflow:hidden;text-overflow:ellipsis}
+.bgx-strip{left:0;right:0;bottom:0;height:7.4cqw;display:flex;align-items:center;gap:2cqw;padding:0 3cqw;background:linear-gradient(90deg,#06102f,#0d2260 55%,#1a0f4d);border-top:.35cqw solid var(--oa,#ff3b50)}
+.bgx-strip .bgc{width:5.4cqw;height:5.4cqw;border-width:.3cqw;font-size:1.5cqw}
+.bgx-strip .sc{font-size:3.6cqw;font-weight:900;white-space:nowrap}.bgx-strip .sc small{font-size:1.9cqw;opacity:.85;margin-left:1cqw;font-weight:700}
+.bgx-strip .bt{font-size:1.9cqw;font-weight:700;line-height:1.35;white-space:nowrap}.bgx-strip .bt b{color:#ffd84d}
+.bgx-strip .dv{width:.2cqw;height:4.6cqw;background:#ffffff40}
+.bgx-strip .gr{margin-left:auto;font-size:1.9cqw;font-weight:700;line-height:1.35;text-align:right;white-space:nowrap}
+.bgd{display:inline-flex;gap:.5cqw;margin-left:.8cqw;vertical-align:middle}.bgd span{width:2.1cqw;height:2.1cqw;border-radius:50%;background:#ffffff30;display:grid;place-items:center;font-size:1.15cqw;font-weight:900}.bgd .f{background:#c4f000;color:#07182d}.bgd .s{background:#ff6b6b}.bgd .w{background:#ff2d55}
+.bgx-glass{left:50%;transform:translateX(-50%);bottom:3.5cqw;width:72cqw;padding:1.1cqw 2.2cqw;border-radius:2cqw;background:linear-gradient(135deg,#0b1a4ad9,#14286e99);border:.2cqw solid #ffffff55;backdrop-filter:blur(14px) saturate(1.3);-webkit-backdrop-filter:blur(14px) saturate(1.3);box-shadow:0 1cqw 3cqw #0007}
+.bgx-glass .t1{display:flex;align-items:center;gap:1.6cqw}.bgx-glass .bgc{width:5.6cqw;height:5.6cqw;border-width:.25cqw;font-size:1.5cqw}
+.bgx-glass .sc{font-size:3.8cqw;font-weight:900}.bgx-glass .ov{font-size:2cqw;font-weight:700;opacity:.9}.bgx-glass .rt{margin-left:auto;font-size:1.9cqw;font-weight:800;color:#ffe14d}
+.bgx-glass .t2{display:flex;justify-content:space-between;gap:2cqw;margin-top:.6cqw;padding-top:.6cqw;border-top:.15cqw solid #ffffff40;font-size:1.9cqw;font-weight:700}
+.bgx-glass b{color:#ffe14d}
+.bgx-corner{right:2.5cqw;top:3cqw;width:25cqw;border-radius:1.2cqw;overflow:hidden;background:#07102fee;border:.2cqw solid #ffffff33;box-shadow:0 .8cqw 2.4cqw #0008}
+.bgx-corner .h{display:flex;align-items:center;gap:1.2cqw;padding:1cqw 1.6cqw;background:linear-gradient(90deg,var(--oa,#ff3b50),#7a1030)}.bgx-corner .bgc{width:4.4cqw;height:4.4cqw;border-width:.25cqw;font-size:1.3cqw}
+.bgx-corner .h b{font-size:2.2cqw;letter-spacing:.1cqw}.bgx-corner .sc{padding:1cqw 1.6cqw 0;font-size:4.4cqw;white-space:nowrap;font-weight:900;line-height:1}.bgx-corner .sc small{white-space:nowrap;font-size:2cqw;font-weight:700;opacity:.85;margin-left:.8cqw}
+.bgx-corner .ln{padding:.5cqw 1.6cqw;font-size:1.8cqw;font-weight:700;display:flex;justify-content:space-between;gap:1cqw}.bgx-corner .ln b{color:#ffe14d}.bgx-corner .ft{padding:.8cqw 1.6cqw 1.1cqw;font-size:1.6cqw;opacity:.9;border-top:.15cqw solid #ffffff30;margin-top:.5cqw}
+.bgx-mini{left:2.5cqw;top:3cqw;display:flex;align-items:stretch;border-radius:.9cqw;overflow:hidden;box-shadow:0 .5cqw 1.5cqw #0008}
+.bgx-mini .a{background:var(--oa,#ff3b50);padding:.8cqw 1.4cqw;font-size:2.2cqw;font-weight:900;display:flex;align-items:center;gap:.9cqw}.bgx-mini .b{background:#07102fee;padding:.8cqw 1.6cqw;font-size:2.6cqw;font-weight:900}.bgx-mini .b small{font-size:1.7cqw;font-weight:700;opacity:.85;margin-left:.8cqw}
+.bgst{display:flex;gap:.8cqw;flex-wrap:wrap;margin:6px 0}.bgst button{border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:10px;padding:8px 12px;font-weight:700;font-size:13px}.bgst button.on{background:var(--ac,#c4f000);color:#07182d;border-color:transparent}`;document.head.appendChild(css);
+const sr=b=>b&&b.b?(b.r*100/b.b).toFixed(0):'0';
+const crest=t=>{if(!t)return'';const h=logo(t,64);return h};
+function data(m){const s=st(m);if(!s)return null;const c=s.inn.cur||{},k=s.k,L=overList(m,s.i),bw=c.bl?k.bowl[c.bl]:null,thisO=(s.inn.lg%BPO===0?[]:L[L.length-1]?L[L.length-1].b:[]),b1=c.s!=null?(k.bat[c.s]||{r:0,b:0,f4:0,f6:0}):null,b2=c.n!=null?(k.bat[c.n]||{r:0,b:0,f4:0,f6:0}):null;
+ const econ=bw&&bw.b?(bw.r*BPO/bw.b).toFixed(1):'0.0';
+ return{s,k,bat:s.bat,bowl:s.bowl,runs:k.runs,wk:k.wk,ov:fmtOv(k.lg),crr:s.crr.toFixed(2),chase:s.i===1,need:Math.max(0,s.need||0),left:s.left,
+  s1:c.s!=null?{n:sh(c.s),b:b1}:null,s2:c.n!=null?{n:sh(c.n),b:b2}:null,bw:c.bl&&bw?{n:sh(c.bl),o:fmtOv(bw.b),m:bw.m,r:bw.r,w:bw.w,e:econ}:null,this:thisO}}
+const dots=a=>`<span class="bgd">${(a||[]).slice(-6).map(x=>{const l=String(x.lab||x.r||'');return`<span class="${/W/i.test(l)?'w':l==='6'?'s':l==='4'?'f':''}">${esc(l)}</span>`}).join('')}</span>`;
+const bl=(x)=>x?`${x.b.r}${x.b.b?' ('+x.b.b+')':''}`:'';
+const ST={
+ hex(d){const row=(p,st)=>p?`<div class="bgn"><b><i>${esc(p.n)}${st?' *':''}</i></b><span>${p.b.r} (${p.b.b}) &nbsp; SR ${sr(p.b)}</span></div>`:'';
+  return `<div class="bgx bgx-hex"><div class="bgc">${crest(d.bat)||esc(d.bat.short)}</div><div class="bgp">${row(d.s1,1)}${row(d.s2,0)}</div>
+  <div class="bgh"><div><div class="s">${d.runs}/${d.wk}</div><div class="y">${d.chase?'NEED '+d.need:'CRR '+d.crr}</div><div class="o">${d.ov} OV</div><div class="t">${d.chase?d.left+' BALLS':esc(d.bat.short)}</div></div></div>
+  <div class="bgw">${d.bw?`<div class="a y">${esc(d.bw.n)}</div><div class="a">OVERS ${d.bw.o}</div><div class="a">ECON ${d.bw.e}</div><div class="a">MAIDENS ${d.bw.m}</div><div class="a">RUNS ${d.bw.r}</div><div class="a">WKTS ${d.bw.w}</div>`:`<div class="a y">${esc(d.bowl.name)}</div><div class="a">BOWLING</div>`}</div><div class="bgc r">${crest(d.bowl)||esc(d.bowl.short)}</div></div>`},
+ strip(d){return `<div class="bgx bgx-strip"><div class="bgc">${crest(d.bat)||esc(d.bat.short)}</div><div class="sc">${esc(d.bat.short)} ${d.runs}-${d.wk}<small>${d.ov} ov</small></div><div class="dv"></div>
+  <div class="bt">${d.s1?`<div>${esc(d.s1.n)}* <b>${d.s1.b.r}</b> (${d.s1.b.b})</div>`:''}${d.s2?`<div>${esc(d.s2.n)} <b>${d.s2.b.r}</b> (${d.s2.b.b})</div>`:''}</div>
+  <div class="gr">${d.bw?`<div>${esc(d.bw.n)} <b style="color:#ffd84d">${d.bw.w}-${d.bw.r}</b> (${d.bw.o})</div>`:''}<div>${d.chase?'NEED '+d.need+' FROM '+d.left:'CRR '+d.crr}${dots(d.this)}</div></div></div>`},
+ glass(d){return `<div class="bgx bgx-glass"><div class="t1"><div class="bgc">${crest(d.bat)||esc(d.bat.short)}</div><span class="sc">${esc(d.bat.short)} ${d.runs}/${d.wk}</span><span class="ov">${d.ov} ov</span><span class="rt">${d.chase?'NEED '+d.need+' FROM '+d.left:'CRR '+d.crr}</span></div>
+  <div class="t2"><span>${d.s1?esc(d.s1.n)+'* <b>'+d.s1.b.r+'</b> ('+d.s1.b.b+')':''}${d.s2?' &nbsp; '+esc(d.s2.n)+' <b>'+d.s2.b.r+'</b> ('+d.s2.b.b+')':''}</span><span>${d.bw?esc(d.bw.n)+' <b>'+d.bw.w+'-'+d.bw.r+'</b> ('+d.bw.o+')':''}${dots(d.this)}</span></div></div>`},
+ corner(d){return `<div class="bgx bgx-corner"><div class="h"><div class="bgc">${crest(d.bat)||esc(d.bat.short)}</div><b>${esc(d.bat.name)}</b></div><div class="sc">${d.runs}/${d.wk}<small>${d.ov} ov</small></div>
+  ${d.s1?`<div class="ln"><span>${esc(d.s1.n)}*</span><b>${d.s1.b.r} (${d.s1.b.b})</b></div>`:''}${d.s2?`<div class="ln"><span>${esc(d.s2.n)}</span><b>${d.s2.b.r} (${d.s2.b.b})</b></div>`:''}
+  ${d.bw?`<div class="ln"><span>${esc(d.bw.n)}</span><b>${d.bw.w}-${d.bw.r} (${d.bw.o})</b></div>`:''}<div class="ft">${d.chase?'Need '+d.need+' from '+d.left+' balls':'Run rate '+d.crr}</div></div>`},
+ mini(d){return `<div class="bgx bgx-mini"><div class="a">${esc(d.bat.short)}</div><div class="b">${d.runs}-${d.wk}<small>${d.ov} ov</small></div></div>`}};
+window.shBug=function(m,style){try{const f=ST[style];if(!f)return'';const d=data(m);return d?f(d):''}catch(e){return''}};
+window.SH_BUGS=[['hex','Pro hexagon'],['strip','Full-width strip'],['glass','Glass card'],['corner','Corner card'],['mini','Mini score'],['classic','Classic']];
+const v0=vStream;vStream=function(){const o=v0.apply(this,arguments),cur=S.stream.bug||'hex';
+ const card=`<div class="card"><div class="b">Score bar style</div><div class="mu sm">Pick the design shown in the OBS overlay.</div><div class="bgst">${SH_BUGS.map(x=>`<button class="${cur===x[0]?'on':''}" data-a="bugStyle" data-v="${x[0]}">${x[1]}</button>`).join('')}</div></div>`;
+ const i=o.indexOf('</div>')+6;return o.slice(0,i)+card+o.slice(i)};
+Object.assign(A,{bugStyle(d){S.stream.bug=d.v;commit()}});
 })();
 
 /* 141 3D LIVE inside the app: any live match can be watched as the 3D avatar stream (the same scene OBS uses), like a live channel */
