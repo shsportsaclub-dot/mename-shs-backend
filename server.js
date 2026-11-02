@@ -2271,6 +2271,13 @@ http.createServer(async (req, res) => {
       return res.end(body);
     } catch { return out(404, { ok: false, error: 'Pack file unavailable' }); }
   }
+  if (req.method === 'GET' && /^\/themes\/[a-z0-9-]{3,48}\.html$/.test(path)) {   // Theme Factory screens (original broadcast graphics)
+    try {
+      const body = fs.readFileSync(new URL('./public' + path, import.meta.url));
+      res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'public, max-age=300', 'x-content-type-options': 'nosniff' });
+      return res.end(body);
+    } catch { return out(404, { ok: false, error: 'Theme screen unavailable' }); }
+  }
   if (req.method === 'GET' && path === '/broadcast-demo') {
     try {
       const html = fs.readFileSync(new URL('./public/broadcast-router-demo.html', import.meta.url));

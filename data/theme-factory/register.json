@@ -1,0 +1,9 @@
+[{"id":"SH-TK-00001-SCR-001","name":"Tournament Season Schedule","phase":"Pre-match / Schedule",
+"data":["tournament_id","season_id","match_id","team_home","team_away","venue","start_datetime","status"],
+"visuals":["timeline","team identity panels","date-time markers","competition badge"],
+"states":["ENTER","HOLD","UPDATE","EXIT"],
+"events":["SCHEDULE_PUBLISHED","MATCH_TIME_CHANGED","MATCH_STATUS_CHANGED"],
+"file":"public/themes/sh-tk-00001-scr-001.html","url":"/themes/sh-tk-00001-scr-001.html",
+"sample":"docs/sample_SH-TK-00001-SCR-001.png",
+"status":"BUILT_PROTOTYPE (CSS-3D, real-time; NOT 4K rendered, NOT approved)",
+"verified":["schedule sorted by start time","MATCH_TIME_CHANGED rebinds data (verified 21:00)","EXIT clears cards (opacity 0)","transparent alpha bg verified","no page errors"]}]
