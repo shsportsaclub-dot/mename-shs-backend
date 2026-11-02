@@ -1153,6 +1153,20 @@ routes['POST /api/avatars/generate'] = async (req, body) => {
     return avPut(body.name, j.img, s.phone) ? [200, { ok: true, img: j.img }] : [409, { ok: false, error: 'Avatar limit reached' }];
   } catch (e) { return [504, { ok: false, error: 'The GPU worker did not answer in time' }]; }
 };
+// Batch mode for a GPU that cannot be reached from outside (e.g. a free Lightning AI Studio): an admin queues players here, the Studio runs gpu-worker/batch.py, which reads the queue and pushes finished avatars back, both authenticated with the shared AVATAR_GPU_KEY.
+const avKey = req => { const k = process.env.AVATAR_GPU_KEY; return !!k && String(req.headers['x-avatar-key'] || '') === k; };
+routes['POST /api/avatars/queue'] = async (req, body) => {
+  const s = grUser(req); if (!s || s.u.role !== 'admin') return [403, { ok: false, error: 'Only an admin can queue avatars' }];
+  db.avatarQueue = db.avatarQueue || {}; let n = 0;
+  (Array.isArray(body.players) ? body.players : []).slice(0, 60).forEach(p => { const k = faceKey(p && p.name); const u = String((p && p.photo) || ''); if (k.length < 2 || !/^https:\/\/[^\s]{4,300}$/.test(u) && !/^data:image\/jpeg;base64,/.test(u)) return; if (db.avatars && db.avatars[k]) return; if (Object.keys(db.avatarQueue).length >= 200) return; db.avatarQueue[k] = { name: String(p.name).slice(0, 60), photo: u.length > 90000 ? '' : u, team: String(p.team || '').slice(0, 40), colour: String(p.colour || '').slice(0, 20) }; n++; });
+  saveDb(); return [200, { ok: true, queued: n, total: Object.keys(db.avatarQueue).length }];
+};
+routes['GET /api/avatars/queue'] = async (req) => { if (!avKey(req)) return [403, { ok: false }]; return [200, { ok: true, players: Object.values(db.avatarQueue || {}) }]; };
+routes['POST /api/avatars/push'] = async (req, body) => {
+  if (!avKey(req)) return [403, { ok: false }];
+  const img = String(body.img || ''); if (faceKey(body.name).length < 2 || !avOk(img)) return [400, { ok: false, error: 'Bad avatar' }];
+  if (!avPut(body.name, img, 'gpu')) return [409, { ok: false }]; if (db.avatarQueue) { delete db.avatarQueue[faceKey(body.name)]; saveDb(); } return [200, { ok: true }];
+};
 routes['POST /api/avatars/delete'] = async (req, body) => {
   const s = grUser(req); if (!s || s.u.role !== 'admin') return [403, { ok: false, error: 'Only an admin can remove avatars' }];
   if (db.avatars) delete db.avatars[faceKey(body.name)]; saveDb(); return [200, { ok: true }];
@@ -2665,7 +2679,7 @@ http.createServer(async (req, res) => {
   const h = routes[req.method + ' ' + pth];
   if (!h) return out(404, { ok: false, error: 'Not found' });
   let raw = '';
-  for await (const c of req) { raw += c; if (raw.length > (pth === '/api/paper' ? 300000 : pth === '/api/admin/home-config' ? 400000 : pth === '/api/grounds/photo' ? 330000 : pth === '/api/faces' ? 130000 : pth === '/api/avatars/save' ? 420000 : pth === '/api/avatars/generate' ? 130000 : pth === '/api/editorial' ? 120000 : 20000)) return out(413, { ok: false, error: 'Too large' }); }
+  for await (const c of req) { raw += c; if (raw.length > (pth === '/api/paper' ? 300000 : pth === '/api/admin/home-config' ? 400000 : pth === '/api/grounds/photo' ? 330000 : pth === '/api/faces' ? 130000 : pth === '/api/avatars/save' || pth === '/api/avatars/push' ? 420000 : pth === '/api/avatars/queue' ? 60000 : pth === '/api/avatars/generate' ? 130000 : pth === '/api/editorial' ? 120000 : 20000)) return out(413, { ok: false, error: 'Too large' }); }
   let body = {};
   try { body = raw ? (raw.trim().startsWith('{') ? JSON.parse(raw) : Object.fromEntries(new URLSearchParams(raw))) : {}; } catch { return out(400, { ok: false, error: 'Bad body' }); }
   if (req.method === 'GET') body = { ...Object.fromEntries(new URL(req.url, 'http://x').searchParams), ...body };

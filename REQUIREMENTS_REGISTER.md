@@ -308,3 +308,6 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 
 ## Own avatar generator (GPU worker)
 - gpu-worker/ (FastAPI, Stable Diffusion XL + IP-Adapter + rembg, open-source) generates a stylised 3D-render avatar PNG from the profile photo; needs a rented NVIDIA GPU (see gpu-worker/README.md). Server: POST /api/avatars/generate (admin, forwards to AVATAR_GPU_URL with AVATAR_GPU_KEY), /api/avatars/save (admin upload), /api/avatars/delete, GET /api/avatars?names=. App: Profile avatar has Generate with AI and Upload avatar image for admins. Tested with a mock worker; the worker itself is untested on a GPU.
+
+## Avatar batch mode (Lightning AI free plan)
+- Admin queues players (`POST /api/avatars/queue`); GPU Studio runs `gpu-worker/batch.py`, reads `GET /api/avatars/queue` and pushes `POST /api/avatars/push`, both with header `x-avatar-key` = env AVATAR_GPU_KEY. Tested with mock (tests/avatars.test.mjs); real GPU run pending.

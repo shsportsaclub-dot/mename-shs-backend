@@ -29,6 +29,15 @@ test('avatars: admin-only save/generate via GPU worker, anyone reads by name', a
     [st] = await call('POST', '/api/avatars/generate', sign('+911'), { name: 'Shamar Joseph', photo: 'x' }); assert.equal(st, 400);
     [st, j] = await call('POST', '/api/avatars/generate', sign('+911'), { name: 'Shamar Joseph', photo: jpg, colour: '#2563eb', team: 'West Indies' }); assert.equal(st, 200); assert.equal(j.img, png);
     [st, j] = await call('GET', '/api/avatars?names=Shamar%20Joseph'); assert.equal(j.avatars['shamar joseph'], png);
+    const kc = async (m, p, body, key) => { const r = await fetch(B + p, { method: m, headers: { 'content-type': 'application/json', ...(key ? { 'x-avatar-key': key } : {}) }, body: body ? JSON.stringify(body) : undefined }); return [r.status, await r.json().catch(() => ({}))]; };
+    [st] = await call('POST', '/api/avatars/queue', sign('+912'), { players: [{ name: 'Kristian Clarke', photo: 'https://example.com/a.jpg' }] }); assert.equal(st, 403);
+    [st, j] = await call('POST', '/api/avatars/queue', sign('+911'), { players: [{ name: 'Kristian Clarke', photo: 'https://example.com/a.jpg', team: 'NZ A' }, { name: 'Bad', photo: 'javascript:x' }, { name: 'Shamar Joseph', photo: 'https://example.com/s.jpg' }] }); assert.equal(st, 200); assert.equal(j.queued, 1);
+    [st] = await kc('GET', '/api/avatars/queue', null, 'wrong'); assert.equal(st, 403);
+    [st, j] = await kc('GET', '/api/avatars/queue', null, 'k1'); assert.equal(st, 200); assert.equal(j.players.length, 1); assert.equal(j.players[0].name, 'Kristian Clarke');
+    [st] = await kc('POST', '/api/avatars/push', { name: 'Kristian Clarke', img: png }, 'wrong'); assert.equal(st, 403);
+    [st] = await kc('POST', '/api/avatars/push', { name: 'Kristian Clarke', img: png }, 'k1'); assert.equal(st, 200);
+    [st, j] = await kc('GET', '/api/avatars/queue', null, 'k1'); assert.equal(j.players.length, 0);
+    [st, j] = await call('GET', '/api/avatars?names=Kristian%20Clarke'); assert.equal(j.avatars['kristian clarke'], png);
     [st] = await call('POST', '/api/avatars/delete', sign('+911'), { name: 'Shamar Joseph' }); assert.equal(st, 200);
     [st, j] = await call('GET', '/api/avatars?names=Shamar%20Joseph'); assert.equal(Object.keys(j.avatars).length, 0);
   } finally { srv.kill(); gpu.close(); }
