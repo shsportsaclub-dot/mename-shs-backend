@@ -181,5 +181,90 @@
   ],
   "sample": "docs/sample_RS_rs.png",
   "status": "BUILT_PROTOTYPE (CSS-3D real-time, verified headless; NOT 4K rendered, NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-SCR-025",
+  "name": "Boundary FOUR",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield.html?screen=e4",
+  "events": [
+   "FOUR"
+  ],
+  "states": [
+   "ENTER",
+   "HOLD",
+   "EXIT"
+  ],
+  "motion": "slash+slam from left+ripples",
+  "sample": "docs/sample_RS_e4.png",
+  "status": "BUILT_PROTOTYPE (CSS real-time, verified headless; NOT 4K rendered, NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-SCR-026",
+  "name": "Boundary SIX",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield.html?screen=e6",
+  "events": [
+   "SIX"
+  ],
+  "states": [
+   "ENTER",
+   "HOLD",
+   "EXIT"
+  ],
+  "motion": "rising numeral+arcing ball+confetti",
+  "sample": "docs/sample_RS_e6.png",
+  "status": "BUILT_PROTOTYPE (CSS real-time, verified headless; NOT 4K rendered, NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-SCR-027",
+  "name": "Wicket / OUT",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield.html?screen=eo",
+  "events": [
+   "WICKET"
+  ],
+  "states": [
+   "ENTER",
+   "HOLD",
+   "EXIT"
+  ],
+  "motion": "stumps topple+bails fly+red flash+shake",
+  "sample": "docs/sample_RS_eo.png",
+  "status": "BUILT_PROTOTYPE (CSS real-time, verified headless; NOT 4K rendered, NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-SCR-028",
+  "name": "Half Century",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield.html?screen=e50",
+  "events": [
+   "FIFTY"
+  ],
+  "states": [
+   "ENTER",
+   "HOLD",
+   "EXIT"
+  ],
+  "motion": "progress ring fill",
+  "sample": "docs/sample_RS_e50.png",
+  "status": "BUILT_PROTOTYPE (CSS real-time, verified headless; NOT 4K rendered, NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-SCR-029",
+  "name": "Century",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield.html?screen=e100",
+  "events": [
+   "HUNDRED"
+  ],
+  "states": [
+   "ENTER",
+   "HOLD",
+   "EXIT"
+  ],
+  "motion": "crown drop+sunburst+confetti",
+  "sample": "docs/sample_RS_e100.png",
+  "status": "BUILT_PROTOTYPE (CSS real-time, verified headless; NOT 4K rendered, NOT approved)"
  }
 ]

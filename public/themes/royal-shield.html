@@ -81,6 +81,38 @@ body.bg{background:radial-gradient(120% 90% at 50% 0%,#0b1a30,#050c18 70%)}
 .sm .ln{display:flex;justify-content:space-around;margin-top:3cqh;font:700 2.1cqw/1.3 var(--f);text-transform:uppercase;text-align:left}.sm .ln span{color:var(--cy);display:block;font-size:1.5cqw;color:var(--gold)}
 .rs1{font:900 4.8cqw/1.05 var(--f);text-transform:uppercase;background:linear-gradient(180deg,var(--gold2),var(--gold),var(--gold3));-webkit-background-clip:text;background-clip:text;color:transparent;margin:2cqh 0}
 .sm .mm{font:700 2.4cqw/1.3 var(--f);color:#fff;text-transform:uppercase}
+
+/* EVENT MOMENTS */
+.ev{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:1.2cqh}
+.ev .nm{font:800 3.4cqw/1 var(--f);text-transform:uppercase;letter-spacing:.2cqw}.ev .st{font:700 2.4cqw/1 var(--f);color:var(--gold);text-transform:uppercase;letter-spacing:.15cqw}.ev .sb{font:600 2cqw/1 var(--f);color:#9fb2c7;text-transform:uppercase}
+.num{font:900 25cqw/.9 var(--f);background:linear-gradient(180deg,var(--gold2),var(--gold) 45%,var(--gold3));-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 1.5cqh 2cqh #000a)}
+.lbl{font:800 6cqw/1 var(--f);letter-spacing:1cqw;text-transform:uppercase}
+.ev>*{opacity:0}.in .ev>*{animation:dn .6s .9s both}
+/* FOUR: slash + slam from left */
+#e4 .num{opacity:0;transform:translateX(-60cqw) skewX(-20deg)}.in #e4 .num{animation:sl4 .7s .3s cubic-bezier(.1,.9,.2,1) both}@keyframes sl4{60%{transform:translateX(3cqw) skewX(-6deg)}to{opacity:1;transform:none}}
+#e4 .lbl{color:var(--cy)}.slash{position:absolute;left:-10cqw;right:-10cqw;top:46cqh;height:1.2cqh;background:linear-gradient(90deg,transparent,var(--cy),#fff,var(--cy),transparent);transform:scaleX(0) rotate(-6deg);box-shadow:0 0 3cqw var(--cy)}.in .slash{animation:sx 1s .2s ease-out both}
+.ring{position:absolute;left:50%;top:50%;width:20cqw;height:20cqw;margin:-10cqw;border:.5cqw solid var(--cy);border-radius:50%;opacity:0}.in .ring{animation:rp 1.6s .45s ease-out both}.in .ring.r2{animation-delay:.75s}@keyframes rp{from{opacity:.9;transform:scale(.3)}to{opacity:0;transform:scale(5)}}
+/* SIX: rise + arc ball */
+#e6 .num{opacity:0;transform:translateY(60cqh) scale(.4)}.in #e6 .num{animation:rs6 .9s .3s cubic-bezier(.2,1.3,.3,1) both}@keyframes rs6{to{opacity:1;transform:none}}
+#e6 .num{background:linear-gradient(180deg,#fff,#ff8a5b 45%,#d32f4a);-webkit-background-clip:text;background-clip:text}#e6 .lbl{color:#ff9a7a}
+.ball{position:absolute;left:-6cqw;top:70cqh;width:5cqw;height:5cqw;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ff6b6b,#a01028);box-shadow:0 0 3cqw #ff4d4d}.in .ball{animation:arc 1.8s .1s cubic-bezier(.3,.6,.5,1) both}@keyframes arc{0%{transform:translate(0,0) scale(1)}50%{transform:translate(60cqw,-62cqh) scale(2.2)}100%{transform:translate(118cqw,-10cqh) scale(.4);opacity:0}}
+.cf{position:absolute;top:-4cqh;width:1cqw;height:2cqh;opacity:0}.in .cf{animation:fall 3s linear both;animation-delay:var(--d)}@keyframes fall{0%{opacity:1;transform:translateY(0) rotate(0)}100%{opacity:0;transform:translateY(112cqh) rotate(var(--r))}}
+/* OUT: stumps topple, red */
+#eo .lbl{color:#ff4d63;font-size:9cqw}.stm{position:relative;width:16cqw;height:18cqh;margin-bottom:3cqh;display:flex;justify-content:space-between;align-items:flex-end;opacity:0}.in .stm{animation:dn .3s .2s both}
+.stm i{width:1.3cqw;height:100%;background:linear-gradient(90deg,#f6e3b0,#b88a3a);border-radius:.4cqw;transform-origin:bottom}.in .stm i:nth-child(1){animation:t1 .9s .5s ease-in both}.in .stm i:nth-child(3){animation:t3 .9s .55s ease-in both}.in .stm i:nth-child(2){animation:t2 1s .45s ease-in both}
+@keyframes t1{to{transform:rotate(-82deg)}}@keyframes t3{to{transform:rotate(84deg)}}@keyframes t2{to{transform:rotate(-12deg) translateY(2cqh)}}
+.stm b{position:absolute;top:-1.2cqh;width:5.5cqw;height:.8cqh;background:#f6e3b0;border-radius:.4cqw}.stm b.a{left:1cqw}.stm b.b{right:1cqw}.in .stm b.a{animation:ba 1.2s .5s ease-out both}.in .stm b.b{animation:bb 1.2s .5s ease-out both}@keyframes ba{to{transform:translate(-9cqw,-14cqh) rotate(-540deg);opacity:0}}@keyframes bb{to{transform:translate(9cqw,-11cqh) rotate(480deg);opacity:0}}
+.in #eo{animation:shk .5s .5s}@keyframes shk{20%{transform:translateX(-1cqw)}40%{transform:translateX(1cqw)}60%{transform:translateX(-.6cqw)}}
+.flash{position:absolute;inset:0;background:#d32f4a;opacity:0}.in .flash{animation:fl .8s .5s ease-out}@keyframes fl{0%{opacity:.55}100%{opacity:0}}
+/* FIFTY: progress ring */
+.rg{position:relative;width:34cqw;height:34cqw}.rg svg{width:100%;height:100%;transform:rotate(-90deg)}.rg circle{fill:none;stroke-width:14;stroke-linecap:round}.rg .bg{stroke:#14263d}.rg .fg{stroke:url(#gg);stroke-dasharray:628;stroke-dashoffset:628}.in .rg .fg{animation:ringf 1.8s .3s cubic-bezier(.3,.7,.2,1) both}@keyframes ringf{to{stroke-dashoffset:0}}
+.rg .num{position:absolute;inset:0;display:grid;place-items:center;font-size:15cqw;line-height:1}
+.ev .rg,.ev .rg *{opacity:1}.ev .rg{animation:none!important}
+/* HUNDRED: crown burst */
+#e100 .num{font-size:30cqw;opacity:0;transform:scale(3)}.in #e100 .num{animation:sl1 .9s .2s cubic-bezier(.2,.9,.2,1) both}@keyframes sl1{to{opacity:1;transform:none}}
+.crown{width:14cqw;opacity:0;transform:translateY(-20cqh)}.in .crown{animation:cr .9s .8s cubic-bezier(.2,1.4,.3,1) both}@keyframes cr{to{opacity:1;transform:none}}
+.burst{position:absolute;left:50%;top:50%;width:70cqw;height:70cqw;margin:-35cqw;background:repeating-conic-gradient(from 0deg,#ffe27a55 0 4deg,transparent 4deg 15deg);border-radius:50%;-webkit-mask:radial-gradient(circle,#000 10%,transparent 70%);mask:radial-gradient(circle,#000 10%,transparent 70%);opacity:0}.in .burst{animation:bu 5s .2s linear both}@keyframes bu{0%{opacity:0;transform:rotate(0) scale(.2)}15%{opacity:1}100%{opacity:.7;transform:rotate(90deg) scale(1)}}
+#e100 .lbl,#e50 .lbl{color:var(--gold)}
 </style></head><body><div id="st"><div class="beam l"></div><div class="beam r"></div>
 <div class="hd"><b>SCORING HEROES</b><span id="sub"></span></div><div class="ttl" id="ttl"></div>
 <div class="sc" id="toss"><div class="tm a" id="ta"></div><div class="tm b" id="tb"></div><div class="shield"><div class="tw" id="tw"></div><div class="el" id="el"></div><div class="coin" id="coin"><i>SH</i><i>TOSS</i></div></div></div>
@@ -91,6 +123,11 @@ body.bg{background:radial-gradient(120% 90% at 50% 0%,#0b1a30,#050c18 70%)}
 <div class="sc" id="pt"><div class="shield"></div><div class="pn2 a" id="p1"></div><div class="pn2 b" id="p2"></div><div class="pm" id="pm"></div><div class="bar2" id="pbar"></div></div>
 <div class="sc" id="is"><div class="shield"></div><div class="sm" id="ism"></div></div>
 <div class="sc" id="rs"><div class="shield"></div><div class="sm" id="rsm"></div></div>
+<div class="sc" id="e4"><div class="slash"></div><div class="ring"></div><div class="ring r2"></div><div class="ev" id="e4c"></div></div>
+<div class="sc" id="e6"><div class="ball"></div><div class="ev" id="e6c"></div><div id="cf6"></div></div>
+<div class="sc" id="eo"><div class="flash"></div><div class="ev" id="eoc"></div></div>
+<div class="sc" id="e50"><div class="ev" id="e50c"></div></div>
+<div class="sc" id="e100"><div class="burst"></div><div class="ev" id="e100c"></div><div id="cf100"></div></div>
 </div><script>
 const Q=new URLSearchParams(location.search),B=document.body;if(Q.get('bg')==='1')B.classList.add('bg');
 const SH=c=>`<svg viewBox="0 0 100 100"><circle cx="50" cy="36" r="17" fill="#26405d" stroke="${c}" stroke-width="2"/><path d="M14 98c0-26 14-38 36-38s36 12 36 38z" fill="${c}" opacity=".9"/></svg>`;
@@ -101,9 +138,10 @@ sc:{team:'Sky High Kings',score:'142/4',overs:'16.2',bat:[['Aarav Sharma',62,38,
 pt:{a:{n:'Aarav Sharma',r:62,b:38},b:{n:'Rohan Mehta',r:24,b:12},total:93,balls:52,wkt:3},
 is:{team:'Sky High Kings',score:'168/6',overs:'20.0',rr:'8.40',bat:[['Aarav Sharma','74 (46)'],['Rohan Mehta','38 (19)']],bowl:[['Yash Gupta','3/24 (4)'],['Neel Iyer','2/31 (4)']]},
 rs:{win:'Sky High Kings',margin:'won by 24 runs',mom:'Aarav Sharma',mom2:'74 (46) & 1 catch',a:'168/6',b:'144/9'},
+ev:{n:'Aarav Sharma',r:62,b:38,f:6,s:2,shot:'Cover drive',how:'Bowled',bowl:'Yash Gupta',fld:'',score:'142/4',ov:'16.2'},
 mh:{overs:[8,14,6,22,9,5,13,19,7,11,16,4,12,10,28,6,15,9,21,8],wk:{3:1,7:1,12:2,15:1,18:1}}};
 let D=JSON.parse(JSON.stringify(DEMO)),cur=Q.get('screen')||'toss';
-const T={sc:['LIVE SCORECARD','Scorecard'],pt:['PARTNERSHIP','Partnership'],is:['INNINGS SUMMARY','Innings Summary'],rs:['MATCH RESULT','Result'],toss:['MATCH TOSS','Toss Result'],xi:['PLAYING XI','Playing XI'],mu:['BATTER / BOWLER MATCHUP','Player Matchup'],mh:['RUNS PER OVER · MANHATTAN','Manhattan']};
+const T={e4:['FOUR','Boundary Four'],e6:['SIX','Boundary Six'],eo:['WICKET','Wicket'],e50:['FIFTY','Half Century'],e100:['CENTURY','Century'],sc:['LIVE SCORECARD','Scorecard'],pt:['PARTNERSHIP','Partnership'],is:['INNINGS SUMMARY','Innings Summary'],rs:['MATCH RESULT','Result'],toss:['MATCH TOSS','Toss Result'],xi:['PLAYING XI','Playing XI'],mu:['BATTER / BOWLER MATCHUP','Player Matchup'],mh:['RUNS PER OVER · MANHATTAN','Manhattan']};
 const up=s=>String(s).toUpperCase();
 function render(){const t=D.toss,w=t.winner==='a'?t.a:t.b;
  ta.textContent=up(t.a);tb.textContent=up(t.b);ta.className='tm a'+(t.winner==='a'?' w':'');tb.className='tm b'+(t.winner==='b'?' w':'');
@@ -116,17 +154,24 @@ function render(){const t=D.toss,w=t.winner==='a'?t.a:t.b;
  {const q=D.pt,t=q.a.r+q.b.r,e=q.total-t;p1.innerHTML=`<b>${q.a.n}</b><span>${q.a.r}</span><small>${q.a.b} balls</small>`;p2.innerHTML=`<b>${q.b.n}</b><span>${q.b.r}</span><small>${q.b.b} balls</small>`;pm.innerHTML=`<small>${q.wkt}${['st','nd','rd'][q.wkt-1]||'th'} WICKET PARTNERSHIP</small><b>${q.total}</b><i>${q.balls} balls</i>`;const tt=q.a.r+q.b.r+e;pbar.innerHTML=`<i style="width:${q.a.r/tt*100}%;background:#38a9ec"></i><i style="width:${e/tt*100}%;background:#8896a8"></i><i style="width:${q.b.r/tt*100}%;background:#d32f4a"></i>`}
  {const i=D.is;ism.innerHTML=`<small>${i.team} · INNINGS</small><div class=sc2>${i.score}</div><div class=ov>${i.overs} OVERS · RUN RATE ${i.rr}</div><div class=ln><div><span>TOP BATTERS</span>${i.bat.map(x=>x[0]+' '+x[1]).join('<br>')}</div><div><span>TOP BOWLERS</span>${i.bowl.map(x=>x[0]+' '+x[1]).join('<br>')}</div></div>`}
  {const r=D.rs;rsm.innerHTML=`<small>MATCH RESULT</small><div class=rs1>${r.win}<br>${r.margin}</div><div class=ov>${r.a} · ${r.b}</div><div class=mm style="margin-top:3cqh"><span style="color:var(--gold);font-size:1.6cqw">PLAYER OF THE MATCH</span><br>${r.mom} · ${r.mom2}</div>`}
+
+ {const e=D.ev,sub=`${e.r} (${e.b}) · ${e.f} FOURS · ${e.s} SIXES`,CF=n=>Array.from({length:n},(_,i)=>`<i class="cf" style="left:${(i*37)%100}%;--d:${(i%12)*.12+.9}s;--r:${(i*53)%720}deg;background:${['#ffe27a','#38a9ec','#d32f4a','#fff'][i%4]}"></i>`).join('');
+ e4c.innerHTML=`<div class="num">4</div><div class="lbl">FOUR</div><div class="nm">${e.n}</div><div class="st">${e.shot}</div><div class="sb">${sub}</div>`;
+ e6c.innerHTML=`<div class="num">6</div><div class="lbl">SIX</div><div class="nm">${e.n}</div><div class="st">${e.shot}</div><div class="sb">${sub}</div>`;cf6.innerHTML=CF(40);
+ eoc.innerHTML=`<div class="stm"><b class="a"></b><b class="b"></b><i></i><i></i><i></i></div><div class="lbl">OUT!</div><div class="nm">${e.n}</div><div class="st">${e.how} · b ${e.bowl}${e.fld?' · c '+e.fld:''}</div><div class="sb">${e.r} (${e.b}) · ${e.score} (${e.ov} OV)</div>`;
+ e50c.innerHTML=`<div class="rg"><svg viewBox="0 0 220 220"><defs><linearGradient id="gg"><stop offset="0" stop-color="#fff3ba"/><stop offset="1" stop-color="#bf8c38"/></linearGradient></defs><circle class="bg" cx="110" cy="110" r="100"/><circle class="fg" cx="110" cy="110" r="100"/></svg><div class="num">50</div></div><div class="lbl">HALF CENTURY</div><div class="nm">${e.n}</div><div class="sb">${sub}</div>`;
+ e100c.innerHTML=`<svg class="crown" viewBox="0 0 100 70"><path d="M5 60 L12 15 L35 38 L50 5 L65 38 L88 15 L95 60 Z" fill="#e6bd6a" stroke="#fff3ba" stroke-width="3"/><circle cx="12" cy="13" r="5" fill="#fff"/><circle cx="50" cy="4" r="5" fill="#fff"/><circle cx="88" cy="13" r="5" fill="#fff"/></svg><div class="num">100</div><div class="lbl">CENTURY</div><div class="nm">${e.n}</div><div class="sb">${sub}</div>`;cf100.innerHTML=CF(70)}
  const o=D.mh.overs,mx=Math.max(10,Math.ceil(Math.max(...o)/10)*10),W=1000,H=500,L=70,R=30,Tp=30,Bt=60,pw=(W-L-R)/o.length,ph=H-Tp-Bt;
  let s='';for(let v=0;v<=mx;v+=10){const y=Tp+ph-ph*v/mx;s+=`<line x1="${L}" x2="${W-R}" y1="${y}" y2="${y}" stroke="#25384a" stroke-width="1"/><text x="${L-10}" y="${y+5}" fill="#9fb2c7" font-size="16" text-anchor="end">${v}</text>`}
  o.forEach((v,i)=>{const h=ph*v/mx,x=L+i*pw+pw*.18,y=Tp+ph-h,c=i<6?'#38a9ec':i<15?'#ecb654':'#d32f4a';
   s+=`<rect class="bar" style="--i:${i}" x="${x}" y="${y}" width="${pw*.64}" height="${h}" rx="4" fill="${c}"/><text x="${x+pw*.32}" y="${H-Bt+24}" fill="#fff" font-size="15" text-anchor="middle">${i+1}</text><text x="${x+pw*.32}" y="${y-8}" fill="#fff" font-size="15" font-weight="700" text-anchor="middle">${v}</text>`;
   const k=D.mh.wk[i+1];if(k)for(let j=0;j<k;j++)s+=`<circle class="wk" style="--i:${i}" cx="${x+pw*.32}" cy="${y-30-j*20}" r="7" fill="#fff" stroke="#d32f4a" stroke-width="3"/>`});
  mc.innerHTML=s;lg.innerHTML=`<i style="background:#38a9ec"></i>POWERPLAY 1–6<i style="background:#ecb654"></i>MIDDLE 7–15<i style="background:#d32f4a"></i>DEATH 16–20<i style="background:#fff;border-radius:50%"></i>WICKET`}
-function show(n){cur=n;document.querySelectorAll('.sc').forEach(e=>e.classList.toggle('on',e.id===n));ttl.textContent=n==='xi'?'PLAYING XI / '+up(D.xi.team):n==='sc'?'BATTING / '+up(D.sc.team):T[n][0];sub.textContent='ROYAL SHIELD / '+up(T[n][1])}
+function show(n){cur=n;document.querySelectorAll('.sc').forEach(e=>e.classList.toggle('on',e.id===n));ttl.textContent=n==='xi'?'PLAYING XI / '+up(D.xi.team):n==='sc'?'BATTING / '+up(D.sc.team):/^e/.test(n)?'':T[n][0];sub.textContent='ROYAL SHIELD / '+up(T[n][1])}
 window.shTheme={id:'SH-RS-V6',
  state(s){B.classList.remove('in','out');void B.offsetWidth;if(s==='ENTER'){show(cur);B.classList.add('in')}else if(s==='EXIT')B.classList.add('out');else if(s==='HOLD')B.classList.add('in')},
  screen(n){cur=n;this.state('ENTER')},data(d){Object.assign(D,d);render();show(cur)},
- event(ev,p){const map={SCORECARD_SHOWN:['sc','sc'],PARTNERSHIP_UPDATE:['pt','pt'],INNINGS_ENDED:['is','is'],MATCH_RESULT:['rs','rs'],TOSS_DECIDED:['toss','toss'],XI_ANNOUNCED:['xi','xi'],MATCHUP_SELECTED:['mu','mu'],INNINGS_BREAK:['mh','mh']}[ev];if(map){this.data({[map[1]]:p});this.screen(map[0])}}};
+ event(ev,p){const map={FOUR:['e4','ev'],SIX:['e6','ev'],WICKET:['eo','ev'],FIFTY:['e50','ev'],HUNDRED:['e100','ev'],SCORECARD_SHOWN:['sc','sc'],PARTNERSHIP_UPDATE:['pt','pt'],INNINGS_ENDED:['is','is'],MATCH_RESULT:['rs','rs'],TOSS_DECIDED:['toss','toss'],XI_ANNOUNCED:['xi','xi'],MATCHUP_SELECTED:['mu','mu'],INNINGS_BREAK:['mh','mh']}[ev];if(map){this.data({[map[1]]:p});this.screen(map[0])}}};
 addEventListener('message',e=>{const d=e.data||{};if(d.shTheme)shTheme[d.fn](...(d.args||[]))});
 render();shTheme.state('ENTER');
 </script></body></html>
