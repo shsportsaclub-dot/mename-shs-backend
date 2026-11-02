@@ -250,3 +250,8 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 - Players face their direction of travel or the ball, arms-up celebration, bat and racket props, bowling arm. Football, rugby and basketball cameras follow the ball.
 - Honest limit: mannequin-style model, not photoreal; sport-specific motion (kick, serve, full batting swing) is approximated by pose, not motion-captured. Realistic faces/kits need licensed character assets.
 - Tests: tests/humans3d.cjs, tests/humans3d-cricket.cjs (software GL is slow, use a long timeout).
+
+## Moments: auto poster and reel from the game streams (block 145)
+- Sixes, fours, wickets (cricket) and goals, baskets, tries, points (other sports) automatically produce a branded poster (JPEG) and a short reel clip (about 7 s, silent; WebM, or MP4 on Safari) captured from the 3D scene, with the score or commentary line on it.
+- The in-app 3D Live player lists the latest 8 moments with Share poster, Share reel and Save. Posting uses the phone share sheet; no social API keys, nothing is posted without the user tapping Share. Fully automatic posting to accounts needs each platform's API credentials and is not built.
+- Test: tests/moments.cjs.
