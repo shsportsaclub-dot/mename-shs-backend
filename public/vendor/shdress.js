@@ -48,7 +48,7 @@ export function dress(T,gl,root,g,o){const pal=palette(T,o),kit=o.kit||'field';
  const K=new T.Group();g.add(K);const parts={};
  const add=(k,obj)=>{K.add(obj);parts[k]=obj;return obj};
  const hcol=new T.Color(o.shirt||'#2563eb').multiplyScalar(.75);
- if(kit==='bat')add('head',helmet(T,hcol));
+ if(kit==='bat'){if(!o.nohelm)add('head',helmet(T,hcol))}
  else if(kit==='bowl'||kit==='field'||kit==='wk')add('head',cap(T,hcol));
  else if(kit==='ump')add('head',hat(T));
  {const sk=pal.skin.getStyle?'#'+pal.skin.getHexString():'#c68a5a';const bd=(o.name||'').length%3!==1;add('face',o.photo?photoCap(T,o.photo):faceGroup(T,sk,bd,(kit==='bat'||kit==='ump')?null:'#1a1410'))}

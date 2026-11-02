@@ -296,3 +296,6 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 
 ## Virtual match viewer uses the 3D stadium
 - The Virtual match screen (shV3dOpen) now draws the same 3D stadium as the game engine (env mode), real shadows, 3D ball, and the batting stroke on hit events (runs 1-6). 2D scene remains as fallback when WebGL is slow or flat mode is on.
+
+## Profile avatar view (virtual match)
+- "Profile avatar" button in the Virtual match screen opens a 3-tab live 3D view of the batter on strike: Face likeness (no helmet, provider/admin photo on the head when available), Full body + kit, Batting action (looping stroke). Built in code; uses each player's own photo.
