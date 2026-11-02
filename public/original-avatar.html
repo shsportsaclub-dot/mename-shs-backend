@@ -9,6 +9,7 @@
 </style><style>
 html,body{height:100%;margin:0;background:#07151e}header,footer,.side,.overlay,.view,#labels,.scorebar,.hud,.caption,#behaviorPhase,#sourceCaptionBox,#lineupPanel{display:none!important}.layout{display:block;padding:0;max-width:none}.stage{height:100vh;min-height:0;max-height:none;border:0;border-radius:0}#stage>div:not(#labels){display:none!important}#scene{height:100%;width:100%}.avatarPanel{position:fixed;inset:0;pointer-events:none;z-index:20;display:flex;flex-direction:column;justify-content:space-between;padding:24px;color:#f1e4bd;background:linear-gradient(180deg,#05121ccc,transparent 16%,transparent 78%,#05121ce8);font:14px system-ui}.avatarBrand{letter-spacing:3px;font-weight:700;font-size:21px}.avatarBrand span{display:block;font-size:10px;letter-spacing:2px;margin-top:8px;color:#e0d4ad}.avatarTools{display:flex;gap:9px;align-items:center;position:absolute;bottom:64px;left:24px;right:24px;flex-wrap:wrap;pointer-events:auto}.avatarTools button{padding:11px 16px;border:1px solid #99b1b344;background:#09202de8;border-radius:8px;color:#fbebbd;font:600 13px system-ui}.avatarTools label{display:flex;align-items:center;gap:8px;padding:9px;background:#09202de8;border-radius:8px}.avatarPanel p{font-size:11px;letter-spacing:.6px;margin:0;color:#d1dedc}@media(max-width:600px){.avatarPanel{padding:14px}.avatarBrand{font-size:15px}.avatarTools{left:14px;bottom:56px;gap:5px}.avatarTools button{padding:8px}.avatarTools label{padding:6px}.avatarPanel p{max-width:300px;font-size:10px}}
 </style>
+<style>.avatarFile{font-size:12px}.avatarFile input{width:150px;font-size:10px}.avatarTools button:disabled{opacity:.45}.avatarTools{bottom:66px}.avatarPanel p{max-width:95%}@media(max-width:600px){.avatarTools{bottom:62px}.avatarTools label{font-size:10px}.avatarFile input{width:115px}}</style>
 </head><body>
 <header><div><div class="brand">SCORING <span>HEROES</span></div><div class="tag">ORIGINAL PROCEDURAL CRICKET</div></div><div class="chip">ORIGINAL AVATARS · OPTIONAL VIDEO TRACKER</div></header>
 <main class="layout"><section class="stage" id="stage"><canvas id="scene" aria-label="Original 3D cricket stadium"></canvas><div class="topbar"><div><div class="live"><i class="dot"></i>VIRTUAL LIVE</div><div class="match">SH HEROES <span style="color:#65879b">vs</span> SH CHALLENGERS</div></div><div class="scoreBox"><span id="score">0 / 0</span><small id="overs">0.0 overs</small></div></div><div id="hybridStageMode" style="display:none" class="hybridStageMode"></div><div id="behaviorPhase" class="behaviorPhase" style="display:none"></div><div id="sourceCaptionBox" class="sourceCaptionBox" style="display:none"><b>SOURCE CAPTION · UNMATCHED TO DELIVERY</b><span id="sourceCaptionText"></span></div><div id="lineupPanel" class="lineupPanel" style="display:none"></div><div class="labels" id="labels"></div><div id="eventBanner" class="eventBanner" style="display:none"></div><div id="badge" class="badge"></div><div class="view"><button data-view="auto">AUTO</button><button data-view="wide">STADIUM</button><button data-view="face">PLAYER</button></div><div class="overlay"><div class="roles"><span>BAT <strong id="batterName">Hemanth</strong></span><span>BOWL <strong id="bowlerName">Ravi</strong></span></div><div id="commentary" class="commentary">Your own ground. Your own players. Play a delivery.</div><div class="scoreTicker"><b>LIVE UPDATES</b><div><span id="tickerText">Waiting for a confirmed ball event</span></div></div><div class="bottomline"><span id="phase">READY TO PLAY</span><span><span id="cameraShot">READY</span> · VIRTUAL 3D</span></div></div></section>
@@ -253,6 +254,41 @@ function studyAvatarCamera(view='portrait',aspect=1){
  aspect=Number.isFinite(aspect)&&aspect>0?Math.max(.2,aspect):1;
  const portrait=view==='portrait',fov=portrait?.51:.55,halfWidth=portrait?.145:.85,minimum=portrait?1.18:3.95,distance=Math.max(minimum,halfWidth/(Math.tan(fov/2)*aspect)),target=portrait?[0,1.59,0]:[.20,.96,0];
  return {eye:portrait?[.02,1.67,distance]:[.20,1.10,distance],target,fov,name:portrait?'AVATAR PORTRAIT':'AVATAR FULL BODY'};
+}
+
+// Versioned original SH asset format, not glTF. No executable code in model files.
+const avatarRound=x=>Math.round(x*1e6)/1e6;
+const avatarArray=(a)=>Array.from(a,avatarRound);
+const avatarId=s=>typeof s==='string'&&/^[A-Za-z0-9_-]{1,100}$/.test(s);
+function buildAvatarModel(withoutHelmet,withHelmet,{kitTexture=null}={}){
+ const meshes=new Map(),materials=[],materialIds=new Map();
+ const convert=snapshot=>snapshot.parts.map(part=>{
+  const geometry=snapshot.geometries[part.mesh];if(!geometry)throw Error('Missing captured geometry');
+  if(!meshes.has(part.mesh)){const m={id:part.mesh,positions:avatarArray(geometry.p),normals:avatarArray(geometry.n),indices:Array.from(geometry.i)};if(geometry.l&&geometry.l!==geometry.p)m.surfaceCoordinates=avatarArray(geometry.l);meshes.set(part.mesh,m);}
+  const material={color:avatarArray(part.color),roughness:avatarRound(part.roughness),shader:part.shader},key=JSON.stringify(material);
+  if(!materialIds.has(key)){const id='material-'+materials.length;materialIds.set(key,id);materials.push({id,...material});}
+  return {mesh:part.mesh,material:materialIds.get(key),matrix:avatarArray(part.matrix)};
+ });
+ const off=convert(withoutHelmet),on=convert(withHelmet),counts=new Map(),key=p=>JSON.stringify(p);
+ for(const p of on)counts.set(key(p),(counts.get(key(p))??0)+1);
+ const common=[],offOnly=[];for(const p of off){const k=key(p),n=counts.get(k)??0;if(n){common.push({...p,variant:'always'});counts.set(k,n-1);}else offOnly.push({...p,variant:'helmet-off'});}
+ const onOnly=[];for(const p of on){const k=key(p),n=counts.get(k)??0;if(n){onOnly.push({...p,variant:'helmet-on'});counts.set(k,n-1);}}
+ const model={format:'sh-avatar-model',version:1,name:'Scoring Heroes Original Avatar',units:'metres',coordinateSystem:{up:'+Y',front:'+Z'},authorship:'Original authored procedural geometry',visualQuality:'stylized',pose:{type:'static',name:'bat-holding inspection'},skin:null,animations:[],meshes:[...meshes.values()],materials,parts:[...common,...offOnly,...onOnly],textures:kitTexture?{kit:{mimeType:'image/png',uri:kitTexture}}:{}};
+ validateAvatarModel(model);return model;
+}
+function validateAvatarModel(model){
+ const fail=message=>{throw Error('Invalid avatar model: '+message);},array=(a,n,max,label)=>{if(!Array.isArray(a)||a.length!==n||n>max||!a.every(Number.isFinite))fail(label);};
+ if(!model||model.format!=='sh-avatar-model'||model.version!==1||model.units!=='metres')fail('unsupported format/version/units');
+ if(model.coordinateSystem?.up!=='+Y'||model.coordinateSystem?.front!=='+Z')fail('coordinate system');
+ if(model.pose?.type!=='static'||model.skin!==null||!Array.isArray(model.animations)||model.animations.length)fail('v1 supports static geometry only');
+ if(!Array.isArray(model.meshes)||!model.meshes.length||model.meshes.length>100||!Array.isArray(model.materials)||!model.materials.length||model.materials.length>200||!Array.isArray(model.parts)||!model.parts.length||model.parts.length>5000)fail('mesh/material/part budget');
+ const meshes=new Map(),materials=new Set();let vertices=0;
+ for(const m of model.meshes){if(!avatarId(m.id)||meshes.has(m.id))fail('mesh id');const count=m.positions?.length/3;if(!Number.isInteger(count)||count<3||count>65535)fail('vertex count');vertices+=count;if(vertices>250000)fail('total vertex budget');array(m.positions,count*3,65535*3,'positions');array(m.normals,count*3,65535*3,'normals');if(m.positions.some(x=>Math.abs(x)>5))fail('position bounds');for(let k=0;k<m.normals.length;k+=3)if(Math.abs(Math.hypot(...m.normals.slice(k,k+3))-1)>.03)fail('normal length');if(m.surfaceCoordinates)array(m.surfaceCoordinates,count*3,65535*3,'surface coordinates');if(!Array.isArray(m.indices)||!m.indices.length||m.indices.length%3||m.indices.length>1500000||!m.indices.every(i=>Number.isInteger(i)&&i>=0&&i<count))fail('triangle indices');meshes.set(m.id,m);}
+ for(const m of model.materials){if(!avatarId(m.id)||materials.has(m.id))fail('material id');array(m.color,3,3,'material color');if(m.color.some(x=>x<0||x>1)||!Number.isFinite(m.roughness)||m.roughness<0||m.roughness>1||!Number.isInteger(m.shader)||m.shader<0||m.shader>14)fail('material');materials.add(m.id);}
+ for(const p of model.parts){if(!meshes.has(p.mesh)||!materials.has(p.material)||!['always','helmet-on','helmet-off'].includes(p.variant))fail('part reference/variant');array(p.matrix,16,16,'part matrix');const m=p.matrix,det=m[0]*(m[5]*m[10]-m[6]*m[9])-m[4]*(m[1]*m[10]-m[2]*m[9])+m[8]*(m[1]*m[6]-m[2]*m[5]);if(m[3]!==0||m[7]!==0||m[11]!==0||m[15]!==1||Math.abs(det)<1e-16||m.some(x=>Math.abs(x)>10))fail('affine transform');const columns=[m.slice(0,3),m.slice(4,7),m.slice(8,11)];for(const [i,j]of [[0,1],[0,2],[1,2]])if(Math.abs(columns[i].reduce((n,x,k)=>n+x*columns[j][k],0))/(Math.hypot(...columns[i])*Math.hypot(...columns[j]))>.005)fail('v1 does not support shear');}
+ const texture=model.textures?.kit;if(texture&&(texture.mimeType!=='image/png'||typeof texture.uri!=='string'||texture.uri.length>1500000||!/^data:image\/png;base64,iVBORw0KGgo/.test(texture.uri)))fail('embedded PNG texture');
+ if(texture){let header;try{header=atob(texture.uri.split(',')[1].slice(0,48));}catch{fail('PNG encoding');}if(header.length<24||header.slice(12,16)!=='IHDR')fail('PNG header');const dimension=start=>[0,1,2,3].reduce((n,i)=>n*256+header.charCodeAt(start+i),0),w=dimension(16),h=dimension(20);if(!w||!h||w>2048||h>2048)fail('PNG dimensions');}
+ if(model.materials.some(m=>m.shader===8||m.shader===9)&&!texture)fail('kit texture is required by material');return true;
 }
 
 // Small procedural expressions for stylized rigs, not a realistic facial rig.
@@ -527,15 +563,16 @@ function shader(type,src){const s=gl.createShader(type);gl.shaderSource(s,src);g
 function program(v,f){const p=gl.createProgram();gl.attachShader(p,shader(gl.VERTEX_SHADER,v));gl.attachShader(p,shader(gl.FRAGMENT_SHADER,f));gl.linkProgram(p);if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw new Error(gl.getProgramInfoLog(p));return p;}
 const prog=program(vertex,fragment),depthProg=program(depthV,depthF),meshes={};
 function installCricketMesh(name,data,dynamic=false){
- const vao=gl.createVertexArray();gl.bindVertexArray(vao);const buffers={};for(const [loc,key,arr]of [[0,'position',data.p],[1,'normal',data.n],[8,'surface',data.l??data.p]]){const buffer=gl.createBuffer();buffers[key]=buffer;gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(arr),dynamic?gl.DYNAMIC_DRAW:gl.STATIC_DRAW);gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,3,gl.FLOAT,false,0,0);}const ib=gl.createBuffer();gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,ib);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint16Array(data.i),gl.STATIC_DRAW);const instances=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,instances);for(let k=0;k<4;k++){gl.enableVertexAttribArray(2+k);gl.vertexAttribPointer(2+k,4,gl.FLOAT,false,84,k*16);gl.vertexAttribDivisor(2+k,1);}gl.enableVertexAttribArray(6);gl.vertexAttribPointer(6,4,gl.FLOAT,false,84,64);gl.vertexAttribDivisor(6,1);gl.enableVertexAttribArray(7);gl.vertexAttribPointer(7,1,gl.FLOAT,false,84,80);gl.vertexAttribDivisor(7,1);return meshes[name]={vao,instances,count:data.i.length,list:[],buffers,dynamic};
+ const vao=gl.createVertexArray();gl.bindVertexArray(vao);const buffers={};for(const [loc,key,arr]of [[0,'position',data.p],[1,'normal',data.n],[8,'surface',data.l??data.p]]){const buffer=gl.createBuffer();buffers[key]=buffer;gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(arr),dynamic?gl.DYNAMIC_DRAW:gl.STATIC_DRAW);gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,3,gl.FLOAT,false,0,0);}const ib=gl.createBuffer();gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,ib);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint16Array(data.i),gl.STATIC_DRAW);const instances=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,instances);for(let k=0;k<4;k++){gl.enableVertexAttribArray(2+k);gl.vertexAttribPointer(2+k,4,gl.FLOAT,false,84,k*16);gl.vertexAttribDivisor(2+k,1);}gl.enableVertexAttribArray(6);gl.vertexAttribPointer(6,4,gl.FLOAT,false,84,64);gl.vertexAttribDivisor(6,1);gl.enableVertexAttribArray(7);gl.vertexAttribPointer(7,1,gl.FLOAT,false,84,80);gl.vertexAttribDivisor(7,1);return meshes[name]={vao,instances,indexBuffer:ib,count:data.i.length,list:[],buffers,dynamic,cpu:avatarStudyMode?data:null};
 }
 const avatarStudyMode=globalThis.SH_AVATAR_STUDY===true;
 const avatarStudyState={view:'portrait',yaw:.22,helmet:false};
+let avatarLoadedAsset=null,avatarAssetEpoch=0,avatarLoadTicket=0,avatarCaptureRequested=false,avatarLastSnapshot=null;
 const originalStudyAvatarMeshesCached=avatarStudyMode?originalStudyAvatarMeshes():{};
 const authoredAvatarMeshes=originalAvatarMeshes();
 if(avatarStudyMode){for(let i=0;i<authoredAvatarMeshes.jersey.p.length;i+=3){const y=authoredAvatarMeshes.jersey.p[i+1],w=1+Math.max(0,Math.min(1,(1.03-y)/.18))*.14;authoredAvatarMeshes.jersey.p[i]*=w;authoredAvatarMeshes.jersey.p[i+2]*=w;}}
 for(const [name,data]of Object.entries({sphere:sphereMesh(avatarStudyMode?32:14,avatarStudyMode?22:10),crowdHead:sphereMesh(8,5),cylinder:cylinderMesh(),box:boxMesh(),disk:diskMesh(),ring:ringMesh(),batBlade:originalBatBladeMesh(),...authoredAvatarMeshes,...originalStudyAvatarMeshesCached}))installCricketMesh(name,data);
-function updateCricketMesh(name,data){let mesh=meshes[name];if(!mesh)mesh=installCricketMesh(name,data,true);else for(const [key,arr]of [['position',data.p],['normal',data.n]]){gl.bindBuffer(gl.ARRAY_BUFFER,mesh.buffers[key]);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(arr),gl.DYNAMIC_DRAW);}return name;}
+function updateCricketMesh(name,data){let mesh=meshes[name];if(!mesh)mesh=installCricketMesh(name,data,true);else for(const [key,arr]of [['position',data.p],['normal',data.n]]){gl.bindBuffer(gl.ARRAY_BUFFER,mesh.buffers[key]);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(arr),gl.DYNAMIC_DRAW);}if(avatarStudyMode)meshes[name].cpu=data;return name;}
 const shadowSize=1024,depthTexture=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,depthTexture);gl.texImage2D(gl.TEXTURE_2D,0,gl.DEPTH_COMPONENT24,shadowSize,shadowSize,0,gl.DEPTH_COMPONENT,gl.UNSIGNED_INT,null);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);const shadowFB=gl.createFramebuffer();gl.bindFramebuffer(gl.FRAMEBUFFER,shadowFB);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.DEPTH_ATTACHMENT,gl.TEXTURE_2D,depthTexture,0);gl.drawBuffers([gl.NONE]);gl.readBuffer(gl.NONE);if(gl.checkFramebufferStatus(gl.FRAMEBUFFER)!==gl.FRAMEBUFFER_COMPLETE)throw new Error('Shadow framebuffer failed');gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.enable(gl.DEPTH_TEST);
 const portraitPost=createPortraitPostprocess(gl,program);
 const kitCanvas=document.createElement('canvas');kitCanvas.width=512;kitCanvas.height=512;const kitCtx=kitCanvas.getContext('2d');kitCtx.clearRect(0,0,512,512);kitCtx.fillStyle='#e6c16b';kitCtx.textAlign='center';kitCtx.font='bold 30px sans-serif';kitCtx.fillText('SCORING',256,144);kitCtx.fillText('HEROES',256,179);kitCtx.font='bold 29px sans-serif';kitCtx.fillText('SH',150,89);const kitTexture=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,kitTexture);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,kitCanvas);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
@@ -634,7 +671,7 @@ function drawWorld(t){for(const m of Object.values(meshes))if(m.dynamic)m.list=[
 
  if(avatarStudyMode){
   const player=registry.get('avatar-study')??registerPlayer({id:'avatar-study',name:'Original SH Avatar',height:1.85,skin:[.49,.30,.19],team:'bat'});
-  posePlayer(player,[0,0,0],avatarStudyState.yaw,'hero',0,'RIGHT',true);
+  if(avatarLoadedAsset)drawAvatarModel();else if(!globalThis.SH_AVATAR_JSON_ONLY){const before=avatarCaptureRequested?new Map(Object.entries(meshes).map(([name,m])=>[name,m.list.length])):null;posePlayer(player,[0,0,0],avatarStudyState.yaw,'hero',0,'RIGHT',true);if(before)avatarLastSnapshot=captureAvatarInstances(before);}
   const camera=studyAvatarCamera(avatarStudyState.view,canvas.clientWidth/Math.max(1,canvas.clientHeight));cameraPos=camera.eye;cameraTarget=camera.target;cameraFov=camera.fov;currentCameraShot=camera.name;
   return {labels:[],ballp:[0,0,0]};
  }
@@ -656,7 +693,7 @@ function drawWorld(t){for(const m of Object.values(meshes))if(m.dynamic)m.list=[
  return {labels:[[e.players.striker,strikerHead],[e.players.bowler,V.add(bowlp,[0,2,0])]],ballp};}
 function draw(){const width=Math.round(canvas.clientWidth*Math.min(devicePixelRatio||1,1.5)),height=Math.round(canvas.clientHeight*Math.min(devicePixelRatio||1,1.5));if(canvas.width!==width||canvas.height!==height){canvas.width=width;canvas.height=height;}const scene=drawWorld(active?.t??renderTime);currentVP=multiply(perspective(cameraFov,width/height,.1,450),lookAt(cameraPos,cameraTarget));for(const m of Object.values(meshes)){gl.bindVertexArray(m.vao);gl.bindBuffer(gl.ARRAY_BUFFER,m.instances);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(m.list),gl.DYNAMIC_DRAW);}
  gl.bindFramebuffer(gl.FRAMEBUFFER,shadowFB);gl.viewport(0,0,shadowSize,shadowSize);gl.clear(gl.DEPTH_BUFFER_BIT);gl.useProgram(depthProg);gl.uniformMatrix4fv(gl.getUniformLocation(depthProg,'vp'),false,new Float32Array(lightVP));for(const m of Object.values(meshes)){gl.bindVertexArray(m.vao);gl.drawElementsInstanced(gl.TRIANGLES,m.count,gl.UNSIGNED_SHORT,0,m.list.length/21);}
- portraitPost.bind(width,height);gl.viewport(0,0,width,height);gl.clearColor(.65,.80,.94,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.useProgram(prog);gl.uniformMatrix4fv(gl.getUniformLocation(prog,'vp'),false,new Float32Array(currentVP));gl.uniformMatrix4fv(gl.getUniformLocation(prog,'lightVP'),false,new Float32Array(lightVP));gl.uniform3fv(gl.getUniformLocation(prog,'camera'),new Float32Array(cameraPos));gl.uniform1f(gl.getUniformLocation(prog,'shadowSize'),shadowSize);gl.uniform1f(gl.getUniformLocation(prog,'avatarStudio'),avatarStudyMode?1:0);gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,depthTexture);gl.uniform1i(gl.getUniformLocation(prog,'shadowMap'),0);gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,kitTexture);gl.uniform1i(gl.getUniformLocation(prog,'kitMap'),1);for(const m of Object.values(meshes)){gl.bindVertexArray(m.vao);gl.drawElementsInstanced(gl.TRIANGLES,m.count,gl.UNSIGNED_SHORT,0,m.list.length/21);}
+ portraitPost.bind(width,height);gl.viewport(0,0,width,height);gl.clearColor(.65,.80,.94,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.useProgram(prog);gl.uniformMatrix4fv(gl.getUniformLocation(prog,'vp'),false,new Float32Array(currentVP));gl.uniformMatrix4fv(gl.getUniformLocation(prog,'lightVP'),false,new Float32Array(lightVP));gl.uniform3fv(gl.getUniformLocation(prog,'camera'),new Float32Array(cameraPos));gl.uniform1f(gl.getUniformLocation(prog,'shadowSize'),shadowSize);gl.uniform1f(gl.getUniformLocation(prog,'avatarStudio'),avatarStudyMode?1:0);gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,depthTexture);gl.uniform1i(gl.getUniformLocation(prog,'shadowMap'),0);gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,avatarLoadedAsset?.texture??kitTexture);gl.uniform1i(gl.getUniformLocation(prog,'kitMap'),1);for(const m of Object.values(meshes)){gl.bindVertexArray(m.vao);gl.drawElementsInstanced(gl.TRIANGLES,m.count,gl.UNSIGNED_SHORT,0,m.list.length/21);}
 
  portraitPost.present(V.len(V.sub(cameraPos,cameraTarget)),viewMode!=='wide'&&/PLAYER|CLOSE-UP|REACTION|READY|CAPTAINS|PORTRAIT/.test(currentCameraShot));
  for(const el of labels.values())el.style.display='none';for(const [pid,p]of scene.labels){const x=currentVP[0]*p[0]+currentVP[4]*p[1]+currentVP[8]*p[2]+currentVP[12],y=currentVP[1]*p[0]+currentVP[5]*p[1]+currentVP[9]*p[2]+currentVP[13],w=currentVP[3]*p[0]+currentVP[7]*p[1]+currentVP[11]*p[2]+currentVP[15];if(w>0&&Math.abs(x/w)<1&&Math.abs(y/w)<1){const el=label(pid);el.textContent=registry.get(pid).name;el.style.display='block';el.style.left=((x/w*.5+.5)*canvas.clientWidth)+'px';el.style.top=((-y/w*.5+.5)*canvas.clientHeight)+'px';}}
@@ -679,15 +716,60 @@ for(const [kind,text]of [['highlights','HIGHLIGHTS'],['scorecard','SCORECARD'],[
 for(const [i,name]of ['01 Run-up','02 Release','03 Footwork','04 Contact','05 Follow-through','06 Fielding'].entries()){const b=document.createElement('button');b.textContent=name;b.onclick=()=>{const r=previewBehavior(i);if(!r.accepted)$('#status').textContent='Open the standalone HTML to inspect the motion study.';};$('#behaviorButtons').append(b);}$('#behaviorPlay').onclick=()=>previewBehavior(0,true);
 requestAnimationFrame(frame);
 
+// Captures only instances added by the single study character, never the stadium.
+function captureAvatarInstances(before){
+ const geometries=Object.create(null),parts=[];
+ for(const [name,mesh]of Object.entries(meshes))for(let k=before.get(name)??0;k<mesh.list.length;k+=21){
+  if(!mesh.cpu)throw Error('Missing mesh data: '+name);geometries[name]=mesh.cpu;
+  parts.push({mesh:name,matrix:mesh.list.slice(k,k+16),color:mesh.list.slice(k+16,k+19),roughness:mesh.list[k+19],shader:mesh.list[k+20]});
+ }
+ return {geometries,parts};
+}
+function exportAvatarModelData(){
+ if(!avatarStudyMode)throw Error('Avatar export is study-only');
+ if(avatarLoadedAsset)return JSON.parse(JSON.stringify(avatarLoadedAsset.data));
+ if(globalThis.SH_AVATAR_JSON_ONLY)throw Error('Load a model JSON first');
+ const saved={...avatarStudyState};let off,on;
+ try{avatarStudyState.yaw=0;avatarCaptureRequested=true;avatarStudyState.helmet=false;draw();off=avatarLastSnapshot;avatarStudyState.helmet=true;draw();on=avatarLastSnapshot;
+  return buildAvatarModel(off,on,{kitTexture:kitCanvas.toDataURL('image/png')});
+ }finally{Object.assign(avatarStudyState,saved);avatarCaptureRequested=false;avatarLastSnapshot=null;draw();}
+}
+function releaseAvatarModel(asset){
+ if(!asset)return;for(const name of asset.names.values()){const mesh=meshes[name];if(!mesh)continue;for(const buffer of [...Object.values(mesh.buffers),mesh.indexBuffer,mesh.instances])gl.deleteBuffer(buffer);gl.deleteVertexArray(mesh.vao);delete meshes[name];}if(asset.texture)gl.deleteTexture(asset.texture);
+}
+async function loadAvatarModelData(input){
+ if(!avatarStudyMode)throw Error('JSON model loading is study-only');validateAvatarModel(input);
+ const data=JSON.parse(JSON.stringify(input)),ticket=++avatarLoadTicket;let image=null;
+ if(data.textures?.kit)image=await new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=()=>reject(Error('Invalid embedded kit image'));img.src=data.textures.kit.uri;});
+ if(ticket!==avatarLoadTicket)return {accepted:false,reason:'REPLACED_LOAD'};
+ const textureLimit=Number(gl.getParameter(gl.MAX_TEXTURE_SIZE))||2048;
+ if(image&&(!image.naturalWidth||!image.naturalHeight||image.naturalWidth>Math.min(2048,textureLimit)||image.naturalHeight>Math.min(2048,textureLimit)))throw Error('Embedded texture exceeds renderer dimensions');
+ if(gl.getError()!==gl.NO_ERROR)throw Error('Renderer has a pending GPU error; current model retained');
+ const epoch=avatarAssetEpoch+1,asset={data,names:new Map(),materials:new Map(data.materials.map(m=>[m.id,m])),texture:null};
+ try{
+  for(const mesh of data.meshes){const name='json-avatar-'+epoch+'-'+mesh.id;installCricketMesh(name,{p:mesh.positions,n:mesh.normals,i:mesh.indices,l:mesh.surfaceCoordinates},true);asset.names.set(mesh.id,name);}
+  if(image){asset.texture=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,asset.texture);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,image);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);}
+  const gpuError=gl.getError();if(gpuError!==gl.NO_ERROR)throw Error('Model GPU upload failed: '+gpuError);
+ }catch(error){releaseAvatarModel(asset);throw error;}
+ const previous=avatarLoadedAsset;avatarLoadedAsset=asset;avatarAssetEpoch=epoch;releaseAvatarModel(previous);draw();return {accepted:true,meshes:data.meshes.length,parts:data.parts.length};
+}
+function drawAvatarModel(){
+ const asset=avatarLoadedAsset,rotation=matrix([0,0,0],[1,1,1],avatarStudyState.yaw);
+ for(const part of asset.data.parts){if(part.variant==='helmet-on'&&!avatarStudyState.helmet||part.variant==='helmet-off'&&avatarStudyState.helmet)continue;const material=asset.materials.get(part.material);add(asset.names.get(part.mesh),multiply(rotation,part.matrix),material.color,material.roughness,material.shader);}
+}
+
 // Dedicated offline asset inspection; no scoring or source-tracking connection.
 manual=true;active=null;presentation=null;
 const avatarPanel=document.createElement('section');avatarPanel.className='avatarPanel';
-avatarPanel.innerHTML='<div class="avatarBrand">SCORING HEROES <span>ORIGINAL AVATAR · CODE RENDER</span></div><div class="avatarTools"><button data-avatar-view="portrait">Face close-up</button><button data-avatar-view="body">Full body + bat</button><button id="avatarHelmet">Helmet off</button><label>Rotate <input id="avatarRotate" type="range" min="-180" max="180" value="13" aria-label="Avatar rotation"></label></div><p>One original coded character · no purchased models · generic identity</p>';
+avatarPanel.innerHTML='<div class="avatarBrand">SCORING HEROES <span id="avatarSource">ORIGINAL AVATAR · CODE RENDER</span></div><div class="avatarTools"><button data-avatar-view="portrait">Face close-up</button><button data-avatar-view="body">Full body + bat</button><button id="avatarHelmet">Helmet off</button><label>Rotate <input id="avatarRotate" type="range" min="-180" max="180" value="13" aria-label="Avatar rotation"></label><label class="avatarFile">Load avatar JSON <input id="avatarModelFile" type="file" accept=".json,application/json"></label><button id="avatarExport">Export model JSON</button></div><p id="avatarModelStatus">One original coded character · no purchased models · generic identity</p>';
 document.body.append(avatarPanel);
-window.SHAvatar={setView(view){if(!['portrait','body'].includes(view))return false;avatarStudyState.view=view;draw();return true;},setYaw(degrees){if(!Number.isFinite(degrees))return false;avatarStudyState.yaw=degrees*Math.PI/180;draw();return true;},setHelmet(value){avatarStudyState.helmet=!!value;document.querySelector('#avatarHelmet').textContent=value?'Helmet on':'Helmet off';draw();},getState(){return {characterCount:1,heightMetres:1.85,view:avatarStudyState.view,yawDegrees:avatarStudyState.yaw*180/Math.PI,helmet:avatarStudyState.helmet,originalGeometry:true,identity:'generic-original',renderer:gl.getParameter(gl.VERSION)};}};
+function refreshAvatarSource(){const source=avatarLoadedAsset?'JSON MODEL · STATIC POSE':globalThis.SH_AVATAR_JSON_ONLY?'LOAD YOUR AVATAR JSON':'AUTHORED SOURCE · STATIC POSE';document.querySelector('#avatarSource').textContent=source;document.querySelector('#avatarExport').disabled=!!globalThis.SH_AVATAR_JSON_ONLY&&!avatarLoadedAsset;}
+window.SHAvatar={setView(view){if(!['portrait','body'].includes(view))return false;avatarStudyState.view=view;draw();return true;},setYaw(degrees){if(!Number.isFinite(degrees))return false;avatarStudyState.yaw=degrees*Math.PI/180;draw();return true;},setHelmet(value){avatarStudyState.helmet=!!value;document.querySelector('#avatarHelmet').textContent=value?'Helmet on':'Helmet off';draw();},exportModel:exportAvatarModelData,async loadModel(data){const result=await loadAvatarModelData(data);refreshAvatarSource();if(result.accepted)document.querySelector('#avatarModelStatus').textContent='JSON model loaded · '+result.meshes+' meshes · '+result.parts+' parts · static pose';return result;},getState(){return {characterCount:globalThis.SH_AVATAR_JSON_ONLY&&!avatarLoadedAsset?0:1,heightMetres:1.85,view:avatarStudyState.view,yawDegrees:avatarStudyState.yaw*180/Math.PI,helmet:avatarStudyState.helmet,assetSource:avatarLoadedAsset?'json':globalThis.SH_AVATAR_JSON_ONLY?'awaiting-json':'authored',modelMeshes:avatarLoadedAsset?.data.meshes.length??0,staticPose:true,originalGeometry:avatarLoadedAsset?null:true,identity:avatarLoadedAsset?'model-file':'generic-original',renderer:gl.getParameter(gl.VERSION)};}};
 for(const b of document.querySelectorAll('[data-avatar-view]'))b.onclick=()=>SHAvatar.setView(b.dataset.avatarView);
 document.querySelector('#avatarRotate').oninput=e=>SHAvatar.setYaw(Number(e.target.value));document.querySelector('#avatarHelmet').onclick=()=>SHAvatar.setHelmet(!avatarStudyState.helmet);
-addEventListener('resize',()=>draw());draw();
+document.querySelector('#avatarModelFile').onchange=async e=>{const file=e.target.files?.[0];if(!file)return;try{if(file.size>32*1024*1024)throw Error('Model JSON exceeds 32 MB');await SHAvatar.loadModel(JSON.parse(await file.text()));}catch(error){document.querySelector('#avatarModelStatus').textContent=error.message;}finally{e.target.value='';}};
+document.querySelector('#avatarExport').onclick=()=>{try{const data=SHAvatar.exportModel(),url=URL.createObjectURL(new Blob([JSON.stringify(data)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download='sh-original-avatar.model.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}catch(error){document.querySelector('#avatarModelStatus').textContent=error.message;}};
+addEventListener('resize',()=>draw());refreshAvatarSource();draw();
 
 
 </script></body></html>
