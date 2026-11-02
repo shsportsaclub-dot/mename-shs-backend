@@ -12970,7 +12970,7 @@ const st=document.createElement('style');st.textContent=`.ccs{position:absolute;
 .ccs-big{position:absolute;left:0;right:0;top:34cqh;text-align:center;font-size:13cqw;font-weight:900;color:#ffd84d;text-shadow:0 .6cqw 2cqw #000;pointer-events:none;opacity:0;transform:scale(.6);transition:opacity .2s,transform .25s}.ccs-big.on{opacity:1;transform:scale(1)}
 .ccs-wait{inset:0;display:flex;align-items:center;justify-content:center;font-size:4cqw;opacity:.85;position:absolute;background:#0a1a3a}`;document.head.appendChild(st);
 const CC=UI.ccst=UI.ccst||{id:'',m:null,d:null,shown:null,queue:[],busy:0,playing:0};
-const sceneNow=()=>{if(location.hash!=='#overlay')return UI.view==='stream'&&UI.ovScene==='ccast'?'ccast':'';const p=new URLSearchParams(location.search);if(p.get('scene')==='ccast'){CC.id=p.get('mid')||CC.id;return'ccast'}return''};
+const sceneNow=()=>{if(location.hash!=='#overlay')return UI.view==='stream'&&UI.ovScene==='ccast'?'ccast':'';const p=new URLSearchParams(location.search);if(p.get('scene')==='ccast'){const q=p.get('mid');CC.auto=!q||q==='auto';if(!CC.auto)CC.id=q;return'ccast'}return''};
 const flat=m=>{const o=[];(m.innings||[]).forEach((inn,i)=>(inn.ev||[]).forEach((e,j)=>o.push({i,j,e})));return o};
 function inject(d){S.rt=S.rt||{teams:{},players:{}};S.rt.teams=S.rt.teams||{};S.rt.players=S.rt.players||{};Object.values(d.teams||{}).forEach(t=>{S.rt.teams[t.id]=t});Object.values(d.players||{}).forEach(p=>{S.rt.players[p.id]=p})}
 const $=id=>document.getElementById(id);
@@ -13125,29 +13125,31 @@ async function play(k){const e=k.e,m=CC.m;layout();startLoop();{const w=e.w?'WIC
  const word=e.w?'OUT!':wide?'WIDE':nb?'NO BALL':e.r===6&&hit?'SIX!':e.r===4&&hit?'FOUR!':'';const big=$('ccbig');if(word&&big){big.textContent=word;big.classList.add('on')}
  await wait(word?1800:900);if(big)big.classList.remove('on');G.ball.on=0;G.follow=0;G.swing=0;G.st0=null;G.wk=0;G.sig=0;G.tcam=BASE;G.batX=-.55;G.batZ=-.5;G.nsZ=19.6;await wait(500)}
 async function pump(){if(CC.playing)return;CC.playing=1;try{while(CC.queue.length){const k=CC.queue.shift();if(CC.queue.length>4){say(text(CC.m,k));paint();continue}await play(k)}}finally{CC.playing=0}}
-async function poll(){if(!sceneNow()||!CC.id||CC.busy)return;CC.busy=1;try{const j=await (await fetch(apiBase()+'/api/shared/matches/'+encodeURIComponent(CC.id))).json();if(!j.ok||!j.item||!j.item.data||!j.item.data.m)return;const d=j.item.data;CC.d=d;inject(d);CC.m=d.m;
+/* mid=auto (or no mid): follow whichever match is live right now; switches by itself when a match ends or another starts */
+async function resolveAuto(){const n=Date.now();if(CC.rt&&n-CC.rt<8000)return;CC.rt=n;try{const j=await (await fetch(apiBase()+'/api/shared/matches')).json();const L=((j&&j.items)||[]).filter(x=>x&&x.data&&x.data.m&&x.data.m.status==='live'&&!x.data.m.rm).sort((a,b)=>(b.updated||0)-(a.updated||0));const cur=L.find(x=>x.id===CC.id),pick=cur||L[0];if(pick&&pick.id!==CC.id){CC.id=pick.id;CC.m=null;CC.d=null;CC.shown=null;CC.queue=[];CC.playing=0;render()}}catch(e){}}
+async function poll(){if(!sceneNow()||CC.busy)return;if(CC.auto)await resolveAuto();if(!CC.id)return;CC.busy=1;try{const j=await (await fetch(apiBase()+'/api/shared/matches/'+encodeURIComponent(CC.id))).json();if(!j.ok||!j.item||!j.item.data||!j.item.data.m)return;const d=j.item.data;CC.d=d;inject(d);CC.m=d.m;
  const all=flat(d.m);if(CC.shown==null){CC.shown=all.length;render();setTimeout(()=>{if(all.length){const k=all[all.length-1];G.names.bat=nm(k.e.bt)||'';G.names.bowl=nm(k.e.bl)||'';say(text(CC.m,k));layout();paint();startLoop()}},60);return}
  if(all.length>CC.shown){CC.queue.push(...all.slice(CC.shown));CC.shown=all.length;pump()}else if(all.length<CC.shown){CC.shown=all.length;CC.queue=[]}}catch(e){}finally{CC.busy=0}}
 setInterval(poll,2000);
 window.shGamePlay=play;window.shSpeak=speakLine;window.shSfx=sfx;window.shSndOn=sndOn;window.shSndIs=()=>!!G.snd;
 const o0=overlayHTML;overlayHTML=function(prev){if(!sceneNow())return o0.apply(this,arguments);
- if(!CC.id)return `<div class="ovroot ov" data-t="sh"><div class="ccs"><div class="ccs-wait">Add &amp;mid=MATCH_ID to this URL</div></div></div>`;
+ if(!CC.id){if(CC.auto)setTimeout(poll,0);return `<div class="ovroot ov" data-t="sh"><div class="ccs"><div class="ccs-wait">${CC.auto?'Waiting for a live match...':'Add &amp;mid=MATCH_ID to this URL'}</div></div></div>`}
  if(!CC.m){setTimeout(poll,0);return `<div class="ovroot ov" data-t="sh"><div class="ccs"><div class="ccs-wait">Connecting to the match...</div></div></div>`}
  setTimeout(()=>{const c=$('ccg');if(c){ctx=null;G.raf=0;startLoop()}paint()},0);
  return `<div class="ovroot ov" data-t="sh"><div class="ccs"><canvas id="ccg" width="${W}" height="${Hh}"></canvas><div class="ccs-hd"><div class="ccs-sc" id="ccs"></div><div class="ccs-bx" id="ccb"></div><div class="ccs-d" id="ccd"></div></div><div class="ccs-big" id="ccbig"></div><div class="ccs-t" id="cct">...</div></div></div>`};
 /* studio card */
 {const sx=XV.studio;if(sx)XV.studio=function(){const o=sx.apply(this,arguments);if(typeof o!=='string'||o.includes('Cricket game stream'))return o;
- const ms=S.matches.filter(m=>!m.rm).slice().reverse();
- const bx=`<div class="card"><h3>Cricket game stream</h3><div class="mu sm" style="margin-bottom:6px">A video-game style 3D stadium with crowd. The batter, bowler and fielders are picked from the live scoring, and each ball is played as scored: shot direction, boundary, wicket, wide. Commentary and score on screen. Add as an OBS Browser Source (1920x1080). The match must be published (signed in, synced).</div><select data-c="ccPick"><option value="">Choose match</option>${ms.map(m=>`<option value="${esc(m.id)}" ${CC.id===m.id?'selected':''}>${esc((T(m.a)||{}).name)} v ${esc((T(m.b)||{}).name)}</option>`).join('')}</select><div class="row" style="gap:6px;margin-top:8px"><button class="btn sm" data-a="ccOpen">Preview in new tab</button><button class="btn sm ghost" data-a="ccCopy">Copy URL</button></div></div>`;
+ const ms=S.matches.filter(m=>m&&m.id).slice().reverse().sort((a,b)=>(b.status==='live')-(a.status==='live'));
+ const bx=`<div class="card"><h3>Cricket game stream</h3><div class="mu sm" style="margin-bottom:6px">A video-game style 3D stadium with crowd. The batter, bowler and fielders are picked from the live scoring, and each ball is played as scored: shot direction, boundary, wicket, wide. Commentary and score on screen. Add as an OBS Browser Source (1920x1080). The match must be published (signed in, synced).</div><select data-c="ccPick"><option value="auto" ${CC.id?'':'selected'}>Auto: follow any live match (recommended)</option>${ms.map(m=>`<option value="${esc(m.id)}" ${CC.id===m.id?'selected':''}>${m.status==='live'?'LIVE: ':''}${esc((T(m.a)||{}).name||'Team A')} v ${esc((T(m.b)||{}).name||'Team B')}</option>`).join('')}</select><div class="row" style="gap:6px;margin-top:8px"><button class="btn sm" data-a="ccOpen">Preview in new tab</button><button class="btn sm ghost" data-a="ccCopy">Copy URL</button></div></div>`;
  return o.replace(/(<div class="bar"><h2>Broadcast studio<\/h2><\/div>)/,'$1'+bx)}}
-const url=()=>location.href.split('#')[0].split('?')[0]+'?scene=ccast&mid='+encodeURIComponent(CC.id)+'#overlay';
-Object.assign(C,{ccPick(v){CC.id=v;CC.m=null;CC.shown=null;render()}});
-Object.assign(A,{ccCopy(){if(!CC.id)return toast('Choose the match first');try{navigator.clipboard.writeText(url());toast('URL copied')}catch(e){toast(url(),6000)}},ccOpen(){if(!CC.id)return toast('Choose the match first');window.open(url(),'_blank','noopener')}});
+const url=()=>location.href.split('#')[0].split('?')[0]+'?scene=ccast&mid='+encodeURIComponent(CC.id||'auto')+'#overlay';
+Object.assign(C,{ccPick(v){CC.id=v==='auto'?'':v;CC.m=null;CC.shown=null;render()}});
+Object.assign(A,{ccCopy(){try{navigator.clipboard.writeText(url());toast('URL copied')}catch(e){toast(url(),6000)}},ccOpen(){window.open(url(),'_blank','noopener')}});
 })();
 
 /* 141 3D LIVE inside the app: any live match can be watched as the 3D avatar stream (the same scene OBS uses), like a live channel */
 (function(){
-const live=()=>(S.matches||[]).filter(m=>m&&!m.rm&&m.status==='live'&&!(typeof isDemo==='function'&&isDemo(m)&&false)).slice().reverse();
+const live=()=>(S.matches||[]).filter(m=>m&&m.status==='live'&&!(typeof isDemo==='function'&&isDemo(m)&&false)).slice().reverse();
 const title=m=>`${esc((T(m.a)||{}).name||'Team A')} v ${esc((T(m.b)||{}).name||'Team B')}`;
 const src=id=>location.href.split('#')[0].split('?')[0]+'?scene=ccast&mid='+encodeURIComponent(id)+'#overlay';
 UI.l3=UI.l3||{id:''};

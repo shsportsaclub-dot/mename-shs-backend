@@ -314,3 +314,6 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 
 ## Cricket bat model (user-supplied, free)
 - Bat in the 3D match is now the low-poly "Cricket Bat" model by MiniPoly (user-supplied zip, Poly Pizza), converted to `public/vendor/shbat.js` (540 triangles, willow blade + dark grip), loaded in the shx engine; falls back to the old box bat if it fails to load (`window.SH_OLDBAT` forces old). Author credit needed (CC-BY style): "Cricket Bat by MiniPoly"; licence on the model page still to be confirmed by the user.
+
+## Universal live 3D stream (OBS)
+- Broadcast studio "Cricket game stream": dropdown now lists every match (live first, including matches scored by others), default "Auto: follow any live match". Link `?scene=ccast&mid=auto` (also used when no mid) follows the newest live shared match by itself, stays on it while live, switches when it ends or another starts, and waits when none is live. In-app 3D Live strip also lists everyone's live matches. Test: tests/ccast-auto.cjs.
