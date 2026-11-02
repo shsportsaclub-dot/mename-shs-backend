@@ -311,3 +311,6 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 
 ## Avatar batch mode (Lightning AI free plan)
 - Admin queues players (`POST /api/avatars/queue`); GPU Studio runs `gpu-worker/batch.py`, reads `GET /api/avatars/queue` and pushes `POST /api/avatars/push`, both with header `x-avatar-key` = env AVATAR_GPU_KEY. Tested with mock (tests/avatars.test.mjs); real GPU run pending.
+
+## Cricket bat model (user-supplied, free)
+- Bat in the 3D match is now the low-poly "Cricket Bat" model by MiniPoly (user-supplied zip, Poly Pizza), converted to `public/vendor/shbat.js` (540 triangles, willow blade + dark grip), loaded in the shx engine; falls back to the old box bat if it fails to load (`window.SH_OLDBAT` forces old). Author credit needed (CC-BY style): "Cricket Bat by MiniPoly"; licence on the model page still to be confirmed by the user.

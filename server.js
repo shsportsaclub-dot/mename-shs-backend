@@ -2228,7 +2228,7 @@ http.createServer(async (req, res) => {
         url: f.url, type: f.type === 'mp4' ? 'video/mp4' : 'application/vnd.apple.mpegurl' }));
     return out(200, { ok: true, matchId, territory, feeds, reason: feeds.length ? null : 'No authorized stream configured for this match and territory' });
   }
-  if (req.method === 'GET' && /^\/vendor\/(three\.core\.js|three\.module\.js|GLTFLoader\.js|SkeletonUtils\.js|BufferGeometryUtils\.js|shdress\.js|shstadium\.js|shbody\.js|Xbot\.glb)$/.test(path)) {   // 3D engine and the animated human model used by the game streams
+  if (req.method === 'GET' && /^\/vendor\/(three\.core\.js|three\.module\.js|GLTFLoader\.js|SkeletonUtils\.js|BufferGeometryUtils\.js|shdress\.js|shstadium\.js|shbody\.js|shbat\.js|Xbot\.glb)$/.test(path)) {   // 3D engine and the animated human model used by the game streams
     try {
       const f = path.slice('/vendor/'.length), body = fs.readFileSync(new URL('./public/vendor/' + f, import.meta.url));
       res.writeHead(200, { 'content-type': f.endsWith('.glb') ? 'model/gltf-binary' : 'text/javascript; charset=utf-8', 'cache-control': 'public, max-age=604800', 'access-control-allow-origin': '*', 'x-content-type-options': 'nosniff' });
