@@ -2199,7 +2199,10 @@ http.createServer(async (req, res) => {
     res.writeHead(200, { 'content-type': 'text/event-stream', 'cache-control': 'no-cache, no-transform', connection: 'keep-alive', 'x-accel-buffering': 'no', 'access-control-allow-origin': allow(origin), vary: 'origin' });
     res.write('retry: 2000\n\n'); sseClients.add(res); req.on('close', () => sseClients.delete(res)); return;
   }
-  const STATIC = { '/manifest.webmanifest': 'application/manifest+json', '/sw.js': 'application/javascript', '/icon-192.png': 'image/png', '/icon-512.png': 'image/png', '/icon-maskable.png': 'image/png', '/apple-touch-icon.png': 'image/png' };
+  const STATIC = { '/fbx-motion-studio.html': 'text/html; charset=utf-8', '/manifest.webmanifest': 'application/manifest+json', '/sw.js': 'application/javascript', '/icon-192.png': 'image/png', '/icon-512.png': 'image/png', '/icon-maskable.png': 'image/png', '/apple-touch-icon.png': 'image/png' };
+  if (req.method === 'GET' && /^\/models\/cricket-equipment\/(cricket_(bail|ball_red|ball_white|bat|pitch|stump)\.glb|manifest\.json|SOURCE-LICENSE\.txt)$/.test(path)) {
+    try { const body = fs.readFileSync(new URL('./public' + path, import.meta.url)); res.writeHead(200, { 'content-type': path.endsWith('.glb') ? 'model/gltf-binary' : path.endsWith('.json') ? 'application/json' : 'text/plain; charset=utf-8', 'x-content-type-options': 'nosniff' }); return res.end(body); } catch { /* fall through */ }
+  }
   const em = /^\/emblems\/[a-z-]+\.webp$/.exec(path);
   const lg = /^\/logos\/[a-z0-9._-]+\.(webp|png|jpg|jpeg|svg|json)$/i.exec(path);
   if (req.method === 'GET' && lg) { try { const f = fs.readFileSync(new URL('./public' + path, import.meta.url)); const x = lg[1].toLowerCase(); res.writeHead(200, { 'content-type': x === 'json' ? 'application/json' : x === 'svg' ? 'image/svg+xml' : x === 'jpg' ? 'image/jpeg' : 'image/' + x, 'cache-control': x === 'json' ? 'no-cache' : 'public, max-age=86400', 'access-control-allow-origin': '*' }); return res.end(f); } catch { /* fall through */ } }
@@ -2245,6 +2248,21 @@ http.createServer(async (req, res) => {
   if (req.method === 'GET' && (path === '/install' || path === '/install.html')) {   // install guide: iPhone (Add to Home Screen) and Android (APK)
     try { const html = fs.readFileSync(new URL('./public/install.html', import.meta.url)); res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache' }); return res.end(html); }
     catch { return out(404, { ok: false, error: 'Install page not available' }); }
+  }
+  // Existing scorer/OBS links now use our original, read-only 3D viewer.
+  if (req.method === 'GET' && (path === '/' || path === '/index.html')) {
+    const q = new URL(req.url, 'http://x').searchParams, mid = q.get('mid') || '';
+    if (q.get('scene') === 'ccast' && /^[\w-]{3,40}$/.test(mid)) {
+      res.writeHead(302, { location: '/virtual-live?mid=' + encodeURIComponent(mid) + '&embed=1', 'cache-control': 'no-store' });
+      return res.end();
+    }
+  }
+  if (req.method === 'GET' && (path === '/virtual-live' || path === '/virtual-live.html')) {
+    try {
+      const html = fs.readFileSync(new URL('./public/original-virtual-live.html', import.meta.url));
+      res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' });
+      return res.end(html);
+    } catch { return out(404, { ok: false, error: 'Original virtual viewer unavailable' }); }
   }
   if (req.method === 'GET' && path === '/live-studio') {
     try { const html = fs.readFileSync(new URL('./public/live-studio.html', import.meta.url)); res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' }); return res.end(html); }

@@ -1,0 +1,963 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Scoring Heroes · Original Cricket</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#06121d;color:#f1f7fb;font:14px system-ui,sans-serif}button,select,textarea{font:inherit}button{border:1px solid #355366;background:#142b3c;color:white;padding:10px 15px;border-radius:9px;cursor:pointer}button:hover{background:#24475b}button:disabled{opacity:.45;cursor:default}.primary{background:#eec86b;color:#071725;border-color:#eec86b;font-weight:800}header{height:65px;display:flex;align-items:center;justify-content:space-between;padding:0 23px;border-bottom:1px solid #254051}.brand{font-size:17px;font-weight:900;letter-spacing:1px}.brand span{color:#f1cc71}.tag{font-size:10px;letter-spacing:2px;color:#8db3c8;margin-top:3px}.chip{padding:6px 11px;border:1px solid #32516a;border-radius:30px;font-size:11px;color:#a8cadc}.layout{display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:15px;padding:16px;max-width:1900px;margin:auto}.stage{height:min(75vw,760px);min-height:490px;position:relative;border-radius:14px;overflow:hidden;border:1px solid #355164;background:#0d2435}canvas{width:100%;height:100%;display:block}.topbar{position:absolute;top:18px;left:18px;right:18px;display:flex;justify-content:space-between;gap:12px;pointer-events:none}.live{font-size:11px;font-weight:bold;letter-spacing:2px}.dot{display:inline-block;width:7px;height:7px;border-radius:100%;background:#eec86b;margin-right:7px}.match{font-size:12px;color:#acc9d8;margin-top:7px}.scoreBox{text-align:right;font-size:34px;font-weight:900;text-shadow:0 2px 6px #000}.scoreBox small{display:block;font-size:11px;color:#b4d0de;font-weight:500}.overlay{position:absolute;bottom:18px;left:18px;right:18px;background:linear-gradient(90deg,#071a2dee,#102e3bd9);border:1px solid #59768766;backdrop-filter:blur(8px);padding:16px 20px;border-radius:10px;pointer-events:none}.roles{font-size:13px;color:#9fc0d3;display:flex;gap:25px;flex-wrap:wrap}.roles strong{color:white}.commentary{margin-top:10px;font-size:18px;font-weight:650;line-height:1.45;min-height:26px}.bottomline{margin-top:11px;display:flex;justify-content:space-between;font-size:10px;letter-spacing:1.5px;color:#8eafc3}.badge{position:absolute;left:50%;top:37%;transform:translate(-50%,-50%);font-size:64px;font-weight:1000;color:#ffe19a;text-shadow:0 3px 24px #000;opacity:0;transition:opacity .2s;pointer-events:none}.side{background:#0d2030;border:1px solid #294252;border-radius:14px;padding:18px;height:fit-content}.eyebrow{color:#edcc79;font-size:10px;letter-spacing:2px;margin:0 0 10px}.side h2{font-size:19px;margin:0 0 10px}.side p{font-size:12px;color:#8fb0c3;line-height:1.65;margin:9px 0 16px}.side label{display:block;font-size:11px;color:#9fbdce;margin:13px 0 7px}select{width:100%;padding:9px;background:#112b3e;color:white;border:1px solid #3a5368;border-radius:8px}.runs{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.runs button{padding:11px 0;font-weight:bold}.runs .four{background:#dbb75f;color:#092130}.runs .wicket{background:#88353a}textarea{width:100%;min-height:110px;background:#071725;color:#d3e6ee;border:1px solid #314c5f;border-radius:8px;padding:8px;font-size:11px}.toolbar{display:flex;gap:8px;margin-bottom:13px;flex-wrap:wrap}.toolbar button{flex:1;padding:10px 7px;font-size:12px}.status{margin-top:14px;line-height:1.6;color:#91b1c4;font-size:11px}.error{color:#ff9797}details{margin-top:18px}summary{font-size:12px;color:#c2d6e1;cursor:pointer}footer{font-size:11px;line-height:1.7;color:#799fb4;margin:0 20px 20px}.labels{position:absolute;inset:0;pointer-events:none}.playerLabel{position:absolute;transform:translate(-50%,-100%);font-size:10px;font-weight:700;background:#092235d9;border:1px solid #52748877;border-radius:5px;padding:3px 6px;white-space:nowrap}.view{position:absolute;right:18px;bottom:158px;display:flex;gap:5px}.view button{font-size:10px;padding:6px 8px;background:#102536bb}.notice{padding:10px;border-left:2px solid #e6c471;color:#a5becb;font-size:11px;line-height:1.6;margin-top:16px}
+@media(max-width:850px){header{padding:0 13px}.layout{grid-template-columns:1fr;padding:9px;gap:9px}.stage{min-height:520px;height:70vh;max-height:760px}.side{padding:15px}.side p{margin-bottom:10px}.toolbar{margin-bottom:9px}.runs{grid-template-columns:repeat(8,1fr)}.commentary{font-size:15px}.overlay{left:9px;right:9px;bottom:9px;padding:12px}.scoreBox{font-size:28px}.chip{display:none}.roles{gap:10px}.badge{font-size:45px}footer{margin:4px 13px 16px}.view{bottom:155px;right:10px}}
+.lineupPanel{position:absolute;top:100px;left:18px;right:18px;z-index:7;background:#071725f5;border:1px solid #41627a;border-radius:12px;padding:16px;max-height:60%;overflow:auto}.lineupPanel>button{float:right;font-size:10px;padding:5px 8px}.lineupCards{display:flex;gap:10px;overflow:auto;padding-top:16px}.lineupCard{flex:0 0 160px;min-height:160px;border:1px solid #3a5269;border-radius:12px;padding:18px 13px;background:linear-gradient(140deg,#1e3850,#0a172a)}.lineupCard.selected{border:2px solid #f1cd71}.lineupCard strong{font-size:18px}.lineupCard p{font-size:12px;color:#b0c6d6;min-height:45px}.lineupCard small{font-size:10px;color:#f1cd71}
+.badge{display:none}.scoreTicker{display:flex;align-items:center;gap:12px;border-top:1px solid #54748a66;margin-top:12px;padding-top:9px;font-size:12px}.scoreTicker>b{flex:none;color:#f2cf78;font-size:10px;letter-spacing:1px}.scoreTicker>div{overflow:hidden;min-width:0;flex:1}#tickerText{display:inline-block;white-space:nowrap}.broadcastNav{display:flex;gap:7px;flex-wrap:wrap;margin-top:16px}.broadcastNav button{font-size:11px;padding:7px}.scoreTableWrap{overflow:auto;margin:14px 0}table{width:100%;border-collapse:collapse;white-space:nowrap;font-size:12px}th,td{padding:10px 12px;border-bottom:1px solid #3c5669;text-align:left}th{color:#edc96e;font-size:10px;letter-spacing:1px}.highlightCard{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-top:10px;padding:13px;background:#163044;border-left:3px solid #e7c56e;border-radius:6px}.highlightCard small{color:#a5c1d1}.highlightCard.wicket{border-color:#ff7077}.highlightCard.milestone{border-color:#78dac1}.eventBanner{pointer-events:none;position:absolute;top:20%;left:50%;transform:translateX(-50%);z-index:4;width:min(620px,87%);padding:18px 24px;display:flex;align-items:center;flex-direction:column;text-align:center;background:linear-gradient(110deg,#10273bf0,#1c4054ef);border:2px solid #e7c56e;border-radius:12px;box-shadow:0 12px 40px #0007;animation:cricketEventIn .42s ease-out}.eventTitle{font-size:clamp(32px,6vw,76px);font-weight:950;letter-spacing:4px;color:#f1d176;text-shadow:0 4px #141c2b}.eventSubtitle{max-width:100%;font-size:13px;line-height:1.5;color:#e9f2f7}.eventScore{margin-top:6px;color:#a9cadc;font-size:16px}.eventBanner.wicket{border-color:#fa6c76}.eventBanner.wicket .eventTitle{color:#ff9398}.eventBanner.milestone{border-color:#76dcc3}.eventSpark{position:absolute;width:6px;height:6px;background:#eccb72;left:50%;top:50%;opacity:0;animation:cricketSpark 1.8s ease-out;transform:rotate(calc(var(--i)*36deg)) translateY(-80px)}.view{flex-wrap:wrap;max-width:94%;bottom:190px}@keyframes cricketEventIn{from{opacity:0;transform:translateX(-50%) scale(.76) rotate(-3deg)}to{opacity:1;transform:translateX(-50%) scale(1)}}@keyframes cricketSpark{20%{opacity:1}100%{opacity:0;transform:rotate(calc(var(--i)*36deg)) translateY(-210px)}}@keyframes cricketTicker{to{transform:translateX(-50%)}}@media(prefers-reduced-motion:reduce){.eventBanner,.eventSpark,#tickerText{animation:none!important}}
+
+.behaviorPhase{position:absolute;top:74px;left:18px;padding:8px 12px;background:#081b2de8;border:1px solid #ddbf70;color:#f2d28c;font-size:12px;font-weight:800;z-index:3;pointer-events:none}.behaviorControls{margin:0 0 20px;padding-bottom:18px;border-bottom:1px solid #355164}.behaviorControls summary{color:#edcc79;font-weight:800}.behaviorButtons{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:12px}.behaviorButtons button{font-size:11px;padding:8px 5px}.sourceCaptionBox{position:absolute;top:108px;left:18px;max-width:64%;z-index:4;padding:8px 10px;background:#081b2def;border:1px solid #587790;border-radius:7px;pointer-events:none}.sourceCaptionBox b{font-size:9px;color:#e9c67d;display:block}.sourceCaptionBox span{font-size:12px;display:block;margin-top:5px}.hybridStageMode{position:absolute;left:18px;top:74px;max-width:75%;padding:7px 10px;background:#061725e8;border:1px solid #4d998d;color:#9cf2de;font-size:10px;border-radius:6px;z-index:3;pointer-events:none}.hybridPanel{border-bottom:1px solid #395668;padding-bottom:18px;margin:0 0 20px}.hybridPanel summary{font-size:15px;color:#f2cf78;font-weight:800}.hybridPanel input[type=file]{font-size:11px;width:100%;color:#bdd2dc}.hybridPanel input[type=url],.hybridPanel input[type=number]{width:100%;background:#081b29;border:1px solid #3d5f76;color:white;border-radius:6px;padding:8px}.hybridPanel button{padding:8px;font-size:11px}.hybridButtons{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}.hybridPanel .sourcePreview{position:relative;min-height:100px;background:#040b11;border:1px solid #355164;border-radius:8px;margin-top:12px;overflow:hidden}.sourcePreview video{width:100%;height:auto;display:block;min-height:100px}.sourcePreview canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;pointer-events:none}.hybridPanel .sourcePreview.cropping canvas{pointer-events:auto}.hybridMode{font-size:10px;line-height:1.6;color:#8ee8cf;margin:12px 0 0;padding:8px;background:#102f3d;border-radius:6px}.hybridPanel textarea{min-height:65px}.hybridPanel .hybridNote{font-size:11px;line-height:1.6;margin:10px 0;color:#9ab4c6}.studioOpen .side{max-height:calc(100vh - 100px);overflow-y:auto}.studioOpen .stage{position:sticky;top:12px}.connected.studioOpen .side{max-height:calc(100vh - 24px)}.studioOpen .layout{grid-template-columns:minmax(0,1fr) 340px}.connected.studioOpen .layout{display:grid;padding:12px;gap:12px;grid-template-columns:minmax(0,1fr) 340px}.connected.studioOpen .side{display:block}.connected.studioOpen .stage{height:calc(100vh - 24px);border:1px solid #355164}.hybridPanel .status{margin-top:8px}.hybridPanel input[type=checkbox]{vertical-align:middle}@media(max-width:850px){.studioOpen .layout,.connected.studioOpen .side{max-height:calc(100vh - 100px);overflow-y:auto}.studioOpen .stage{position:sticky;top:12px}.connected.studioOpen .side{max-height:calc(100vh - 24px)}.studioOpen .layout{grid-template-columns:1fr}.connected.studioOpen .stage{height:70vh;min-height:520px}.studioOpen .stage{position:relative;top:0}.studioOpen .side,.connected.studioOpen .side{max-height:none;overflow:visible}}
+</style></head><body>
+<header><div><div class="brand">SCORING <span>HEROES</span></div><div class="tag">ORIGINAL PROCEDURAL CRICKET</div></div><div class="chip">ORIGINAL AVATARS · OPTIONAL VIDEO TRACKER</div></header>
+<main class="layout"><section class="stage" id="stage"><canvas id="scene" aria-label="Original 3D cricket stadium"></canvas><div class="topbar"><div><div class="live"><i class="dot"></i>VIRTUAL LIVE</div><div class="match">SH HEROES <span style="color:#65879b">vs</span> SH CHALLENGERS</div></div><div class="scoreBox"><span id="score">0 / 0</span><small id="overs">0.0 overs</small></div></div><div id="hybridStageMode" style="display:none" class="hybridStageMode"></div><div id="behaviorPhase" class="behaviorPhase" style="display:none"></div><div id="sourceCaptionBox" class="sourceCaptionBox" style="display:none"><b>SOURCE CAPTION · UNMATCHED TO DELIVERY</b><span id="sourceCaptionText"></span></div><div id="lineupPanel" class="lineupPanel" style="display:none"></div><div class="labels" id="labels"></div><div id="eventBanner" class="eventBanner" style="display:none"></div><div id="badge" class="badge"></div><div class="view"><button data-view="auto">AUTO</button><button data-view="wide">STADIUM</button><button data-view="face">PLAYER</button></div><div class="overlay"><div class="roles"><span>BAT <strong id="batterName">Hemanth</strong></span><span>BOWL <strong id="bowlerName">Ravi</strong></span></div><div id="commentary" class="commentary">Your own ground. Your own players. Play a delivery.</div><div class="scoreTicker"><b>LIVE UPDATES</b><div><span id="tickerText">Waiting for a confirmed ball event</span></div></div><div class="bottomline"><span id="phase">READY TO PLAY</span><span><span id="cameraShot">READY</span> · VIRTUAL 3D</span></div></div></section>
+<aside class="side"><details class="behaviorControls" open><summary>Six-stage cricket behavior</summary><p>One original code-rendered delivery. Inspect the planted foot, rotating trunk, paired grip and camera. Character visuals remain a prototype.</p><div id="behaviorButtons" class="behaviorButtons"></div><button id="behaviorPlay" class="primary">▶ Play coordinated flow</button></details><details id="hybridControls" class="hybridPanel"><summary>Video + Commentary Studio</summary>
+<p class="hybridNote">Use your source video and original audio alongside the avatars. Crop to one visible person, then map them to a role. Body motion is estimated; ball, bat orientation and field positions stay illustrative.</p>
+<label for="hybridFile">VIDEO FILE</label><input id="hybridFile" type="file" accept="video/*">
+<label for="hybridUrl">OR DIRECT MEDIA URL</label><input id="hybridUrl" type="url" placeholder="https://…/match.mp4"><button id="hybridUrlLoad">Load URL</button>
+<div class="hybridButtons"><button id="hybridCamera">Use camera</button><button id="hybridScreen">Share source screen</button><button id="hybridStop">Stop all sources</button></div>
+<div class="sourcePreview"><video id="hybridVideo" controls playsinline crossorigin="anonymous"></video><canvas id="hybridSkeleton" aria-label="Drag a box around one visible person"></canvas></div>
+<div id="hybridClock" class="status">No source</div><div class="hybridButtons"><button id="hybridCropSelect">Select person crop</button><button id="hybridCropReset">Reset crop</button><button id="hybridTrack">Start body tracking</button></div>
+<label for="hybridRole">MAP VISIBLE PERSON TO AVATAR</label><select id="hybridRole"><option value="striker">Current batsman</option><option value="bowler">Current bowler</option></select>
+<div id="hybridMode" class="hybridMode">ILLUSTRATIVE · NO VALID POSE</div><div id="hybridStatus" class="status" role="status">Load a video. Tracker downloads only when started.</div>
+<p class="hybridNote">Tracking uses the free MediaPipe model, not a paid character pack. Video frames stay in this browser. Best with one clearly visible full body; this does not identify players, capture faces, or track the cricket ball.</p>
+<label for="hybridVtt">TIMED COMMENTARY CAPTIONS (.vtt)</label><input id="hybridVtt" type="file" accept=".vtt,text/vtt"><label for="hybridOffset">CAPTION OFFSET (SECONDS)</label><input id="hybridOffset" type="number" min="-60" max="60" step="0.1" value="0">
+<label for="hybridCaption">OR LIVE COMMENTARY TEXT</label><textarea id="hybridCaption" placeholder="Ravi runs in. Hemanth drives through cover…"></textarea><button id="hybridCaptionSend">Show live caption</button>
+<label for="hybridLanguage">MICROPHONE COMMENTARY LANGUAGE</label><select id="hybridLanguage"><option value="te-IN">Telugu</option><option value="en-IN">English</option><option value="hi-IN">Hindi</option></select><div class="hybridButtons"><button id="hybridMic">Start commentary mic</button></div><label><input id="hybridMonitor" type="checkbox"> Hear my microphone (use headphones)</label><div id="captionStatus" class="status">Optional browser speech recognition may use an online service. Source-video audio is not automatically transcribed.</div><div id="hybridHint" class="hybridMode">Commentary hints never change the scorer score.</div></details><div class="eyebrow">CONTROL ROOM</div><h2>Make the match move.</h2><p>Original meshes, rig motion and sound built in code. No third-party artwork, models or recordings.</p><div class="toolbar"><button id="demo" class="primary">▶ Play demo</button><button id="sound">Sound off</button></div><label for="direction">SHOT DIRECTION</label><select id="direction"><option value="COVER">Cover</option><option value="STRAIGHT">Straight</option><option value="MIDWICKET">Midwicket</option><option value="POINT">Point</option><option value="THIRD_MAN">Third man</option><option value="FINE_LEG">Fine leg</option><option value="SQUARE_LEG">Square leg</option><option value="LONG_OFF">Long off</option><option value="LONG_ON">Long on</option></select><label for="hand">BATSMAN STANCE</label><select id="hand"><option value="RIGHT">Right hand</option><option value="LEFT">Left hand</option></select><label>PLAY A BALL</label><div class="runs"><button data-run="0">0</button><button data-run="1">1</button><button data-run="2">2</button><button data-run="3">3</button><button data-run="4" class="four">4</button><button data-run="6">6</button><button data-run="W" class="wicket">W</button><button data-run="WD">WD</button></div><label for="voice">COMMENTARY</label><select id="voice"><option value="off">Text only</option><option value="en">English · local device voice</option><option value="te">Telugu · local device voice</option><option value="hi">Hindi · local device voice</option></select><div class="notice">This is an original-code prototype. Faces and motion are stylized, not cinema-quality or verified likenesses of real players. Crowd/effects are synthesized.</div><details><summary>Connect a scorer event</summary><p>Paste a confirmed event. Outcome and player IDs come from structured data; text does not change the score.</p><textarea id="eventInput" spellcheck="false"></textarea><button id="submit" style="margin-top:8px;width:100%">Queue event</button></details><div class="status" id="status">Offline-ready · WebGL2 renderer</div></aside></main>
+<footer>Single HTML file. Uses browser WebGL2 / Web Audio; speech is optional and requires an installed local voice. Virtual trajectories illustrate scorer events; they do not reconstruct unseen footage. No full scoring-rules engine or video-broadcast service is included.</footer>
+<script>
+const ANGLES={STRAIGHT:0,COVER:55,POINT:90,THIRD_MAN:135,FINE_LEG:-145,SQUARE_LEG:-90,MIDWICKET:-55,LONG_ON:-22,LONG_OFF:22};
+const id=v=>typeof v==='string'&&/^[A-Za-z0-9_-]{1,100}$/.test(v);
+const num=(v,min,max)=>Number.isInteger(v)&&v>=min&&v<=max;
+function directionFor(region,hand='RIGHT'){if(!(region in ANGLES))throw new Error('Unknown region');return ANGLES[region]*(hand==='LEFT'?-1:1);}
+function positionOnRun(progress,count){const p=Math.max(0,Math.min(progress,count));const leg=Math.min(Math.floor(p),Math.max(0,count-1));const u=p-leg;return leg%2===0?u:1-u;}
+function inferredRegion(text){const names={COVER:['cover','కవర్'],POINT:['point','పాయింట్'],MIDWICKET:['mid[ -]?wicket','మిడ్\\s*వికెట్'],FINE_LEG:['fine[ -]?leg','ఫైన్\\s*లెగ్'],SQUARE_LEG:['square[ -]?leg','స్క్వేర్\\s*లెగ్'],THIRD_MAN:['third[ -]?man','థర్డ్\\s*మ్యాన్'],LONG_ON:['long[ -]?on','లాంగ్\\s*ఆన్'],LONG_OFF:['long[ -]?off','లాంగ్\\s*ఆఫ్'],STRAIGHT:['straight','స్ట్రెయిట్']};const found=[];for(const [r,[en,te]]of Object.entries(names)){if(new RegExp(`\\b(?:through|towards?|over|past|to)\\s+(?:deep\\s+)?${en}\\b|\\b${en}\\s+drive\\b`,'i').test(text)||new RegExp(`${te}\\s*(?:వైపు|మీదుగా|డ్రైవ్)`,'u').test(text))found.push(r);}return found.length===1?found[0]:null;}
+function normalizeBall(raw){
+ if(!raw||!id(raw.eventId))throw new Error('A stable eventId is required');
+ const players=raw.players??{};if(!['striker','nonStriker','bowler'].every(r=>id(players[r]))||new Set([players.striker,players.nonStriker,players.bowler]).size!==3)throw new Error('Distinct scorer player IDs are required');
+ const batRuns=raw.batRuns??0,extraRuns=raw.extraRuns??0,extraType=raw.extraType??'NONE',boundary=raw.boundary??'NONE',wicketType=raw.wicketType??'NONE',hand=raw.hand??'RIGHT';
+ if(!num(batRuns,0,7)||!num(extraRuns,0,7))throw new Error('Runs must be integers from 0 to 7');
+ if(!['NONE','WIDE','NO_BALL','BYE','LEG_BYE','PENALTY'].includes(extraType)||!['NONE','FOUR','SIX'].includes(boundary)||!['RIGHT','LEFT'].includes(hand)||!['NONE','BOWLED','CAUGHT','LBW','RUN_OUT','STUMPED','HIT_WICKET'].includes(wicketType))throw new Error('Unsupported event type');
+ if(extraType==='NONE'&&extraRuns!==0||extraType!=='NONE'&&extraRuns<1||['WIDE','BYE','LEG_BYE','PENALTY'].includes(extraType)&&batRuns!==0)throw new Error('Inconsistent extras');
+ const extraBoundary=boundary==='FOUR'&&batRuns===0&&(['BYE','LEG_BYE'].includes(extraType)&&extraRuns===4||extraType==='WIDE'&&extraRuns===5);
+ if(boundary==='FOUR'&&batRuns!==4&&!extraBoundary||boundary==='SIX'&&batRuns!==6)throw new Error('Boundary does not match runs');
+ if(wicketType!=='NONE'){
+  if(boundary!=='NONE'||![players.striker,players.nonStriker].includes(raw.dismissedPlayer))throw new Error('Dismissal needs the dismissed player ID');
+  if(extraType==='NO_BALL'&&!['RUN_OUT'].includes(wicketType)||extraType==='WIDE'&&!['RUN_OUT','STUMPED','HIT_WICKET'].includes(wicketType))throw new Error('Invalid dismissal on an illegal delivery');
+  if(['BOWLED','CAUGHT','LBW','STUMPED','HIT_WICKET'].includes(wicketType)&&batRuns)throw new Error('Dismissal cannot include bat runs');
+ }
+ if(players.fielder&&(!id(players.fielder)||[players.striker,players.nonStriker].includes(players.fielder)))throw new Error('Invalid fielder');
+ let region=raw.shotRegion??'UNKNOWN',directionSource='SCORER';
+ if(region==='UNKNOWN'){region=inferredRegion(String(raw.commentary??''));directionSource=region?'COMMENTARY':'ILLUSTRATIVE';region??='STRAIGHT';}
+ if(!(region in ANGLES))throw new Error('Unsupported shot region');
+ let runsTaken=0;if(boundary==='NONE'){runsTaken=['NONE','NO_BALL'].includes(extraType)?batRuns:extraType==='WIDE'?extraRuns-1:['BYE','LEG_BYE'].includes(extraType)?extraRuns:0;}
+ const outcome=wicketType!=='NONE'?'WICKET':boundary!=='NONE'?boundary:extraType!=='NONE'?extraType:batRuns?'RUNS':'DOT';
+ const batContact=!['WIDE','BYE','LEG_BYE','PENALTY'].includes(extraType)&&!['BOWLED','LBW','STUMPED','HIT_WICKET'].includes(wicketType);
+ const generated=outcome==='WICKET'?`WICKET! ${wicketType.replaceAll('_',' ')}.`:outcome==='FOUR'?`Through ${region.toLowerCase().replaceAll('_',' ')} — FOUR!`:outcome==='SIX'?`Over ${region.toLowerCase().replaceAll('_',' ')} — SIX!`:outcome==='DOT'?'Defended. No run.':`${extraType==='NONE'?'':extraType.replaceAll('_',' ')+' — '}${batRuns+extraRuns} run${batRuns+extraRuns===1?'':'s'}.`;
+ if(raw.commentary!==undefined&&(typeof raw.commentary!=='string'||raw.commentary.length>2000))throw new Error('Invalid commentary text');
+ if(raw.score&&!num(raw.score.runs,0,99999)||raw.score&&!num(raw.score.wickets,0,10)||raw.score&&!num(raw.score.legalBalls,0,99999))throw new Error('Invalid score snapshot');
+ return {...raw,players:{...players},batRuns,extraRuns,extraType,boundary,wicketType,hand,region,directionSource,batContact,runsTaken,outcome,angle:!batContact&&extraBoundary&&directionSource==='ILLUSTRATIVE'?180:directionFor(region,hand),lofted:boundary==='SIX'||wicketType==='CAUGHT'||raw.shotHeight==='LOFTED',isLegal:!['WIDE','NO_BALL','PENALTY'].includes(extraType),commentary:raw.commentary||generated};
+}
+function stable(value){if(Array.isArray(value))return '['+value.map(stable).join(',')+']';if(value&&typeof value==='object')return '{'+Object.keys(value).sort().map(k=>JSON.stringify(k)+':'+stable(value[k])).join(',')+'}';return JSON.stringify(value);}
+class MatchQueue{
+ constructor(capacity=64){this.capacity=capacity;this.pending=[];this.seen=new Map();this.acceptedScore={runs:0,wickets:0,legalBalls:0};}
+ push(raw){const signature=stable(raw);if(this.seen.has(raw?.eventId)){if(this.seen.get(raw.eventId)!==signature)throw new Error('Event ID conflict');return {accepted:false};}if(this.pending.length>=this.capacity)throw new Error('Playback queue full');if(this.seen.size>=10000)throw new Error('Session capacity reached');const e=normalizeBall(raw);const s=this.acceptedScore;const score=e.score?{...e.score}:{runs:s.runs+e.batRuns+e.extraRuns,wickets:s.wickets+(e.wicketType!=='NONE'?1:0),legalBalls:s.legalBalls+(e.isLegal?1:0)};if(score.wickets>10||score.runs<e.batRuns+e.extraRuns)throw new Error('Invalid resulting score');e.score=score;this.pending.push(e);this.acceptedScore={...score};this.seen.set(e.eventId,signature);return {accepted:true,eventId:e.eventId};}
+ next(){return this.pending.shift()??null;}
+}
+function boundaryDistance(origin,degrees,a=75,b=65){const r=degrees*Math.PI/180,dx=Math.cos(r),dz=Math.sin(r),[x,z]=origin,A=dx*dx/(a*a)+dz*dz/(b*b),B=2*(x*dx/(a*a)+z*dz/(b*b)),C=x*x/(a*a)+z*z/(b*b)-1;return (-B+Math.sqrt(B*B-4*A*C))/(2*A);}
+function playbackDelta(now,previous){return previous?Math.max(0,Math.min((now-previous)/1000,.5)):0;}
+
+// Original fusion/retargeting logic. Vision estimates are not measured field or ball tracking.
+function parseCricketCaption(value){
+ const text=String(value??'').replace(/[\u0000-\u0008]/g,'').trim().slice(0,1000),s=text.toLowerCase();
+ const regions=[['THIRD_MAN',/third man|థర్డ్ మ్యాన్/],['FINE_LEG',/fine leg|ఫైన్ లెగ్/],['MIDWICKET',/mid[ -]?wicket|మిడ్ వికెట్/],['LONG_ON',/long[ -]?on|లాంగ్ ఆన్/],['LONG_OFF',/long[ -]?off|లాంగ్ ఆఫ్/],['COVER',/cover|కవర్|कवर/],['POINT',/point|పాయింట్/],['STRAIGHT',/straight|స్ట్రెయిట్/]];
+ const region=regions.find(([,re])=>re.test(s))?.[0]??null;
+ const uncertain=/\b(not out|no[ -]?ball|needed|need|requires?|if|might|could|nearly|almost)\b|కావాలి|నాట్ అవుట్|चाहिए/.test(s);
+ let resultHint=null;if(!uncertain){if(/\bsix\b|సిక్స్|छक्का/.test(s))resultHint='SIX';else if(/\bfour\b|ఫోర్|చౌకా|चौका/.test(s))resultHint='FOUR';else if(/\b(bowled|caught|out)\b|అవుట్|आउट/.test(s))resultHint='WICKET';}
+ const phase=resultHint?'result':/\bruns? in\b|\brun[ -]?up\b|బౌలింగ్/.test(s)?'delivery':region||/\b(driv|pull|cut|shot|hit)/.test(s)?'shot':null;
+ return {text,region,phase,resultHint,authority:'COMMENTARY_HINT_ONLY'};
+}
+function parseHybridVtt(value){
+ const text=String(value).replace(/^\uFEFF/,'').replace(/\r/g,'');if(!/^WEBVTT(?:\s|$)/.test(text))throw Error('Expected a WEBVTT caption file');
+ const stamp=s=>{const m=s.match(/^(?:(\d{2,}):)?(\d{2}):(\d{2})\.(\d{3})$/);if(!m||+m[2]>59||+m[3]>59)return NaN;return (+m[1]||0)*3600+(+m[2])*60+(+m[3])+(+m[4])/1000;};
+ const cues=[];for(const block of text.split(/\n\s*\n/).slice(1)){const lines=block.split('\n'),at=lines.findIndex(l=>l.includes('-->'));if(at<0)continue;const parts=lines[at].trim().split(/\s+-->\s+/),start=stamp(parts[0]),end=stamp(parts[1]?.split(/\s/)[0]||'');if(!Number.isFinite(start)||!Number.isFinite(end)||end<=start)continue;const content=lines.slice(at+1).join(' ').replace(/<[^>]*>/g,'').trim().slice(0,1000);if(content)cues.push({start,end,text:content});if(cues.length>=20000)break;}
+ return cues.sort((a,b)=>a.start-b.start);
+}
+function hybridCaptionAt(cues,time){return cues.filter(c=>c.start<=time&&time<c.end).map(c=>c.text).join(' · ').slice(0,1000);}
+function retargetCricketPose(points){
+ if(!Array.isArray(points)||points.length!==33)return null;
+ const visible=p=>p&&[p.x,p.y,p.z].every(Number.isFinite)&&Number.isFinite(p.visibility)&&p.visibility>=.55;
+ if(![11,12,23,24].every(i=>visible(points[i])))return null;
+ const vec=(a,b)=>{const d=[-(b.x-a.x),-(b.y-a.y),-(b.z-a.z)],l=Math.hypot(...d);return l>=.055&&l<=1.1?d.map(x=>x/l||0):null;};
+ const limb=ids=>{if(!ids.every(i=>visible(points[i])))return null;const upper=vec(points[ids[0]],points[ids[1]]),lower=vec(points[ids[1]],points[ids[2]]);return upper&&lower?{upper,lower}:null;};
+ const p={leftArm:limb([11,13,15]),rightArm:limb([12,14,16]),leftLeg:limb([23,25,27]),rightLeg:limb([24,26,28])};
+ return p.leftArm||p.rightArm?{...p,confidence:Math.min(...[11,12,23,24].map(i=>points[i].visibility))}:null;
+}
+class HybridPoseBuffer{
+ constructor(){this.frames=[];}
+ reset(){this.frames=[];}
+ push(time,pose,wallTime=globalThis.performance?.now?.()??Date.now()){if(!Number.isFinite(time)||time<0||!pose||time<=(this.frames.at(-1)?.time??-1))return false;this.frames.push({time,pose,wallTime});if(this.frames.length>60)this.frames.shift();return true;}
+ sample(time,wallTime=globalThis.performance?.now?.()??Date.now()){if(!Number.isFinite(time))return null;for(let i=this.frames.length-1;i>=0;i--){const f=this.frames[i];if(f.time<=time)return time-f.time<=.35&&wallTime-f.wallTime<=500?f.pose:null;}return null;}
+}
+
+// Original illustrative movement. A confirmed boundary is never turned into a pickup.
+function sampleBoundaryChase({time,start,end,boundary}){
+ if(boundary!=='FOUR'&&boundary!=='SIX')return null;
+ const elapsed=Math.max(0,time-2.7-.18),speed=7,ramp=.30;
+ // The ball may finish over the rope; the athlete stays on the playing surface.
+ const radial=Math.hypot(end[0]/75,end[2]/65),scale=radial>.98?.98/radial:1;
+ const target=[end[0]*scale,0,end[2]*scale],dx=target[0]-start[0],dz=target[2]-start[2],distance=Math.hypot(dx,dz);
+ const travel=speed*(elapsed<ramp?elapsed*elapsed/(2*ramp):elapsed-ramp/2),u=distance>1e-9?Math.min(1,travel/distance):1;
+ const moving=elapsed>0&&u<1;
+ return {position:[start[0]+dx*u,0,start[2]+dz*u],yaw:distance>1e-9?Math.atan2(dx,dz):0,mode:moving?'run':'idle',localTime:elapsed,phase:moving?'BOUNDARY CHASE':elapsed>0?'ROPE HOLD':'READY'};
+}
+
+// Original broadcast camera director. Time is the delivery playback clock,
+// so seeking, slow devices and commentary delays cannot desync camera cuts.
+const camAdd=(a,b)=>a.map((v,i)=>v+b[i]);
+const camMix=(a,b,u)=>a.map((v,i)=>v+(b[i]-v)*u);
+const camClamp=u=>Math.max(0,Math.min(1,u));
+function cricketCamera({mode='auto',time=0,active=false,event={},resolve=5.5,flight=2.8,batter=[-10,0,0],runner=[9,0,0],bowler=[20,0,0],ball=[0,1,0],fieldStart=[20,0,20],fieldEnd=[20,0,20]}){
+ const shot=(name,eye,target,fov=.75)=>({name,eye,target,fov});
+ const portrait=(name,p,side=1)=>shot(name,camAdd(p,[2.1,1.1,side*1.3]),camAdd(p,[0,1.30,0]),.58);
+ if(mode==='wide')return shot('STADIUM',[60,52,48],[0,0,0]);
+ if(mode==='face')return portrait('PLAYER',batter);
+ const handed=event.hand==='LEFT'?-1:1;
+ if(!active){const phase=Math.floor(time/5)%3,u=(time%5)/5;if(phase===0)return portrait('BATTER READY',camAdd(batter,[0,0,Math.sin(u*Math.PI)*.25]),handed);if(phase===1)return portrait('BOWLER READY',bowler,-1);return shot('GROUND OVERVIEW',camMix([83,37,64],[78,34,69],u),[0,0,0],.8);}
+ if(time<.7)return portrait('BOWLER CLOSE-UP',bowler,-1);
+ if(time<2.35)return shot('BOWLING END',[33,4.8,6.5*handed],[-7,.85,0],.63);
+ if(time<2.9)return shot('BATTING CONTACT',camAdd(batter,[2.8,1.9,4.8*handed]),camAdd(batter,[.8,1,0]),.85);
+ if(time<resolve){
+  const fieldTime=time-2.7,atBall=fieldTime>=flight-.55;
+  if(event.boundary==='NONE'&&atBall&&['CAUGHT','RUN_OUT','STUMPED'].includes(event.wicketType))return shot('WICKET ACTION',camAdd(fieldEnd,[5,3.1,7*handed]),camAdd(fieldEnd,[0,1,0]),.85);
+  if(event.runsTaken&&fieldTime>=flight)return shot('RUNNING BETWEEN WICKETS',[0,15,26],camMix(batter,runner,.5),.9);
+  if(event.boundary==='NONE'&&atBall&&!['BOWLED','LBW'].includes(event.wicketType)){
+   const p=camMix(fieldStart,fieldEnd,camClamp(fieldTime/flight));return shot('FIELDING',camAdd(p,[7,4,8*handed]),camAdd(ball,[0,.5,0]),.9);
+  }
+  const a=(event.angle||0)*Math.PI/180;
+  const u=camClamp((time-2.9)/.40),blend=u*u*(3-2*u),eye=camAdd(ball,[-Math.cos(a)*13,event.lofted?6:4,-Math.sin(a)*13+8*handed]);return shot(event.lofted?'AERIAL BALL FOLLOW':'BALL FOLLOW',camMix(camAdd(batter,[2.8,1.9,4.8*handed]),eye,blend),camMix(camAdd(batter,[.8,1,0]),ball,blend),.85+.05*blend);
+ }
+ const resultTime=time-resolve;
+ if(event.wicketType&&event.wicketType!=='NONE'){
+  if(resultTime<.8)return shot('UMPIRE',[15.8,2.1,5.5],[12,1.15,1.8],.67);
+  return portrait('DISMISSED BATTER',event.dismissedPlayer===event.players?.nonStriker?runner:batter,handed);
+ }
+ if(event.boundary&&event.boundary!=='NONE'&&resultTime<.8)return shot('CROWD REACTION',[58,10,44],[76,5,62],.85);
+ if(event.outcome==='DOT')return portrait('BOWLER REACTION',bowler,-1);
+ return portrait('BATTER REACTION',batter,handed);
+}
+
+// Explicit diagnostic views, all rendered from one original demonstration delivery.
+function cricketStudyCamera(index,{batter,bowler,fieldEnd}){const close=(name,p,offset,target=[0,1,0],fov=.65)=>({name,eye:camAdd(p,offset),target:camAdd(p,target),fov});if(index<2)return close(index===0?'01 RUN-UP':'02 RELEASE',bowler,[-4,1.65,5.1],[0,1.05,0],.68);if(index<5)return close(['','','03 FOOTWORK','04 CONTACT','05 FOLLOW-THROUGH'][index],batter,[3.1,1.45,4.7],[.30,1.0,0],.60);return close('06 FIELDING',fieldEnd,[4.4,1.65,5.4],[0,.78,0],.62);}
+
+// Broadcast introductions use saved XI/captains/toss. No random toss or ratings.
+function cricketIntro(context,elapsed,kind='intro'){
+ const teams=context?.teams;if(!Array.isArray(teams)||teams.length!==2)return null;
+ const usable=teams.filter(t=>t.xi?.length);if(!usable.length)return null;
+ const captains=kind==='intro'&&teams.every(t=>t.captain&&t.xi.includes(t.captain));
+ const t=Math.max(0,elapsed),walkStart=captains?4:0;
+ if(captains&&t<4){const winner=teams.find(team=>team.id===context.toss?.winner);return {phase:'CAPTAINS',actors:teams.map((team,i)=>({id:team.captain,p:[i?1.1:-1.1,0,0],yaw:i?-Math.PI/2:Math.PI/2,mode:'idle'})),eye:[.2,1.9,5],target:[0,1.1,0],title:teams.map(team=>team.name).join(' vs '),caption:winner?`${winner.name} won the toss and chose to ${context.toss.decision}.`:'Captains introduction · toss decision not published.'};}
+ const walkTime=t-walkStart,index=Math.floor(walkTime/4);if(index>=usable.length)return null;
+ const team=usable[index],progress=(walkTime%4)/4;
+ const ids=team.captain?[team.captain,...team.xi.filter(id=>id!==team.captain)]:team.xi;
+ return {phase:'TEAM WALKOUT',actors:ids.slice(0,11).map((id,i)=>({id,p:[i===0?0:((i%2)?-1:1)*(.8+Math.floor((i-1)/2)*.4),0,-Math.ceil(i/2)*1.1-5+progress*4],yaw:0,mode:'walk'})),eye:[4.8,2.6,6],target:[0,1,-2],title:team.name,caption:'Playing XI · '+ids.length+' players'+(team.captain?' · captain leads':'')};
+}
+
+// Original geometry and joint math. No downloaded models, textures or motion clips.
+const avAdd=(a,b)=>a.map((v,i)=>v+b[i]),avSub=(a,b)=>a.map((v,i)=>v-b[i]),avScale=(a,s)=>a.map(v=>v*s),avDot=(a,b)=>a.reduce((s,v,i)=>s+v*b[i],0);
+const avCross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+const avNorm=a=>avScale(a,1/(Math.hypot(...a)||1));
+const avGauss=(x,y,cx,cy,wx,wy)=>Math.exp(-(((x-cx)/wx)**2+((y-cy)/wy)**2));
+function solveAvatarJoint(start,target,upper,lower,pole=[0,0,1]){
+ if(!(upper>0&&lower>0))throw Error('Positive bone lengths required');
+ const delta=avSub(target,start),distance=Math.hypot(...delta),axis=distance>1e-8?avScale(delta,1/distance):[0,-1,0];
+ const d=Math.max(Math.abs(upper-lower)+1e-6,Math.min(upper+lower-1e-6,distance));
+ let bend=avSub(pole,avScale(axis,avDot(pole,axis)));
+ if(Math.hypot(...bend)<1e-6){const fallback=Math.abs(axis[1])<.9?[0,1,0]:[1,0,0];bend=avSub(fallback,avScale(axis,avDot(fallback,axis)));}
+ bend=avNorm(bend);const along=(upper*upper-lower*lower+d*d)/(2*d),height=Math.sqrt(Math.max(0,upper*upper-along*along));
+ return {joint:avAdd(start,avAdd(avScale(axis,along),avScale(bend,height))),end:avAdd(start,avScale(axis,d))};
+}
+function avatarSurface(rows,columns,point,invert=false,periodic=true){
+ const p=[],n=[],i=[];for(let y=0;y<=rows;y++)for(let x=0;x<=columns;x++){p.push(...point(y/rows,x/columns));n.push(0,0,0);}
+ for(let y=0;y<rows;y++)for(let x=0;x<columns;x++){const a=y*(columns+1)+x,b=a+columns+1;i.push(...(invert?[a,b,a+1,a+1,b,b+1]:[a,a+1,b,a+1,b+1,b]));}
+ for(let k=0;k<i.length;k+=3){const ids=i.slice(k,k+3),a=p.slice(ids[0]*3,ids[0]*3+3),b=p.slice(ids[1]*3,ids[1]*3+3),c=p.slice(ids[2]*3,ids[2]*3+3),normal=avCross(avSub(b,a),avSub(c,a));for(const index of ids)for(let j=0;j<3;j++)n[index*3+j]+=normal[j];}
+ // The longitude seam is shared geometrically; average normals across it.
+ if(periodic)for(let y=0;y<=rows;y++){const a=y*(columns+1)*3,b=a+columns*3;for(let j=0;j<3;j++){const v=n[a+j]+n[b+j];n[a+j]=v;n[b+j]=v;}}
+ for(let k=0;k<n.length;k+=3){let unit=avNorm(n.slice(k,k+3));
+  // Open lip corners collapse to a point: evaluate the nearby surface limit.
+  if(Math.hypot(...unit)<.5){const index=k/3,u=Math.max(.001,Math.min(.999,Math.floor(index/(columns+1))/rows)),v=Math.max(.001,Math.min(.999,(index%(columns+1))/columns)),dv=avSub(point(u,v+.0001),point(u,v-.0001)),du=avSub(point(u+.0001,v),point(u-.0001,v));unit=avNorm(avScale(avCross(dv,du),invert?-1:1));}
+  n.splice(k,3,...unit);}return {p,n,i};
+}
+function avatarFaceProfile(variant=0){const v=((variant%6)+6)%6;return {width:.094+v*.002,jaw:.69+(v%3)*.055,nose:.027+(v%4)*.0025,brow:.005+(v%2)*.002};}
+function originalAvatarMeshes(){
+ const result={};for(let variant=0;variant<6;variant++){
+  const shape=avatarFaceProfile(variant);
+  result['head'+variant]=avatarSurface(28,40,(u,v)=>{
+   const lat=.015+u*(Math.PI-.03),angle=v*Math.PI*2,sy=Math.cos(lat),y=sy*.143,x=Math.sin(angle)*Math.sin(lat)*shape.width*(sy<-.25?shape.jaw+(sy+1)*.25:1),front=Math.max(0,Math.cos(angle));
+   let z=Math.cos(angle)*Math.sin(lat)*.103;
+   if(front>0){const nose=shape.nose*avGauss(x,y,0,-.008,.018,.039),bridge=.009*avGauss(x,y,0,.035,.014,.035),nostrils=.006*avGauss(x,y,0,-.026,.03,.01),eyes=-.012*(avGauss(x,y,-.038,.026,.025,.016)+avGauss(x,y,.038,.026,.025,.016)),brow=shape.brow*(avGauss(x,y,-.036,.05,.029,.012)+avGauss(x,y,.036,.05,.029,.012)),cheek=.008*(avGauss(x,y,-.057,-.008,.027,.03)+avGauss(x,y,.057,-.008,.027,.03)),mouth=.006*avGauss(x,y,0,-.064,.036,.01),chin=.007*avGauss(x,y,0,-.107,.032,.02);z+=(nose+bridge+nostrils+eyes+brow+cheek+mouth+chin)*front**3;}
+   return [x,y,z];
+  },true);
+ }
+ const profile=[[.84,.170,.118],[.92,.165,.116],[1.04,.147,.101],[1.17,.171,.115],[1.32,.205,.128],[1.43,.218,.119],[1.47,.192,.105],[1.52,.078,.068]];
+ result.jersey=avatarSurface(30,32,(u,v)=>{const pos=u*(profile.length-1),index=Math.min(profile.length-2,Math.floor(pos)),f=pos-index,a=profile[index],b=profile[index+1],y=a[0]+(b[0]-a[0])*f,rx=a[1]+(b[1]-a[1])*f,rz=a[2]+(b[2]-a[2])*f,angle=v*Math.PI*2,fold=.0025*Math.sin(angle*9+y*43)*Math.sin(u*Math.PI);return [Math.sin(angle)*(rx+fold),y,Math.cos(angle)*(rz+fold)];});
+ result.neck=avatarSurface(12,32,(u,v)=>{const a=v*Math.PI*2,r=.061+Math.max(0,.35-u)*.03;return [Math.sin(a)*r,1.46+u*.13,Math.cos(a)*r*.9];});
+ result.helmet=avatarSurface(16,36,(u,v)=>{const a=.01+u*Math.PI/2,b=v*Math.PI*2;return [Math.sin(b)*Math.sin(a)*.125,Math.cos(a)*.154,Math.cos(b)*Math.sin(a)*.133];},true);
+ result.hair=avatarSurface(14,32,(u,v)=>{const a=.01+u*Math.PI*.56,b=v*Math.PI*2,ripple=.0015*Math.sin(b*23+a*11);return [Math.sin(b)*Math.sin(a)*(.1+ripple),Math.cos(a)*.15,Math.cos(b)*Math.sin(a)*(.104+ripple)];},true);
+ return result;
+}
+
+let humanHeadCache=null,humanHeadGrid=null;
+function nativeStudyHead(){
+ if(typeof anatomicalHeadData!=='function')return null;
+ if(!humanHeadCache)humanHeadCache=anatomicalHeadData();return humanHeadCache;
+}
+function nativeFacePoint(x,y){
+ const head=nativeStudyHead();if(!head)return null;
+ const cell=.008,key=(x,y)=>Math.floor(x/cell)+','+Math.floor(y/cell);
+ if(!humanHeadGrid){humanHeadGrid=new Map();for(let k=0;k<head.i.length;k+=3){const ids=head.i.slice(k,k+3),xs=ids.map(i=>head.p[i*3]),ys=ids.map(i=>head.p[i*3+1]);for(let a=Math.floor(Math.min(...xs)/cell);a<=Math.floor(Math.max(...xs)/cell);a++)for(let b=Math.floor(Math.min(...ys)/cell);b<=Math.floor(Math.max(...ys)/cell);b++){const id=a+','+b;if(!humanHeadGrid.has(id))humanHeadGrid.set(id,[]);humanHeadGrid.get(id).push(ids);}}}
+ let z=-Infinity;for(const ids of humanHeadGrid.get(key(x,y))??[]){const [a,b,c]=ids.map(i=>head.p.slice(i*3,i*3+3)),den=(b[1]-c[1])*(a[0]-c[0])+(c[0]-b[0])*(a[1]-c[1]);if(Math.abs(den)<1e-14)continue;const u=((b[1]-c[1])*(x-c[0])+(c[0]-b[0])*(y-c[1]))/den,v=((c[1]-a[1])*(x-c[0])+(a[0]-c[0])*(y-c[1]))/den;if(u>=-1e-6&&v>=-1e-6&&u+v<=1.000001)z=Math.max(z,u*a[2]+v*b[2]+(1-u-v)*c[2]);}
+ return [x,y,Number.isFinite(z)?z:0];
+}
+function nativeStudyMeshes(){
+ const head=nativeStudyHead();if(!head)return {};
+ const out={},hair={p:head.p.slice(),n:head.n.slice(),i:[]};
+ for(let k=0;k<hair.p.length;k+=3){for(let j=0;j<3;j++)hair.p[k+j]+=head.n[k+j]*.003;const x=head.p[k],y=head.p[k+1],z=head.p[k+2],root=Math.max(0,Math.min(1,(y-.090)/.05)),front=Math.max(0,Math.min(1,(z-.015)/.065)),quiff=root*front*Math.exp(-(((x+.015)/.085)**2));hair.p[k]+=.008*quiff;hair.p[k+1]+=.027*quiff;hair.p[k+2]+=.006*quiff+.002*Math.sin(x*140+y*18)*quiff;}
+ for(let k=0;k<head.i.length;k+=3){const ids=head.i.slice(k,k+3);if(ids.every(i=>{const y=head.p[i*3+1],z=head.p[i*3+2],x=head.p[i*3];return y>(z>.015?.091+.005*Math.sin(x*38):.035);}))hair.i.push(...ids);}
+ const used=[...new Set(hair.i)],remap=new Map(used.map((v,i)=>[v,i])),scalp={p:used.flatMap(i=>hair.p.slice(i*3,i*3+3)),n:new Array(used.length*3).fill(0),i:hair.i.map(i=>remap.get(i))};
+ for(let k=0;k<scalp.i.length;k+=3){const ids=scalp.i.slice(k,k+3),[a,b,c]=ids.map(i=>scalp.p.slice(i*3,i*3+3)),u=b.map((v,i)=>v-a[i]),v=c.map((x,i)=>x-a[i]),n=[u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]];for(const id of ids)for(let j=0;j<3;j++)scalp.n[id*3+j]+=n[j];}
+ for(let i=0;i<scalp.n.length;i+=3){const length=Math.hypot(...scalp.n.slice(i,i+3));for(let j=0;j<3;j++)scalp.n[i+j]=length>1e-12?scalp.n[i+j]/length:head.n[used[i/3]*3+j];}
+ out.studyNativeHair=scalp;
+ for(const [side,name]of [[-1,'Left'],[1,'Right']]){
+  const cx=side*.034468,cy=.026538,cz=.083442,r=.0167;
+  const eye=avatarSurface(28,40,(u,v)=>{const lat=.001+u*(Math.PI-.002),a=v*Math.PI*2;return [cx+r*Math.sin(lat)*Math.sin(a),cy+r*Math.cos(lat),cz+r*Math.sin(lat)*Math.cos(a)];},true);
+  eye.l=eye.p.map((x,i)=>i%3===0?x-cx+side*.034:i%3===1?x-cy+.027:x);out['studyNativeEye'+name]=eye;
+  out['studyNativeBrow'+name]=avatarSurface(8,48,(u,v)=>{const x=side*(.016+v*.040),y=.049+.004*Math.sin(v*Math.PI)-v*.001+u*(.0058-v*.003),p=nativeFacePoint(x,y);p[2]+=.0012;return p;},side<0,false);
+ }
+ return out;
+}
+
+// Original analytic surfaces in metres. Generic identity; no scan or downloaded model.
+const studyG=(x,y,cx,cy,wx,wy)=>Math.exp(-(((x-cx)/wx)**2+((y-cy)/wy)**2));
+const studyProfile=[[-.143,.010,.030],[-.124,.048,.075],[-.103,.072,.085],[-.070,.084,.087],[-.027,.092,.088],[.019,.095,.087],[.055,.092,.087],[.095,.082,.080],[.126,.055,.056],[.143,.002,.002]];
+function studySection(y){
+ if(y>.126){const cap=Math.sqrt(Math.max(0,(.143-y)/.017));return [Math.max(.0001,.055*cap),Math.max(.0001,.056*cap)];}
+ let k=0;while(k<studyProfile.length-2&&y>studyProfile[k+1][0])k++;
+ const a=studyProfile[k],b=studyProfile[k+1],t=Math.max(0,Math.min(1,(y-a[0])/(b[0]-a[0])));
+ return [1,2].map(j=>{const prev=studyProfile[Math.max(0,k-1)],next=studyProfile[Math.min(studyProfile.length-1,k+2)],m0=(b[j]-prev[j])/(b[0]-prev[0]),m1=(next[j]-a[j])/(next[0]-a[0]),d=b[0]-a[0];return Math.max(.001,(2*t*t*t-3*t*t+1)*a[j]+(t*t*t-2*t*t+t)*d*m0+(-2*t*t*t+3*t*t)*b[j]+(t*t*t-t*t)*d*m1);});
+}
+function studyFaceRelief(x,y){
+ const nose=.024*studyG(x,y,0,-.010,.012,.018)+.014*studyG(x,y,0,.023,.010,.035)+.005*studyG(x,y,0,-.025,.023,.008)+.005*(studyG(x,y,-.013,-.023,.007,.007)+studyG(x,y,.013,-.023,.007,.007));
+ const orbit=-.010*(studyG(x,y,-.034,.027,.022,.013)+studyG(x,y,.034,.027,.022,.013))+.004*(studyG(x,y,-.035,.047,.025,.009)+studyG(x,y,.035,.047,.025,.009));
+ const cheeks=.006*(studyG(x,y,-.057,-.010,.025,.027)+studyG(x,y,.057,-.010,.025,.027))-.002*(studyG(x,y,-.027,-.046,.008,.023)+studyG(x,y,.027,-.046,.008,.023));
+ const mouth=.002*studyG(x,y,0,-.061,.029,.012)-.0018*studyG(x,y,0,-.046,.005,.010)+.005*studyG(x,y,0,-.106,.031,.018);
+ return nose+orbit+cheeks+mouth;
+}
+function studyFacePoint(x,y){if(nativeStudyHead())return nativeFacePoint(x,y);const [w,d]=studySection(y),front=Math.sqrt(Math.max(0,1-(x/w)**2));return [x,y,d*front+studyFaceRelief(x,y)*front**3];}
+function studyEyeOpening(side,q,upper){
+ const x=side*.034+q*.0145,y=.027+(upper?.0050:-.0042)*Math.max(0,1-q*q)**.72+side*q*.0006,p=studyFacePoint(x,y);p[2]+=.0012;return p;
+}
+function originalStudyAvatarMeshes(){
+ const studyHead=nativeStudyHead()??avatarSurface(88,128,(u,v)=>{const lat=.009+u*(Math.PI-.018),y=Math.cos(lat)*.143,a=v*Math.PI*2,[w,d]=studySection(y),x=Math.sin(a)*w,f=Math.max(0,Math.cos(a)),z=Math.cos(a)*(Math.cos(a)<0?d*1.12:d)+studyFaceRelief(x,y)*f**3;return [x,y,z];},true);
+ const studyHair=avatarSurface(56,128,(u,v)=>{const a=v*Math.PI*2,front=Math.max(0,Math.cos(a)),lat=.009+u*(1.67-front*.58-.14*front*Math.sin(a)**2),y=Math.cos(lat)*.143,[w,d]=studySection(y),x=Math.sin(a)*w,z=Math.cos(a)*(Math.cos(a)<0?d*1.12:d)+studyFaceRelief(x,y)*front**3,ripple=1.047+.005*Math.sin(a*71+lat*23)+.003*Math.sin(a*43-lat*61),quiff=.0025*front*Math.exp(-(((lat-.72)/.35)**2));return [x*ripple,y+.004+quiff,z*ripple];},true);
+ const collarSide=side=>avatarSurface(10,10,(u,v)=>{const top=[side*(.037+v*.043),1.515-v*.009,.055+v*.016],bottom=[side*(.026+v*.034),1.462+v*.012,.123];return top.map((x,i)=>x+(bottom[i]-x)*u);},side>0,false);
+ const left=collarSide(-1),right=collarSide(1),studyCollar={p:[...left.p,...right.p],n:[...left.n,...right.n],i:[...left.i,...right.i.map(i=>i+left.p.length/3)]};
+ const result={studyHead,studyHair,studyCollar,...nativeStudyMeshes()};
+ for(const [side,name]of [[-1,'Left'],[1,'Right']]){
+  result['studyEye'+name]=avatarSurface(12,48,(r,v)=>{const a=v*Math.PI*2,q=Math.cos(a),p=studyEyeOpening(side,q,Math.sin(a)>=0);p[0]=side*.034+(p[0]-side*.034)*r;p[1]=.027+(p[1]-.027)*r;p[2]=studyFacePoint(p[0],p[1])[2]+.0012+.0026*(1-r*r);return p;},true);
+  for(const [upper,label]of [[true,'Upper'],[false,'Lower']])result['study'+label+'Lid'+name]=avatarSurface(8,64,(u,v)=>{const q=v*2-1,inner=studyEyeOpening(side,q,upper),x=inner[0]+q*.0025*u,y=inner[1]+(upper?1:-1)*(.0033*(1-q*q)+.0004)*u,outer=studyFacePoint(x,y);return [x,y,inner[2]*(1-u)+outer[2]*u+.0012*Math.sin(u*Math.PI)*(1-q*q)];},!upper,false);
+ }
+ for(const [upper,name]of [[true,'studyUpperLip'],[false,'studyLowerLip']])result[name]=avatarSurface(10,64,(u,v)=>{const q=v*2-1,x=q*.027,seam=-.061+.0007*q*q,cupid=.0016*Math.exp(-(((Math.abs(q)-.32)/.23)**2)),height=(upper?.0033+cupid:.0050)*(1-q*q),y=seam+(upper?1:-1)*height*u,p=studyFacePoint(x,y);p[2]+=(.0005+.0016*Math.sin(u*Math.PI))*(1-q*q);return p;},!upper,false);
+ return result;
+}
+function studyFacialParts({helmet=false}={}){
+ const parts=[],skin=[.49,.30,.19],dark=[.025,.017,.013],p=(mesh,at,size,color,kind=0)=>parts.push({mesh,p:at,s:size,c:color,kind}),tube=(a,b,r,c)=>parts.push({a,b,r,c});
+ if(nativeStudyHead()){p('studyHead',[0,1.66,0],[1,1,1],[.72,.44,.29],15);if(!helmet)p('studyNativeHair',[0,1.66,0],[1,1,1],[.065,.038,.023],12);for(const name of ['Left','Right']){p('studyNativeEye'+name,[0,1.66,0],[1,1,1],[.91,.90,.84],13);p('studyNativeBrow'+name,[0,1.66,0],[1,1,1],[.045,.027,.017],12);}return parts;}
+ p('studyHead',[0,1.66,0],[1,1,1],skin,11);if(!helmet)p('studyHair',[0,1.66,0],[1,1,1],dark,12);
+ for(const name of ['studyUpperLip','studyLowerLip'])p(name,[0,1.66,0],[1,1,1],[.40,.215,.15],14);
+ for(const [side,name]of [[-1,'Left'],[1,'Right']]){
+  p('studyEye'+name,[0,1.66,0],[1,1,1],[.71,.69,.62],13);
+  for(const label of ['Upper','Lower'])p('study'+label+'Lid'+name,[0,1.66,0],[1,1,1],skin,11);
+  p('sphere',[side*.098,1.647,-.008],[.012,.027,.013],skin,1);p('sphere',[side*.104,1.647,.002],[.004,.017,.007],[.36,.19,.12],1);
+  // Small broken strands follow brow direction, avoiding a repeated diagonal comb.
+  for(let j=0;j<43;j++){const u=j/42,bx=side*(.018+u*.035),by=.047+Math.sin(u*Math.PI)*.0027-u*.0015+(j%3-1)*.00042,z=studyFacePoint(bx,by)[2],length=.0022+Math.sin(j*2.3)*.00045;tube([bx,by+1.66,z+.0007],[bx+side*.0014,by+1.66+length,z+.0009],.00028,dark);}
+  const nostril=studyFacePoint(side*.010,-.0275);p('sphere',[nostril[0],1.66+nostril[1]-.0005,nostril[2]+.0003],[.0028,.0011,.0007],[.12,.055,.033]);
+ }
+ let prev=null;for(let i=0;i<=32;i++){const q=i/16-1,x=q*.027,y=-.061+.0007*q*q,at=studyFacePoint(x,y);at[1]+=1.66;at[2]+=.0009*(1-q*q);if(prev)tube(prev,at,.00020,[.24,.115,.075]);prev=at;}
+ return parts;
+}
+function studySleeveMesh(a,b){
+ const axis=b.map((x,i)=>x-a[i]),length=Math.hypot(...axis),up=axis.map(x=>x/length),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],v=cross(up,[0,0,1]),vl=Math.hypot(...v),x=v.map(n=>n/vl),z=cross(x,up);
+ return avatarSurface(20,40,(u,v)=>{const angle=v*Math.PI*2,r=(.020+.040*Math.sin(Math.min(1,u/.24)*Math.PI/2))+.009*Math.sin(Math.PI*u)-.001*u,fold=1+.003*Math.sin(u*31+angle*5);return a.map((n,i)=>n+axis[i]*u+r*fold*(Math.cos(angle)*x[i]+Math.sin(angle)*z[i]));},true);
+}
+function studyAvatarCamera(view='portrait',aspect=1){
+ aspect=Number.isFinite(aspect)&&aspect>0?Math.max(.2,aspect):1;
+ const portrait=view==='portrait',fov=portrait?.51:.55,halfWidth=portrait?.145:.85,minimum=portrait?1.18:3.95,distance=Math.max(minimum,halfWidth/(Math.tan(fov/2)*aspect)),target=portrait?[0,1.59,0]:[.20,.96,0];
+ return {eye:portrait?[.02,1.67,distance]:[.20,1.10,distance],target,fov,name:portrait?'AVATAR PORTRAIT':'AVATAR FULL BODY'};
+}
+
+// Versioned original SH asset format, not glTF. No executable code in model files.
+const avatarRound=x=>Math.round(x*1e6)/1e6;
+const avatarArray=(a)=>Array.from(a,avatarRound);
+const avatarId=s=>typeof s==='string'&&/^[A-Za-z0-9_-]{1,100}$/.test(s);
+function buildAvatarModel(withoutHelmet,withHelmet,{kitTexture=null}={}){
+ const meshes=new Map(),materials=[],materialIds=new Map();
+ const convert=snapshot=>snapshot.parts.map(part=>{
+  const geometry=snapshot.geometries[part.mesh];if(!geometry)throw Error('Missing captured geometry');
+  if(!meshes.has(part.mesh)){const m={id:part.mesh,positions:avatarArray(geometry.p),normals:avatarArray(geometry.n),indices:Array.from(geometry.i)};if(geometry.l&&geometry.l!==geometry.p)m.surfaceCoordinates=avatarArray(geometry.l);meshes.set(part.mesh,m);}
+  const material={color:avatarArray(part.color),roughness:avatarRound(part.roughness),shader:part.shader},key=JSON.stringify(material);
+  if(!materialIds.has(key)){const id='material-'+materials.length;materialIds.set(key,id);materials.push({id,...material});}
+  return {mesh:part.mesh,material:materialIds.get(key),matrix:avatarArray(part.matrix)};
+ });
+ const off=convert(withoutHelmet),on=convert(withHelmet),counts=new Map(),key=p=>JSON.stringify(p);
+ for(const p of on)counts.set(key(p),(counts.get(key(p))??0)+1);
+ const common=[],offOnly=[];for(const p of off){const k=key(p),n=counts.get(k)??0;if(n){common.push({...p,variant:'always'});counts.set(k,n-1);}else offOnly.push({...p,variant:'helmet-off'});}
+ const onOnly=[];for(const p of on){const k=key(p),n=counts.get(k)??0;if(n){onOnly.push({...p,variant:'helmet-on'});counts.set(k,n-1);}}
+ const model={format:'sh-avatar-model',version:1,name:'Scoring Heroes Original Avatar',units:'metres',coordinateSystem:{up:'+Y',front:'+Z'},authorship:'Original authored procedural geometry',visualQuality:'stylized',pose:{type:'static',name:'bat-holding inspection'},skin:null,animations:[],meshes:[...meshes.values()],materials,parts:[...common,...offOnly,...onOnly],textures:kitTexture?{kit:{mimeType:'image/png',uri:kitTexture}}:{}};
+ validateAvatarModel(model);return model;
+}
+function validateAvatarModel(model){
+ const fail=message=>{throw Error('Invalid avatar model: '+message);},array=(a,n,max,label)=>{if(!Array.isArray(a)||a.length!==n||n>max||!a.every(Number.isFinite))fail(label);};
+ if(!model||model.format!=='sh-avatar-model'||model.version!==1||model.units!=='metres')fail('unsupported format/version/units');
+ if(model.coordinateSystem?.up!=='+Y'||model.coordinateSystem?.front!=='+Z')fail('coordinate system');
+ if(model.pose?.type!=='static'||model.skin!==null||!Array.isArray(model.animations)||model.animations.length)fail('v1 supports static geometry only');
+ if(!Array.isArray(model.meshes)||!model.meshes.length||model.meshes.length>100||!Array.isArray(model.materials)||!model.materials.length||model.materials.length>200||!Array.isArray(model.parts)||!model.parts.length||model.parts.length>5000)fail('mesh/material/part budget');
+ const meshes=new Map(),materials=new Set();let vertices=0;
+ for(const m of model.meshes){if(!avatarId(m.id)||meshes.has(m.id))fail('mesh id');const count=m.positions?.length/3;if(!Number.isInteger(count)||count<3||count>65535)fail('vertex count');vertices+=count;if(vertices>250000)fail('total vertex budget');array(m.positions,count*3,65535*3,'positions');array(m.normals,count*3,65535*3,'normals');if(m.positions.some(x=>Math.abs(x)>5))fail('position bounds');for(let k=0;k<m.normals.length;k+=3)if(Math.abs(Math.hypot(...m.normals.slice(k,k+3))-1)>.03)fail('normal length');if(m.surfaceCoordinates)array(m.surfaceCoordinates,count*3,65535*3,'surface coordinates');if(!Array.isArray(m.indices)||!m.indices.length||m.indices.length%3||m.indices.length>1500000||!m.indices.every(i=>Number.isInteger(i)&&i>=0&&i<count))fail('triangle indices');meshes.set(m.id,m);}
+ for(const m of model.materials){if(!avatarId(m.id)||materials.has(m.id))fail('material id');array(m.color,3,3,'material color');if(m.color.some(x=>x<0||x>1)||!Number.isFinite(m.roughness)||m.roughness<0||m.roughness>1||!Number.isInteger(m.shader)||m.shader<0||m.shader>15)fail('material');materials.add(m.id);}
+ for(const p of model.parts){if(!meshes.has(p.mesh)||!materials.has(p.material)||!['always','helmet-on','helmet-off'].includes(p.variant))fail('part reference/variant');array(p.matrix,16,16,'part matrix');const m=p.matrix,det=m[0]*(m[5]*m[10]-m[6]*m[9])-m[4]*(m[1]*m[10]-m[2]*m[9])+m[8]*(m[1]*m[6]-m[2]*m[5]);if(m[3]!==0||m[7]!==0||m[11]!==0||m[15]!==1||Math.abs(det)<1e-16||m.some(x=>Math.abs(x)>10))fail('affine transform');const columns=[m.slice(0,3),m.slice(4,7),m.slice(8,11)];for(const [i,j]of [[0,1],[0,2],[1,2]])if(Math.abs(columns[i].reduce((n,x,k)=>n+x*columns[j][k],0))/(Math.hypot(...columns[i])*Math.hypot(...columns[j]))>.005)fail('v1 does not support shear');}
+ const texture=model.textures?.kit;if(texture&&(texture.mimeType!=='image/png'||typeof texture.uri!=='string'||texture.uri.length>1500000||!/^data:image\/png;base64,iVBORw0KGgo/.test(texture.uri)))fail('embedded PNG texture');
+ if(texture){let header;try{header=atob(texture.uri.split(',')[1].slice(0,48));}catch{fail('PNG encoding');}if(header.length<24||header.slice(12,16)!=='IHDR')fail('PNG header');const dimension=start=>[0,1,2,3].reduce((n,i)=>n*256+header.charCodeAt(start+i),0),w=dimension(16),h=dimension(20);if(!w||!h||w>2048||h>2048)fail('PNG dimensions');}
+ if(model.materials.some(m=>m.shader===8||m.shader===9)&&!texture)fail('kit texture is required by material');return true;
+}
+
+// Small procedural expressions for stylized rigs, not a realistic facial rig.
+function cricketFaceExpression({mode='idle',time=0,seed=0,celebrate=false,dismissed=false}={}){
+ const cycle=((time+seed*.137)%4.8+4.8)%4.8,blink=cycle>4.65;
+ const state=dismissed||mode==='out'?'DISAPPOINTED':celebrate?'CELEBRATE':['shot','bowl'].includes(mode)?'FOCUSED':'NEUTRAL';
+ return {state,eyeOpen:blink?.09:state==='FOCUSED'?.78:1,browInner:state==='DISAPPOINTED'?.007:state==='FOCUSED'?-.003:state==='CELEBRATE'?.003:0,browOuter:state==='DISAPPOINTED'?-.003:0,smile:state==='CELEBRATE'?.005:state==='DISAPPOINTED'?-.004:0,mouthOpen:state==='CELEBRATE'?.006:0};
+}
+
+// Metres throughout (the existing pitch is 20.12 m long).
+// Bounds: MCC 2026 Laws 4.1 (Size 1) and 5.7. Dimensions below are our
+// selected model sizes within those bounds, not mandatory sizes for every bat.
+const gearAdd=(a,b)=>a.map((v,i)=>v+b[i]),gearSub=(a,b)=>a.map((v,i)=>v-b[i]),gearMul=(a,s)=>a.map(v=>v*s),gearDot=(a,b)=>a.reduce((s,v,i)=>s+v*b[i],0),gearCross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+const gearUnit=(a,fallback=[0,-1,0])=>Math.hypot(...a)>1e-8?gearMul(a,1/Math.hypot(...a)):fallback;
+function cricketEquipment(height=1.85){
+ if(!Number.isFinite(height)||height<1||height>2.3)throw Error('Player height must be 1–2.3 metres');
+ const scale=Math.max(.78,Math.min(1.05,height/1.85));
+ return {units:'metres',ballSize:1,ballRadius:.2265/(2*Math.PI),ballCircumference:.2265,batLength:.86*scale,handleLength:.25*scale,bladeLength:.61*scale,bladeWidth:Math.min(.108,.104*scale),bladeDepth:.035*scale,handleRadius:.0155*scale,handWidth:.078*scale,gripSpacing:.084*scale};
+}
+function bowlingHandTarget(t){const a=Math.max(-.45,Math.min(.6,t-2))*Math.PI*2.4;return [.25,1.38+Math.cos(a)*.58,Math.sin(a)*.58];}
+function fitBatToHands({grip,tip,height=1.85,hand='RIGHT',oneHand=false,shoulders=[[-.205,1.32,0],[.205,1.32,0]]}){
+ const equipment=cricketEquipment(height),h=height/1.85,local={};for(const key of ['batLength','handleLength','bladeLength','bladeWidth','bladeDepth','handleRadius','gripSpacing'])local[key]=equipment[key]/h;
+ const axis=gearUnit(gearSub(tip,grip)),preferred=[0,0,1];let front=gearSub(preferred,gearMul(axis,gearDot(axis,preferred)));if(Math.hypot(...front)<1e-5)front=gearSub([0,1,0],gearMul(axis,axis[1]));front=gearUnit(front);const side=gearUnit(gearCross(front,axis));
+ const palmOffset=local.handleRadius+.010,order=hand==='LEFT'?1:-1,offsets=oneHand?[null,0]:[order*local.gripSpacing/2,-order*local.gripSpacing/2];let center=grip.slice();
+ const targets=()=>offsets.map(x=>x===null?null:gearAdd(center,gearAdd(gearMul(axis,x),gearMul(front,palmOffset))));
+ // Project the shared grip into both arm reach spheres. Both palms remain on
+ // the same handle, rather than independently clamping and leaving it floating.
+ for(let iteration=0;iteration<32;iteration++)for(let i=0;i<2;i++){
+  const target=targets()[i];if(!target)continue;const shoulder=shoulders[i],delta=gearSub(target,shoulder),length=Math.hypot(...delta),reach=.659;
+  if(length>reach)center=gearAdd(center,gearMul(delta,reach/length-1));
+ }
+ const palms=targets(),butt=gearSub(center,gearMul(axis,local.handleLength*.44)),bladeStart=gearAdd(butt,gearMul(axis,local.handleLength)),toe=gearAdd(butt,gearMul(axis,local.batLength)),bladeCenter=gearAdd(bladeStart,gearMul(axis,local.bladeLength*.6));
+ return {equipment,local,axis,front,side,grip:center,palms,palmOffset,butt,bladeStart,toe,bladeCenter,contact:gearAdd(bladeCenter,gearMul(front,local.bladeDepth/2+equipment.ballRadius/h))};
+}
+function originalBatBladeMesh(){
+ const rows=[[0,.42,.65],[.07,.75,.83],[.17,1,1],[.88,1,1],[1,.93,.78]],cross=[[-1,-.8],[-.8,-1],[.8,-1],[1,-.8],[1,.8],[.8,1],[-.8,1],[-1,.8]],p=[],n=[],i=[];
+ for(const [y,w,d]of rows)for(const [x,z]of cross){p.push(x*d,y,z*w);n.push(0,0,0);}
+ for(let row=0;row<rows.length-1;row++)for(let k=0;k<8;k++){const a=row*8+k,b=row*8+(k+1)%8;i.push(a,b,a+8,b,b+8,a+8);}
+ for(let k=1;k<7;k++){i.push(0,k+1,k);const a=(rows.length-1)*8;i.push(a,a+k,a+k+1);}
+ for(let k=0;k<i.length;k+=3){[i[k+1],i[k+2]]=[i[k+2],i[k+1]];}
+ for(let k=0;k<i.length;k+=3){const ids=i.slice(k,k+3),a=p.slice(ids[0]*3,ids[0]*3+3),b=p.slice(ids[1]*3,ids[1]*3+3),c=p.slice(ids[2]*3,ids[2]*3+3),normal=gearCross(gearSub(b,a),gearSub(c,a));for(const id of ids)for(let j=0;j<3;j++)n[id*3+j]+=normal[j];}
+ for(let k=0;k<n.length;k+=3)n.splice(k,3,...gearUnit(n.slice(k,k+3)));
+ return {p,n,i};
+}
+
+// Original authored keys, metres/radians. These are not extracted commercial motions.
+const motionMix=(a,b,u)=>a.map((v,i)=>v+(b[i]-v)*u),motionClamp=x=>Math.max(0,Math.min(1,x));
+const motionSmooth=x=>{x=motionClamp(x);return x*x*(3-2*x);};
+const motionKey=(time,hips,pelvisYaw,spineYaw,lean,feet,batGrip,batTip,leftHand=[-.24,1.05,.12],rightHand=[.24,1.05,.12])=>({time,hips,pelvisYaw,spineYaw,lean,feet,batGrip,batTip,leftHand,rightHand});
+const readyFeet=[[-.105,.08,.06],[.105,.08,-.06]],driveFeet=[[-.11,.08,.40],[.11,.08,-.06]];
+const batKeys=[
+ motionKey(0,[0,-.035,-.02],0,-.08,.10,readyFeet,[.08,1.02,.22],[.12,.17,.42]),
+ motionKey(2.15,[0,-.035,-.02],0,-.08,.10,readyFeet,[.08,1.02,.22],[.12,.17,.42]),
+ motionKey(2.42,[0,-.07,.02],-.08,-.20,.18,[[-.11,.14,.18],[.11,.08,-.06]],[.12,1.20,.19],[.30,1.97,-.17]),
+ motionKey(2.57,[0,-.10,.06],-.10,-.28,.23,driveFeet,[.10,1.23,.23],[.27,2.02,-.12]),
+ motionKey(2.70,[0,-.10,.08],.04,.18,.25,driveFeet,[.035,1.04,.32],[.04,.20,.80]),
+ motionKey(2.88,[0,-.075,.08],.14,.49,.16,driveFeet,[-.18,1.43,.34],[-.55,2.08,.18]),
+ motionKey(3.25,[0,-.06,.075],.18,.61,.11,driveFeet,[-.22,1.49,.28],[-.68,2.09,.03]),
+ motionKey(3.65,[0,-.045,.04],.07,.28,.12,driveFeet,[-.12,1.30,.25],[-.42,1.85,.10]),
+ motionKey(4.15,[0,-.035,-.02],0,-.08,.10,readyFeet,[.08,1.02,.22],[.12,.17,.42])
+];
+function interpolateMotion(keys,time){let a=keys[0],b=a;for(let i=1;i<keys.length;i++){b=keys[i];if(time<=b.time)break;a=b;}const u=a===b?0:motionSmooth((time-a.time)/(b.time-a.time));const m={};for(const k of ['hips','batGrip','batTip','leftHand','rightHand'])m[k]=motionMix(a[k],b[k],u);for(const k of ['pelvisYaw','spineYaw','lean'])m[k]=a[k]+(b[k]-a[k])*u;m.feet=a.feet.map((p,i)=>motionMix(p,b.feet[i],u));return m;}
+function sampleCricketMotion(mode,time=0,hand='RIGHT'){
+ if(!Number.isFinite(time))time=0;
+ let m;
+ if(mode==='bat'||mode==='shot')m=interpolateMotion(batKeys,mode==='shot'?time+2.35:time);
+ else{
+  m=interpolateMotion(batKeys,0);m.hips=[0,0,0];m.pelvisYaw=0;m.spineYaw=0;m.lean=.025;
+  if(mode==='hero'){m.batGrip=[-.16,1.03,.30];m.batTip=[.68,1.12,.30];}
+  else if(mode==='bowl'){
+   const plant=[[-.11,.08,.30],[.11,.13,-.24]];
+   const runTime=Math.min(time,1.3);
+   const runPose=()=>{const s=Math.sin(runTime*11),lift=Math.max(0,s),liftR=Math.max(0,-s);m.hips=[0,Math.abs(s)*.025,0];m.lean=.13;m.spineYaw=Math.sin(time*11)*.10;m.feet=[[-.10,.08+lift*.16,-s*.34],[.10,.08+liftR*.16,s*.34]];m.leftHand=[-.24,1.09+s*.18,s*.24];m.rightHand=[.24,1.09-s*.18,-s*.24];return m;};
+   if(time<1.3)m=runPose();
+   else m=interpolateMotion([
+    {...runPose(),time:1.3},
+    motionKey(1.55,[0,.05,0],-.10,-.16,-.04,[[-.10,.19,.18],[.10,.35,-.20]],m.batGrip,m.batTip,[-.20,1.62,.24],[.22,1.67,-.36]),
+    motionKey(1.82,[0,-.04,.025],-.12,-.20,.02,plant,m.batGrip,m.batTip,[-.18,1.60,.25],[.23,1.95,-.16]),
+    motionKey(2,[0,-.025,.04],.04,.24,.13,plant,m.batGrip,m.batTip,[-.22,1.05,.30],[.22,2.02,.08]),
+    motionKey(2.30,[0,-.07,.13],.15,.46,.38,plant,m.batGrip,m.batTip,[-.26,1.04,.22],[.20,1.02,.63]),
+    motionKey(2.65,[0,0,.18],.12,.18,.14,[[-.11,.08,.30],[.11,.08,.56]],m.batGrip,m.batTip,[-.23,1.04,.12],[.24,.97,.28]),
+    motionKey(3.0,[0,0,0],0,0,.025,readyFeet,m.batGrip,m.batTip)
+   ],time);
+  }else if(mode==='pickup'||mode==='field'||mode==='keeper'){
+   const u=mode==='keeper'?.72:motionSmooth(Math.min(time,.7)/.7);m.hips=[0,-.27*u,.035*u];m.lean=.03+.56*u;m.feet=[[-.19,.08,.17],[.19,.08,-.07]];m.leftHand=[-.10,1.05-.77*u,.35+.08*u];m.rightHand=[.10,1.05-.77*u,.35+.08*u];
+  }else if(mode==='catch'){m.hips=[0,-.06,0];m.lean=.08;m.leftHand=[-.12,1.75,.35];m.rightHand=[.12,1.75,.35];}
+  else if(mode==='run'||mode==='walk'){
+   const walk=mode==='walk',s=Math.sin(time*(walk?6:10));m.lean=walk?.06:.18;m.spineYaw=s*.10;m.hips=[0,Math.abs(s)*(walk?.015:.035),0];m.feet=[[-.1,.08+Math.max(0,s)*(walk?.06:.15),-s*(walk?.18:.36)],[.1,.08+Math.max(0,-s)*(walk?.06:.15),s*(walk?.18:.36)]];m.leftHand=[-.24,1.12+s*.16,s*.23];m.rightHand=[.24,1.12-s*.16,-s*.23];
+  }else if(mode==='out'){m.hips=[0,-.025,0];m.lean=.15;m.leftHand=[-.22,1.06,.15];m.rightHand=[.22,1.06,.15];}
+ }
+ if(hand==='LEFT'){
+  for(const k of ['hips','batGrip','batTip'])m[k][0]*=-1;m.pelvisYaw*=-1;m.spineYaw*=-1;
+  m.feet=[m.feet[1].slice(),m.feet[0].slice()];m.feet.forEach(p=>p[0]*=-1);
+ }
+ m.phase=mode==='bat'||mode==='shot'?(time<2.42?'READY':time<2.57?'FOOTWORK':time<2.70?'BACKLIFT':time<2.82?'CONTACT':time<3.65?'FOLLOW-THROUGH':'RECOVERY'):mode==='bowl'?(time<1.55?'RUN-UP':time<1.95?'FRONT-FOOT PLANT':time<2.08?'RELEASE':'BOWLING FOLLOW-THROUGH'):mode==='pickup'||mode==='field'?'FIELDING':mode.toUpperCase();return m;
+}
+function cricketBodyPoint(p,m){
+ const w=motionSmooth((p[1]-.90)/.61),yaw=m.pelvisYaw+m.spineYaw*w,lean=m.lean*(.22+.78*w),x=p[0],y=p[1]-.90,z=p[2],a=x*Math.cos(yaw)+z*Math.sin(yaw),b=-x*Math.sin(yaw)+z*Math.cos(yaw);
+ return [a+m.hips[0],.90+y*Math.cos(lean)-b*Math.sin(lean)+m.hips[1],y*Math.sin(lean)+b*Math.cos(lean)+m.hips[2]];
+}
+function cricketBodyVector(v,m,height=1.53){const w=motionSmooth((height-.90)/.61),yaw=m.pelvisYaw+m.spineYaw*w,lean=m.lean*(.22+.78*w),x=v[0]*Math.cos(yaw)+v[2]*Math.sin(yaw),z=-v[0]*Math.sin(yaw)+v[2]*Math.cos(yaw);return [x,v[1]*Math.cos(lean)-z*Math.sin(lean),v[1]*Math.sin(lean)+z*Math.cos(lean)];}
+function cricketArmAnchors(m){return [[-.205,1.43,0],[.205,1.43,0]].map(p=>cricketBodyPoint(p,m));}
+function cricketMotionBat(m,height=1.85,hand='RIGHT'){return fitBatToHands({grip:cricketBodyPoint(m.batGrip,m),tip:cricketBodyPoint(m.batTip,m),height,hand,shoulders:cricketArmAnchors(m)});}
+
+const skinAdd=(a,b)=>a.map((x,i)=>x+b[i]),skinSub=(a,b)=>a.map((x,i)=>x-b[i]),skinMul=(a,s)=>a.map(x=>x*s),skinCross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],skinUnit=a=>{const l=Math.hypot(...a)||1;return a.map(x=>x/l);};
+function cricketSurfaceNormals(p,indices){const n=new Array(p.length).fill(0);for(let k=0;k<indices.length;k+=3){const ids=indices.slice(k,k+3),a=p.slice(ids[0]*3,ids[0]*3+3),b=p.slice(ids[1]*3,ids[1]*3+3),c=p.slice(ids[2]*3,ids[2]*3+3),v=skinCross(skinSub(b,a),skinSub(c,a));for(const id of ids)for(let j=0;j<3;j++)n[id*3+j]+=v[j];}for(let k=0;k<n.length;k+=3){let v=skinUnit(n.slice(k,k+3));if(Math.hypot(...v)<.5)v=[0,1,0];n.splice(k,3,...v);}return n;}
+function deformCricketTorso(bind,motion){const p=[];for(let i=0;i<bind.p.length;i+=3)p.push(...cricketBodyPoint(bind.p.slice(i,i+3),motion));return {p,n:cricketSurfaceNormals(p,bind.i),i:bind.i};}
+function originalCricketLimb(a,b,c,kind='arm'){
+ const p=[],i=[],columns=16,rows=14,upper=skinUnit(skinSub(b,a)),lower=skinUnit(skinSub(c,b));
+ const profile=kind==='leg'?[[.083,.091],[.072,.075],[.061,.064],[.065,.062],[.043,.047]]:[[.050,.047],[.047,.046],[.040,.039],[.041,.036],[.026,.024]];
+ for(let row=0;row<=rows;row++){
+  const u=row/rows,first=u<=.5,center=first?skinAdd(a,skinMul(skinSub(b,a),u*2)):skinAdd(b,skinMul(skinSub(c,b),(u-.5)*2));
+  const blend=Math.max(0,Math.min(1,(u-.35)/.3)),tangent=skinUnit(skinAdd(skinMul(upper,1-blend),skinMul(lower,blend))),x=skinUnit(skinCross(Math.abs(tangent[2])<.9?[0,0,1]:[1,0,0],tangent)),z=skinCross(tangent,x),at=u*(profile.length-1),n=Math.min(profile.length-2,Math.floor(at)),f=at-n,rx=profile[n][0]+(profile[n+1][0]-profile[n][0])*f,rz=profile[n][1]+(profile[n+1][1]-profile[n][1])*f;
+  for(let col=0;col<=columns;col++){const angle=col/columns*Math.PI*2;p.push(...skinAdd(center,skinAdd(skinMul(x,Math.cos(angle)*rx),skinMul(z,Math.sin(angle)*rz))));}
+ }
+ for(let r=0;r<rows;r++)for(let col=0;col<columns;col++){const a=r*(columns+1)+col,b=a+columns+1;i.push(a,a+1,b,a+1,b+1,b);}
+ return {p,n:cricketSurfaceNormals(p,i),i};
+}
+
+// Original numeric stadium architecture; no external models or scenery images.
+function originalStadiumLayout(){
+ const items=[],point=(a,r,y)=>[r*Math.cos(a),y,r*.88*Math.sin(a)];
+ const box=(p,s,c,yaw=0,kind=0)=>items.push({mesh:'box',p,s,c,yaw,kind});
+ const beam=(a,b,r=.09,c=[.47,.53,.56])=>items.push({mesh:'cylinder',a,b,r,c});
+ const ivory=[.68,.72,.71],navy=[.035,.13,.25],blue=[.06,.3,.56];
+ for(let tier=0;tier<3;tier++){
+  const base=1.2+tier*9;
+  for(let sector=0;sector<48;sector++){
+   const angle=sector/48*Math.PI*2,yaw=-angle+Math.PI/2;
+   for(let row=0;row<5;row++){
+    const radius=82+tier*4.5+row*2.4,y=base+row*.92;
+    box(point(angle,radius,y),[6.2,.31,1.28],ivory,yaw);
+    box(point(angle,radius,y+.38),[6,.09,.8],sector%4===0?blue:[.28,.45,.62],yaw);
+   }
+   const front=81+tier*4.5;
+   // Concourse facades close the void beneath each seating deck.
+   if(tier>0){box(point(angle,front+2,base-3.1),[6.2,1.8,.75],ivory,yaw);box(point(angle,front+1,base-3.0),[5.7,.72,.14],navy,yaw);}
+   box(point(angle,front,base-.7),[6.2,.7,.3],tier%2?ivory:blue,yaw);
+   beam(point(angle-.065,front-.3,base+.17),point(angle+.065,front-.3,base+.17),.045,[.83,.86,.84]);
+   if(sector%3===0)beam(point(angle,111,0),point(angle,111,30),.23,ivory);
+  }
+ }
+ // Cantilever roof panels and visible radial triangular trusses.
+ for(let sector=0;sector<48;sector++){
+  const a=sector/48*Math.PI*2;
+  box(point(a,103,29.7),[7,.18,11],sector%3===0?[.58,.63,.64]:[.75,.77,.75],-a+Math.PI/2);
+  if(sector%2===0){
+   beam(point(a,114,29.3),point(a,91,28.2),.12);
+   beam(point(a,114,27),point(a,91,28.2),.09);
+   for(let j=0;j<5;j++)beam(point(a,114-j*4.6,29.3-j*.22),point(a,111.7-j*4.6,27.15+j*.21),.05);
+  }
+ }
+ // Four original lattice floodlight towers with banks aimed into the ground.
+ for(const a of [.7,2.44,3.84,5.58]){
+  const p=point(a,113,0),inward=[-Math.cos(a),0,-Math.sin(a)];
+  for(const sx of [-1,1])for(const sz of [-1,1])beam([p[0]+sx*.75,0,p[2]+sz*.75],[p[0]+sx*.48,37,p[2]+sz*.48],.13);
+  for(let y=0;y<36;y+=4){beam([p[0]-.7,y,p[2]-.7],[p[0]+.7,y+4,p[2]-.7],.055);beam([p[0]+.7,y,p[2]+.7],[p[0]-.7,y+4,p[2]+.7],.055);}
+  for(let row=0;row<3;row++)for(let column=0;column<6;column++){
+   const tangent=[Math.sin(a),0,-Math.cos(a)],x=column-2.5;
+   box([p[0]+tangent[0]*x+inward[0]*.65,36+row*.65,p[2]+tangent[2]*x+inward[2]*.65],[.35,.22,.10],[.98,.94,.78],-a+Math.PI/2,4);
+  }
+ }
+ return items;
+}
+function originalCrowdPosition(index,random){
+ const angle=random()*Math.PI*2,tier=index%3,row=Math.floor(random()*5),radius=82+tier*4.5+row*2.4;
+ return [radius*Math.cos(angle),1.8+tier*9+row*.92,radius*.88*Math.sin(angle)];
+}
+
+// Read-only presentation derived from saved deliveries in the current innings.
+function matchBroadcastSummary(records,context,score){
+ const names=new Map((context.roster||[]).map(p=>[p.id,p.name])),batters=new Map(),bowlers=new Map(),highlights=[],achievements=[];
+ const playerName=id=>names.get(id)||id||'Player';
+ for(const record of records){
+  const e=record.event,id=e.players?.striker,bid=e.players?.bowler,br=Number.isInteger(e.batRuns)?e.batRuns:0;
+  if(!id||!bid)continue;
+  if(!batters.has(id))batters.set(id,{id,name:playerName(id),runs:0,balls:0,fours:0,sixes:0,status:'not out'});
+  if(!bowlers.has(bid))bowlers.set(bid,{id:bid,name:playerName(bid),runs:0,balls:0,wickets:0});
+  const b=batters.get(id),bow=bowlers.get(bid),before=b.runs,priorWickets=bow.wickets,isLegal=!['WIDE','NO_BALL','PENALTY'].includes(e.extraType),milestones=[];
+  b.runs+=br;if(isLegal)b.balls++;if(e.boundary==='FOUR'&&br===4)b.fours++;if(e.boundary==='SIX'&&br===6)b.sixes++;
+  bow.runs+=br+(['WIDE','NO_BALL'].includes(e.extraType)?e.extraRuns:0);if(isLegal)bow.balls++;
+  if(e.savedWicketLabel||e.wicketType&&e.wicketType!=='NONE'){
+   const out=e.dismissedPlayer||id;if(!batters.has(out))batters.set(out,{id:out,name:playerName(out),runs:0,balls:0,fours:0,sixes:0,status:'not out'});batters.get(out).status=e.savedWicketLabel||e.wicketType.replaceAll('_',' ');
+   if(['BOWLED','CAUGHT','LBW','STUMPED','HIT_WICKET'].includes(e.wicketType))bow.wickets++;
+  }
+  for(let n=50;n<=b.runs;n+=50)if(before<n)milestones.push(`${b.name} · ${n} runs`);
+  for(const n of [3,5,10])if(priorWickets<n&&bow.wickets>=n)milestones.push(`${bow.name} · ${n} wickets`);
+  for(const text of milestones)achievements.push({eventId:e.eventId,text});
+  const wickets=!!e.savedWicketLabel||e.wicketType&&e.wicketType!=='NONE',highlight=wickets||e.boundary==='FOUR'||e.boundary==='SIX';
+  if(highlight||milestones.length)highlights.push({eventId:e.eventId,kind:wickets?'WICKET':e.boundary!=='NONE'?e.boundary:'MILESTONE',text:wickets?`${playerName(e.dismissedPlayer||id)} · ${e.savedWicketLabel||e.wicketType.replaceAll('_',' ')}`:`${b.name} · ${e.boundary==='FOUR'?'FOUR':e.boundary==='SIX'?'SIX':br+' runs'}`,score:{...e.score},milestones});
+ }
+ return {inning:context.inning||1,bpo:context.bpo||6,score:{...score},batters:[...batters.values()],bowlers:[...bowlers.values()],highlights,achievements};
+}
+function cricketBanner(event,summary){
+ const wicket=event.wicketType&&event.wicketType!=='NONE',boundary=event.boundary==='FOUR'||event.boundary==='SIX';
+ const milestones=summary?.highlights?.find(h=>h.eventId===event.eventId)?.milestones||[];
+ return {title:wicket?'WICKET':boundary?event.boundary:milestones.length?'MILESTONE':event.extraType&&event.extraType!=='NONE'?event.extraType.replaceAll('_',' '):event.batRuns?`${event.batRuns} RUN${event.batRuns===1?'':'S'}`:'DOT BALL',kind:wicket?'wicket':boundary?'boundary':milestones.length?'milestone':'runs',subtitle:milestones.join(' • ')||event.commentary||'',score:`${event.score.runs} / ${event.score.wickets}`};
+}
+
+function createCricketBroadcastUI({document,panel,banner,ticker,canOpen,getRoster}){
+ let context=null,summary=null,currentView=null,lastBanner=null;const played=new Map();
+ const node=(tag,text,className)=>{const e=document.createElement(tag);if(text!==undefined)e.textContent=String(text);if(className)e.className=className;return e;};
+ const headline=node('strong','','eventTitle'),sub=node('span','','eventSubtitle'),score=node('b','','eventScore');banner.replaceChildren();banner.append(headline);banner.append(sub);banner.append(score);for(let i=0;i<10;i++){const p=node('i','','eventSpark');p.style.cssText='--i:'+i;banner.append(p);}
+ const overs=(balls,bpo)=>Math.floor(balls/bpo)+'.'+balls%bpo;
+ const tick=text=>{ticker.textContent=text+'     •     '+text;ticker.style.animation=text.length>45?'cricketTicker 24s linear infinite':'none';};
+ const table=(headers,rows)=>{const wrap=node('div',undefined,'scoreTableWrap'),t=node('table'),head=node('thead'),tr=node('tr');for(const h of headers)tr.append(node('th',h));head.append(tr);t.append(head);const body=node('tbody');for(const row of rows){const r=node('tr');for(const value of row)r.append(node('td',value));body.append(r);}t.append(body);wrap.append(t);return wrap;};
+ function renderPanel(kind){
+  if(!canOpen())return {accepted:false};currentView=kind;panel.replaceChildren();panel.append(node('strong',kind==='scorecard'?'LATEST SCORER SCORECARD':kind==='highlights'?'CONFIRMED MATCH HIGHLIGHTS':'THIS INNINGS · RECORDS & ACHIEVEMENTS'));
+  const close=node('button','CLOSE');close.onclick=()=>{panel.style.display='none';currentView=null;};panel.append(close);
+  const nav=node('div',undefined,'broadcastNav');for(const [name,label]of [['highlights','HIGHLIGHTS'],['scorecard','SCORECARD'],['records','ACHIEVEMENTS']]){const b=node('button',label);b.onclick=()=>renderPanel(name);nav.append(b);}panel.append(nav);
+  if(!summary){panel.append(node('p','Waiting for saved deliveries.'));panel.style.display='block';return {accepted:true};}
+  panel.append(node('p',`Innings ${summary.inning} · ${summary.score.runs} / ${summary.score.wickets} · ${overs(summary.score.legalBalls,summary.bpo)} overs`));
+  if(kind==='scorecard'){
+   panel.append(table(['BATTER','RUNS','BALLS','4s','6s','STATUS'],summary.batters.map(b=>[b.name,b.runs,b.balls,b.fours,b.sixes,b.status])));
+   panel.append(table(['BOWLER','OVERS','RUNS','WICKETS'],summary.bowlers.map(b=>[b.name,overs(b.balls,summary.bpo),b.runs,b.wickets])));
+   const batTotal=summary.batters.reduce((n,b)=>n+b.runs,0);panel.append(node('p','Extras / adjustments: '+Math.max(0,summary.score.runs-batTotal)));
+  }else if(kind==='highlights'){
+   if(!summary.highlights.length)panel.append(node('p','No boundary, wicket or milestone recorded yet.'));
+   for(const h of summary.highlights.slice().reverse()){const card=node('article',undefined,'highlightCard '+h.kind.toLowerCase());card.append(node('b',h.kind));card.append(node('span',h.text));card.append(node('small',`${h.score.runs} / ${h.score.wickets} · ${overs(h.score.legalBalls,summary.bpo)} ov`));for(const m of h.milestones)card.append(node('small',m));panel.append(card);}
+  }else{
+   const top=summary.batters.slice().sort((a,b)=>b.runs-a.runs)[0],best=summary.bowlers.slice().sort((a,b)=>b.wickets-a.wickets||a.runs-b.runs)[0];
+   if(top)panel.append(node('p',`Top score this innings: ${top.name} · ${top.runs} (${top.balls})`));
+   if(best)panel.append(node('p',`Best bowling this innings: ${best.name} · ${best.wickets} / ${best.runs}`));
+   panel.append(node('p',`Boundaries recorded: ${summary.batters.reduce((n,b)=>n+b.fours,0)} fours · ${summary.batters.reduce((n,b)=>n+b.sixes,0)} sixes`));
+   for(const a of summary.achievements)panel.append(node('article',a.text,'highlightCard milestone'));
+   if(!summary.achievements.length)panel.append(node('p','No 50-run or 3/5/10-wicket milestone recorded yet.'));
+  }
+  panel.style.display='block';return {accepted:true};
+ }
+ return {setContext(c){context=c;summary=c.broadcast||summary;if(currentView&&panel.style.display==='block')renderPanel(currentView);},baseline(s,c){context=c;played.clear();summary=c.broadcast||matchBroadcastSummary([],c,s);banner.style.display='none';lastBanner=null;const recent=summary.highlights.slice(-3).map(h=>h.text).join(' • ');tick(recent||`Score synced · ${s.runs} / ${s.wickets} · waiting for the next saved ball`);if(currentView&&panel.style.display==='block')renderPanel(currentView);},result(e){played.set(e.eventId,{event:e,supported:true});if(!context?.broadcast)summary=matchBroadcastSummary([...played.values()],{roster:getRoster(),bpo:context?.bpo||6,inning:context?.inning||1},e.score);const b=cricketBanner(e,summary);headline.textContent=b.title;sub.textContent=b.subtitle;score.textContent=b.score;banner.className='eventBanner '+b.kind;if(lastBanner!==e.eventId){banner.style.animation='none';void banner.offsetWidth;banner.style.animation='';lastBanner=e.eventId;}tick(`${b.title} · ${e.commentary||''} · ${b.score}`);},visibility(show){banner.style.display=show?'flex':'none';},newBall(){banner.style.display='none';panel.style.display='none';currentView=null;},show:renderPanel,reset(){played.clear();summary=null;context=null;banner.style.display='none';currentView=null;tick('Ready · waiting for a confirmed ball event');}};
+}
+
+// Small original WebGL2 post-process: depth-aware blur only for close-up shots.
+function createPortraitPostprocess(gl,compileProgram){
+ const vertex=`#version 300 es
+ precision highp float;out vec2 uv;void main(){vec2 p=vec2((gl_VertexID<<1)&2,gl_VertexID&2);uv=p;gl_Position=vec4(p*2.-1.,0.,1.);}`;
+ const fragment=`#version 300 es
+ precision highp float;in vec2 uv;uniform sampler2D sceneColor;uniform sampler2D sceneDepth;uniform vec2 pixel;uniform float focus;uniform float enabled;out vec4 color;
+ float depthAt(vec2 p){float z=texture(sceneDepth,p).r*2.-1.;return 90./(450.1-z*449.9);}
+ void main(){vec3 center=texture(sceneColor,uv).rgb;float d=depthAt(uv);float coc=clamp((d-focus-.75)/max(focus,1.),0.,1.)*enabled;vec3 sum=center;float weight=1.;for(int i=0;i<12;i++){float a=float(i)*2.399963;vec2 offset=vec2(cos(a),sin(a))*sqrt((float(i)+.5)/12.)*pixel*4.5*coc;vec2 q=clamp(uv+offset,vec2(0.),vec2(1.));float w=step(focus+.45,depthAt(q));sum+=texture(sceneColor,q).rgb*w;weight+=w;}vec3 c=mix(center,sum/weight,coc);vec2 v=uv-.5;c*=1.-dot(v,v)*.16*enabled;color=vec4(c,1.);}`;
+ const prog=compileProgram(vertex,fragment),fb=gl.createFramebuffer(),color=gl.createTexture(),depth=gl.createTexture();let w=0,h=0;
+ const texture=(tex,filter)=>{gl.bindTexture(gl.TEXTURE_2D,tex);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,filter);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,filter);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);};
+ return {bind(width,height){gl.bindFramebuffer(gl.FRAMEBUFFER,fb);if(w!==width||h!==height){w=width;h=height;texture(color,gl.LINEAR);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA8,w,h,0,gl.RGBA,gl.UNSIGNED_BYTE,null);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,color,0);texture(depth,gl.NEAREST);gl.texImage2D(gl.TEXTURE_2D,0,gl.DEPTH_COMPONENT24,w,h,0,gl.DEPTH_COMPONENT,gl.UNSIGNED_INT,null);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.DEPTH_ATTACHMENT,gl.TEXTURE_2D,depth,0);if(gl.checkFramebufferStatus(gl.FRAMEBUFFER)!==gl.FRAMEBUFFER_COMPLETE)throw Error('Scene framebuffer unavailable');}},present(focus,enabled){gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.disable(gl.DEPTH_TEST);gl.viewport(0,0,w,h);gl.useProgram(prog);gl.bindVertexArray(null);gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,color);gl.uniform1i(gl.getUniformLocation(prog,'sceneColor'),0);gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,depth);gl.uniform1i(gl.getUniformLocation(prog,'sceneDepth'),1);gl.uniform2f(gl.getUniformLocation(prog,'pixel'),1/w,1/h);gl.uniform1f(gl.getUniformLocation(prog,'focus'),focus);gl.uniform1f(gl.getUniformLocation(prog,'enabled'),enabled?1:0);gl.drawArrays(gl.TRIANGLES,0,3);gl.enable(gl.DEPTH_TEST);}};
+}
+
+'use strict';
+const $=s=>document.querySelector(s),canvas=$('#scene'),stage=$('#stage');
+const V={add:(a,b)=>a.map((v,i)=>v+b[i]),sub:(a,b)=>a.map((v,i)=>v-b[i]),mul:(a,s)=>a.map(v=>v*s),dot:(a,b)=>a.reduce((s,v,i)=>s+v*b[i],0),cross:(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],len:a=>Math.hypot(...a),norm:a=>{const l=Math.hypot(...a)||1;return a.map(v=>v/l);},mix:(a,b,t)=>a.map((v,i)=>v+(b[i]-v)*t)};
+const clamp=(v,a=0,b=1)=>Math.max(a,Math.min(v,b)),smooth=t=>{t=clamp(t);return t*t*(3-2*t);};
+function matrix(p=[0,0,0],s=[1,1,1],yaw=0){const c=Math.cos(yaw),n=Math.sin(yaw);return [c*s[0],0,-n*s[0],0,0,s[1],0,0,n*s[2],0,c*s[2],0,...p,1];}
+function multiply(a,b){const out=new Array(16).fill(0);for(let c=0;c<4;c++)for(let r=0;r<4;r++)for(let k=0;k<4;k++)out[c*4+r]+=a[k*4+r]*b[c*4+k];return out;}
+function perspective(fovy,aspect,near,far){const f=1/Math.tan(fovy/2);return [f/aspect,0,0,0,0,f,0,0,0,0,(far+near)/(near-far),-1,0,0,2*far*near/(near-far),0];}
+function lookAt(eye,at){const z=V.norm(V.sub(eye,at)),x=V.norm(V.cross([0,1,0],z)),y=V.cross(z,x);return [x[0],y[0],z[0],0,x[1],y[1],z[1],0,x[2],y[2],z[2],0,-V.dot(x,eye),-V.dot(y,eye),-V.dot(z,eye),1];}
+function ortho(l,r,b,t,n,f){return [2/(r-l),0,0,0,0,2/(t-b),0,0,0,0,-2/(f-n),0,-(r+l)/(r-l),-(t+b)/(t-b),-(f+n)/(f-n),1];}
+function segment(a,b,r,rz=r){const y=V.norm(V.sub(b,a)),x=V.norm(V.cross(Math.abs(y[1])>.95?[1,0,0]:[0,1,0],y)),z=V.cross(x,y),length=V.len(V.sub(b,a));return [...V.mul(x,r),0,...V.mul(y,length),0,...V.mul(z,rz),0,...a,1];}
+function sphereMesh(n=14,m=10){let p=[],norm=[],ind=[];for(let j=0;j<=m;j++){const a=j/m*Math.PI;for(let i=0;i<=n;i++){const b=i/n*2*Math.PI,v=[Math.sin(a)*Math.cos(b),Math.cos(a),Math.sin(a)*Math.sin(b)];p.push(...v);norm.push(...v);}}for(let j=0;j<m;j++)for(let i=0;i<n;i++){const a=j*(n+1)+i,b=a+n+1;ind.push(a,b,a+1,b,b+1,a+1);}return {p,n:norm,i:ind};}
+function cylinderMesh(n=16){let p=[],norm=[],ind=[];for(let y=0;y<=1;y++)for(let k=0;k<=n;k++){const a=k/n*2*Math.PI;p.push(Math.cos(a),y,Math.sin(a));norm.push(Math.cos(a),0,Math.sin(a));}for(let k=0;k<n;k++)ind.push(k,k+n+1,k+1,k+1,k+n+1,k+n+2);return {p,n:norm,i:ind};}
+function boxMesh(){let p=[],n=[],i=[];const faces=[[[1,0,0],[[1,-1,-1],[1,1,-1],[1,1,1],[1,-1,1]]],[[-1,0,0],[[-1,-1,1],[-1,1,1],[-1,1,-1],[-1,-1,-1]]],[[0,1,0],[[-1,1,-1],[-1,1,1],[1,1,1],[1,1,-1]]],[[0,-1,0],[[-1,-1,1],[-1,-1,-1],[1,-1,-1],[1,-1,1]]],[[0,0,1],[[1,-1,1],[1,1,1],[-1,1,1],[-1,-1,1]]],[[0,0,-1],[[-1,-1,-1],[-1,1,-1],[1,1,-1],[1,-1,-1]]]];for(const [normal,vs]of faces){let k=p.length/3;for(const v of vs){p.push(...v);n.push(...normal);}i.push(k,k+1,k+2,k,k+2,k+3);}return {p,n,i};}
+function diskMesh(n=128){let p=[0,0,0],norm=[0,1,0],ind=[];for(let k=0;k<=n;k++){const a=k/n*2*Math.PI;p.push(Math.cos(a),0,Math.sin(a));norm.push(0,1,0);}for(let k=1;k<=n;k++)ind.push(0,k,k+1);return {p,n:norm,i:ind};}
+function ringMesh(n=128){let p=[],norm=[],ind=[];for(let k=0;k<=n;k++){const a=k/n*2*Math.PI;for(const r of [1,.994]){p.push(r*Math.cos(a),0,r*Math.sin(a));norm.push(0,1,0);}}for(let k=0;k<n;k++){let a=k*2;ind.push(a,a+1,a+2,a+1,a+3,a+2);}return {p,n:norm,i:ind};}
+const gl=canvas.getContext('webgl2',{antialias:true,alpha:false,preserveDrawingBuffer:true});
+if(!gl){$('#status').textContent='WebGL2 is not available in this browser.';throw new Error('WebGL2 required');}
+const vertex=`#version 300 es
+precision highp float;layout(location=0)in vec3 pos;layout(location=1)in vec3 normal;layout(location=2)in mat4 model;layout(location=6)in vec4 tint;layout(location=7)in float kind;layout(location=8)in vec3 surface;uniform mat4 vp;uniform mat4 lightVP;out vec3 P;out vec3 L;out vec3 N;out vec4 C;out vec4 shadow;flat out float K;void main(){vec4 w=model*vec4(pos,1.);P=w.xyz;L=surface;mat3 b=mat3(model);N=normalize(b[0]*normal.x/dot(b[0],b[0])+b[1]*normal.y/dot(b[1],b[1])+b[2]*normal.z/dot(b[2],b[2]));C=tint;K=kind;shadow=lightVP*w;gl_Position=vp*w;}`;
+const fragment=`#version 300 es
+precision highp float;in vec3 P;in vec3 L;in vec3 N;in vec4 C;in vec4 shadow;flat in float K;uniform vec3 camera;uniform sampler2D shadowMap;uniform float shadowSize;uniform float avatarStudio;uniform sampler2D kitMap;out vec4 outColor;float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}float cloudNoise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1.,0.)),f.x),mix(hash(i+vec2(0.,1.)),hash(i+vec2(1.)),f.x),f.y);}float clouds(vec2 p){return cloudNoise(p)*.55+cloudNoise(p*2.03)*.28+cloudNoise(p*4.17)*.13+cloudNoise(p*8.3)*.04;}void main(){if(K>5.5&&K<6.5){vec3 ray=normalize(P-camera);float elevation=clamp(ray.y,0.,1.);vec3 sky=mix(vec3(.74,.86,.94),vec3(.10,.38,.76),sqrt(elevation));vec2 q=vec2(atan(ray.z,ray.x)*4.,ray.y*12.);float c=smoothstep(.49,.70,clouds(q))*smoothstep(.015,.22,elevation);sky=mix(sky,vec3(.98,.965,.93),c*.83);float sun=pow(max(dot(ray,normalize(vec3(.5,1.,.35))),0.),24.);outColor=vec4(sky+vec3(.12,.08,.02)*sun,1.);return;}if(K>6.5&&K<7.5){bool beard=L.z>0.&&((abs(L.x)>.045&&L.y<-.032)||L.y<-.089||(abs(L.x)<.030&&L.y<-.030&&L.y>-.045));if(!beard)discard;}vec3 n=normalize(N),l=normalize(vec3(.5,1.,.35)),v=normalize(camera-P);vec3 base=C.rgb;if(K>10.5&&K<11.5){float front=smoothstep(.035,.075,L.z);float pore=hash(floor(L.xy*14000.));base*=.975+pore*.045;float cheek=exp(-pow((abs(L.x)-.055)/.026,2.)-pow((L.y+.018)/.034,2.));base=mix(base,base*vec3(1.08,.91,.89),cheek*.32*front);float jaw=(1.-smoothstep(-.060,-.032,L.y))*smoothstep(.025,.050,abs(L.x))+(1.-smoothstep(-.098,-.065,L.y));float moustache=exp(-pow(L.x/.027,4.)-pow((L.y+.044)/.005,2.));float beard=clamp(jaw+moustache,0.,1.)*front;float strand=hash(floor(L.xy*12500.));base=mix(base,vec3(.048,.029,.019)*( .86+.28*strand),beard*(.72+.10*strand));}if(K>14.5&&K<15.5){float lip=exp(-pow(L.x/.030,6.)-pow((L.y+.053)/.008,4.))*smoothstep(.04,.09,L.z);base=mix(base,vec3(.49,.245,.18),lip*.42);float stubble=(1.-smoothstep(-.088,-.052,L.y))*smoothstep(.025,.045,L.z);base=mix(base,base*vec3(.65,.61,.58),stubble*.22);}if(K>11.5&&K<12.5){float hair=sin(L.x*17000.+sin(L.y*770.)*4.);base*=.80+hash(floor(L.xy*9000.))*.24+hair*.045;}if(K>12.5&&K<13.5){vec2 q=vec2(abs(L.x)-.034,L.y-.027);float r=length(q),iris=1.-smoothstep(.0070,.0077,r),pupil=1.-smoothstep(.0031,.0035,r),rays=sin(atan(q.y,q.x)*91.+r*9000.)*.5+.5;vec3 irisColor=mix(vec3(.10,.064,.032),vec3(.22,.135,.056),rays);float rim=smoothstep(.0063,.0073,r);irisColor=mix(irisColor,vec3(.026,.022,.019),rim);base=mix(base,irisColor,iris);base=mix(base,vec3(.008,.008,.007),pupil);float glint=exp(-pow((q.x+.0015)/.0007,2.)-pow((q.y-.0014)/.0007,2.));base=mix(base,vec3(.97,.98,.96),glint*.88);}if(K>13.5&&K<14.5){base*=.97+hash(floor(L.xy*16000.))*.06;}if(K>.5&&K<1.5){base*=.98+(hash(floor(L.xy*3500.))-.5)*.045;}if((K>4.5&&K<5.5)||(K>7.5&&K<8.5)){float weave=sin(L.x*1600.)*sin(L.y*1600.);base*=.96+weave*.04+sin((L.x+L.y*.42)*95.)*.035;}if(K>7.5&&K<8.5&&L.z>.045){vec4 mark=texture(kitMap,vec2(L.x/.45+.5,1.-(L.y-.79)/.64));base=mix(base,mark.rgb,mark.a);}if(K>8.5&&K<9.5){float grain=sin(L.z*84.+sin(L.y*5.)*1.7)*.5+.5;base*=.86+grain*.17;if(abs(L.x)>.5&&L.y>.12&&L.y<.52&&abs(L.z)<.82){base=vec3(.025,.13,.31);vec4 logo=texture(kitMap,vec2(L.z*.5+.5,(.52-L.y)*1.2));base=mix(base,logo.rgb,logo.a);if(abs(L.z)>.73)base=vec3(.88,.69,.29);}}if(K>9.5&&K<10.5)base*=.75+step(.4,fract(L.y*26.))*.25;if(K>6.5&&K<7.5)base=vec3(.14,.085,.06)*(.8+hash(floor(L.xy*2300.))*.2);if(K>1.5&&K<2.5){float stripe=step(.5,fract(P.x/9.));base*=.91+stripe*.10+(hash(floor(P.xz*55.))-.5)*.10;}if(K>2.5&&K<3.5)base*=.9+hash(floor(P.xz*80.))*.15;vec3 s=shadow.xyz/shadow.w*.5+.5;float shade=1.;if(s.x>0.&&s.x<1.&&s.y>0.&&s.y<1.&&s.z<1.){float sum=0.;for(int x=-1;x<=1;x++)for(int y=-1;y<=1;y++){float d=texture(shadowMap,s.xy+vec2(x,y)/shadowSize).r;sum+=s.z-.0018>d?.45:1.;}shade=sum/9.;}float diff=max(dot(n,l),0.);float spec=pow(max(dot(n,normalize(l+v)),0.),mix(55.,9.,C.a))*.23*(1.-C.a*.6);float rim=pow(1.-max(dot(n,v),0.),3.)*max(dot(n,normalize(vec3(.5,.4,-.6))),0.);vec3 col=base*(vec3(.26,.30,.36)+vec3(1.,.87,.67)*diff*1.08*shade)+spec*vec3(1.,.9,.73)*shade+base*rim*.18;if(K>3.5&&K<4.5)col=base*1.6;if(avatarStudio>.5&&K<15.5){vec3 key=normalize(vec3(-.38,.68,1.)),fill=normalize(vec3(.72,.22,.65));float k=max(dot(n,key),0.),f=max(dot(n,fill),0.);float gloss=pow(max(dot(n,normalize(key+v)),0.),K>12.5&&K<13.5?110.:42.);float specular=K>12.5&&K<13.5?.20:K>10.5&&K<11.5?.025:.045;vec3 studio=base*(vec3(.28,.30,.34)+vec3(.91,.79,.66)*k*.80+vec3(.53,.66,.83)*f*.24)+gloss*specular+base*pow(1.-max(dot(n,v),0.),3.)*.025;col=mix(col,studio,.66);}float fog=1.-exp(-length(camera-P)*.0012);col=mix(col,vec3(.67,.79,.86),fog);col=col/(col+.45);outColor=vec4(pow(col,vec3(.95)),1.);}`;
+const depthV=`#version 300 es
+precision highp float;layout(location=0)in vec3 pos;layout(location=2)in mat4 model;uniform mat4 vp;void main(){gl_Position=vp*model*vec4(pos,1.);}`;
+const depthF=`#version 300 es
+precision highp float;void main(){}`;
+function shader(type,src){const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw new Error(gl.getShaderInfoLog(s));return s;}
+function program(v,f){const p=gl.createProgram();gl.attachShader(p,shader(gl.VERTEX_SHADER,v));gl.attachShader(p,shader(gl.FRAGMENT_SHADER,f));gl.linkProgram(p);if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw new Error(gl.getProgramInfoLog(p));return p;}
+const prog=program(vertex,fragment),depthProg=program(depthV,depthF),meshes={};
+function installCricketMesh(name,data,dynamic=false){
+ const vao=gl.createVertexArray();gl.bindVertexArray(vao);const buffers={};for(const [loc,key,arr]of [[0,'position',data.p],[1,'normal',data.n],[8,'surface',data.l??data.p]]){const buffer=gl.createBuffer();buffers[key]=buffer;gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(arr),dynamic?gl.DYNAMIC_DRAW:gl.STATIC_DRAW);gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,3,gl.FLOAT,false,0,0);}const ib=gl.createBuffer();gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,ib);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint16Array(data.i),gl.STATIC_DRAW);const instances=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,instances);for(let k=0;k<4;k++){gl.enableVertexAttribArray(2+k);gl.vertexAttribPointer(2+k,4,gl.FLOAT,false,84,k*16);gl.vertexAttribDivisor(2+k,1);}gl.enableVertexAttribArray(6);gl.vertexAttribPointer(6,4,gl.FLOAT,false,84,64);gl.vertexAttribDivisor(6,1);gl.enableVertexAttribArray(7);gl.vertexAttribPointer(7,1,gl.FLOAT,false,84,80);gl.vertexAttribDivisor(7,1);return meshes[name]={vao,instances,indexBuffer:ib,count:data.i.length,list:[],buffers,dynamic,cpu:avatarStudyMode?data:null};
+}
+const avatarStudyMode=globalThis.SH_AVATAR_STUDY===true;
+const avatarStudyState={view:'portrait',yaw:.22,helmet:false};
+let avatarLoadedAsset=null,avatarAssetEpoch=0,avatarLoadTicket=0,avatarCaptureRequested=false,avatarLastSnapshot=null;
+const originalStudyAvatarMeshesCached=avatarStudyMode&&!globalThis.SH_AVATAR_JSON_ONLY?originalStudyAvatarMeshes():{};
+const authoredAvatarMeshes=globalThis.SH_AVATAR_JSON_ONLY?{}:originalAvatarMeshes();
+if(avatarStudyMode&&!globalThis.SH_AVATAR_JSON_ONLY){for(let i=0;i<authoredAvatarMeshes.jersey.p.length;i+=3){const y=authoredAvatarMeshes.jersey.p[i+1],w=1+Math.max(0,Math.min(1,(1.03-y)/.18))*.14;authoredAvatarMeshes.jersey.p[i]*=w;authoredAvatarMeshes.jersey.p[i+2]*=w;}}
+for(const [name,data]of Object.entries({sphere:sphereMesh(avatarStudyMode?32:14,avatarStudyMode?22:10),crowdHead:sphereMesh(8,5),cylinder:cylinderMesh(),box:boxMesh(),disk:diskMesh(),ring:ringMesh(),batBlade:originalBatBladeMesh(),...authoredAvatarMeshes,...originalStudyAvatarMeshesCached}))installCricketMesh(name,data);
+function updateCricketMesh(name,data){let mesh=meshes[name];if(!mesh)mesh=installCricketMesh(name,data,true);else for(const [key,arr]of [['position',data.p],['normal',data.n]]){gl.bindBuffer(gl.ARRAY_BUFFER,mesh.buffers[key]);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(arr),gl.DYNAMIC_DRAW);}if(avatarStudyMode)meshes[name].cpu=data;return name;}
+const shadowSize=1024,depthTexture=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,depthTexture);gl.texImage2D(gl.TEXTURE_2D,0,gl.DEPTH_COMPONENT24,shadowSize,shadowSize,0,gl.DEPTH_COMPONENT,gl.UNSIGNED_INT,null);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);const shadowFB=gl.createFramebuffer();gl.bindFramebuffer(gl.FRAMEBUFFER,shadowFB);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.DEPTH_ATTACHMENT,gl.TEXTURE_2D,depthTexture,0);gl.drawBuffers([gl.NONE]);gl.readBuffer(gl.NONE);if(gl.checkFramebufferStatus(gl.FRAMEBUFFER)!==gl.FRAMEBUFFER_COMPLETE)throw new Error('Shadow framebuffer failed');gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.enable(gl.DEPTH_TEST);
+const portraitPost=createPortraitPostprocess(gl,program);
+const kitCanvas=document.createElement('canvas');kitCanvas.width=512;kitCanvas.height=512;const kitCtx=kitCanvas.getContext('2d');kitCtx.clearRect(0,0,512,512);kitCtx.fillStyle='#e6c16b';kitCtx.textAlign='center';kitCtx.font='bold 30px sans-serif';kitCtx.fillText('SCORING',256,144);kitCtx.fillText('HEROES',256,179);kitCtx.font='bold 29px sans-serif';kitCtx.fillText('SH',150,89);const kitTexture=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,kitTexture);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,kitCanvas);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+const lightVP=multiply(ortho(-105,105,-105,105,1,400),lookAt([85,150,70],[0,0,0]));let cameraFov=.75,currentCameraShot='READY';let currentVP,cameraPos=[36,9,19],cameraTarget=[-8,1,0],viewMode='auto';
+let staticObjects=[];function add(mesh,m,color,rough=.8,kind=0,target=null){(target??meshes[mesh].list).push(...m,...color,rough,kind);}function object(mesh,p,s,c,yaw=0,kind=0){add(mesh,matrix(p,s,yaw),c,.8,kind);}function ball(p,r,c){object('sphere',p,[r,r,r],c);}function limb(a,b,r,c){add('cylinder',segment(a,b,r),c);ball(a,r,c);ball(b,r,c);}
+const GREEN=[.055,.3,.13],BLUE=[.035,.27,.62],RED=[.91,.72,.12],WHITE=[.92,.94,.88],WOOD=[.61,.37,.13];
+function buildStadium(){for(const m of Object.values(meshes))m.list=[];object('sphere',[0,0,0],[280,280,280],[1,1,1],0,6);object('disk',[0,0,0],[78,1,68],GREEN,0,2);object('ring',[0,.022,0],[75,1,65],[.95,.96,.85]);object('box',[0,.024,0],[10.8,.025,1.5],[.56,.45,.27],0,3);for(const x of [-8.84,8.84,-10.06,10.06])object('box',[x,.065,0],[.035,.015,1.25],WHITE);for(const z of [-1.32,1.32])object('box',[0,.065,z],[10.75,.015,.025],WHITE);for(let k=0;k<64;k++){const a=k/64*2*Math.PI;object('box',[27.43*Math.cos(a),.035,27.43*Math.sin(a)],[.48,.015,.065],WHITE,-a);}
+ for(const item of originalStadiumLayout()){if(item.a)add(item.mesh,segment(item.a,item.b,item.r),item.c);else object(item.mesh,item.p,item.s,item.c,item.yaw,item.kind);}
+ for(let k=0;k<40;k++){const a=k/40*2*Math.PI;object('box',[78*Math.cos(a),.7,68*Math.sin(a)],[4.9,.55,.13],k%2?[.035,.23,.33]:[.33,.26,.1],-a+Math.PI/2);}
+ for(const x of [-10.06,10.06]){for(const z of [-.115,0,.115])object('cylinder',[x,.03,z],[.025,.71,.025],WOOD);}
+ for(const [name,m]of Object.entries(meshes))staticObjects.push([name,m.list.slice()]);}
+buildStadium();
+let seed=1;function rand(){seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;}const crowd=[];for(let i=0;i<3600;i++){crowd.push({p:originalCrowdPosition(i,rand),color:[[.13,.3,.5],[.65,.36,.12],[.8,.8,.72],[.3,.49,.41]][Math.floor(rand()*4)],phase:rand()*6.28,skin:[.42+rand()*.25,.25+rand()*.2,.14+rand()*.15]});}
+const crowdBatches=new Map(Object.keys(meshes).map(name=>[name,[]]));for(const person of crowd){add('crowdHead',matrix(V.add(person.p,[0,.52,0]),[.15,.18,.15]),person.skin,.8,0,crowdBatches.get('crowdHead'));add('box',matrix(V.add(person.p,[0,.2,0]),[.19,.25,.13]),person.color,.8,0,crowdBatches.get('box'));}
+function hashId(id){let h=2166136261;for(const c of id)h=Math.imul(h^c.charCodeAt(0),16777619);return h>>>0;}
+const registry=new Map();function registerPlayer(p){if(!p||!id(p.id))throw new Error('Valid player ID required');const h=hashId(p.id),old=registry.get(p.id);const player={id:p.id,name:p.name??old?.name??p.id,team:p.team??old?.team??'bat',n:p.number??old?.n??(h%90+1),skin:[.42+(h%25)/100,.27+(h%25)/100*.72,.18+(h%25)/100*.52],height:1.75+((h>>>14)%16)/100,...old,...p};registry.set(p.id,player);return player;}
+registerPlayer({id:'hema',name:'Hemanth',team:'bat',number:7});registerPlayer({id:'runner',name:'Arjun',team:'bat',number:18});registerPlayer({id:'ravi',name:'Ravi',team:'field',number:11});registerPlayer({id:'keeper',name:'Keeper',team:'field',number:1});for(let i=1;i<=9;i++)registerPlayer({id:'fielder'+i,name:'Fielder '+i,team:'field'});
+let ballsPerOver=6,liveContext=null,presentation=null;const introSeen=new Set();
+function fieldSlots(players){if(!liveContext)return [...fieldPoints.map((p,i)=>({id:'fielder'+(i+1),p})),{id:'keeper',p:[-13,0,0]}];const ids=liveContext.fieldingXI.filter(id=>![players.striker,players.nonStriker,players.bowler].includes(id));const keeper=ids.includes(liveContext.keeper)?liveContext.keeper:ids.at(-1);return ids.filter(id=>id!==keeper).slice(0,9).map((id,i)=>({id,p:fieldPoints[i]})).concat(keeper?[{id:keeper,p:[-13,0,0]}]:[]);}
+const fieldPoints=[[19,0,31],[1,0,25],[-28,0,26],[-35,0,-17],[-1,0,-28],[28,0,-29],[50,0,10],[42,0,-3],[-49,0,4]];
+let trackedPose=null,sourceCaption=null;const hybridNow=()=>globalThis.performance?.now?.()??Date.now();
+const currentTrackedPose=()=>trackedPose&&hybridNow()-trackedPose.at<500?trackedPose:null;
+const queue=new MatchQueue();let active=null,demo=false,manual=false,renderTime=0,simTime=0,lastFrame=0,lastEvent=null,sequence=0,displayScore={runs:0,wickets:0,legalBalls:0};let striker='hema',nonStriker='runner',bowler='ravi',cameraInitialized=false;const labels=new Map();
+const broadcastUI=createCricketBroadcastUI({document,panel:$('#lineupPanel'),banner:$('#eventBanner'),ticker:$('#tickerText'),canOpen:()=>!active,getRoster:()=>[...registry.values()]});
+function label(id){if(!labels.has(id)){const el=document.createElement('div');el.className='playerLabel';$('#labels').append(el);labels.set(id,el);}return labels.get(id);}
+function posePlayer(player,root,yaw,mode,t,hand='RIGHT',isBatter=false){
+ const h=player.height/1.85,motion=sampleCricketMotion(mode==='idle'&&isBatter?'bat':mode,mode==='idle'?0:t,hand),observed=currentTrackedPose()?.playerId===player.id&&!active?currentTrackedPose().pose:null;
+ const bodyPoint=p=>cricketBodyPoint(p,motion),tr=p=>{const c=Math.cos(yaw),s=Math.sin(yaw);return [root[0]+h*(p[0]*c+p[2]*s),root[1]+h*p[1],root[2]+h*(-p[0]*s+p[2]*c)];},rotate=p=>{const c=Math.cos(yaw),s=Math.sin(yaw);return [p[0]*c+p[2]*s,p[1],-p[0]*s+p[2]*c];};
+ const oriented=(name,center,basis,sizes,color,kind=0)=>add(name,[...V.mul(rotate(basis[0]),sizes[0]*h),0,...V.mul(rotate(basis[1]),sizes[1]*h),0,...V.mul(rotate(basis[2]),sizes[2]*h),0,...tr(center),1],color,.75,kind);
+ const bodyBasis=[[1,0,0],[0,1,0],[0,0,1]].map(v=>cricketBodyVector(v,motion)),bodyObject=(name,p,s,c,kind=0)=>oriented(name,bodyPoint(p),[[1,0,0],[0,1,0],[0,0,1]].map(v=>cricketBodyVector(v,motion,p[1])),s,c,kind),ell=(p,s,c,kind=0)=>bodyObject('sphere',p,s,c,kind),tube=(a,b,r,c,kind=0)=>add('cylinder',segment(tr(bodyPoint(a)),tr(bodyPoint(b)),r*h),c,.72,kind),rigEll=(p,s,c,kind=0)=>object('sphere',tr(p),s.map(v=>v*h),c,yaw,kind),rigTube=(a,b,r,c,kind=0)=>add('cylinder',segment(tr(a),tr(b),r*h),c,.72,kind);
+ const poseKey=JSON.stringify([motion,observed,isBatter,player.height,hand]),skinMesh=(part,makeData,color,kind=0)=>{const name='rig-'+player.id+'-'+part;if(meshes[name]?.poseKey!==poseKey){updateCricketMesh(name,makeData());meshes[name].poseKey=poseKey;}object(name,root,[h,h,h],color,yaw,kind);};
+ const faceMood=cricketFaceExpression({mode,time:t,seed:hashId(player.id)%50,celebrate:!!active&&active.t>=active.resolve&&(active.e.boundary!=='NONE'&&player.id===active.e.players.striker||active.e.wicketType!=='NONE'&&player.team==='field'),dismissed:!!active&&active.t>=active.resolve&&active.e.dismissedPlayer===player.id});
+ const variant=Number.isInteger(player.faceVariant)?((player.faceVariant%6)+6)%6:hashId(player.id)%6,face=avatarFaceProfile(variant),skin=player.skin,jersey=avatarStudyMode&&player.id==='avatar-study'?[.025,.095,.40]:player.team==='field'?RED:BLUE,pants=player.team==='field'?[.035,.17,.09]:[.025,.12,.31],hair=[.045,.033,.026];
+ skinMesh('torso',()=>({...deformCricketTorso(authoredAvatarMeshes.jersey,motion),l:authoredAvatarMeshes.jersey.p}),jersey,8);ell([0,.90,0],[.155,.12,.105],pants);if(!(avatarStudyMode&&player.id==='avatar-study'&&nativeStudyHead()))skinMesh('neck',()=>({...deformCricketTorso(authoredAvatarMeshes.neck,motion),l:authoredAvatarMeshes.neck.p}),skin,1);
+ if(avatarStudyMode&&player.id==='avatar-study'){
+  for(const part of studyFacialParts(avatarStudyState)){if(part.a)tube(part.a,part.b,part.r,part.c);else bodyObject(part.mesh,part.p,part.s,part.c,part.kind);}
+ }else{
+ bodyObject('head'+variant,[0,1.66,0],[1,1,1],skin,1);bodyObject('head'+variant,[0,1.66,0],[1.006,1.006,1.006],hair,7);
+ for(const s of [-1,1]){ell([s*(face.width+.005),1.66,-.003],[.018,.034,.017],skin,1);ell([s*.038,1.685,.093],[.017,.006*faceMood.eyeOpen,.009],WHITE);ell([s*.038,1.685,.101],[.007,.008*faceMood.eyeOpen,.004],[.12,.075,.035]);ell([s*.038,1.685,.105],[.003,.005*faceMood.eyeOpen,.002],[.015,.017,.018]);tube([s*.059,1.711+faceMood.browOuter,.092],[s*.021,1.715+faceMood.browInner,.103],.0035,hair);ell([s*.009,1.636,.128],[.004,.0025,.003],[.19,.09,.065]);}
+ ell([0,1.598,.105],[.026,.004,.004],[.39,.19,.15]);ell([0,1.591-faceMood.mouthOpen,.104],[.024,.004,.004],[.43,.22,.17]);if(faceMood.mouthOpen){ell([0,1.595,.108],[.020,faceMood.mouthOpen,.003],[.08,.026,.018]);ell([0,1.598,.111],[.016,.002,.002],WHITE);}for(const side of [-1,1])tube([0,1.593,.108],[side*.024,1.593+faceMood.smile,.105],.0018,[.32,.14,.10]);
+ }
+ if(!isBatter){bodyObject('hair',[0,1.66,-.002],[1,1,1],hair);bodyObject('helmet',[0,1.735,-.006],[1,.45,1],jersey,5);bodyObject('box',[0,1.731,.13],[.105,.005,.07],jersey,5);}
+ else if(!avatarStudyMode||player.id!=='avatar-study'||avatarStudyState.helmet){bodyObject('helmet',[0,1.705,-.009],[1,1,1],jersey);bodyObject('box',[0,1.716,.13],[.12,.008,.065],jersey);for(const s of [-1,1]){tube([s*.112,1.715,.09],[s*.107,1.564,.145],.004,WHITE);tube([s*.107,1.564,.145],[s*.065,1.54,.15],.004,WHITE);}for(const y of [1.575,1.625,1.675])tube([-.107,y,.151],[.107,y,.151],.0033,[.52,.57,.6]);}
+ if(avatarStudyMode&&player.id==='avatar-study')skinMesh('collar',()=>deformCricketTorso(originalStudyAvatarMeshesCached.studyCollar,motion),jersey,5);
+ for(const s of [-1,1]){if(!avatarStudyMode||player.id!=='avatar-study')tube([s*.065,1.515,.042],[s*.038,1.465,.102],.012,[.91,.73,.34]);else tube([s*.078,1.505,.074],[s*.060,1.474,.126],.0017,[.91,.73,.34]);tube([s*.15,.94,.065],[s*.197,1.36,.071],.007,[.88,.69,.29]);}tube([0,1.46,.119],[0,1.37,.131],.002,[.5,.62,.74]);
+ const limbFromDirections=(start,limb,a,b)=>{if(!limb)return null;const joint=V.add(start,V.mul(limb.upper,a)),end=V.add(joint,V.mul(limb.lower,b));return {joint,end};};
+ const feet=[];
+ for(let i=0;i<2;i++){
+  const side=i?1:-1,hip=bodyPoint([side*.087,.90,0]),leg=limbFromDirections(hip,i?observed?.rightLeg:observed?.leftLeg,.42,.40)??solveAvatarJoint(hip,motion.feet[i],.42,.40,[0,0,1]);feet.push(leg.end);skinMesh('leg'+i,()=>originalCricketLimb(hip,leg.joint,leg.end,'leg'),pants,5);
+  rigEll([leg.end[0],leg.end[1]-.035,leg.end[2]+.05],[.055,.047,.123],WHITE);for(let k=0;k<3;k++)rigTube([leg.end[0]-.025,leg.end[1]+.008,leg.end[2]+.06+k*.018],[leg.end[0]+.025,leg.end[1]+.008,leg.end[2]+.06+k*.018],.002,jersey);
+  if(isBatter){const mid=V.add(V.mix(leg.joint,leg.end,.5),[0,0,.055]),axis=V.norm(V.sub(leg.joint,leg.end)),right=V.norm(V.cross(axis,[0,0,1])),front=V.norm(V.cross(right,axis));oriented('sphere',mid,[right,axis,front],[.07,.18,.045],[.91,.92,.86]);for(let k=-1;k<=1;k++)rigTube(V.add(mid,V.add(V.mul(right,k*.03),V.add(V.mul(axis,-.14),V.mul(front,.04)))),V.add(mid,V.add(V.mul(right,k*.03),V.add(V.mul(axis,.14),V.mul(front,.04)))),.0055,[.83,.84,.78]);}
+ }
+ const shoulders=cricketArmAnchors(motion);let left=bodyPoint(motion.leftHand),right=bodyPoint(motion.rightHand),batFit=null,oneHand=false;
+ if(isBatter){
+  if(['run','walk','out'].includes(mode)||observed){oneHand=true;const arm=limbFromDirections(shoulders[1],observed?.rightArm,.33,.33),grip=arm?.end??right;batFit=fitBatToHands({grip,tip:V.add(grip,[hand==='LEFT'?-.20:.20,-.65,.12]),height:player.height,hand,oneHand:true,shoulders});if(observed){const d=V.sub(grip,batFit.palms[1]);for(const k of ['butt','bladeStart','toe','contact'])batFit[k]=V.add(batFit[k],d);}}
+  else batFit=cricketMotionBat(motion,player.height,hand);
+  if(batFit&&!observed){if(batFit.palms[0])left=batFit.palms[0];right=batFit.palms[1];}
+ }
+ const ballR=cricketEquipment(player.height).ballRadius/h,heldBallLocal=p=>V.add(p,[0,.006,ballR+.014]),hands=[],arms=[];
+ for(let i=0;i<2;i++){
+  const side=i?1:-1,shoulder=shoulders[i],arm=limbFromDirections(shoulder,i?observed?.rightArm:observed?.leftArm,.33,.33)??solveAvatarJoint(shoulder,i?right:left,.33,.33,[side,-.35,-.55]),elbow=arm.joint,handp=arm.end;hands.push(handp);arms.push(arm);
+  const sleeve=V.mix(shoulder,elbow,.52);if(avatarStudyMode&&player.id==='avatar-study')skinMesh('sleeve'+i,()=>studySleeveMesh(bodyPoint([side*.165,1.43,0]),sleeve),jersey,5);else{rigEll(shoulder,[.070,.075,.074],jersey,5);rigTube(shoulder,sleeve,.059,jersey,5);}skinMesh('arm'+i,()=>originalCricketLimb(sleeve,elbow,handp,'arm'),skin,1);
+  const gripping=batFit&&(i===1||!oneHand);
+  if(gripping){const A=batFit.axis,F=batFit.front,B=batFit.side,R=batFit.local.handleRadius+.006,center=V.sub(handp,V.mul(F,batFit.palmOffset));oriented('sphere',handp,[A,B,F],[.036,.043,.017],WHITE);
+   for(let finger=0;finger<4;finger++){let prev=null;for(let j=0;j<5;j++){const angle=-.15+j*.66,p=V.add(center,V.add(V.mul(A,(finger-1.5)*.016),V.add(V.mul(B,Math.sin(angle)*R),V.mul(F,Math.cos(angle)*R))));if(prev)rigTube(prev,p,.0065,WHITE);prev=p;}const pad=V.add(handp,V.add(V.mul(A,(finger-1.5)*.016),V.mul(F,.017)));oriented('sphere',pad,[A,B,F],[.0068,.026,.008],[.92,.93,.89]);}
+   rigTube(V.add(handp,V.mul(A,-.036)),V.add(center,V.add(V.mul(A,-.03),V.mul(B,-R))),.009,WHITE);rigTube(V.mix(elbow,handp,.88),handp,.034,jersey,5);
+  }else{rigEll(handp,[.030,.043,.020],isBatter?WHITE:skin,isBatter?0:1);for(let finger=0;finger<4;finger++){if(!isBatter&&i===1){const center=heldBallLocal(handp),x=(finger-1.5)*.014,rr=Math.sqrt(Math.max(.0001,ballR*ballR-x*x))+.004;let prev=null;for(let j=0;j<4;j++){const angle=Math.PI-j*.52,p=V.add(center,[x,Math.sin(angle)*rr,Math.cos(angle)*rr]);if(prev)rigTube(prev,p,.0055,skin,1);prev=p;}}else{const base=V.add(handp,[(finger-1.5)*.014,-.018,.012]);rigTube(base,V.add(base,[0,-.034,.018]),isBatter?.007:.0055,isBatter?WHITE:skin,isBatter?0:1);}}}
+ }
+ if(batFit){add('cylinder',segment(tr(batFit.butt),tr(batFit.bladeStart),batFit.equipment.handleRadius),[.13,.15,.15],.8,10);oriented('batBlade',batFit.bladeStart,[batFit.front,batFit.axis,batFit.side],[batFit.local.bladeDepth/2,batFit.local.bladeLength,batFit.local.bladeWidth/2],[.77,.58,.3],9);}
+ return {head:tr(bodyPoint([0,1.9,0])),hand:tr(hands[1]),ballGrip:tr(heldBallLocal(hands[1])),bat:batFit?tr(batFit.toe):null,batContact:batFit?tr(batFit.contact):null,skeleton:{feet:feet.map(tr),shoulders:shoulders.map(tr),hands:hands.map(tr)},phase:motion.phase};
+}
+
+class SoundEngine{
+ constructor(){this.enabled=false;this.ctx=null;this.lastStep=-1;}
+ async enable(){if(!this.ctx){this.ctx=new(window.AudioContext||window.webkitAudioContext)();const ctx=this.ctx,len=ctx.sampleRate*4,buf=ctx.createBuffer(2,len,ctx.sampleRate);let last=0;for(let c=0;c<2;c++){const d=buf.getChannelData(c);for(let i=0;i<len;i++){last=last*.92+(Math.random()*2-1)*.08;d[i]=last;}}const src=ctx.createBufferSource();src.buffer=buf;src.loop=true;const hp=ctx.createBiquadFilter();hp.type='highpass';hp.frequency.value=150;const lp=ctx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=1700;this.amb=ctx.createGain();this.amb.gain.value=0;src.connect(hp).connect(lp).connect(this.amb).connect(ctx.destination);src.start();}await this.ctx.resume();this.enabled=!this.enabled;this.amb.gain.setTargetAtTime(this.enabled?.16:0,this.ctx.currentTime,.2);}
+ tone(f,duration,volume=.1,type='sine',when=0){if(!this.enabled)return;const c=this.ctx,o=c.createOscillator(),g=c.createGain(),t=c.currentTime+when;o.type=type;o.frequency.setValueAtTime(f,t);g.gain.setValueAtTime(Math.max(.0001,volume),t);g.gain.exponentialRampToValueAtTime(.0001,t+duration);o.connect(g).connect(c.destination);o.start(t);o.stop(t+duration+.02);}
+ hit(){this.tone(930,.09,.12,'triangle');this.tone(220,.055,.13);this.tone(1830,.025,.07);}
+ bounce(){this.tone(145,.08,.1);}
+ step(){this.tone(85,.055,.035,'triangle');}
+ wicket(){for(let i=0;i<5;i++){this.tone(420+i*137,.1,.06,'triangle',i*.035);}this.cheer(1);}
+ cheer(strength=1){if(!this.enabled)return;const c=this.ctx,t=c.currentTime;for(let i=0;i<16;i++){const o=c.createOscillator(),f=c.createBiquadFilter(),g=c.createGain();o.type='sawtooth';o.frequency.value=95+Math.random()*170;f.type='bandpass';f.frequency.value=500+Math.random()*900;f.Q.value=2;g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(.006*strength,t+.25+Math.random()*.3);g.gain.exponentialRampToValueAtTime(.0001,t+2.5+Math.random());o.connect(f).connect(g).connect(c.destination);o.start(t);o.stop(t+3.6);}}
+ speak(text){const lang=$('#voice').value;if(!this.enabled||lang==='off'||!window.speechSynthesis)return;const voice=speechSynthesis.getVoices().find(v=>v.localService&&v.lang.toLowerCase().startsWith(lang));if(!voice){$('#status').textContent='No installed local voice for this language; commentary text remains available.';return;}speechSynthesis.cancel();const msg=new SpeechSynthesisUtterance(text);msg.voice=voice;msg.rate=1;const restore=()=>this.amb?.gain.setTargetAtTime(this.enabled?.16:0,this.ctx.currentTime,.2);msg.onstart=()=>this.amb.gain.setTargetAtTime(.035,this.ctx.currentTime,.08);msg.onend=restore;msg.onerror=restore;speechSynthesis.speak(msg);}
+}
+const sound=new SoundEngine();
+function batImpactPoint(player,hand){const g=cricketMotionBat(sampleCricketMotion('bat',2.7,hand),player.height,hand),h=player.height/1.85;return [-10.06+g.contact[2]*h,g.contact[1]*h,-g.contact[0]*h];}
+function bowlerReleasePoint(player){const h=player.height/1.85,m=sampleCricketMotion('bowl',2),p=solveAvatarJoint(cricketArmAnchors(m)[1],cricketBodyPoint(m.rightHand,m),.33,.33,[1,-.35,-.55]).end,R=cricketEquipment().ballRadius;return [9.5-p[2]*h-R-.014*h,(p[1]+.006)*h,p[0]*h];}
+function beginNext(){if(active||!queue.pending.length)return;presentation=null;trackedPose=null;broadcastUI.newBall();const e=queue.next();for(const role of ['striker','nonStriker','bowler','fielder'])if(e.players[role]&&!registry.has(e.players[role]))registerPlayer({id:e.players[role],team:role==='striker'||role==='nonStriker'?'bat':'field'});const contact=batImpactPoint(registry.get(e.players.striker),e.hand),edge=boundaryDistance([contact[0],contact[2]],e.angle),radius=e.boundary==='SIX'?edge*1.16:e.boundary==='FOUR'?edge*1.04:e.outcome==='DOT'?5:28;const a=e.angle*Math.PI/180;let end=[contact[0]+Math.cos(a)*radius,cricketEquipment().ballRadius,contact[2]+Math.sin(a)*radius];if(!e.batContact&&e.boundary==='NONE')end=[-17,cricketEquipment().ballRadius,1.3];if(e.wicketType==='BOWLED')end=[-10.1,.4,0];if(e.wicketType==='LBW')end=[-9.75,.35,.1];if(e.wicketType==='CAUGHT')end[1]=1.5;const slots=fieldSlots(e.players);let fieldId=e.players.fielder??null,best=1e9;for(const slot of slots){if(e.players.fielder)break;const d=V.len(V.sub(slot.p,end));if(d<best){best=d;fieldId=slot.id;}}if(e.extraType==='WIDE'||e.wicketType==='STUMPED')fieldId=slots.find(slot=>slot.p[0]===-13)?.id??fieldId;if(fieldId&&!registry.has(fieldId))registerPlayer({id:fieldId,team:'field'});const fieldStart=fieldId===e.players.bowler?[9.5,0,0]:slots.find(slot=>slot.id===fieldId)?.p??[20,0,20];const flight=['BOWLED','LBW'].includes(e.wicketType)?.3:e.lofted?3.1:2.8;active={e,t:0,end,fieldId,fieldStart,flight,resolve:Math.max(2.7+flight,e.runsTaken?4.15+e.runsTaken*2.6:0),flags:new Set(),trail:[],contact,release:bowlerReleasePoint(registry.get(e.players.bowler))};lastEvent=e;simTime=0;sound.lastStep=-1;$('#batterName').textContent=registry.get(e.players.striker).name;$('#bowlerName').textContent=registry.get(e.players.bowler).name;$('#commentary').textContent=`${registry.get(e.players.bowler).name} approaches ${registry.get(e.players.striker).name}…`;$('#status').textContent='Playing original procedural 3D · '+e.directionSource.toLowerCase()+' direction';setButtons();}
+function enqueue(raw){const result=queue.push(raw);if(result.accepted)beginNext();return result;}
+function makeEvent(value){const runs=value==='W'||value==='WD'?0:Number(value),wicket=value==='W';return {eventId:'local-'+(++sequence),players:{striker,nonStriker,bowler},batRuns:runs,boundary:runs===4?'FOUR':runs===6?'SIX':'NONE',extraType:value==='WD'?'WIDE':'NONE',extraRuns:value==='WD'?1:0,wicketType:wicket?'BOWLED':'NONE',...(wicket?{dismissedPlayer:striker}:{}),shotRegion:$('#direction').value,hand:$('#hand').value};}
+function fire(key,fn){if(!active.flags.has(key)){active.flags.add(key);fn();}}
+function applyTime(t,quiet=false){if(!active)return;const s=active,e=s.e;s.t=t;simTime=t;if(t>=2)fire('release',()=>{if(!quiet){};});if(t>=2.4)fire('bounce',()=>{if(!quiet)sound.bounce();});if(t>=2.7)fire('contact',()=>{$('#commentary').textContent=e.commentary;if(!quiet){if(e.batContact)sound.hit();sound.speak(e.commentary);}});if(t>=s.resolve)fire('result',()=>{broadcastUI.result(e);displayScore={...e.score};$('#score').textContent=`${e.score.runs} / ${e.score.wickets}`;$('#overs').textContent=`${Math.floor(e.score.legalBalls/ballsPerOver)}.${e.score.legalBalls%ballsPerOver} overs`;if(!quiet){if(e.outcome==='WICKET')sound.wicket();else if(e.boundary!=='NONE')sound.cheer(e.boundary==='SIX'?1.35:1);}$('#badge').textContent=e.outcome==='WICKET'?'WICKET':e.boundary!=='NONE'?e.boundary==='FOUR'?'FOUR':'SIX':e.runsTaken?`+${e.runsTaken}`:'';});broadcastUI.visibility(t>=s.resolve&&t<s.resolve+2.1);$('#badge').style.opacity=t>s.resolve&&t<s.resolve+1.55?'1':'0';$('#phase').textContent=t<2?'BOWLER RUN-UP':t<2.7?'DELIVERY':t<s.resolve?(e.runsTaken?'SHOT & RUNNING':'BALL IN PLAY'):'RESULT CONFIRMED';const step=Math.floor(t/.32);if(!quiet&&step!==sound.lastStep&&(t<2||t>4.15&&t<4.15+e.runsTaken*2.6)){sound.lastStep=step;sound.step();}}
+function finish(){broadcastUI.visibility(false);const e=active.e;striker=e.players.striker;nonStriker=e.players.nonStriker;bowler=e.players.bowler;if(e.runsTaken%2)[striker,nonStriker]=[nonStriker,striker];if(!liveContext&&e.wicketType!=='NONE'){striker='batter'+(displayScore.wickets+2);registerPlayer({id:striker,name:'Batsman '+(displayScore.wickets+2),team:'bat'});}if(e.isLegal&&e.score.legalBalls%ballsPerOver===0)[striker,nonStriker]=[nonStriker,striker];active=null;if(liveContext?.currentPlayers){({striker,nonStriker,bowler}=liveContext.currentPlayers);}$('#badge').style.opacity='0';setButtons();if(queue.pending.length)beginNext();else if(demo)setTimeout(()=>{if(demo&&!active){const values=[4,1,0,6,2,'W'];$('#direction').value=['COVER','MIDWICKET','STRAIGHT','LONG_ON'][sequence%4];enqueue(makeEvent(values[sequence%values.length]));}},600);}
+function setButtons(){document.querySelectorAll('[data-run]').forEach(b=>b.disabled=!!active);$('#demo').textContent=demo?'■ Stop demo':'▶ Play demo';}
+function ballPosition(s){const t=s.t;if(t<2)return s.heldBall??s.release;if(t<2.7){const u=(t-2)/.7,bounce=[-4,cricketEquipment().ballRadius,0],contact=s.contact;return u<.58?V.mix(s.release,bounce,u/.58):V.mix(bounce,contact,(u-.58)/.42);}const u=clamp((t-2.7)/s.flight),p=V.mix(s.contact,s.end,u);p[1]+=s.e.lofted?4*15*u*(1-u):Math.abs(Math.sin(u*Math.PI*3))*.18*(1-u);return p;}
+function drawWorld(t){for(const m of Object.values(meshes))if(m.dynamic)m.list=[];for(const [name,list]of staticObjects)meshes[name].list=list.concat(crowdBatches.get(name));const excitement=active&&t>active.resolve&&t<active.resolve+3?1:0;if(excitement)for(const person of crowd){const p=person.p;if(person.phase>3.8){const wave=Math.sin(t*8+person.phase)*.12;limb(V.add(p,[-.19,.35,0]),V.add(p,[-.3,.95+wave,0]),.035,person.skin);limb(V.add(p,[.19,.35,0]),V.add(p,[.35,.98-wave,0]),.035,person.skin);}}
+
+ if(avatarStudyMode){
+  const player=registry.get('avatar-study')??registerPlayer({id:'avatar-study',name:'Original SH Avatar',height:1.85,skin:[.72,.44,.29],team:'bat'});
+  if(avatarLoadedAsset)drawAvatarModel();else if(!globalThis.SH_AVATAR_JSON_ONLY){const before=avatarCaptureRequested?new Map(Object.entries(meshes).map(([name,m])=>[name,m.list.length])):null;posePlayer(player,[0,0,0],avatarStudyState.yaw,'hero',0,'RIGHT',true);if(before)avatarLastSnapshot=captureAvatarInstances(before);}
+  const camera=studyAvatarCamera(avatarStudyState.view,canvas.clientWidth/Math.max(1,canvas.clientHeight));cameraPos=camera.eye;cameraTarget=camera.target;cameraFov=camera.fov;currentCameraShot=camera.name;
+  return {labels:[],ballp:[0,0,0]};
+ }
+ if(presentation&&!active){const intro=cricketIntro(liveContext,renderTime-presentation.start,presentation.kind);if(intro){const headLabels=[];for(const actor of intro.actors){const rig=posePlayer(registry.get(actor.id),actor.p,actor.yaw,actor.mode,renderTime*1.4);headLabels.push([actor.id,rig.head]);}const introCamera=viewMode==='auto'?{eye:intro.eye,target:intro.target,fov:.8,name:intro.phase}:cricketCamera({mode:viewMode,batter:intro.actors[0].p});cameraPos=introCamera.eye;cameraTarget=introCamera.target;cameraFov=introCamera.fov;currentCameraShot=introCamera.name;$('#cameraShot').textContent=intro.phase;$('#phase').textContent=intro.phase;$('#commentary').textContent=intro.title+' · '+intro.caption;return {labels:headLabels,ballp:[0,0,0]};}presentation=null;$('#commentary').textContent='Waiting for the next saved ball.';$('#phase').textContent='WAITING FOR SCORER';}
+ if(liveContext&&!active&&!liveContext.currentPlayers){cameraPos=[93,56,80];cameraTarget=[0,0,0];cameraFov=.75;currentCameraShot='WAITING FOR PLAYERS';$('#cameraShot').textContent=currentCameraShot;$('#batterName').textContent='Not selected';$('#bowlerName').textContent='Not selected';return {labels:[],ballp:[0,0,0]};}
+ const s=active,e=s?.e??{players:{striker,nonStriker,bowler},hand:$('#hand').value,runsTaken:0},time=s?.t??0;let bp=[-10.06,0,0],np=[8.84,0,-.35],bowlp=s?V.mix([22,0,0],[9.5,0,0],clamp(time/1.82)):[20,0,0],batYaw=Math.PI/2,runYaw=-Math.PI/2,mode=s&&time>=2.15&&time<4.15&&e.batContact?'shot':!s&&viewMode==='face'?'hero':'idle';
+ if(s&&e.runsTaken&&time>=4.15){const progress=clamp((time-4.15)/2.6,0,e.runsTaken),u=positionOnRun(progress,e.runsTaken);bp=V.mix([-10.06,0,0],V.mix([-8.84,0,.3],[8.84,0,.3],u),motionSmooth(progress/.2));np=V.mix([8.84,0,-.35],[-8.84,0,-.35],u);const leg=Math.min(Math.floor(progress),e.runsTaken-1);batYaw=leg%2===0?Math.PI/2:-Math.PI/2;runYaw=-batYaw;mode=progress<e.runsTaken?'run':'idle';}
+ if(s&&e.wicketType!=='NONE'&&time>=s.resolve&&e.dismissedPlayer===e.players.striker)mode='out';
+ const bowlerChase=s&&s.fieldId===e.players.bowler&&time>2.88?sampleBoundaryChase({time,start:s.fieldStart,end:s.end,boundary:e.boundary}):null;if(bowlerChase)bowlp=bowlerChase.position;
+ const batter=registry.get(e.players.striker),non=registry.get(e.players.nonStriker),bowl=registry.get(e.players.bowler);const batpose=posePlayer(batter,bp,batYaw,mode,mode==='shot'?time-2.35:time,e.hand,true);posePlayer(non,np,runYaw,s&&time>=s.resolve&&e.dismissedPlayer===e.players.nonStriker?'out':mode==='run'?'run':'idle',time,e.hand,true);const bowlpose=posePlayer(bowl,bowlp,bowlerChase?.yaw??-Math.PI/2,bowlerChase?.mode??(s&&time<3.1?'bowl':'idle'),bowlerChase?.localTime??time);if(s&&time<2)s.heldBall=bowlpose.ballGrip;
+ let ballp=s?ballPosition(s):bowlpose.ballGrip;
+ for(const slot of fieldSlots(e.players)){const fid=slot.id;if([e.players.bowler,e.players.striker,e.players.nonStriker].includes(fid))continue;let fp=slot.p.slice(),fm=slot.p[0]===-13?'keeper':'idle';if(s&&fid===s.fieldId&&e.boundary==='NONE'&&time>2.7){const u=clamp((time-2.7)/s.flight);fp=V.mix(s.fieldStart,[s.end[0],0,s.end[2]],u);fm=u<.85?'run':e.wicketType==='CAUGHT'?'catch':'field';}const chase=s&&fid===s.fieldId?sampleBoundaryChase({time,start:s.fieldStart,end:s.end,boundary:e.boundary}):null;if(chase){fp=chase.position;fm=chase.mode;}const faceTo=V.sub(ballp,fp),yaw=chase?.yaw??Math.atan2(faceTo[0],faceTo[2]);const fpose=posePlayer(registry.get(fid),fp,yaw,fm,chase?.localTime??time);if(s&&fid===s.fieldId&&time>2.7+s.flight&&e.boundary==='NONE'&&!['BOWLED','LBW'].includes(e.wicketType))ballp=fpose.ballGrip;}
+ if(s&&s.fieldId&&!fieldSlots(e.players).some(slot=>slot.id===s.fieldId)&&s.fieldId!==e.players.bowler){const u=clamp((time-2.7)/s.flight);const fp=V.mix(s.fieldStart,[s.end[0],0,s.end[2]],u),chase=sampleBoundaryChase({time,start:s.fieldStart,end:s.end,boundary:e.boundary});posePlayer(registry.get(s.fieldId),chase?.position??fp,chase?.yaw??0,chase?.mode??(u<1?'run':'field'),chase?.localTime??time);}
+ {const R=cricketEquipment().ballRadius;ball(ballp,R,[.64,.045,.04]);object('ring',ballp,[R*1.003,R*1.003,R*1.003],WHITE,0);if(s&&time>=2.7&&time<2.7+s.flight){for(let k=1;k<9;k++){const prev={...s,t:Math.max(2.7,time-k*.03)},p=ballPosition(prev);object('sphere',p,[.010,.010,.010],[.72,.6,.36]);}}}
+ // Original umpire rig, separate from either team.
+ const ump=registry.get('umpire')??registerPlayer({id:'umpire',name:'Umpire',team:'umpire'});posePlayer({...ump,skin:[.53,.36,.23],team:'field'},[12,0,1.8],-Math.PI/2,'idle',time);object('cylinder',[12,1.77,1.8],[.15,.04,.15],WHITE);
+ for(const wx of [-10.06,10.06])for(const z of [-.06,.06]){let a=[wx,.76,z-.06],b=[wx,.76,z+.06];if(s&&wx<0&&e.wicketType==='BOWLED'&&time>s.resolve){const dt=time-s.resolve,fall=Math.max(.035,.76+1.8*dt-4.9*dt*dt);a=[wx-dt*.8,fall,z-.06+dt*.7];b=[wx-dt*.8+.08,fall+.04,z+.06+dt*.7];}add('cylinder',segment(a,b,.022),WOOD);}
+ const strikerHead=batpose.head;
+ let camera=cricketCamera({mode:viewMode,time:s?time:t,active:!!s,event:e,resolve:s?.resolve,flight:s?.flight,batter:bp,runner:np,bowler:bowlp,ball:ballp,fieldStart:s?.fieldStart,fieldEnd:s?.end});if(s?.study&&viewMode==='study'){const i=time<1.6?0:time<2.15?1:time<2.66?2:time<2.82?3:time<4.15?4:5;camera=cricketStudyCamera(i,{batter:bp,bowler:bowlp,fieldEnd:s.end});$('#behaviorPhase').style.display='block';$('#behaviorPhase').textContent='CODE DEMO · '+camera.name;}else $('#behaviorPhase').style.display='none';cameraPos=camera.eye;cameraTarget=camera.target;cameraFov=camera.fov;currentCameraShot=camera.name;$('#cameraShot').textContent=camera.name;
+ return {labels:[[e.players.striker,strikerHead],[e.players.bowler,V.add(bowlp,[0,2,0])]],ballp};}
+function draw(){const width=Math.round(canvas.clientWidth*Math.min(devicePixelRatio||1,1.5)),height=Math.round(canvas.clientHeight*Math.min(devicePixelRatio||1,1.5));if(canvas.width!==width||canvas.height!==height){canvas.width=width;canvas.height=height;}const scene=drawWorld(active?.t??renderTime);currentVP=multiply(perspective(cameraFov,width/height,.1,450),lookAt(cameraPos,cameraTarget));for(const m of Object.values(meshes)){gl.bindVertexArray(m.vao);gl.bindBuffer(gl.ARRAY_BUFFER,m.instances);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(m.list),gl.DYNAMIC_DRAW);}
+ gl.bindFramebuffer(gl.FRAMEBUFFER,shadowFB);gl.viewport(0,0,shadowSize,shadowSize);gl.clear(gl.DEPTH_BUFFER_BIT);gl.useProgram(depthProg);gl.uniformMatrix4fv(gl.getUniformLocation(depthProg,'vp'),false,new Float32Array(lightVP));for(const m of Object.values(meshes)){gl.bindVertexArray(m.vao);gl.drawElementsInstanced(gl.TRIANGLES,m.count,gl.UNSIGNED_SHORT,0,m.list.length/21);}
+ portraitPost.bind(width,height);gl.viewport(0,0,width,height);gl.clearColor(.65,.80,.94,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.useProgram(prog);gl.uniformMatrix4fv(gl.getUniformLocation(prog,'vp'),false,new Float32Array(currentVP));gl.uniformMatrix4fv(gl.getUniformLocation(prog,'lightVP'),false,new Float32Array(lightVP));gl.uniform3fv(gl.getUniformLocation(prog,'camera'),new Float32Array(cameraPos));gl.uniform1f(gl.getUniformLocation(prog,'shadowSize'),shadowSize);gl.uniform1f(gl.getUniformLocation(prog,'avatarStudio'),avatarStudyMode?1:0);gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,depthTexture);gl.uniform1i(gl.getUniformLocation(prog,'shadowMap'),0);gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,avatarLoadedAsset?.texture??kitTexture);gl.uniform1i(gl.getUniformLocation(prog,'kitMap'),1);for(const m of Object.values(meshes)){gl.bindVertexArray(m.vao);gl.drawElementsInstanced(gl.TRIANGLES,m.count,gl.UNSIGNED_SHORT,0,m.list.length/21);}
+
+ portraitPost.present(V.len(V.sub(cameraPos,cameraTarget)),viewMode!=='wide'&&/PLAYER|CLOSE-UP|REACTION|READY|CAPTAINS|PORTRAIT/.test(currentCameraShot));
+ for(const el of labels.values())el.style.display='none';for(const [pid,p]of scene.labels){const x=currentVP[0]*p[0]+currentVP[4]*p[1]+currentVP[8]*p[2]+currentVP[12],y=currentVP[1]*p[0]+currentVP[5]*p[1]+currentVP[9]*p[2]+currentVP[13],w=currentVP[3]*p[0]+currentVP[7]*p[1]+currentVP[11]*p[2]+currentVP[15];if(w>0&&Math.abs(x/w)<1&&Math.abs(y/w)<1){const el=label(pid);el.textContent=registry.get(pid).name;el.style.display='block';el.style.left=((x/w*.5+.5)*canvas.clientWidth)+'px';el.style.top=((-y/w*.5+.5)*canvas.clientHeight)+'px';}}
+}
+function frame(ms){const dt=playbackDelta(ms,lastFrame);lastFrame=ms;if(!manual){renderTime+=dt;if(active){applyTime(active.t+dt);if(active.t>active.resolve+2.1&&!(window.speechSynthesis?.speaking&&active.t<active.resolve+15))finish();}draw();}requestAnimationFrame(frame);}
+$('#sound').onclick=async()=>{try{await sound.enable();$('#sound').textContent=sound.enabled?'Sound on':'Sound off';}catch(e){$('#status').textContent='Audio unavailable: '+e.message;}};
+$('#demo').onclick=()=>{demo=!demo;if(demo&&!active)enqueue(makeEvent(4));setButtons();};
+document.querySelectorAll('[data-run]').forEach(b=>b.onclick=()=>{demo=false;enqueue(makeEvent(b.dataset.run));});
+document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{viewMode=b.dataset.view;if(manual)draw();});
+$('#eventInput').value=JSON.stringify({eventId:'scorer-001',players:{striker:'hema',nonStriker:'runner',bowler:'ravi'},batRuns:4,boundary:'FOUR',shotRegion:'COVER',commentary:'Through cover — FOUR!'},null,2);
+$('#submit').onclick=()=>{try{const r=enqueue(JSON.parse($('#eventInput').value));$('#status').className='status';$('#status').textContent=r.accepted?'Event queued.':'Duplicate ignored.';}catch(e){$('#status').className='status error';$('#status').textContent=e.message;}};
+function startPresentation(kind='intro'){if(active||queue.pending.length||!cricketIntro(liveContext,0,kind))return {accepted:false};for(const team of liveContext.teams)for(const pid of team.xi)if(!registry.has(pid))registerPlayer({id:pid,team:liveContext.fieldingXI.includes(pid)?'field':'bat'});presentation={kind,start:renderTime};$('#lineupPanel').style.display='none';draw();return {accepted:true};}
+function showBowlingXI(){if(active)return {accepted:false};const panel=$('#lineupPanel');panel.replaceChildren();const title=document.createElement('strong');title.textContent='BOWLING XI · selected in scorer';panel.append(title);const close=document.createElement('button');close.textContent='CLOSE';close.onclick=()=>panel.style.display='none';panel.append(close);const cards=document.createElement('div');cards.className='lineupCards';for(const pid of liveContext?.fieldingXI||[]){const p=registry.get(pid);if(!p)continue;const card=document.createElement('article');card.className='lineupCard'+(liveContext.currentPlayers?.bowler===pid?' selected':'');const name=document.createElement('strong');name.textContent=p.name;const role=document.createElement('p');role.textContent=[p.role,p.bowlingStyle].filter(Boolean).join(' · ')||'Playing XI';const mark=document.createElement('small');mark.textContent=liveContext.currentPlayers?.bowler===pid?'✓ SELECTED BOWLER':p.number?'JERSEY '+p.number:'XI PLAYER';card.append(name);card.append(role);card.append(mark);cards.append(card);}panel.append(cards);panel.style.display='block';return {accepted:true};}
+function applyContext(context){broadcastUI.setContext(context);liveContext=context;ballsPerOver=context.bpo;for(const p of context.roster)registerPlayer(p);for(const pid of context.fieldingXI)if(!registry.has(pid))registerPlayer({id:pid,team:'field'});$('.match').textContent=context.title;if(!active&&context.currentPlayers){({striker,nonStriker,bowler}=context.currentPlayers);for(const [role,pid]of Object.entries(context.currentPlayers))if(!registry.has(pid))registerPlayer({id:pid,team:role==='bowler'?'field':'bat'});$('#batterName').textContent=registry.get(striker).name;$('#bowlerName').textContent=registry.get(bowler).name;}if($('#lineupPanel').style.display==='block')showBowlingXI();}
+function syncBaseline(score,context){trackedPose=null;applyContext(context);broadcastUI.baseline(score,context);demo=false;active=null;presentation=null;queue.pending.length=0;queue.seen.clear();queue.acceptedScore={...score};displayScore={...score};window.speechSynthesis?.cancel();if(context.currentPlayers){({striker,nonStriker,bowler}=context.currentPlayers);for(const [role,pid]of Object.entries(context.currentPlayers))if(!registry.has(pid))registerPlayer({id:pid,team:role==='bowler'?'field':'bat'});$('#batterName').textContent=registry.get(striker).name;$('#bowlerName').textContent=registry.get(bowler).name;}$('#score').textContent=`${score.runs} / ${score.wickets}`;$('#overs').textContent=`${Math.floor(score.legalBalls/ballsPerOver)}.${score.legalBalls%ballsPerOver} overs`;$('#badge').textContent='';$('#commentary').textContent='Scorer connected. Waiting for the next saved ball.';$('#phase').textContent='WAITING FOR SCORER';setButtons();const introKey=context.matchId+'-'+context.inning,firstBaseline=!introSeen.has(introKey);introSeen.add(introKey);if(firstBaseline&&context.inning===1&&score.runs===0&&score.legalBalls===0&&score.wickets===0){startPresentation();}draw();}
+const behaviorTimes=[.85,2,2.57,2.7,3.2,5.45];
+function previewBehavior(index,play=false){if(liveContext||!Number.isInteger(index)||index<0||index>5)return {accepted:false,reason:'STANDALONE_STUDY_ONLY'};if(!active?.study){window.SHCricket.reset();enqueue({eventId:'behavior-study',players:{striker:'hema',nonStriker:'runner',bowler:'ravi'},batRuns:1,shotRegion:'COVER',commentary:'Original code demo: cover drive, follow-through and a single.'});active.study=true;}active.studyIndex=index;manual=!play;viewMode='study';active.flags.clear();applyTime(behaviorTimes[index],true);draw();return {accepted:true};}
+window.SHCricket={previewBehavior,applyTrackedPose(playerId,landmarks){if(active){trackedPose=null;return {accepted:false,reason:'UNALIGNED_DELIVERY'};}const pose=retargetCricketPose(landmarks);if(!pose||!registry.has(playerId)){trackedPose=null;return {accepted:false};}trackedPose={playerId,pose,at:hybridNow()};return {accepted:true};},clearTracking(){trackedPose=null;},setSourceCaption(text){const hint=parseCricketCaption(text);sourceCaption=hint.text?hint:null;$('#sourceCaptionText').textContent=hint.text;$('#sourceCaptionBox').style.display=hint.text?'block':'none';return hint;},getRoles:()=>active?{...active.e.players}:liveContext?{...liveContext.currentPlayers}:{striker,bowler},showBroadcast:kind=>broadcastUI.show(kind),startPresentation,showBowlingXI,applyContext,syncBaseline,registerPlayer,pushBall:enqueue,getState:()=>({active:active?{eventId:active.e.eventId,time:active.t,outcome:active.e.outcome,players:active.e.players,resolve:active.resolve}:null,score:{...displayScore},study:active?.study?{index:active.studyIndex,eventId:active.e.eventId}:null,tracking:currentTrackedPose()?{playerId:trackedPose.playerId,status:'ESTIMATED BODY MOTION'}:null,sourceCaption:sourceCaption?.text??null,acceptedScore:{...queue.acceptedScore},queued:queue.pending.length,renderer:gl.getParameter(gl.VERSION),originalAssets:true,behavior:{batterPhase:active&&active.e.runsTaken&&active.t>=4.15&&active.t<4.15+active.e.runsTaken*2.6?'RUNNING':active&&active.e.batContact?sampleCricketMotion('bat',active.t,active.e.hand).phase:'READY',coordinatedSkeleton:true,contactFromRenderedPose:true},equipment:cricketEquipment(registry.get(active?.e.players.striker??striker)?.height??1.85),visuals:{stadiumTiers:3,proceduralSky:true,portraitDepthBlur:true,originalKit:true},presentation:presentation?.kind??null,camera:{mode:viewMode,shot:currentCameraShot,eye:cameraPos.slice(),target:cameraTarget.slice()}}),setManual(value=true){manual=value;},seek(seconds){manual=true;if(active){active.flags.clear();applyTime(seconds,true);}draw();},setView(mode){viewMode=mode;draw();},reset(){trackedPose=null;sourceCaption=null;$('#sourceCaptionText').textContent='';$('#sourceCaptionBox').style.display='none';broadcastUI.reset();demo=false;active=null;presentation=null;queue.pending.length=0;queue.seen.clear();queue.acceptedScore={runs:0,wickets:0,legalBalls:0};displayScore={...queue.acceptedScore};striker='hema';nonStriker='runner';bowler='ravi';$('#score').textContent='0 / 0';$('#overs').textContent='0.0 overs';$('#badge').textContent='';$('#badge').style.opacity='0';setButtons();draw();}};
+for(const [kind,text]of [['highlights','HIGHLIGHTS'],['scorecard','SCORECARD'],['records','ACHIEVEMENTS']]){const button=document.createElement('button');button.textContent=text;button.onclick=()=>broadcastUI.show(kind);$('.view').append(button);}
+for(const [i,name]of ['01 Run-up','02 Release','03 Footwork','04 Contact','05 Follow-through','06 Fielding'].entries()){const b=document.createElement('button');b.textContent=name;b.onclick=()=>{const r=previewBehavior(i);if(!r.accepted)$('#status').textContent='Open the standalone HTML to inspect the motion study.';};$('#behaviorButtons').append(b);}$('#behaviorPlay').onclick=()=>previewBehavior(0,true);
+requestAnimationFrame(frame);
+
+// Captures only instances added by the single study character, never the stadium.
+function captureAvatarInstances(before){
+ const geometries=Object.create(null),parts=[];
+ for(const [name,mesh]of Object.entries(meshes))for(let k=before.get(name)??0;k<mesh.list.length;k+=21){
+  if(!mesh.cpu)throw Error('Missing mesh data: '+name);geometries[name]=mesh.cpu;
+  parts.push({mesh:name,matrix:mesh.list.slice(k,k+16),color:mesh.list.slice(k+16,k+19),roughness:mesh.list[k+19],shader:mesh.list[k+20]});
+ }
+ return {geometries,parts};
+}
+function exportAvatarModelData(){
+ if(!avatarStudyMode)throw Error('Avatar export is study-only');
+ if(avatarLoadedAsset)return JSON.parse(JSON.stringify(avatarLoadedAsset.data));
+ if(globalThis.SH_AVATAR_JSON_ONLY)throw Error('Load a model JSON first');
+ const saved={...avatarStudyState};let off,on;
+ try{avatarStudyState.yaw=0;avatarCaptureRequested=true;avatarStudyState.helmet=false;draw();off=avatarLastSnapshot;avatarStudyState.helmet=true;draw();on=avatarLastSnapshot;
+  const model=buildAvatarModel(off,on,{kitTexture:kitCanvas.toDataURL('image/png')});if(nativeStudyHead()){model.authorship='SH adaptation of CC0 MakeHuman head topology; original equipment and procedural parts';model.sourceProvenance=nativeStudyHead().provenance;}return model;
+ }finally{Object.assign(avatarStudyState,saved);avatarCaptureRequested=false;avatarLastSnapshot=null;draw();}
+}
+function releaseAvatarModel(asset){
+ if(!asset)return;for(const name of asset.names.values()){const mesh=meshes[name];if(!mesh)continue;for(const buffer of [...Object.values(mesh.buffers),mesh.indexBuffer,mesh.instances])gl.deleteBuffer(buffer);gl.deleteVertexArray(mesh.vao);delete meshes[name];}if(asset.texture)gl.deleteTexture(asset.texture);
+}
+async function loadAvatarModelData(input){
+ if(!avatarStudyMode)throw Error('JSON model loading is study-only');validateAvatarModel(input);
+ const data=JSON.parse(JSON.stringify(input)),ticket=++avatarLoadTicket;let image=null;
+ if(data.textures?.kit)image=await new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=()=>reject(Error('Invalid embedded kit image'));img.src=data.textures.kit.uri;});
+ if(ticket!==avatarLoadTicket)return {accepted:false,reason:'REPLACED_LOAD'};
+ const textureLimit=Number(gl.getParameter(gl.MAX_TEXTURE_SIZE))||2048;
+ if(image&&(!image.naturalWidth||!image.naturalHeight||image.naturalWidth>Math.min(2048,textureLimit)||image.naturalHeight>Math.min(2048,textureLimit)))throw Error('Embedded texture exceeds renderer dimensions');
+ if(gl.getError()!==gl.NO_ERROR)throw Error('Renderer has a pending GPU error; current model retained');
+ const epoch=avatarAssetEpoch+1,asset={data,names:new Map(),materials:new Map(data.materials.map(m=>[m.id,m])),texture:null};
+ try{
+  for(const mesh of data.meshes){const name='json-avatar-'+epoch+'-'+mesh.id;installCricketMesh(name,{p:mesh.positions,n:mesh.normals,i:mesh.indices,l:mesh.surfaceCoordinates},true);asset.names.set(mesh.id,name);}
+  if(image){asset.texture=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,asset.texture);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,image);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);}
+  const gpuError=gl.getError();if(gpuError!==gl.NO_ERROR)throw Error('Model GPU upload failed: '+gpuError);
+ }catch(error){releaseAvatarModel(asset);throw error;}
+ const previous=avatarLoadedAsset;avatarLoadedAsset=asset;avatarAssetEpoch=epoch;releaseAvatarModel(previous);draw();return {accepted:true,meshes:data.meshes.length,parts:data.parts.length};
+}
+function drawAvatarModel(){
+ const asset=avatarLoadedAsset,rotation=matrix([0,0,0],[1,1,1],avatarStudyState.yaw);
+ for(const part of asset.data.parts){if(part.variant==='helmet-on'&&!avatarStudyState.helmet||part.variant==='helmet-off'&&avatarStudyState.helmet)continue;const material=asset.materials.get(part.material);add(asset.names.get(part.mesh),multiply(rotation,part.matrix),material.color,material.roughness,material.shader);}
+}
+
+// Read-only adapter for the existing /api/shared/matches/:id scorer format.
+const liveId=v=>typeof v==='string'&&/^[A-Za-z0-9_-]{1,100}$/.test(v);
+const liveStable=v=>Array.isArray(v)?'['+v.map(liveStable).join(',')+']':v&&typeof v==='object'?'{'+Object.keys(v).sort().map(k=>JSON.stringify(k)+':'+liveStable(v[k])).join(',')+'}':JSON.stringify(v);
+const wicketKinds={'Bowled':'BOWLED','Caught':'CAUGHT','LBW':'LBW','Run out':'RUN_OUT','Stumped':'STUMPED','Hit wicket':'HIT_WICKET'};
+function liveRegion(ang,hand){if(!ang||!Number.isFinite(ang.a))return 'UNKNOWN';let degrees=Math.atan2(Math.cos(ang.a),-Math.sin(ang.a))*180/Math.PI;if(hand==='LEFT')degrees=-degrees;let sector=Math.round(degrees/45);if(sector< -3)sector+=8;if(sector>4)sector-=8;return ({0:'STRAIGHT',1:'COVER',2:'POINT',3:'THIRD_MAN',4:'UNKNOWN','-3':'FINE_LEG','-2':'SQUARE_LEG','-1':'MIDWICKET'})[sector]||'UNKNOWN';}
+function scorerSnapshot(data,matchId){
+ const m=data?.m;if(!m||m.id!==matchId||!Array.isArray(m.innings))throw new Error('Published match data does not match this viewer');
+ const bpo=Number(m.bpo)||6,nbp=Number(m.nbp)||1,index=Number.isInteger(m.cur)?m.cur:0,inn=m.innings[index];
+ if(!Number.isInteger(bpo)||bpo<1||bpo>12||!Number.isInteger(nbp)||nbp<1||nbp>7)throw new Error('Unsupported match format');
+ const playerData=data.players||{},batTeam=inn?.bat,fieldTeam=inn?.bowl,fieldingXI=(m.xi?.[fieldTeam]||[]).map(String),battingXI=(m.xi?.[batTeam]||[]).map(String);
+ const roster=Object.entries(playerData).filter(([id])=>liveId(id)).map(([id,p])=>({id,name:String(p?.name||id).slice(0,100),team:fieldingXI.includes(id)?'field':'bat',number:Number(p?.jersey)||undefined,role:String(p?.role||''),bowlingStyle:String(p?.bowl||'').slice(0,100),hand:/left/i.test(p?.bat||'')?'LEFT':'RIGHT'}));
+ const keeper=fieldingXI.includes(m.keeper?.[fieldTeam])?m.keeper[fieldTeam]:fieldingXI.find(id=>/^(wk|wicket.?keeper)$/i.test(playerData[id]?.role||''))||null;
+ const cur=inn?.cur||{};const currentPlayers=[cur.s,cur.n,cur.bl].every(liveId)?{striker:cur.s,nonStriker:cur.n,bowler:cur.bl}:null;
+ const teams=[m.a,m.b].map(tid=>{const xi=(m.xi?.[tid]||[]).map(String).filter(liveId);return {id:tid,name:String(data.teams?.[tid]?.name||tid||'Team').slice(0,100),xi,captain:xi.includes(m.cap?.[tid])?m.cap[tid]:null};});
+ const toss=teams.some(t=>t.id===m.toss)&&['bat','bowl'].includes(m.dec)?{winner:m.toss,decision:m.dec}:null;
+ const context={teams,toss,matchId,title:[data.teams?.[m.a]?.name||m.a,data.teams?.[m.b]?.name||m.b].join(' vs '),venue:String(m.venue||''),status:String(m.status||''),bpo,inning:index+1,roster,fieldingXI,keeper,currentPlayers};
+ const score={runs:0,wickets:0,legalBalls:0},records=[];
+ const dis=Array.isArray(inn?.dis)?inn.dis:[],pen=Array.isArray(inn?.pen)?inn.pen:[];
+ for(const p of pen)score.runs+=Math.max(0,Number(p.r)||0);
+ score.wickets+=dis.filter(d=>d.t<0).length;
+ const raw=Array.isArray(inn?.ev)?inn.ev:[];
+ for(let j=0;j<raw.length;j++){
+  const e=raw[j]||{},r=Number(e.r)||0,x=e.x||'',isLegal=x!=='wd'&&x!=='nb';
+  score.runs+=r+(x==='wd'?1:x==='nb'?nbp:0);if(e.w)score.wickets++;if(isLegal)score.legalBalls++;score.wickets+=dis.filter(d=>d.t===j).length;
+  const ids={striker:e.bt,nonStriker:e.pre?.n,bowler:e.bl};
+  const hand=/left/i.test(playerData[e.bt]?.bat||'')?'LEFT':'RIGHT';
+  const extras={wd:'WIDE',nb:'NO_BALL',b:'BYE',lb:'LEG_BYE'};
+  const extraType=extras[x]||'NONE',batRuns=['','nb'].includes(x)?r:0,extraRuns=x==='wd'?r+1:x==='nb'?nbp:['b','lb'].includes(x)?r:0;
+  const boundary=!e.ot&&!e.w?(r===6&&!['wd','b','lb'].includes(x)?'SIX':r===4?'FOUR':'NONE'):'NONE';
+  const wk=e.w?wicketKinds[e.w]:null;
+  let supported=Object.values(ids).every(liveId)&&new Set(Object.values(ids)).size===3&&Number.isInteger(r)&&r>=0&&r<=7&&extraRuns<=7&&!e.ot&&(!e.w||!!wk)&&(!x||x in extras);
+  const dismissed=e.out||e.bt;
+  if(e.w&&![ids.striker,ids.nonStriker].includes(dismissed))supported=false;
+  const fielderMatches=fieldingXI.filter(id=>id===e.fld||playerData[id]?.name===e.fld);
+  if(fielderMatches.length===1)ids.fielder=fielderMatches[0];
+  const region=liveRegion(e.ang,hand),batter=String(playerData[e.bt]?.name||e.bt||'Batter'),bowler=String(playerData[e.bl]?.name||e.bl||'Bowler');
+  const commentary=String(e.commentary||e.text||'').trim().slice(0,2000)||`${bowler} to ${batter}. ${e.w?e.w+' — wicket.':boundary==='FOUR'?'FOUR!':boundary==='SIX'?'SIX!':x==='wd'?'Wide.':x==='nb'?'No ball. '+r+' bat runs.':r?r+' run'+(r===1?'':'s')+'.':'No run.'}${region==='UNKNOWN'?'':' Toward '+region.toLowerCase().replaceAll('_',' ')+'.'}`;
+  const event={savedWicketLabel:String(e.w||''),eventId:`${matchId}-i${index}-b${j}`,players:ids,batRuns,boundary,extraType,extraRuns,wicketType:wk||'NONE',...(wk?{dismissedPlayer:dismissed}:{}),shotRegion:region,hand,commentary,score:{...score},inning:index+1};
+  try{normalizeBall(event);}catch{supported=false;}
+  records.push({key:liveStable(e),event,supported,reason:supported?'':'This saved action needs unsupported details or complete player IDs'});
+ }
+ context.broadcast=matchBroadcastSummary(records,context,score);
+ return {matchId,epoch:liveStable([index,bpo,nbp,dis,pen]),records,score:{...score},context};
+}
+class FeedCursor{
+ constructor(matchId,viewer){this.matchId=matchId;this.viewer=viewer;this.epoch=null;this.keys=[];}
+ baseline(snapshot,mode,note){this.viewer.syncBaseline(snapshot.score,snapshot.context);this.epoch=snapshot.epoch;this.keys=snapshot.records.map(r=>r.key);this.viewer.showStatus(note);return {mode};}
+ ingest(snapshot){
+  if(snapshot.matchId!==this.matchId)throw new Error('Feed match changed');this.viewer.applyContext(snapshot.context);
+  if(this.epoch===null)return this.baseline(snapshot,'baseline','Connected to scorer. Waiting for the next saved ball.');
+  if(this.epoch!==snapshot.epoch||this.keys.length>snapshot.records.length||this.keys.some((k,i)=>k!==snapshot.records[i]?.key))return this.baseline(snapshot,'resync','Score correction or innings change synced. Waiting for the next saved ball.');
+  const next=snapshot.records.slice(this.keys.length);
+  if(next.some(r=>!r.supported))return this.baseline(snapshot,'unsupported','Score synced; one saved action cannot be visualized accurately by this prototype.');
+  for(const record of next){this.viewer.pushBall(record.event);this.keys.push(record.key);}
+  this.viewer.showStatus(next.length?`${next.length} scorer event${next.length===1?'':'s'} received.`:'Scorer connected · waiting for the next saved ball.');
+  return {mode:next.length?'append':'unchanged',count:next.length};
+ }
+}
+class LiveFeedConnection{
+ constructor({matchId,viewer,fetchImpl=(...args)=>globalThis.fetch(...args),subscribe=null,intervalMs=2500}){if(!liveId(matchId))throw new Error('Invalid match ID');this.matchId=matchId;this.viewer=viewer;this.fetchImpl=fetchImpl;this.subscribe=subscribe;this.intervalMs=intervalMs;this.cursor=new FeedCursor(matchId,viewer);this.busy=false;this.closed=false;}
+ async poll(){if(this.closed||this.busy)return;this.busy=true;try{const response=await this.fetchImpl('/api/shared/matches/'+encodeURIComponent(this.matchId),{cache:'no-store',signal:AbortSignal.timeout(10000)});if(!response.ok)throw new Error('Match feed HTTP '+response.status);const j=await response.json();if(!j.ok||!j.item?.data)throw new Error('Match is not published yet');this.cursor.ingest(scorerSnapshot(j.item.data,this.matchId));}catch(e){this.viewer.showStatus('Scorer connection: '+e.message);}finally{this.busy=false;}}
+ start(){this.poll();this.timer=setInterval(()=>this.poll(),this.intervalMs);if(this.subscribe)this.unsubscribe=this.subscribe(change=>{if(change.col==='matches'&&change.id===this.matchId)this.poll()});return this;}
+ stop(){this.closed=true;clearInterval(this.timer);if(this.unsubscribe)this.unsubscribe();}
+}
+
+// Read-only connection to the scorer published by this same backend.
+{
+const params=new URLSearchParams(location.search),mid=params.get('mid');
+if(mid!==null){
+ document.body.classList.add('connected');
+ const style=document.createElement('style');style.textContent='.connected header,.connected footer,.connected .side{display:none}.connected .layout{display:block;padding:0;max-width:none}.connected .stage{height:100vh;min-height:350px;max-height:none;border:0;border-radius:0}.feedNote{position:absolute;left:18px;top:90px;max-width:80%;background:#091b2de8;padding:8px 12px;border-radius:8px;font-size:12px;color:#c2d7e3}.feedMask{position:absolute;inset:0;background:#071725;display:grid;place-items:center;text-align:center;padding:30px;z-index:5}.connected .view{z-index:6;flex-wrap:wrap;max-width:92%}';document.head.append(style);
+ const note=document.createElement('div');note.className='feedNote';note.textContent='Connecting to scorer…';stage.append(note);
+ const mask=document.createElement('div');mask.className='feedMask';mask.textContent='Connecting to published match…';stage.append(mask);
+ const audio=document.createElement('button');audio.textContent='ENABLE SOUND';audio.onclick=async()=>{await $('#sound').onclick();audio.textContent=$('#sound').textContent;};$('.view').append(audio);
+ const voice=document.createElement('select');voice.setAttribute('aria-label','Commentary voice');for(const [value,text]of [['off','Text commentary'],['en','English voice'],['te','Telugu voice'],['hi','Hindi voice']]){voice.add(new Option(text,value));}voice.style.cssText='width:auto;font-size:10px;padding:5px';voice.onchange=()=>{$('#voice').value=voice.value;};$('.view').append(voice);
+ for(const [text,action]of [['MATCH INTRO',()=>window.SHCricket.startPresentation('intro')],['TEAM WALKOUT',()=>window.SHCricket.startPresentation('walkout')],['BOWLING XI',()=>window.SHCricket.showBowlingXI()]]){const b=document.createElement('button');b.textContent=text;b.onclick=()=>{const r=action();if(r.accepted)mask.style.display='none';else note.textContent='Waiting for published XI, or current ball to finish.';};$('.view').append(b);}
+ if(!/^[\w-]{3,40}$/.test(mid)){mask.textContent='Invalid match ID. Open Virtual Live from a published match.';note.textContent='No match connected.';}else{
+ const viewer={applyContext:c=>{window.SHCricket.applyContext(c);if(c.currentPlayers||window.SHCricket.getState().presentation)mask.style.display='none';},syncBaseline:(score,c)=>{window.SHCricket.syncBaseline(score,c);mask.style.display=c.currentPlayers||window.SHCricket.getState().presentation?'none':'grid';mask.textContent='Score synced. Waiting for scorer to select batsmen and bowler.';},pushBall:e=>{const result=window.SHCricket.pushBall(e);mask.style.display='none';return result;},showStatus:text=>{note.textContent=text;if(mask.style.display!=='none'&&text.startsWith('Scorer connection:'))mask.textContent=text;}};
+ const connection=new LiveFeedConnection({matchId:mid,viewer,subscribe:notify=>{const source=new EventSource('/api/shared-stream');source.onmessage=e=>{try{notify(JSON.parse(e.data));}catch{}};return()=>source.close();}}).start();
+ window.SHLiveFeed=connection;window.addEventListener('pagehide',()=>connection.stop(),{once:true});
+ }
+}
+}
+
+const HYBRID_TRACKER_WORKER="// Optional free MediaPipe dependency; loaded only after the operator starts tracking.\nlet detector=null;\nself.onmessage=async({data:m})=>{\n try{\n  if(m.type==='init'){\n   const vision=await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.32/vision_bundle.mjs');\n   const files=await vision.FilesetResolver.forVisionTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.32/wasm');\n   detector=await vision.PoseLandmarker.createFromOptions(files,{baseOptions:{modelAssetPath:'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task',delegate:'CPU'},runningMode:'VIDEO',numPoses:1,minPoseDetectionConfidence:.6,minPosePresenceConfidence:.6,minTrackingConfidence:.6});\n   self.postMessage({type:'ready'});\n  }else if(m.type==='frame'){\n   try{if(!detector)throw Error('Tracker is not ready');const r=detector.detectForVideo(m.bitmap,m.stamp);self.postMessage({type:'pose',epoch:m.epoch,time:m.time,world:r.worldLandmarks[0]??null,landmarks:r.landmarks[0]??null});}finally{m.bitmap?.close();}\n  }\n }catch(e){self.postMessage({type:'error',message:String(e.message||e).slice(0,200)});}\n};\n";
+// Browser source lifecycle. No media uploads and no automatic score events from speech.
+(function(){
+ const video=$('#hybridVideo');if(!video)return;
+ const badge=$('#hybridMode'),status=$('#hybridStatus'),captionStatus=$('#captionStatus'),overlay=$('#hybridSkeleton'),ctx=overlay.getContext('2d'),buffer=new HybridPoseBuffer();
+ let captionLoad=0;let sourceGeneration=0;let sourceStream=null,sourceURL=null,sourceKind=null,worker=null,workerURL=null,ready=false,busy=false,inferenceTimer=0,epoch=0,lastFrameTime=-1,lastRole=null,trackingWanted=false,pendingCapture=false,cues=[],captionOverride=null,lastCaption='',recognition=null,micStream=null,micAudio=null,listenGeneration=0,crop={x:0,y:0,w:1,h:1},drag=null,latestLandmarks=null;
+ const sourceTime=()=>Number.isFinite(video.currentTime)?video.currentTime:0;
+ const hasVideo=()=>!!sourceKind&&video.readyState>=2;
+ const say=text=>{status.textContent=text;};
+ function drawOverlay(){
+  if(!ctx)return;overlay.width=video.videoWidth||640;overlay.height=video.videoHeight||360;const W=overlay.width,H=overlay.height;ctx.clearRect(0,0,W,H);
+  if(crop.w<.99||crop.h<.99){ctx.strokeStyle='#f1cd71';ctx.lineWidth=Math.max(2,W/320);ctx.strokeRect(crop.x*W,crop.y*H,crop.w*W,crop.h*H);}
+  if(!latestLandmarks)return;const p=latestLandmarks,xy=i=>[(crop.x+p[i].x*crop.w)*W,(crop.y+p[i].y*crop.h)*H];ctx.strokeStyle='#75efd3';ctx.lineWidth=Math.max(2,W/250);
+  for(const [a,b]of [[11,12],[11,13],[13,15],[12,14],[14,16],[11,23],[12,24],[23,24],[23,25],[25,27],[24,26],[26,28]])if(p[a]?.visibility>=.55&&p[b]?.visibility>=.55){ctx.beginPath();ctx.moveTo(...xy(a));ctx.lineTo(...xy(b));ctx.stroke();}
+ }
+ function clearMotion(){epoch++;busy=false;lastFrameTime=-1;lastRole=null;latestLandmarks=null;buffer.reset();window.SHCricket.clearTracking();badge.textContent='ILLUSTRATIVE · NO VALID POSE';drawOverlay();}
+ function clearCaption(){captionOverride=null;lastCaption='';window.SHCricket.setSourceCaption('');}
+ function stopTracker(){trackingWanted=false;clearTimeout(inferenceTimer);if(worker)worker.terminate();worker=null;if(workerURL)URL.revokeObjectURL(workerURL);workerURL=null;ready=false;clearMotion();$('#hybridTrack').disabled=false;$('#hybridTrack').textContent='Start body tracking';}
+ function stopListening(){listenGeneration++;try{recognition?.abort();}catch{}recognition=null;for(const t of micStream?.getTracks()||[])t.stop();micStream=null;if(micAudio){micAudio.pause();micAudio.srcObject=null;}micAudio=null;$('#hybridMic').textContent='Start commentary mic';captionStatus.textContent='Microphone stopped.';}
+ function stopSource(){sourceGeneration++;captionLoad++;stopTracker();stopListening();video.pause();for(const t of sourceStream?.getTracks()||[])t.stop();sourceStream=null;video.srcObject=null;video.removeAttribute('src');video.load();if(sourceURL)URL.revokeObjectURL(sourceURL);sourceURL=null;sourceKind=null;cues=[];crop={x:0,y:0,w:1,h:1};clearCaption();say('Source stopped. Scorer animation remains available.');}
+ async function setFile(file){if(!file)return;stopSource();sourceURL=URL.createObjectURL(file);sourceKind='file';video.muted=false;video.src=sourceURL;video.load();say('Video loaded. Press Play, crop to one person, then Start body tracking.');}
+ async function capture(kind){if(pendingCapture)return;pendingCapture=true;stopSource();const attempt=sourceGeneration;
+  try{const media=navigator.mediaDevices;if(!media)throw Error('Camera/screen capture needs HTTPS or localhost.');const stream=kind==='camera'?await media.getUserMedia({video:{width:{ideal:1280}},audio:false}):await media.getDisplayMedia({video:true,audio:true});if(sourceGeneration!==attempt){stream.getTracks().forEach(t=>t.stop());return;}sourceStream=stream;sourceKind=kind;video.muted=kind==='camera';video.srcObject=stream;for(const t of stream.getVideoTracks())t.addEventListener('ended',()=>{if(sourceStream===stream)stopSource();},{once:true});await video.play();say(kind==='camera'?'Camera connected; its microphone is off.':'Shared source connected. Original audio is available only if included in sharing.');}
+  catch(e){if(sourceGeneration===attempt)say('Source unavailable: '+e.message);}finally{pendingCapture=false;}
+ }
+ async function startTracker(){if(trackingWanted){stopTracker();say('Tracking stopped. Scorer animation is illustrative.');return;}if(!hasVideo()){say('Load and play a video source first.');return;}if(!globalThis.Worker||!globalThis.createImageBitmap){say('Body tracking needs Worker and ImageBitmap support.');return;}
+  stopTracker();trackingWanted=true;$('#hybridTrack').textContent='Stop body tracking';say('Loading optional free pose tracker… internet required for first load.');
+  try{workerURL=URL.createObjectURL(new Blob([HYBRID_TRACKER_WORKER],{type:'text/javascript'}));worker=new Worker(workerURL);const instance=worker;worker.onerror=e=>{stopTracker();say('Tracker unavailable: '+(e.message||'worker blocked'));};worker.onmessage=({data:m})=>{if(worker!==instance)return;
+   if(m.type==='ready'){if(!trackingWanted)return;ready=true;say('Tracker ready. Crop to one person and choose their avatar role.');pump();}
+   else if(m.type==='error'){stopTracker();say('Tracking failed: '+m.message+' · Source playback is still available.');}
+   else if(m.type==='pose'){if(m.epoch!==epoch)return;busy=false;const pose=m.world&&retargetCricketPose(m.world);latestLandmarks=pose?m.landmarks:null;if(pose)buffer.push(m.time,m.world,performance.now());else{buffer.reset();window.SHCricket.clearTracking();}drawOverlay();}
+  };worker.postMessage({type:'init'});
+  }catch(e){stopTracker();say('Tracker unavailable: '+e.message);}
+ }
+ async function pump(){clearTimeout(inferenceTimer);if(!trackingWanted||!ready||!worker)return;
+  if(!busy&&hasVideo()&&!video.paused&&!video.seeking&&Math.abs(sourceTime()-lastFrameTime)>.035){
+   const stamp=sourceTime(),frameEpoch=epoch,W=video.videoWidth,H=video.videoHeight;busy=true;lastFrameTime=stamp;
+   try{const sw=Math.max(1,Math.floor(W*crop.w)),sh=Math.max(1,Math.floor(H*crop.h));const bitmap=await createImageBitmap(video,Math.floor(W*crop.x),Math.floor(H*crop.y),sw,sh,{resizeWidth:Math.min(640,sw),resizeHeight:Math.max(1,Math.round(sh*Math.min(1,640/sw)))});if(!worker||frameEpoch!==epoch){bitmap.close();busy=false;}else worker.postMessage({type:'frame',bitmap,epoch:frameEpoch,time:stamp,stamp:performance.now()},[bitmap]);}
+   catch(e){busy=false;stopTracker();say('Video cannot be analysed: '+e.message+' · For a URL, the media server must allow CORS.');}
+  }
+  if(trackingWanted)inferenceTimer=setTimeout(pump,100);
+ }
+ function tick(){
+  const time=sourceTime(),role=$('#hybridRole').value,playerId=window.SHCricket.getRoles()[role];if(playerId!==lastRole){clearMotion();lastRole=playerId;}
+  const pose=trackingWanted&&ready&&!video.paused&&!video.seeking?buffer.sample(time,performance.now()):null;
+  if(pose&&playerId){const r=window.SHCricket.applyTrackedPose(playerId,pose);badge.textContent=r.accepted?'VIDEO BODY ESTIMATE · '+role.toUpperCase()+' · BALL / FIELD ILLUSTRATIVE':'ILLUSTRATIVE · NO VALID POSE';}else{window.SHCricket.clearTracking();badge.textContent='ILLUSTRATIVE · NO VALID POSE';}
+  $('#hybridStageMode').style.display=sourceKind?'block':'none';$('#hybridStageMode').textContent=badge.textContent;
+  $('#hybridClock').textContent=sourceKind?time.toFixed(2)+' s · '+(video.paused?'PAUSED':sourceKind.toUpperCase()):'No source';
+  if(captionOverride&&performance.now()>captionOverride.until)captionOverride=null;
+  const timed=cues.length?hybridCaptionAt(cues,time+Number($('#hybridOffset').value||0)):'';const text=captionOverride?.text??timed;
+  if(text!==lastCaption){lastCaption=text;const hint=window.SHCricket.setSourceCaption(text);$('#hybridHint').textContent=text?(hint.region||'No direction')+' · '+(hint.resultHint||hint.phase||'Caption only')+' · score unchanged':'Commentary hints never change the scorer score.';}
+ }
+ function caption(text){captionOverride={text:String(text).slice(0,1000),until:performance.now()+8000};lastCaption='';tick();return parseCricketCaption(text);}
+ async function startMic(){if(recognition||micStream){stopListening();return;}const Speech=window.SpeechRecognition||window.webkitSpeechRecognition;if(!Speech){captionStatus.textContent='Speech recognition unavailable in this browser. Use typed captions or a VTT file.';return;}const generation=++listenGeneration;
+  try{if(!navigator.mediaDevices?.getUserMedia)throw Error('Microphone needs HTTPS or localhost.');const stream=await navigator.mediaDevices.getUserMedia({audio:true,video:false});if(generation!==listenGeneration){stream.getTracks().forEach(t=>t.stop());return;}micStream=stream;
+   // Explicit radio monitor, off by default to avoid feedback. Headphones recommended.
+   micAudio=document.createElement('audio');micAudio.srcObject=stream;micAudio.muted=!$('#hybridMonitor').checked;if(!micAudio.muted)await micAudio.play();if(generation!==listenGeneration)return;
+   recognition=new Speech();recognition.lang=$('#hybridLanguage').value;recognition.continuous=true;recognition.interimResults=false;recognition.onresult=e=>{if(generation!==listenGeneration)return;for(let i=e.resultIndex;i<e.results.length;i++)if(e.results[i].isFinal)caption(e.results[i][0].transcript);};recognition.onerror=e=>{if(generation!==listenGeneration)return;stopListening();captionStatus.textContent='Speech unavailable: '+e.error+' · use typed captions / VTT.';};recognition.onend=()=>{if(generation===listenGeneration)stopListening();};recognition.start();$('#hybridMic').textContent='Stop commentary mic';captionStatus.textContent='Listening. Browser speech service may process audio online. Original video audio is separate.';
+  }catch(e){if(generation!==listenGeneration)return;stopListening();captionStatus.textContent='Microphone unavailable: '+e.message;}
+ }
+ $('#hybridFile').onchange=e=>setFile(e.target.files?.[0]);
+ $('#hybridUrlLoad').onclick=()=>{try{const u=new URL($('#hybridUrl').value);if(!['https:','http:'].includes(u.protocol)||/(^|\.)(youtube\.com|youtu\.be)$/.test(u.hostname))throw Error('Use a direct browser-playable media URL, not a YouTube page.');stopSource();sourceKind='url';video.crossOrigin='anonymous';video.muted=false;video.src=u.href;video.load();say('Direct media loaded. Playback and frame access depend on server CORS / codec support.');}catch(e){say(e.message);}};
+ $('#hybridCamera').onclick=()=>capture('camera');$('#hybridScreen').onclick=()=>capture('screen');$('#hybridStop').onclick=stopSource;$('#hybridTrack').onclick=startTracker;
+ $('#hybridRole').onchange=()=>{clearMotion();say('Avatar role changed. Crop to the matching person in the video.');};
+ $('#hybridVtt').onchange=async e=>{const generation=sourceGeneration,load=++captionLoad;try{const f=e.target.files?.[0];if(!f)return;if(f.size>2000000)throw Error('Caption file must be smaller than 2 MB');const text=await f.text();if(generation!==sourceGeneration||load!==captionLoad)return;cues=parseHybridVtt(text);clearCaption();say(cues.length+' timed captions loaded for this video.');tick();}catch(e){if(generation===sourceGeneration&&load===captionLoad)say(e.message);}};
+ $('#hybridCaptionSend').onclick=()=>caption($('#hybridCaption').value);$('#hybridMic').onclick=startMic;
+ $('#hybridMonitor').onchange=()=>{if(micAudio){micAudio.muted=!$('#hybridMonitor').checked;if(!micAudio.muted)micAudio.play().catch(e=>{captionStatus.textContent=e.message;});}};
+ $('#hybridCropSelect').onclick=()=>{overlay.parentElement.classList.toggle('cropping');say('Drag a rectangle over one person. Click Select person crop again to return to video controls.');};
+ $('#hybridCropReset').onclick=()=>{crop={x:0,y:0,w:1,h:1};clearMotion();};
+ const point=e=>{const r=overlay.getBoundingClientRect();return {x:Math.max(0,Math.min(1,(e.clientX-r.left)/r.width)),y:Math.max(0,Math.min(1,(e.clientY-r.top)/r.height))};};
+ overlay.onpointerdown=e=>{drag=point(e);overlay.setPointerCapture(e.pointerId);};overlay.onpointerup=e=>{if(!drag)return;const p=point(e),next={x:Math.min(p.x,drag.x),y:Math.min(p.y,drag.y),w:Math.abs(p.x-drag.x),h:Math.abs(p.y-drag.y)};drag=null;if(next.w>.05&&next.h>.05){crop=next;overlay.parentElement.classList.remove('cropping');clearMotion();say('Crop selected. Only the person inside this area will be analysed.');}};
+ for(const event of ['seeking','pause','ended','emptied','waiting','stalled'])video.addEventListener(event,()=>{clearMotion();if(event==='seeking'||event==='emptied'){clearCaption();tick();}});
+ video.addEventListener('loadedmetadata',drawOverlay);video.addEventListener('error',()=>{stopTracker();say('Video could not load. Check the file, direct URL, CORS and codec.');});
+ const studioButton=document.createElement('button');studioButton.textContent='SOURCE STUDIO';studioButton.onclick=()=>{document.body.classList.toggle('studioOpen');$('#hybridControls').open=true;};$('.view').append(studioButton);
+ if(new URLSearchParams(location.search).get('studio')==='1'){document.body.classList.add('studioOpen');$('#hybridControls').open=true;}
+ const timer=setInterval(tick,80);window.addEventListener('pagehide',()=>{clearInterval(timer);stopSource();},{once:true});
+ window.SHHybridStudio={caption,stop:stopSource,stopTracker,getState:()=>({source:sourceKind,time:sourceTime(),tracking:trackingWanted,ready,crop:{...crop},cues:cues.length,scoreAuthority:'SCORER_ONLY'})};
+})();
+
+</script></body></html>
