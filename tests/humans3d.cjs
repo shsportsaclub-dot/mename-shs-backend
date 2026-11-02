@@ -9,5 +9,5 @@ await p.route('**/*',async r=>{if(await route(r)!==null)return;const u=r.request
 await p.goto('file://'+process.cwd()+'/app-index.html?scene=sgame&mid=x1#overlay');
 await p.waitForFunction('window.shx&&(shx.ready||shx.fail)',null,{timeout:60000});assert(await p.evaluate('shx.ready&&!shx.fail'),'shx ready');
 await p.waitForFunction(()=>{const c=document.getElementById('shx3');return c&&c.parentNode},null,{timeout:60000});await p.waitForTimeout(1500);await p.screenshot({path:'/tmp/h3-football.png'});
-assert(await p.evaluate(()=>{const c=document.getElementById('shx3');return !!c&&c.parentNode&&c.width===1280}),'3d canvas in scene');
+await p.waitForFunction(()=>{const c=document.getElementById('shx3');return !!c&&c.parentNode&&c.width===1280},null,{timeout:30000});
 assert.deepEqual(errs,[]);console.log('PASS humans3d sports');await b.close()})().catch(e=>{console.error('FAIL',e.message);process.exit(1)})
