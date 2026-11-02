@@ -2137,7 +2137,10 @@ http.createServer(async (req, res) => {
     res.writeHead(200, { 'content-type': 'text/event-stream', 'cache-control': 'no-cache, no-transform', connection: 'keep-alive', 'x-accel-buffering': 'no', 'access-control-allow-origin': allow(origin), vary: 'origin' });
     res.write('retry: 2000\n\n'); sseClients.add(res); req.on('close', () => sseClients.delete(res)); return;
   }
-  const STATIC = { '/manifest.webmanifest': 'application/manifest+json', '/sw.js': 'application/javascript', '/icon-192.png': 'image/png', '/icon-512.png': 'image/png', '/icon-maskable.png': 'image/png', '/apple-touch-icon.png': 'image/png' };
+  const STATIC = { '/fbx-motion-studio.html': 'text/html; charset=utf-8', '/manifest.webmanifest': 'application/manifest+json', '/sw.js': 'application/javascript', '/icon-192.png': 'image/png', '/icon-512.png': 'image/png', '/icon-maskable.png': 'image/png', '/apple-touch-icon.png': 'image/png' };
+  if (req.method === 'GET' && /^\/models\/cricket-equipment\/(cricket_(bail|ball_red|ball_white|bat|pitch|stump)\.glb|manifest\.json|SOURCE-LICENSE\.txt)$/.test(path)) {
+    try { const body = fs.readFileSync(new URL('./public' + path, import.meta.url)); res.writeHead(200, { 'content-type': path.endsWith('.glb') ? 'model/gltf-binary' : path.endsWith('.json') ? 'application/json' : 'text/plain; charset=utf-8', 'x-content-type-options': 'nosniff' }); return res.end(body); } catch { /* fall through */ }
+  }
   const em = /^\/emblems\/[a-z-]+\.webp$/.exec(path);
   const lg = /^\/logos\/[a-z0-9._-]+\.(webp|png|jpg|jpeg|svg|json)$/i.exec(path);
   if (req.method === 'GET' && lg) { try { const f = fs.readFileSync(new URL('./public' + path, import.meta.url)); const x = lg[1].toLowerCase(); res.writeHead(200, { 'content-type': x === 'json' ? 'application/json' : x === 'svg' ? 'image/svg+xml' : x === 'jpg' ? 'image/jpeg' : 'image/' + x, 'cache-control': x === 'json' ? 'no-cache' : 'public, max-age=86400', 'access-control-allow-origin': '*' }); return res.end(f); } catch { /* fall through */ } }

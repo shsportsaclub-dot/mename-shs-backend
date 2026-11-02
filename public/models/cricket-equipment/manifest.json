@@ -1,0 +1,52 @@
+{
+  "source": "https://nrgs.itch.io/lp-cricket-model-pack",
+  "author": "nrgs / NRG Studios",
+  "license": "CC0-1.0",
+  "downloaded": "2026-11-02",
+  "archiveSha256": "a83db3df61fe356d496d9cf12526ec2d4f5e7a968022034ebb661690d597b4ca",
+  "originalToSH": false,
+  "assets": [
+    {
+      "file": "cricket_bail.glb",
+      "sha256": "fb01e954712fe9330e18522ed48dceedb1761b9322ca33a515c835fc239eb263",
+      "bytes": 114444,
+      "meshes": 1,
+      "animations": 0
+    },
+    {
+      "file": "cricket_ball_red.glb",
+      "sha256": "c212cb09073bcc4f06f5b46fdc8b66eabf76143ab8e043336780e7cce562316e",
+      "bytes": 713020,
+      "meshes": 1,
+      "animations": 0
+    },
+    {
+      "file": "cricket_ball_white.glb",
+      "sha256": "a358af76afbc5dfa11dccdb2854c49be95a5e1166fc67eb340b47245e13e9dca",
+      "bytes": 561044,
+      "meshes": 1,
+      "animations": 0
+    },
+    {
+      "file": "cricket_bat.glb",
+      "sha256": "5d2b24e43bf46314c32f42cee2a9bbf39a1f38332884f51e99cefbd3ed45ad73",
+      "bytes": 113080,
+      "meshes": 1,
+      "animations": 0
+    },
+    {
+      "file": "cricket_pitch.glb",
+      "sha256": "5fe011c93e3b10ec73da7a2ef598a828adbad6c97a4992143d3072c3b97edc4b",
+      "bytes": 103568,
+      "meshes": 1,
+      "animations": 0
+    },
+    {
+      "file": "cricket_stump.glb",
+      "sha256": "bd179e7a6cf6fe28f64aca4ea7d39af09290832e87935d2d7182d1a66793e277",
+      "bytes": 54236,
+      "meshes": 1,
+      "animations": 0
+    }
+  ]
+}

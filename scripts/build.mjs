@@ -1,3 +1,4 @@
+import './build-fbx-studio.mjs';
 import './build-original-cricket.mjs';
 import fs from 'node:fs';
 import { spawnSync } from 'node:child_process';
