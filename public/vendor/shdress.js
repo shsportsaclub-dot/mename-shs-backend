@@ -28,11 +28,12 @@ function hat(T){const g=new T.Group(),m=M(T,'#2b2e33',.8);const cr=new T.Mesh(ne
 /* root: cloned skinned model, g: the person group. returns {update(o)} */
 /* stylised face built from primitives: brows, eyes, nose, beard, hair; front is +z of the head bone */
 function faceGroup(T,skin,beard,hair){const g=new T.Group(),mat=(c,r)=>new T.MeshStandardMaterial({color:c,roughness:r||.8});
- const eye=(sx)=>{const e=new T.Group(),w=new T.Mesh(new T.SphereGeometry(.014,10,8),mat('#f4f1ea',.4));w.scale.set(1.3,.8,.6);const i=new T.Mesh(new T.SphereGeometry(.0075,8,6),mat('#2a1a10',.3));i.position.z=.007;e.add(w,i);e.position.set(sx*.036,.012,.092);return e};
+ const eye=(sx)=>{const e=new T.Group(),w=new T.Mesh(new T.SphereGeometry(.0115,12,8),mat('#efe9dc',.4));w.scale.set(1.45,.6,.5);const i=new T.Mesh(new T.SphereGeometry(.0068,10,8),mat('#1d120b',.25));i.scale.set(1,.9,.8);i.position.z=.0035;e.add(w,i);e.position.set(sx*.036,.012,.092);return e};
  g.add(eye(-1),eye(1));
- for(const sx of[-1,1]){const b=new T.Mesh(new T.BoxGeometry(.04,.008,.01),mat('#1b1410'));b.position.set(sx*.037,.036,.097);b.rotation.z=sx*-.12;g.add(b)}
- const nose=new T.Mesh(new T.SphereGeometry(.014,10,8),mat(skin,.7));nose.scale.set(.9,1.3,1.2);nose.position.set(0,-.012,.106);g.add(nose);
- if(beard){const bd=new T.Mesh(new T.SphereGeometry(.026,10,8),mat('#2a1c14',1));bd.scale.set(1,.7,.7);bd.position.set(0,-.1,.07);g.add(bd);const mo=new T.Mesh(new T.BoxGeometry(.046,.007,.008),mat('#2a1c14',1));mo.position.set(0,-.028,.1);g.add(mo)}
+ for(const sx of[-1,1]){const b=new T.Mesh(new T.BoxGeometry(.042,.0095,.01),mat('#1b1410'));b.position.set(sx*.037,.033,.097);b.rotation.z=sx*-.07;g.add(b)}
+ const nose=new T.Mesh(new T.SphereGeometry(.012,10,8),mat(skin,.7));nose.scale.set(.85,1.25,1.1);nose.position.set(0,-.012,.106);g.add(nose);
+ const mo=new T.Mesh(new T.BoxGeometry(.03,.0045,.006),mat('#6b2f2a',.7));mo.position.set(0,-.052,.098);g.add(mo);
+ if(beard){const bd=new T.Mesh(new T.SphereGeometry(.045,14,10),new T.MeshStandardMaterial({color:'#2a1c14',roughness:1,transparent:true,opacity:.55}));bd.scale.set(1.25,.85,.85);bd.position.set(0,-.07,.062);g.add(bd)}
  if(hair){const h=new T.Mesh(new T.SphereGeometry(.102,18,10,Math.PI*.5,Math.PI,0,Math.PI*.5),mat(hair,.9));h.position.set(0,.002,-.006);g.add(h)}
  g.scale.setScalar(1.22);return g}
 /* the player's real photo wrapped on the front of the head (used when the data provider supplies a usable picture) */
@@ -55,7 +56,7 @@ export function dress(T,gl,root,g,o){const pal=palette(T,o),kit=o.kit||'field';
  if(kit==='bat'||kit==='wk'){for(const s of['l','r']){const p=new T.Mesh(new T.BoxGeometry(.13,.5,.07),M(T,kit==='wk'?'#e9e4d2':'#f5f5f2',.7));add('pad'+s,p)}}
  if(kit==='bat'||kit==='wk')for(const s of['l','r']){const gv=new T.Mesh(new T.SphereGeometry(kit==='wk'?.075:.06,10,8),M(T,kit==='wk'?'#d8c9a0':'#f2f2f2',.8));add('gl'+s,gv)}
  const GOLD=M(T,'#d4af37',.35),showKit=kit==='bat'||kit==='bowl'||kit==='field'||kit==='wk'||kit==='soccer';
- if(showKit){const col=new T.Mesh(new T.TorusGeometry(.082,.013,8,20),GOLD);col.rotation.x=Math.PI/2;add('collar',col);for(const s of['l','r']){const b=new T.Mesh(new T.TorusGeometry(.046,.007,6,16),GOLD);add('band'+s,b)}
+ if(showKit){const col=new T.Mesh(new T.TorusGeometry(.082,.012,8,24),GOLD);col.rotation.x=Math.PI/2;col.scale.z=.35;add('collar',col);for(const s of['l','r']){const b=new T.Mesh(new T.TorusGeometry(.046,.007,6,16),GOLD);add('band'+s,b)}
   const lg=new T.Mesh(new T.PlaneGeometry(.1,.05),new T.MeshBasicMaterial({map:logoTex(T,'#e8cf7a'),transparent:true,depthWrite:false}));add('logo',lg)}
  let plane=null;if(o.name&&kit!=='ump'){const t=nameTex(T,o.name,'#ffffff');plane=new T.Mesh(new T.PlaneGeometry(.4,.15),new T.MeshBasicMaterial({map:t,transparent:true,depthWrite:false}));plane.rotation.y=Math.PI;K.add(plane)}
  const v=new T.Vector3(),w=new T.Vector3(),q=new T.Quaternion(),gq=new T.Quaternion(),up=new T.Vector3(0,1,0),fw=new T.Vector3(0,0,1);
