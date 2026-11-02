@@ -13296,7 +13296,7 @@ const qd=(ax,a)=>new T.Quaternion().setFromAxisAngle(new T.Vector3(ax==='x'?1:0,
 X.begin=()=>{X.list.length=0};
 /* id: stable per person. o: {c colour, face:[x,z], run, up(0..1), swing(0..1), bat, racket, arm(0..1), k scale} */
 X.h=(id,x,z,o)=>{X.list.push({id,x,z,o})};
-X.flush=(c,fovDeg,dt,host,y0)=>{if(!X.on())return false;if(!X.cv.parentNode||X.cv.parentNode!==host.parentNode){host.parentNode.insertBefore(X.cv,host.nextSibling)}
+X.flush=(c,fovDeg,dt,host,y0)=>{if(!X.on())return false;if(!navigator.webdriver){const nw=performance.now(),wd=X.lt?nw-X.lt:0;X.lt=nw;X.fr=(X.fr||0)+1;X.sl=(X.sl||0)+(wd>110?1:0);if(X.fr>=90){if(X.sl>60){X.fail=1;try{X.cv.remove();ren.dispose()}catch(e){}return false}X.fr=0;X.sl=0}}if(!X.cv.parentNode||X.cv.parentNode!==host.parentNode){host.parentNode.insertBefore(X.cv,host.nextSibling)}
  cam.fov=fovDeg;cam.updateProjectionMatrix();cam.position.set(-c.x,c.y,c.z);cam.lookAt(-c.lx,c.ly,c.lz);
  cur++;const seen=new Set();
  for(const it of X.list){const o=it.o||{};let H=gm.get(it.id);if(!H||H.col!==o.c){if(H){scene.remove(H.g)}H=mk(it.id,o.c);gm.set(it.id,H)}H.seen=cur;
