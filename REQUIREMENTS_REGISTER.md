@@ -293,3 +293,6 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 
 ## Original athlete body (shbody.js)
 - Own character mesh built in code (no downloaded assets): torso with waist/chest/shoulders, thigh/calf, upper arm/forearm, palm and finger tubes, boots, neck, skull with jaw, nose, ears. Skinned to the Xbot skeleton so all clips, stroke pose, grip IK and kit paint keep working. Fallback to the old mesh: `window.SH_OLDBODY=1`.
+
+## Virtual match viewer uses the 3D stadium
+- The Virtual match screen (shV3dOpen) now draws the same 3D stadium as the game engine (env mode), real shadows, 3D ball, and the batting stroke on hit events (runs 1-6). 2D scene remains as fallback when WebGL is slow or flat mode is on.
