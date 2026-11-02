@@ -264,3 +264,6 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 ## In-code player kit (no purchased assets)
 - public/vendor/shdress.js builds jerseys (team colour via vertex colours), helmet+grill, caps, umpire hat, pads, gloves, surname name-plate on back, all from code on the open Xbot rig.
 - Used by cricket, all-sports streams and Virtual match via shx; tests: humans3d*, v3d-3d-humans.
+
+## Virtual match broadcast player cards
+- When a new batter/bowler comes on, a card (provider photo or initials, role, runs/balls or figures) slides over the pitch for ~3 s; built in code. Test: v3d-3d-humans asserts it shows.
