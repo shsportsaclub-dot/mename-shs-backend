@@ -13368,7 +13368,7 @@ X.flush=(c,fovDeg,dt,host,y0,opt)=>{if(!X.on())return false;if(!navigator.webdri
   const u=o.up||0;H.up+=(u-H.up)*Math.min(1,dt*10);const B=H.bn;
   if(H.up>.02){B.la.quaternion.premultiply(qd('z',2.4*H.up));B.ra.quaternion.premultiply(qd('z',-2.4*H.up))}
   if(o.catchUp){B.la.quaternion.premultiply(qd('z',1.7));B.ra.quaternion.premultiply(qd('z',-1.7))}
-  if(o.bat){const s=o.stroke!=null?0:(o.swing||0);{const ab=o.stroke!=null?-1.0:-.4;B.la.quaternion.premultiply(qd('x',ab));B.ra.quaternion.premultiply(qd('x',ab))}if(B.sp)B.sp.quaternion.premultiply(qd('y',-1.3*s+.25))}
+  if(o.bat){const s=o.stroke!=null?0:(o.swing||0);{const ab=o.stroke==null?.5:.5-1.5*sm(0,.2,o.stroke);B.la.quaternion.premultiply(qd('x',ab));B.ra.quaternion.premultiply(qd('x',ab))}if(B.sp)B.sp.quaternion.premultiply(qd('y',-1.3*s+.25))}
   if(o.racket&&!o.up){B.ra.quaternion.premultiply(qd('x',-.9))}
   if(o.arm){B.ra.quaternion.premultiply(qd('x',-3.4*Math.min(1,o.arm)))}
   {const st=X.dbg!=null&&o.bat?X.dbg:o.stroke;if(st!=null&&o.bat)strokePose(B,st,H)}
