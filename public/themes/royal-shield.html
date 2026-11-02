@@ -1,0 +1,96 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Royal Shield</title>
+<style>
+:root{--f:'Barlow Condensed','Arial Narrow','DejaVu Sans',sans-serif;--gold:#e6bd6a;--gold2:#fff3ba;--gold3:#bf8c38;--navy:#075bb6;--ink:#0c1729;--red:#d32f4a;--cy:#5bc8f5}
+html,body{margin:0;height:100%;overflow:hidden;background:transparent;font-family:'Barlow Condensed','Arial Narrow','DejaVu Sans',sans-serif;color:#fff}
+body.bg{background:radial-gradient(120% 90% at 50% 0%,#0b1a30,#050c18 70%)}
+#st{position:absolute;inset:0;container-type:size;perspective:2000px}
+.beam{position:absolute;top:0;bottom:0;width:36cqw;opacity:0;transition:opacity 1s}
+.beam.l{left:0;background:linear-gradient(100deg,#075bb688,transparent 80%);clip-path:polygon(0 0,100% 0,60% 100%,0 100%)}
+.beam.r{right:0;background:linear-gradient(260deg,#d32f4a88,transparent 80%);clip-path:polygon(0 0,100% 0,100% 100%,40% 100%)}
+.in .beam{opacity:1}
+.hd{position:absolute;left:5cqw;right:5cqw;top:3cqh;display:flex;justify-content:space-between;align-items:baseline;border-bottom:.25cqh solid var(--gold);padding-bottom:1.2cqh;opacity:0;transform:translateY(-3cqh)}
+.hd b{font:800 2.4cqw/1 var(--f);letter-spacing:.3cqw}.hd span{color:var(--gold);font:600 1.5cqw/1 var(--f);letter-spacing:.3cqw;text-transform:uppercase}
+.ttl{position:absolute;left:0;right:0;top:11cqh;text-align:center;font:800 4.6cqw/1 var(--f);letter-spacing:.4cqw;text-transform:uppercase;background:linear-gradient(180deg,var(--gold2),var(--gold) 50%,var(--gold3));-webkit-background-clip:text;background-clip:text;color:transparent;opacity:0}
+.sc{position:absolute;inset:0;display:none}.sc.on{display:block}
+.in .hd{animation:dn .7s .1s both}.in .ttl{animation:dn .8s .25s both}
+.out .sc{animation:ot .6s ease-in both}.out .hd{opacity:0;transition:.4s}
+@keyframes dn{to{opacity:1;transform:none}}@keyframes ot{to{opacity:0;transform:translateZ(400px) scale(1.06)}}
+.shield{position:absolute;background:linear-gradient(#101f33f2,#0a1524f2);clip-path:polygon(5% 0,95% 0,100% 7%,100% 100%,0 100%,0 7%)}
+.shield:before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,var(--gold2),var(--gold3) 45%,var(--gold));clip-path:polygon(5% 0,95% 0,100% 7%,100% 100%,0 100%,0 7%,.4cqw 7%,.4cqw calc(100% - .4cqw),calc(100% - .4cqw) calc(100% - .4cqw),calc(100% - .4cqw) 7%,95% .4cqw,5% .4cqw,.4cqw 7%)}
+/* TOSS */
+#toss .shield{left:26cqw;right:26cqw;top:30cqh;bottom:16cqh;transform:rotateX(60deg) translateZ(-300px);opacity:0}
+.in #toss .shield{animation:rise 1s .5s cubic-bezier(.2,.9,.2,1) both}
+@keyframes rise{to{opacity:1;transform:none}}
+.tw{position:absolute;left:0;right:0;top:12%;text-align:center;font:800 2.5cqw/1 var(--f);text-transform:uppercase}
+.el{position:absolute;left:0;right:0;top:34%;text-align:center;font:800 2.8cqw/1 var(--f);color:var(--cy);text-transform:uppercase}
+.coin{position:absolute;left:50%;bottom:9%;width:9cqw;height:9cqw;margin-left:-4.5cqw;transform-style:preserve-3d}
+.in .coin{animation:flip 2.2s 1.2s cubic-bezier(.3,.7,.3,1) both}
+.coin i{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 35% 30%,var(--gold2),var(--gold) 45%,var(--gold3));display:grid;place-items:center;font:900 2cqw/1 var(--f);color:#3a2600;backface-visibility:hidden;box-shadow:inset 0 0 0 .5cqw #fff3ba88}
+.coin i+i{transform:rotateY(180deg);background:radial-gradient(circle at 35% 30%,#fff,#9fb7d9 50%,#51698c)}
+@keyframes flip{from{transform:translateY(-34cqh) rotateY(0)}60%{transform:translateY(-8cqh) rotateY(1620deg)}to{transform:translateY(0) rotateY(var(--end,1800deg))}}
+.tm{position:absolute;top:50%;width:21cqw;font:800 3cqw/1.05 var(--f);text-transform:uppercase;opacity:0}
+.tm.a{left:3cqw;color:#a9dcff}.tm.b{right:3cqw;color:#ffc2cd;text-align:right}
+.in .tm{animation:dn .8s .6s both}.tm.w{text-shadow:0 0 3cqw currentColor}
+/* XI */
+#xi .grid{position:absolute;left:5cqw;right:5cqw;top:24cqh;bottom:9cqh;display:grid;grid-template-columns:repeat(6,1fr);grid-template-rows:1fr 1fr;gap:2.4cqw 1.6cqw;transform-style:preserve-3d}
+.pc{position:relative;opacity:0;transform:translateY(8cqh) rotateX(-70deg);transform-origin:top;background:linear-gradient(#142a46,#0b1a2e);border:.2cqw solid var(--gold3);border-radius:1cqw 1cqw .4cqw .4cqw;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:1.4cqh;overflow:hidden}
+.pc.c{border-color:var(--gold2);box-shadow:0 0 2cqw #e6bd6a66}
+.in .pc{animation:deal .7s cubic-bezier(.2,.9,.2,1) both;animation-delay:calc(var(--i)*.09s + .5s)}
+@keyframes deal{to{opacity:1;transform:none}}
+.pc .n{position:absolute;top:.8cqh;left:.8cqw;font:900 1.7cqw/1 var(--f);color:var(--gold)}
+.pc .r{position:absolute;top:.8cqh;right:.8cqw;font:700 1.1cqw/1 var(--f);color:#fff;background:var(--red);padding:.2cqw .5cqw;border-radius:.3cqw}
+.pc svg{width:62%;margin-bottom:.6cqh}.pc .nm{font:700 2cqw/1.05 var(--f);text-align:center;text-transform:uppercase;padding:0 .5cqw}.pc .ro{font:600 1.15cqw/1 var(--f);color:var(--cy);letter-spacing:.15cqw;margin-top:.4cqh}
+/* MATCHUP */
+.pl{position:absolute;top:26cqh;width:22cqw;text-align:center;opacity:0}
+.pl.a{left:9cqw;transform:translateX(-12cqw)}.pl.b{right:9cqw;transform:translateX(12cqw)}
+.in .pl{animation:sl .9s .5s cubic-bezier(.2,.9,.2,1) both}@keyframes sl{to{opacity:1;transform:none}}
+.ph{width:17cqw;height:17cqw;margin:0 auto;border-radius:50%;border:.5cqw solid var(--c);background:radial-gradient(circle at 50% 30%,#1c3550,#0a1626);overflow:hidden;box-shadow:0 0 3cqw var(--c)}
+.ph svg{width:100%;height:100%}
+.role{font:800 2.4cqw/1 var(--f);margin-top:2cqh;letter-spacing:.3cqw}.pn{font:700 2.1cqw/1 var(--f);color:var(--gold);margin-top:.8cqh;text-transform:uppercase}.k{font:600 1.7cqw/1 var(--f);margin-top:1.6cqh;color:#dbe7f5}
+#mu .shield{left:38cqw;right:38cqw;top:32cqh;bottom:22cqh;opacity:0}.in #mu .shield{animation:rise .9s .8s both;transform:translateZ(-200px)}
+.hh{position:absolute;left:39cqw;right:39cqw;top:35cqh;bottom:24cqh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:1.6cqh;opacity:0}.in .hh{animation:dn .6s 1.3s both}
+.hh small{color:var(--gold);font:600 1.6cqw/1 var(--f);letter-spacing:.3cqw}.hh b{font:800 3.2cqw/1 var(--f)}.hh .r{color:var(--cy);font:700 2.6cqw/1 var(--f)}.hh .w{color:#ffb3c1;font:700 2.4cqw/1 var(--f)}
+/* MANHATTAN */
+#mh .box{position:absolute;left:12cqw;right:12cqw;top:23cqh;bottom:14cqh;background:#08141fe6;border:.15cqw solid #3c566f;border-radius:1cqw}
+#mh svg{position:absolute;inset:0;width:100%;height:100%}
+.bar{transform-box:fill-box;transform-origin:bottom;transform:scaleY(0)}.in .bar{animation:gr .6s cubic-bezier(.2,.9,.2,1) both;animation-delay:calc(var(--i)*.08s + .6s)}@keyframes gr{to{transform:scaleY(1)}}
+.wk{opacity:0}.in .wk{animation:dn .4s both;animation-delay:calc(var(--i)*.08s + 1.2s)}
+.lg{position:absolute;left:0;right:0;bottom:-6.5cqh;text-align:center;font:600 1.7cqw/1 var(--f);letter-spacing:.2cqw;opacity:0}.in .lg{animation:dn .6s 2s both}
+.lg i{display:inline-block;width:1.2cqw;height:1.2cqw;margin:0 .5cqw 0 1.4cqw;vertical-align:-.1cqw;border-radius:.2cqw}
+</style></head><body><div id="st"><div class="beam l"></div><div class="beam r"></div>
+<div class="hd"><b>SCORING HEROES</b><span id="sub"></span></div><div class="ttl" id="ttl"></div>
+<div class="sc" id="toss"><div class="tm a" id="ta"></div><div class="tm b" id="tb"></div><div class="shield"><div class="tw" id="tw"></div><div class="el" id="el"></div><div class="coin" id="coin"><i>SH</i><i>TOSS</i></div></div></div>
+<div class="sc" id="xi"><div class="grid" id="xg"></div></div>
+<div class="sc" id="mu"><div class="pl a" id="pa"></div><div class="pl b" id="pb"></div><div class="shield"></div><div class="hh" id="hh"></div></div>
+<div class="sc" id="mh"><div class="box"><svg id="mc" viewBox="0 0 1000 500" preserveAspectRatio="none"></svg><div class="lg" id="lg"></div></div></div>
+</div><script>
+const Q=new URLSearchParams(location.search),B=document.body;if(Q.get('bg')==='1')B.classList.add('bg');
+const SH=c=>`<svg viewBox="0 0 100 100"><circle cx="50" cy="36" r="17" fill="#26405d" stroke="${c}" stroke-width="2"/><path d="M14 98c0-26 14-38 36-38s36 12 36 38z" fill="${c}" opacity=".9"/></svg>`;
+const DEMO={toss:{a:'Sky High Kings',b:'Hapur Hawks',winner:'a',elected:'bat'},
+xi:{team:'Sky High Kings',players:[['Aarav Sharma','Opener','C'],['Vihaan Rao','Opener'],['Kabir Singh','Top order'],['Rohan Mehta','Middle order'],['Ishaan Verma','All-rounder'],['Aditya Nair','WK-Bat','WK'],['Dev Patel','All-rounder'],['Arjun Reddy','Spinner'],['Karan Joshi','Pacer'],['Yash Gupta','Pacer'],['Neel Iyer','Spinner']]},
+mu:{bat:{n:'Aarav Sharma',sr:134.8},bowl:{n:'Yash Gupta',eco:8.08},balls:46,runs:62,wkts:3},
+mh:{overs:[8,14,6,22,9,5,13,19,7,11,16,4,12,10,28,6,15,9,21,8],wk:{3:1,7:1,12:2,15:1,18:1}}};
+let D=JSON.parse(JSON.stringify(DEMO)),cur=Q.get('screen')||'toss';
+const T={toss:['MATCH TOSS','Toss Result'],xi:['PLAYING XI','Playing XI'],mu:['BATTER / BOWLER MATCHUP','Player Matchup'],mh:['RUNS PER OVER · MANHATTAN','Manhattan']};
+const up=s=>String(s).toUpperCase();
+function render(){const t=D.toss,w=t.winner==='a'?t.a:t.b;
+ ta.textContent=up(t.a);tb.textContent=up(t.b);ta.className='tm a'+(t.winner==='a'?' w':'');tb.className='tm b'+(t.winner==='b'?' w':'');
+ tw.textContent=up(w)+' WON THE TOSS';el.textContent='ELECTED TO '+(t.elected==='bat'?'BAT':'BOWL')+' FIRST';coin.style.setProperty('--end',t.winner==='a'?'1800deg':'1980deg');
+ xg.innerHTML=D.xi.players.map((p,i)=>`<div class="pc${p[2]==='C'?' c':''}" style="--i:${i}"><span class="n">${i+1}</span>${p[2]?`<span class="r">${p[2]}</span>`:''}${SH('#2a7fd0')}<div class="nm">${p[0]}</div><div class="ro">${up(p[1])}</div></div>`).join('');
+ const m=D.mu;pa.innerHTML=`<div class="ph" style="--c:#2a7fd0">${SH('#2a7fd0')}</div><div class="role">BATTER</div><div class="pn">${m.bat.n}</div><div class="k">STRIKE RATE ${m.bat.sr.toFixed(1)}</div>`;
+ pb.innerHTML=`<div class="ph" style="--c:#c8394f">${SH('#c8394f')}</div><div class="role">BOWLER</div><div class="pn">${m.bowl.n}</div><div class="k">ECONOMY ${m.bowl.eco.toFixed(2)}</div>`;
+ hh.innerHTML=`<small>HEAD TO HEAD</small><b>${m.balls} BALLS</b><span class="r">${m.runs} RUNS</span><span class="w">${m.wkts} WICKETS</span>`;
+ const o=D.mh.overs,mx=Math.max(10,Math.ceil(Math.max(...o)/10)*10),W=1000,H=500,L=70,R=30,Tp=30,Bt=60,pw=(W-L-R)/o.length,ph=H-Tp-Bt;
+ let s='';for(let v=0;v<=mx;v+=10){const y=Tp+ph-ph*v/mx;s+=`<line x1="${L}" x2="${W-R}" y1="${y}" y2="${y}" stroke="#25384a" stroke-width="1"/><text x="${L-10}" y="${y+5}" fill="#9fb2c7" font-size="16" text-anchor="end">${v}</text>`}
+ o.forEach((v,i)=>{const h=ph*v/mx,x=L+i*pw+pw*.18,y=Tp+ph-h,c=i<6?'#38a9ec':i<15?'#ecb654':'#d32f4a';
+  s+=`<rect class="bar" style="--i:${i}" x="${x}" y="${y}" width="${pw*.64}" height="${h}" rx="4" fill="${c}"/><text x="${x+pw*.32}" y="${H-Bt+24}" fill="#fff" font-size="15" text-anchor="middle">${i+1}</text><text x="${x+pw*.32}" y="${y-8}" fill="#fff" font-size="15" font-weight="700" text-anchor="middle">${v}</text>`;
+  const k=D.mh.wk[i+1];if(k)for(let j=0;j<k;j++)s+=`<circle class="wk" style="--i:${i}" cx="${x+pw*.32}" cy="${y-30-j*20}" r="7" fill="#fff" stroke="#d32f4a" stroke-width="3"/>`});
+ mc.innerHTML=s;lg.innerHTML=`<i style="background:#38a9ec"></i>POWERPLAY 1–6<i style="background:#ecb654"></i>MIDDLE 7–15<i style="background:#d32f4a"></i>DEATH 16–20<i style="background:#fff;border-radius:50%"></i>WICKET`}
+function show(n){cur=n;document.querySelectorAll('.sc').forEach(e=>e.classList.toggle('on',e.id===n));ttl.textContent=n==='toss'||n==='mh'||n==='mu'||n==='xi'?(n==='xi'?'PLAYING XI / '+up(D.xi.team):T[n][0]):'';sub.textContent='ROYAL SHIELD / '+up(T[n][1])}
+window.shTheme={id:'SH-RS-V6',
+ state(s){B.classList.remove('in','out');void B.offsetWidth;if(s==='ENTER'){show(cur);B.classList.add('in')}else if(s==='EXIT')B.classList.add('out');else if(s==='HOLD')B.classList.add('in')},
+ screen(n){cur=n;this.state('ENTER')},data(d){Object.assign(D,d);render();show(cur)},
+ event(ev,p){const map={TOSS_DECIDED:['toss','toss'],XI_ANNOUNCED:['xi','xi'],MATCHUP_SELECTED:['mu','mu'],INNINGS_BREAK:['mh','mh']}[ev];if(map){this.data({[map[1]]:p});this.screen(map[0])}}};
+addEventListener('message',e=>{const d=e.data||{};if(d.shTheme)shTheme[d.fn](...(d.args||[]))});
+render();shTheme.state('ENTER');
+</script></body></html>

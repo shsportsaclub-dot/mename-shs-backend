@@ -1,9 +1,117 @@
-[{"id":"SH-TK-00001-SCR-001","name":"Tournament Season Schedule","phase":"Pre-match / Schedule",
-"data":["tournament_id","season_id","match_id","team_home","team_away","venue","start_datetime","status"],
-"visuals":["timeline","team identity panels","date-time markers","competition badge"],
-"states":["ENTER","HOLD","UPDATE","EXIT"],
-"events":["SCHEDULE_PUBLISHED","MATCH_TIME_CHANGED","MATCH_STATUS_CHANGED"],
-"file":"public/themes/sh-tk-00001-scr-001.html","url":"/themes/sh-tk-00001-scr-001.html",
-"sample":"docs/sample_SH-TK-00001-SCR-001.png",
-"status":"BUILT_PROTOTYPE (CSS-3D, real-time; NOT 4K rendered, NOT approved)",
-"verified":["schedule sorted by start time","MATCH_TIME_CHANGED rebinds data (verified 21:00)","EXIT clears cards (opacity 0)","transparent alpha bg verified","no page errors"]}]
+[
+ {
+  "id": "SH-TK-00001-SCR-001",
+  "name": "Tournament Season Schedule",
+  "phase": "Pre-match / Schedule",
+  "data": [
+   "tournament_id",
+   "season_id",
+   "match_id",
+   "team_home",
+   "team_away",
+   "venue",
+   "start_datetime",
+   "status"
+  ],
+  "visuals": [
+   "timeline",
+   "team identity panels",
+   "date-time markers",
+   "competition badge"
+  ],
+  "states": [
+   "ENTER",
+   "HOLD",
+   "UPDATE",
+   "EXIT"
+  ],
+  "events": [
+   "SCHEDULE_PUBLISHED",
+   "MATCH_TIME_CHANGED",
+   "MATCH_STATUS_CHANGED"
+  ],
+  "file": "public/themes/sh-tk-00001-scr-001.html",
+  "url": "/themes/sh-tk-00001-scr-001.html",
+  "sample": "docs/sample_SH-TK-00001-SCR-001.png",
+  "status": "BUILT_PROTOTYPE (CSS-3D, real-time; NOT 4K rendered, NOT approved)",
+  "verified": [
+   "schedule sorted by start time",
+   "MATCH_TIME_CHANGED rebinds data (verified 21:00)",
+   "EXIT clears cards (opacity 0)",
+   "transparent alpha bg verified",
+   "no page errors"
+  ]
+ },
+ {
+  "id": "SH-RS-V6-SCR-017",
+  "name": "Toss Result",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield.html?screen=toss",
+  "events": [
+   "TOSS_DECIDED"
+  ],
+  "states": [
+   "ENTER",
+   "HOLD",
+   "EXIT",
+   "UPDATE via data()"
+  ],
+  "source": "public/themes/src/royal-shield-v6/ (user-supplied flat stills)",
+  "sample": "docs/sample_RS_toss.png",
+  "status": "BUILT_PROTOTYPE (CSS-3D real-time, verified headless; NOT 4K rendered, NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-SCR-018",
+  "name": "Playing XI",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield.html?screen=xi",
+  "events": [
+   "XI_ANNOUNCED"
+  ],
+  "states": [
+   "ENTER",
+   "HOLD",
+   "EXIT",
+   "UPDATE via data()"
+  ],
+  "source": "public/themes/src/royal-shield-v6/ (user-supplied flat stills)",
+  "sample": "docs/sample_RS_xi.png",
+  "status": "BUILT_PROTOTYPE (CSS-3D real-time, verified headless; NOT 4K rendered, NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-SCR-019",
+  "name": "Batter/Bowler Matchup",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield.html?screen=mu",
+  "events": [
+   "MATCHUP_SELECTED"
+  ],
+  "states": [
+   "ENTER",
+   "HOLD",
+   "EXIT",
+   "UPDATE via data()"
+  ],
+  "source": "public/themes/src/royal-shield-v6/ (user-supplied flat stills)",
+  "sample": "docs/sample_RS_mu.png",
+  "status": "BUILT_PROTOTYPE (CSS-3D real-time, verified headless; NOT 4K rendered, NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-SCR-020",
+  "name": "Manhattan (runs per over)",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield.html?screen=mh",
+  "events": [
+   "INNINGS_BREAK"
+  ],
+  "states": [
+   "ENTER",
+   "HOLD",
+   "EXIT",
+   "UPDATE via data()"
+  ],
+  "source": "public/themes/src/royal-shield-v6/ (user-supplied flat stills)",
+  "sample": "docs/sample_RS_mh.png",
+  "status": "BUILT_PROTOTYPE (CSS-3D real-time, verified headless; NOT 4K rendered, NOT approved)"
+ }
+]
