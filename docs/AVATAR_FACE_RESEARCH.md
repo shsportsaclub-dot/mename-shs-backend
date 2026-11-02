@@ -31,3 +31,7 @@ Acceptance: compare the actual neutral render to the supplied image, then inspec
 The published SH asset is a stylized static mesh export with no skin or animation tracks. The experimental procedural face and portrait-projection changes did not establish a convincing likeness. They were checkpointed locally and were not published as a completed solution. A frontal portrait projection remains an approximation with invented side/back geometry and cannot by itself deliver the required expressions.
 
 The execution environment currently has no Blender executable or PyTorch, and nvidia-smi is unavailable. The image-to-3D path was researched, not run. Installing authoring tools or adding a loader would not by itself prove visual success; a fitted, reviewed character asset remains the essential missing deliverable.
+
+## Subsequent anatomy study
+
+The neutral head topology foundation is now implemented and documented in [HUMAN_HEAD_STUDY.md](HUMAN_HEAD_STUDY.md). It uses an explicitly CC0 head source, not an image-generation model. It does not establish player likeness or complete facial expressions.

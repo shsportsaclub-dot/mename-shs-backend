@@ -86,3 +86,5 @@ test('selected fielder chases FOUR and SIX while the boundary ball remains indep
  const expected=h.run('ballPosition(active)');assert.deepEqual(h.run('drawWorld(active.t).ballp'),expected);h.ctx.SHCricket.seek(7);assert.equal(h.ctx.SHCricket.getState().score.runs,runs);
  }
 });
+
+test('JSON-only startup allocates no authored character meshes',()=>{const h=harness({study:true,jsonOnly:true});assert.equal(h.run("Object.keys(meshes).some(name=>/^study|^head[0-9]|^jersey$|^neck$/.test(name))"),false);});

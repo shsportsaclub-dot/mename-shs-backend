@@ -1,3 +1,4 @@
+import {nativeStudyHead,nativeFacePoint,nativeStudyMeshes} from './human-head-fit.mjs';
 import {avatarSurface} from './avatars.mjs';
 // Original analytic surfaces in metres. Generic identity; no scan or downloaded model.
 const studyG=(x,y,cx,cy,wx,wy)=>Math.exp(-(((x-cx)/wx)**2+((y-cy)/wy)**2));
@@ -15,16 +16,16 @@ function studyFaceRelief(x,y){
  const mouth=.002*studyG(x,y,0,-.061,.029,.012)-.0018*studyG(x,y,0,-.046,.005,.010)+.005*studyG(x,y,0,-.106,.031,.018);
  return nose+orbit+cheeks+mouth;
 }
-export function studyFacePoint(x,y){const [w,d]=studySection(y),front=Math.sqrt(Math.max(0,1-(x/w)**2));return [x,y,d*front+studyFaceRelief(x,y)*front**3];}
+export function studyFacePoint(x,y){if(nativeStudyHead())return nativeFacePoint(x,y);const [w,d]=studySection(y),front=Math.sqrt(Math.max(0,1-(x/w)**2));return [x,y,d*front+studyFaceRelief(x,y)*front**3];}
 function studyEyeOpening(side,q,upper){
  const x=side*.034+q*.0145,y=.027+(upper?.0050:-.0042)*Math.max(0,1-q*q)**.72+side*q*.0006,p=studyFacePoint(x,y);p[2]+=.0012;return p;
 }
 export function originalStudyAvatarMeshes(){
- const studyHead=avatarSurface(88,128,(u,v)=>{const lat=.009+u*(Math.PI-.018),y=Math.cos(lat)*.143,a=v*Math.PI*2,[w,d]=studySection(y),x=Math.sin(a)*w,f=Math.max(0,Math.cos(a)),z=Math.cos(a)*(Math.cos(a)<0?d*1.12:d)+studyFaceRelief(x,y)*f**3;return [x,y,z];},true);
+ const studyHead=nativeStudyHead()??avatarSurface(88,128,(u,v)=>{const lat=.009+u*(Math.PI-.018),y=Math.cos(lat)*.143,a=v*Math.PI*2,[w,d]=studySection(y),x=Math.sin(a)*w,f=Math.max(0,Math.cos(a)),z=Math.cos(a)*(Math.cos(a)<0?d*1.12:d)+studyFaceRelief(x,y)*f**3;return [x,y,z];},true);
  const studyHair=avatarSurface(56,128,(u,v)=>{const a=v*Math.PI*2,front=Math.max(0,Math.cos(a)),lat=.009+u*(1.67-front*.58-.14*front*Math.sin(a)**2),y=Math.cos(lat)*.143,[w,d]=studySection(y),x=Math.sin(a)*w,z=Math.cos(a)*(Math.cos(a)<0?d*1.12:d)+studyFaceRelief(x,y)*front**3,ripple=1.047+.005*Math.sin(a*71+lat*23)+.003*Math.sin(a*43-lat*61),quiff=.0025*front*Math.exp(-(((lat-.72)/.35)**2));return [x*ripple,y+.004+quiff,z*ripple];},true);
  const collarSide=side=>avatarSurface(10,10,(u,v)=>{const top=[side*(.037+v*.043),1.515-v*.009,.055+v*.016],bottom=[side*(.026+v*.034),1.462+v*.012,.123];return top.map((x,i)=>x+(bottom[i]-x)*u);},side>0,false);
  const left=collarSide(-1),right=collarSide(1),studyCollar={p:[...left.p,...right.p],n:[...left.n,...right.n],i:[...left.i,...right.i.map(i=>i+left.p.length/3)]};
- const result={studyHead,studyHair,studyCollar};
+ const result={studyHead,studyHair,studyCollar,...nativeStudyMeshes()};
  for(const [side,name]of [[-1,'Left'],[1,'Right']]){
   result['studyEye'+name]=avatarSurface(12,48,(r,v)=>{const a=v*Math.PI*2,q=Math.cos(a),p=studyEyeOpening(side,q,Math.sin(a)>=0);p[0]=side*.034+(p[0]-side*.034)*r;p[1]=.027+(p[1]-.027)*r;p[2]=studyFacePoint(p[0],p[1])[2]+.0012+.0026*(1-r*r);return p;},true);
   for(const [upper,label]of [[true,'Upper'],[false,'Lower']])result['study'+label+'Lid'+name]=avatarSurface(8,64,(u,v)=>{const q=v*2-1,inner=studyEyeOpening(side,q,upper),x=inner[0]+q*.0025*u,y=inner[1]+(upper?1:-1)*(.0033*(1-q*q)+.0004)*u,outer=studyFacePoint(x,y);return [x,y,inner[2]*(1-u)+outer[2]*u+.0012*Math.sin(u*Math.PI)*(1-q*q)];},!upper,false);
@@ -34,6 +35,7 @@ export function originalStudyAvatarMeshes(){
 }
 export function studyFacialParts({helmet=false}={}){
  const parts=[],skin=[.49,.30,.19],dark=[.025,.017,.013],p=(mesh,at,size,color,kind=0)=>parts.push({mesh,p:at,s:size,c:color,kind}),tube=(a,b,r,c)=>parts.push({a,b,r,c});
+ if(nativeStudyHead()){p('studyHead',[0,1.66,0],[1,1,1],[.72,.44,.29],15);if(!helmet)p('studyNativeHair',[0,1.66,0],[1,1,1],[.065,.038,.023],12);for(const name of ['Left','Right']){p('studyNativeEye'+name,[0,1.66,0],[1,1,1],[.91,.90,.84],13);p('studyNativeBrow'+name,[0,1.66,0],[1,1,1],[.045,.027,.017],12);}return parts;}
  p('studyHead',[0,1.66,0],[1,1,1],skin,11);if(!helmet)p('studyHair',[0,1.66,0],[1,1,1],dark,12);
  for(const name of ['studyUpperLip','studyLowerLip'])p(name,[0,1.66,0],[1,1,1],[.40,.215,.15],14);
  for(const [side,name]of [[-1,'Left'],[1,'Right']]){

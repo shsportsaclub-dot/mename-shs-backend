@@ -13,7 +13,7 @@ function exportAvatarModelData(){
  if(globalThis.SH_AVATAR_JSON_ONLY)throw Error('Load a model JSON first');
  const saved={...avatarStudyState};let off,on;
  try{avatarStudyState.yaw=0;avatarCaptureRequested=true;avatarStudyState.helmet=false;draw();off=avatarLastSnapshot;avatarStudyState.helmet=true;draw();on=avatarLastSnapshot;
-  return buildAvatarModel(off,on,{kitTexture:kitCanvas.toDataURL('image/png')});
+  const model=buildAvatarModel(off,on,{kitTexture:kitCanvas.toDataURL('image/png')});if(nativeStudyHead()){model.authorship='SH adaptation of CC0 MakeHuman head topology; original equipment and procedural parts';model.sourceProvenance=nativeStudyHead().provenance;}return model;
  }finally{Object.assign(avatarStudyState,saved);avatarCaptureRequested=false;avatarLastSnapshot=null;draw();}
 }
 function releaseAvatarModel(asset){
