@@ -5,8 +5,8 @@ const camMix=(a,b,u)=>a.map((v,i)=>v+(b[i]-v)*u);
 const camClamp=u=>Math.max(0,Math.min(1,u));
 export function cricketCamera({mode='auto',time=0,active=false,event={},resolve=5.5,flight=2.8,batter=[-10,0,0],runner=[9,0,0],bowler=[20,0,0],ball=[0,1,0],fieldStart=[20,0,20],fieldEnd=[20,0,20]}){
  const shot=(name,eye,target,fov=.75)=>({name,eye,target,fov});
- const portrait=(name,p,side=1)=>shot(name,camAdd(p,[3.6,1.85,side*3.1]),camAdd(p,[0,1.25,0]),.65);
- if(mode==='wide')return shot('STADIUM',[93,56,80],[0,0,0]);
+ const portrait=(name,p,side=1)=>shot(name,camAdd(p,[2.1,1.1,side*1.3]),camAdd(p,[0,1.30,0]),.58);
+ if(mode==='wide')return shot('STADIUM',[60,52,48],[0,0,0]);
  if(mode==='face')return portrait('PLAYER',batter);
  const handed=event.hand==='LEFT'?-1:1;
  if(!active){const phase=Math.floor(time/5)%3,u=(time%5)/5;if(phase===0)return portrait('BATTER READY',camAdd(batter,[0,0,Math.sin(u*Math.PI)*.25]),handed);if(phase===1)return portrait('BOWLER READY',bowler,-1);return shot('GROUND OVERVIEW',camMix([83,37,64],[78,34,69],u),[0,0,0],.8);}

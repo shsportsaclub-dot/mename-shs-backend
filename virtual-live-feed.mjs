@@ -57,7 +57,7 @@ export class FeedCursor{
  }
 }
 export class LiveFeedConnection{
- constructor({matchId,viewer,fetchImpl=globalThis.fetch,subscribe=null,intervalMs=2500}){if(!liveId(matchId))throw new Error('Invalid match ID');this.matchId=matchId;this.viewer=viewer;this.fetchImpl=fetchImpl;this.subscribe=subscribe;this.intervalMs=intervalMs;this.cursor=new FeedCursor(matchId,viewer);this.busy=false;this.closed=false;}
+ constructor({matchId,viewer,fetchImpl=(...args)=>globalThis.fetch(...args),subscribe=null,intervalMs=2500}){if(!liveId(matchId))throw new Error('Invalid match ID');this.matchId=matchId;this.viewer=viewer;this.fetchImpl=fetchImpl;this.subscribe=subscribe;this.intervalMs=intervalMs;this.cursor=new FeedCursor(matchId,viewer);this.busy=false;this.closed=false;}
  async poll(){if(this.closed||this.busy)return;this.busy=true;try{const response=await this.fetchImpl('/api/shared/matches/'+encodeURIComponent(this.matchId),{cache:'no-store',signal:AbortSignal.timeout(10000)});if(!response.ok)throw new Error('Match feed HTTP '+response.status);const j=await response.json();if(!j.ok||!j.item?.data)throw new Error('Match is not published yet');this.cursor.ingest(scorerSnapshot(j.item.data,this.matchId));}catch(e){this.viewer.showStatus('Scorer connection: '+e.message);}finally{this.busy=false;}}
  start(){this.poll();this.timer=setInterval(()=>this.poll(),this.intervalMs);if(this.subscribe)this.unsubscribe=this.subscribe(change=>{if(change.col==='matches'&&change.id===this.matchId)this.poll()});return this;}
  stop(){this.closed=true;clearInterval(this.timer);if(this.unsubscribe)this.unsubscribe();}

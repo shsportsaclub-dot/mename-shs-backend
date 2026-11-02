@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { scorerSnapshot, FeedCursor } from '../virtual-live-feed.mjs';
+import { scorerSnapshot, FeedCursor, LiveFeedConnection } from '../virtual-live-feed.mjs';
 const ball=(p={})=>({r:4,x:'',w:'',bt:'p1',bl:'b1',pre:{s:'p1',n:'p2',bl:'b1'},ang:{a:-Math.PI/4,d:1.02},...p});
 const pack=(ev=[ball()],extra={})=>({m:{id:'match-one',a:'A',b:'B',cur:0,status:'live',bpo:6,nbp:1,xi:{A:['p1','p2'],B:['b1','f1']},innings:[{bat:'A',bowl:'B',ev,cur:{s:'p2',n:'p1',bl:null}}],...extra},players:{p1:{id:'p1',name:'Hemanth',bat:'Right-hand'},p2:{id:'p2',name:'Arjun'},b1:{id:'b1',name:'Ravi'},f1:{id:'f1',name:'Fielder',role:'WK'}},teams:{A:{name:'SH Heroes'},B:{name:'Challengers'}}});
 function sink(){return {baselines:[],balls:[],context:null,applyContext(c){this.context=c},syncBaseline(s,c){this.baselines.push({s,c})},pushBall(e){this.balls.push(e);return {accepted:true}},showStatus(){}};}
@@ -18,3 +18,5 @@ test('rejects another match and preserves unsupported/missing identities',()=>{a
 
 test('an invalid no-ball dismissal resyncs score instead of blocking the feed forever',()=>{const s=scorerSnapshot(pack([ball({r:0,x:'nb',w:'Caught',out:'p1'})]),'match-one');assert.equal(s.records[0].supported,false);});
 test('presentation metadata uses published XI captain keeper and toss only',()=>{const p=pack();p.m.cap={A:'p2',B:'outsider'};p.m.keeper={B:'f1'};p.m.toss='B';p.m.dec='bowl';p.players.b1.bowl='Right arm fast';const s=scorerSnapshot(p,'match-one');assert.equal(s.context.teams[0].captain,'p2');assert.equal(s.context.teams[1].captain,null);assert.equal(s.context.keeper,'f1');assert.deepEqual(s.context.toss,{winner:'B',decision:'bowl'});assert.equal(s.context.roster.find(p=>p.id==='b1').bowlingStyle,'Right arm fast');assert.equal('rating' in s.context.roster[0],false);});
+
+test('browser native fetch keeps the Window receiver in the default connection',async()=>{const original=globalThis.fetch;try{globalThis.fetch=function(){assert.equal(this,globalThis);return Promise.resolve({ok:true,json:async()=>({ok:true,item:{data:pack([])}})})};const v=sink(),c=new LiveFeedConnection({matchId:'match-one',viewer:v});await c.poll();assert.equal(v.baselines.length,1);}finally{globalThis.fetch=original;}});
