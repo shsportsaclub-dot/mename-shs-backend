@@ -244,3 +244,9 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 - Scene: ?scene=sgame&mid=<published sports match id>#overlay. Score changes from the scorer become a scoring scene (goal, basket, try, point), commentary text and voice, crowd cheer and confetti. Idle play (passing or rallies) runs between events.
 - In-app 3D Live lists cricket, sports and auctions with the bid room on, with the right scene per kind (ccast, sgame, auclive).
 - Tests: tests/sports-game.cjs, tests/live3d-all.cjs.
+
+## Real 3D humans in the game streams (block 144)
+- All game streams (cricket and every sport) draw skinned, animated human models (idle, walk, run cycles, team-colour kit) with WebGL over the stadium, instead of flat figures. Model and engine are served from /vendor (three.js, GLTFLoader, Xbot.glb, MIT licensed); flat figures remain as fallback if WebGL or the model cannot load.
+- Players face their direction of travel or the ball, arms-up celebration, bat and racket props, bowling arm. Football, rugby and basketball cameras follow the ball.
+- Honest limit: mannequin-style model, not photoreal; sport-specific motion (kick, serve, full batting swing) is approximated by pose, not motion-captured. Realistic faces/kits need licensed character assets.
+- Tests: tests/humans3d.cjs, tests/humans3d-cricket.cjs (software GL is slow, use a long timeout).
