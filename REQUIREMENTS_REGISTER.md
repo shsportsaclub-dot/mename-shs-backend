@@ -255,3 +255,4 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 - Sixes, fours, wickets (cricket) and goals, baskets, tries, points (other sports) automatically produce a branded poster (JPEG) and a short reel clip (about 7 s, silent; WebM, or MP4 on Safari) captured from the 3D scene, with the score or commentary line on it.
 - The in-app 3D Live player lists the latest 8 moments with Share poster, Share reel and Save. Posting uses the phone share sheet; no social API keys, nothing is posted without the user tapping Share. Fully automatic posting to accounts needs each platform's API credentials and is not built.
 - Test: tests/moments.cjs.
+- 3D humans safety: on a real device, if the 3D layer runs slower than about 9 fps for 60 of 90 frames, it switches itself off and the flat figures take over, so a weak phone never freezes the stream.
