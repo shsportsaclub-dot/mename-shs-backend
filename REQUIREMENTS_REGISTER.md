@@ -317,3 +317,6 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 
 ## Universal live 3D stream (OBS)
 - Broadcast studio "Cricket game stream": dropdown now lists every match (live first, including matches scored by others), default "Auto: follow any live match". Link `?scene=ccast&mid=auto` (also used when no mid) follows the newest live shared match by itself, stays on it while live, switches when it ends or another starts, and waits when none is live. In-app 3D Live strip also lists everyone's live matches. Test: tests/ccast-auto.cjs.
+
+## Virtual match TV camera
+- Virtual match 3D default camera is now a TV broadcast view (high, behind the bowler's end, batter facing the camera); hero close-ups still blend in on each ball. Button "Camera: TV / Batter" switches back to the old behind-the-batter view.
