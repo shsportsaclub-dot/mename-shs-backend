@@ -329,3 +329,8 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 - Style = shape (8) x palette (12) x motion (7) x font (3) = 2016 combinations; "Random every time" mixes them. Streamers pick per graphic in Stream and OBS > Graphics studio (gallery of 12, "More styles"), preview on a checkerboard, "Send to OBS now".
 - Fires automatically from live scoring: new ball (four, six, each wicket type), milestones, hat-trick, DRS log entries (review then result), new batter / new bowler (records). `?scene=fx#overlay` = graphics only.
 - Premium: shapes burst/glass/neon, 4 palettes, flip/bounce motions are premium; locked unless admin or unlocked by an admin per phone (`S.settings.fxPremium`). Payment is taken manually by the admin. Test: tests/fx-studio.cjs.
+
+## Pro finish + per-theme links (broadcast graphics)
+- Graphics studio animations got gloss, sheen sweep, glow flare, text reveal, broadcast fonts (Rajdhani/Barlow Condensed/Teko), particle bursts on 4/6/50/100/hat-trick and a wicket shake.
+- Each score bar design has its own OBS link: `?bug=<id>#overlay` overrides the saved style, so different OBS sources can show different designs. Copy buttons in Stream and OBS > Score bar style.
+- Tests: tests/fx-studio.cjs, tests/bug-styles.cjs.
