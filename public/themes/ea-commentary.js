@@ -30,6 +30,11 @@ export const LINES = {
       STUMPED: ["Lightning hands behind the stumps! Stumped!"],
       DEFAULT: ["WICKET! A big moment in this match!"]
     },
+    NORMAL: [
+      "Good length delivery, nicely defended into the off-side.",
+      "Tapped safely for a single, good running between the wickets.",
+      "Well bowled, right on the spot. No run."
+    ],
     DOT: "Bowler is building intense pressure here!"
   },
   te: {
@@ -51,6 +56,11 @@ export const LINES = {
       STUMPED: ["Keeper minnu laga stumping chesadu!"],
       DEFAULT: ["WICKET! Match lo pedda moment!"]
     },
+    NORMAL: [
+      "Good length delivery, nicely defended into the off-side.",
+      "Tapped safely for a single, good running between the wickets.",
+      "Well bowled, right on the spot. No run."
+    ],
     DOT: "Bowler ikkada pressure penchutunnadu!"
   }
 };
@@ -113,8 +123,12 @@ export class EAPerformanceCommentarySystem {
     this.graphics.showTicker({ title: "DOT BALL", subtitle: LINES[this.language].DOT, color: "#ffffff" });
   }
 
-  /** Default for any other event: quiet crowd, no banner. */
-  playNormalPlay() {
-    this.sound.playAmbientCrowd("normal_play_murmur");
+  /** NORMAL_PLAY / any other event (v5.1 supplied version): light crowd, tap SFX, a calm line; ticker only on request. */
+  playNormalPlay(data = {}) {
+    const line = this.pick("N", LINES[this.language].NORMAL);
+    this.sound.playSFX("bat_tap_pitch");
+    this.sound.playAmbientCrowd("murmur_light");
+    this.sound.speakVoiceover(line, { pitch: 1.0, intensity: "normal" });
+    if (data.showTicker) this.graphics.showTicker({ title: "DOT BALL / SINGLE", subtitle: line, color: "#cccccc" });
   }
 }
