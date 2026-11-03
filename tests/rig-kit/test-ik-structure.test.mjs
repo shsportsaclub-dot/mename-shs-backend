@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {CricketIKSolver} from '../../public/rig-kit/cricket-ik-solver.mjs';
+assert.throws(()=>new CricketIKSolver(null,null),/Skeleton/);
+const skeleton={getBoneByName:()=>null};
+const bat={getObjectByName:()=>null};
+const solver=new CricketIKSolver(skeleton,bat);
+assert.deepEqual(solver.solveTwoHandGrip().missing,['top socket','Left arm/forearm/hand','bottom socket','Right arm/forearm/hand']);
+assert.deepEqual(solver.solveTwoHandGrip({handPreference:'left_hand'}).missing,['top socket','Right arm/forearm/hand','bottom socket','Left arm/forearm/hand']);
+assert.throws(()=>solver.solveTwoHandGrip({weight:1.1}),/weight/);
+assert.throws(()=>solver.solveTwoHandGrip({handPreference:'unknown'}),/handPreference/);
+console.log('IK structural checks PASS');
