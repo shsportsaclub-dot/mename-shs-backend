@@ -12,7 +12,7 @@
 </style></head><body>
 <div class="pv"><iframe id="f" src="royal-shield-b.html?screen=pi"></iframe></div>
 <div class="bar"><button class="go" id="show">SHOW</button><button id="hide">HIDE</button><button id="nx">NEXT ▶</button><button id="ly">STYLE 1</button></div>
-<div class="tabs" id="tabs"></div><div class="hint" id="src"></div><div class="hint" id="live"></div>
+<div class="tabs" id="tabs"></div><div class="hint" id="src"></div><div class="bar" style="margin:6px 0"><input id="pid" placeholder="Player ID  SH-P-202610-000001" style="flex:1;padding:12px;border-radius:8px;border:1px solid #2a4a7a;background:#0b2144;color:#fff;font-size:15px"><button id="addid" style="flex:0 0 90px">ADD</button></div><div class="hint" id="live"></div>
 <div class="hint">Tap a player. Name, role, stats fill automatically — no typing.</div>
 <div class="grid" id="g"></div>
 <script>
@@ -27,7 +27,8 @@ function real(){try{const S=JSON.parse(localStorage.getItem('scoringheroes.v1')|
   if(b.mat)st.push(['MATCHES',''+b.mat]);if(b.runs!==undefined)st.push(['RUNS',''+b.runs]);if(w.wkts!==undefined)st.push(['WICKETS',''+w.wkts]);if(b.hs)st.push(['HIGH SCORE',''+b.hs]);
   const key=p.team?(tn[p.team]||'Team'):'Players';(g[key]=g[key]||[]).push([p.name,(RN[p.role]||p.role||'Player')+(p.jersey?' · #'+p.jersey:''),0,0,0,0,st.length?st:[['ROLE',(RN[p.role]||'PLAYER').toUpperCase()]],p.photo||p.avatar||'',key])});
  const k=Object.keys(g);return k.length?k.map(n=>({n,p:g[n]})):null}catch(e){return null}}
-const RL=real();const TEAMS=RL||[{n:'SKY HIGH KINGS',p:DEMO[0]},{n:'HAPUR HAWKS',p:DEMO[1]}];
+let IDP=[];try{IDP=JSON.parse(localStorage.getItem('sh.intro.ids')||'[]')}catch(e){}
+const RL0=real();const RL=(RL0||IDP.length)?[...(RL0||[]),...(IDP.length?[{n:'By Player ID',p:IDP}]:[])]:null;const TEAMS=RL||[{n:'SKY HIGH KINGS',p:DEMO[0]},{n:'HAPUR HAWKS',p:DEMO[1]}];
 const R=TEAMS.map(x=>x.p);
 const TEAM=TEAMS.map(x=>x.n);let team=0,cur=0;const f=document.getElementById('f'),g=document.getElementById('g');
 const send=(fn,...a)=>f.contentWindow.postMessage({shTheme:1,fn,args:a},'*');
@@ -42,6 +43,9 @@ g.onclick=e=>{const b=e.target.closest('.p');if(!b)return;cur=+b.dataset.i;draw(
 const tabs=document.getElementById('tabs');tabs.innerHTML=TEAM.map((n,i)=>`<button data-t="${i}" class="${i===0?'on':''}">${n}</button>`).join('');tabs.style.flexWrap='wrap';
 tabs.onclick=e=>{const b=e.target.closest('button');if(!b)return;team=+b.dataset.t;cur=0;[...tabs.children].forEach((x,i)=>x.classList.toggle('on',i===team));draw();show()};
 document.getElementById('src').textContent=RL?'Showing real players from this app ('+R.reduce((s,x)=>s+x.length,0)+').':'No players saved in this browser yet — showing sample roster. Open the app once here and they will load.';
+document.getElementById('addid').onclick=async()=>{const id=document.getElementById('pid').value.trim().toUpperCase(),m=document.getElementById('src');if(!/^SH-P-\d{6}-\d{6}$/.test(id)){m.textContent='Enter an ID like SH-P-202610-000001';return}
+ try{const j=await (await fetch('/api/intro/player?id='+id)).json();if(!j.ok){m.textContent='ID not found on server';return}
+ IDP=IDP.filter(x=>x[10]!==id);IDP.push([j.name||id,id,0,0,0,0,j.stats&&j.stats.length?j.stats:[['PLAYER ID',id.slice(-6)]],'','By Player ID',0,id]);try{localStorage.setItem('sh.intro.ids',JSON.stringify(IDP))}catch(e){}location.reload()}catch(e){m.textContent='Server not reachable'}};
 document.getElementById('show').onclick=show;
 document.getElementById('hide').onclick=()=>{send('state','EXIT');take('player_hide')};
 document.getElementById('nx').onclick=()=>{cur=(cur+1)%R[team].length;draw();show()};

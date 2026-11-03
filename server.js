@@ -852,6 +852,19 @@ routes['GET /api/ids/lookup'] = async (req) => {
   if (!r) return [404, { ok: false, error: 'ID not found' }];
   return [200, { ok: true, type: r.type, id, status: r.verification_status || r.match_status, name: r.player_name || '', sport: r.sport_id || '', created_at: r.created_at }];
 };
+// Public, read-only data for a live-stream player intro, found by the permanent player ID (SH-P-YYYYMM-NNNNNN).
+// Stats come only from a linked external capture (IDS external map, or data/intro-links.json set by the owner); nothing is invented.
+routes['GET /api/intro/player'] = async (req) => {
+  const id = String(new URL(req.url, 'http://x').searchParams.get('id') || '').toUpperCase().trim(), r = IDS.lookup(id);
+  if (!r || r.type !== 'player') return [404, { ok: false, error: 'Player ID not found' }];
+  let ext = ((r.external || []).find(x => x.source_provider === 'cricheroes') || {}).external_source_id || '';
+  try { const L = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'data', 'intro-links.json'), 'utf8')); if (!ext && L[id]) ext = String(L[id]); } catch {}
+  const out = { ok: true, id, name: r.player_name || '', stats: [] };
+  const fn = ext === '5295710' ? 'cricheroes-hemanth-5295710.json' : ext === '216859' ? 'cricheroes-thaman-216859.json' : '';
+  if (fn) { try { const c = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'imports', 'staging', fn), 'utf8')), b = ((c.records || []).find(x => x.kind === 'career-batting-overall') || {}).values;
+    if (b) out.stats = [['MATCHES', String(b.matches)], ['RUNS', String(b.runs)], ['AVERAGE', String(b.average)], ['HIGH SCORE', String(b.highest)]]; out.source = 'CricHeroes profile (player supplied)'; } catch {} }
+  return [200, out];
+};
 routes['POST /api/mo/inbound'] = moInbound;
 routes['GET /api/mo/inbound'] = moInbound;
 setInterval(() => { const n = Date.now(); for (const [k, v] of moPending) if (v.exp < n) moPending.delete(k); }, 6e4).unref();
