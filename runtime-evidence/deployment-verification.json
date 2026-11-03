@@ -1,0 +1,17 @@
+{
+  "checkedAt": "2026-11-03T13:38:39.312Z",
+  "base": "http://127.0.0.1:45047",
+  "readOnly": true,
+  "expectedCommit": "1234567890abcdef1234567890abcdef12345678",
+  "expectedAppSha256": "5b4a760452297dfc9be226a39268be348db0e762e73b684314b841c7e0a45bc1",
+  "productionVerified": true,
+  "healthStatus": 200,
+  "appStatus": 200,
+  "deployedCommit": "1234567890abcdef1234567890abcdef12345678",
+  "expectedServedSha256": "d1963cb774407f518ff6372e7ece3c5a1ac3b2666322172af9fc09e22d1bb1a9",
+  "actualAppSha256": "d1963cb774407f518ff6372e7ece3c5a1ac3b2666322172af9fc09e22d1bb1a9",
+  "serverReportsAppHash": "5b4a760452297dfc9be226a39268be348db0e762e73b684314b841c7e0a45bc1",
+  "exactHtmlMatch": true,
+  "sourceHashMatch": true,
+  "commitMatch": true
+}
