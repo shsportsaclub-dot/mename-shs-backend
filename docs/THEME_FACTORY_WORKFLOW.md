@@ -14,7 +14,7 @@ Scope: complete broadcast themes: fixtures/schedule, pre-match, toss, live, inni
 ## Gates
 G01 Global research and sources — PARTIAL
 G02 Worldwide graphics family classification — PARTIAL
-G03 Master inventory >=200 named screens — NOT STARTED
+G03 Master inventory >=200 named screens — DONE (260 names, 26 families; see THEME_FACTORY_INVENTORY.md)
 G04 Data fields and event-trigger mapping — NOT STARTED
 G05 Art direction and motion choreography — NOT STARTED
 G06 Tools, architecture, reusable components — NOT STARTED
