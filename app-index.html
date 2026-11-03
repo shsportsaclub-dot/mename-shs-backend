@@ -333,7 +333,18 @@ function sessRestore(){try{const j=JSON.parse(localStorage.getItem(SESS_KEY)||'n
 try{if(sessRestore()&&typeof UI!=='undefined'){}}catch(e){}
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
 const UI={stage:'welcome',view:'home',tab:'live',mid:null,sid:null,gi:2,ex:'',ang:null,modal:null,draft:null,q:'',cim:null,login:{step:1},rmid:null,ci:0};
-function load(){try{const j=localStorage.getItem(LS);if(j)return JSON.parse(j)}catch(e){}return seed()}
+function stripSeed(s){try{if(!s||s.seedGone)return s;const used=JSON.stringify(s.matches||[]);
+ const N=new Set(['Aiden Markram','Ryan Rickelton','Wiaan Mulder','Temba Bavuma','Tristan Stubbs','David Bedingham','Kyle Verreynne','Marco Jansen','Keshav Maharaj','Kagiso Rabada','Lungi Ngidi','Dewald Brevis','Corbin Bosch','Usman Khawaja','Travis Head','Marnus Labuschagne','Steve Smith','Cameron Green','Alex Carey','Mitchell Marsh','Pat Cummins','Mitchell Starc','Nathan Lyon','Josh Hazlewood','Josh Inglis','Scott Boland','Aarav Mehta','Kabir Rao','Rohan Iyer','Vihaan Reddy','Arjun Nair','Dev Kapoor','Ishaan Verma','Sai Teja','Karthik Goud','Nikhil Varma','Harsha Vardhan','Pranav Chary']);
+ const free=p=>N.has(p.name)&&!p.phone&&!p.earlier&&!p.shid&&!p.uid&&!used.includes(p.id);
+ const gone=new Set((s.players||[]).filter(free).map(p=>p.id));
+ s.players=(s.players||[]).filter(p=>!gone.has(p.id));
+ s.teams=(s.teams||[]).filter(t=>{const seedT=(t.name==='South Africa'&&t.short==='SA')||(t.name==='Australia'&&t.short==='AUS');if(!seedT)return true;if(used.includes(t.id))return true;return (t.players||[]).some(id=>!gone.has(id))});
+ s.teams.forEach(t=>{t.players=(t.players||[]).filter(id=>!gone.has(id))});
+ const bk=JSON.stringify(s.bookings||[]);
+ s.grounds=(s.grounds||[]).filter(g=>!(['Main Oval:2500','Practice Nets:800','Turf Box:1500'].includes(g.name+':'+g.rate)&&!bk.includes(g.id)));
+ if(Array.isArray(s.auc)){const d=s.auc.find(x=>x.id==='demo-hcl');if(d){s.auc=s.auc.filter(x=>x.id!=='demo-hcl')}}
+ s.demoHclGone=1;s.seedGone=1}catch(e){}return s}
+function load(){try{const j=localStorage.getItem(LS);if(j)return stripSeed(JSON.parse(j))}catch(e){}return seed()}
 let syncT=null;
 function save(){sessSave();try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){try{localStorage.setItem(LS,JSON.stringify(S,(k,v)=>typeof v==='string'&&v.length>3000&&/^data:/.test(v)?undefined:v))}catch(e2){}}
   clearTimeout(syncT);syncT=setTimeout(syncPush,400)}
@@ -344,21 +355,10 @@ function syncPull(){const u=S.settings.syncUrl;if(!u)return;try{fetch(u).then(r=
 
 /* ---------------- 2 SEED ---------------- */
 function seed(){
-  const mk=(n,r,tm,i)=>({id:uid(),name:n,role:r,team:tm,phone:'',bat:'Right-hand',bowl:r==='BOWL'||r==='AR'?'Right-arm fast':'',jersey:i+1,photo:null});
-  const SA=['Aiden Markram','Ryan Rickelton','Wiaan Mulder','Temba Bavuma','Tristan Stubbs','David Bedingham','Kyle Verreynne','Marco Jansen','Keshav Maharaj','Kagiso Rabada','Lungi Ngidi','Dewald Brevis','Corbin Bosch'];
-  const sr=['BAT','BAT','AR','BAT','BAT','BAT','WK','AR','BOWL','BOWL','BOWL','BAT','AR'];
-  const AU=['Usman Khawaja','Travis Head','Marnus Labuschagne','Steve Smith','Cameron Green','Alex Carey','Mitchell Marsh','Pat Cummins','Mitchell Starc','Nathan Lyon','Josh Hazlewood','Josh Inglis','Scott Boland'];
-  const ar=['BAT','BAT','BAT','BAT','AR','WK','AR','BOWL','BOWL','BOWL','BOWL','WK','BOWL'];
-  const ta={id:uid(),name:'South Africa',short:'SA',color:'#0a7c4a',preset:2,logo:null,players:[]};
-  const tb={id:uid(),name:'Australia',short:'AUS',color:'#c9a400',preset:0,logo:null,players:[]};
-  const players=[];
-  SA.forEach((n,i)=>{const p=mk(n,sr[i],ta.id,i);players.push(p);ta.players.push(p.id)});
-  AU.forEach((n,i)=>{const p=mk(n,ar[i],tb.id,i);players.push(p);tb.players.push(p.id)});
-  ['Aarav Mehta','Kabir Rao','Rohan Iyer','Vihaan Reddy','Arjun Nair','Dev Kapoor','Ishaan Verma','Sai Teja','Karthik Goud','Nikhil Varma','Harsha Vardhan','Pranav Chary'].forEach((n,i)=>players.push(mk(n,['BAT','BOWL','AR','WK'][i%4],null,i)));
   return {v:1,user:null,theme:(typeof matchMedia!=='undefined'&&matchMedia('(prefers-color-scheme: light)').matches)?'cbl':'cb',
     settings:{appName:'Scoring Heroes',appLogo:null,defLogo:0,sponsors:[],syncUrl:''},
-    teams:[ta,tb],players,matches:[],messages:[],
-    users:[],academy:{students:[]},grounds:[{id:uid(),name:'Main Oval',rate:2500},{id:uid(),name:'Practice Nets',rate:800},{id:uid(),name:'Turf Box',rate:1500}],bookings:[],
+    teams:[],players:[],matches:[],messages:[],
+    users:[],academy:{students:[]},grounds:[],bookings:[],
     auction:null,dream:{mid:null,picks:[],c:null,vc:null},
     stream:{mid:'',bg:'transparent',theme:'cb',sponsor:true,gfx:'',auto:8}}}
 
@@ -12300,7 +12300,7 @@ const SH_ICON='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALAAAACwCAYAAACvt+R
   return {id:'demo-hcl',demo:1,mode:'money',currency:'INR',name:'Hero Champions League',logo:HCL_LOGO,venue:'SH Arena (demo)',date:today,time:'19:00',ppt:15,pts:100000000,base:1000000,inc:500000,fee:'DEMO',owner:uid0,
    rules:{min:11,slabs:[{upto:20000000,step:500000},{upto:null,step:1000000}]},reg:{cats:[{n:'A',base:3000000},{n:'B',base:2000000},{n:'C',base:1000000}]},
    teams:T.map((t,i)=>({id:'ht'+(i+1),name:t[0],short:t[1],color:t[2],purse:100000000,players:[],owner:'Demo owner',email:''})),players,cur:null,bid:null,bidTeam:null,hist:[],round:1}};
- const seed=()=>{try{if(!S.user||!Array.isArray(S.auc))return;if(S.demoHclGone||S.auc.some(x=>x.id==='demo-hcl'))return;S.auc.unshift(build(S.user.id));commit()}catch(e){}};
+ const seed=()=>{try{return;if(!S.user||!Array.isArray(S.auc))return;if(S.demoHclGone||S.auc.some(x=>x.id==='demo-hcl'))return;S.auc.unshift(build(S.user.id));commit()}catch(e){}};
  const r0=render;render=function(){seed();return r0.apply(this,arguments)};
  /* logo in the list card and in the auction page */
  const c0=aucCard;aucCard=function(a){const h=c0.apply(this,arguments);return a.logo?h.replace(/<span class="aucc"[^>]*>[\s\S]*?<\/span>/,`<img class="aucc" src="${a.logo}" alt="" data-lg="1" style="width:76px;height:52px;object-fit:contain;border-radius:8px">`):h};
