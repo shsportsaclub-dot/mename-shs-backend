@@ -14077,7 +14077,7 @@ X.flush=(c,fovDeg,dt,host,y0,opt)=>{if(!X.on())return false;if(!navigator.webdri
   const sp=o.run&&H.sp<.5?3.6:H.sp;const tw=sp<.4?{idle:1,walk:0,run:0}:sp<2.4?{idle:0,walk:1,run:0}:{idle:0,walk:0,run:1};
   for(const n of['idle','walk','run']){H.w[n]+=(tw[n]-H.w[n])*Math.min(1,dt*8);H.acts[n].setEffectiveWeight(H.w[n]);H.acts[n].setEffectiveTimeScale(n==='run'?Math.max(.7,Math.min(1.6,sp/4.2)):n==='walk'?Math.max(.6,Math.min(1.5,sp/1.5)):1)}
   H.mx.update(dt);
-  H.sbp=0;if(o.bat&&X.SBP&&(window.SH_BATTING_MASTER===true||o.forceBM)&&!o.run&&H.sp<.6){H.sbp=batterBT(H,o)?1:0}else batterOff(H);
+  H.sbp=0;if(o.bat&&X.SBP&&(window.SH_BATTING_MASTER!==false||o.forceBM)&&!o.run&&H.sp<.6){H.sbp=batterBT(H,o)?1:0}else batterOff(H);
   const u=o.up||0;H.up+=(u-H.up)*Math.min(1,dt*10);const B=H.bn;
   if(H.up>.02){B.la.quaternion.premultiply(qd('z',2.4*H.up));B.ra.quaternion.premultiply(qd('z',-2.4*H.up))}
   if(o.catchUp){B.la.quaternion.premultiply(qd('z',1.7));B.ra.quaternion.premultiply(qd('z',-1.7))}
