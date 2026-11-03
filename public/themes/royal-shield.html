@@ -27,6 +27,7 @@ body.bg{background:radial-gradient(120% 90% at 50% 0%,#0b1a30,#050c18 70%)}
 .in .coin{animation:flip 2.2s 1.2s cubic-bezier(.3,.7,.3,1) both}
 .coin i{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 35% 30%,var(--gold2),var(--gold) 45%,var(--gold3));display:grid;place-items:center;font:900 2cqw/1 var(--f);color:#3a2600;backface-visibility:hidden;box-shadow:inset 0 0 0 .5cqw #fff3ba88}
 .coin i+i{transform:rotateY(180deg);background:radial-gradient(circle at 35% 30%,#fff,#9fb7d9 50%,#51698c)}
+.coin{width:11cqw;height:11cqw;margin-left:-5.5cqw}.coin i,.coin i+i{background:center/contain no-repeat;box-shadow:none;border-radius:0;filter:drop-shadow(0 .6cqw .8cqw #0009)}.coin i{background-image:var(--ch)}.coin i+i{background-image:var(--ct)}
 @keyframes flip{from{transform:translateY(-34cqh) rotateY(0)}60%{transform:translateY(-8cqh) rotateY(1620deg)}to{transform:translateY(0) rotateY(var(--end,1800deg))}}
 .tm{position:absolute;top:50%;width:21cqw;font:800 3cqw/1.05 var(--f);text-transform:uppercase;opacity:0}
 .tm.a{left:3cqw;color:#a9dcff}.tm.b{right:3cqw;color:#ffc2cd;text-align:right}
@@ -145,7 +146,7 @@ body.bg{background:radial-gradient(120% 90% at 50% 0%,#0b1a30,#050c18 70%)}
 #e4 .tp{position:absolute;top:16cqh;width:2cqw;height:30cqh;background:linear-gradient(#5d7fa0,#2a3f55);opacity:0}.tp:after{content:"";position:absolute;left:-3cqw;top:-3cqh;width:8cqw;height:5cqh;background:radial-gradient(#f4f0d8 30%,transparent 31%) 0 0/1.4cqw 1.4cqw}.in #e4 .tp{animation:dn .8s .2s both}
 </style></head><body><div id="st"><div class="beam l"></div><div class="beam r"></div>
 <div class="hd"><b>SCORING HEROES</b><span id="sub"></span></div><div class="ttl" id="ttl"></div>
-<div class="sc" id="toss"><div class="tm a" id="ta"></div><div class="tm b" id="tb"></div><div class="shield"><div class="tw" id="tw"></div><div class="el" id="el"></div><div class="coin" id="coin"><i>SH</i><i>TOSS</i></div></div></div>
+<div class="sc" id="toss"><div class="tm a" id="ta"></div><div class="tm b" id="tb"></div><div class="shield"><div class="tw" id="tw"></div><div class="el" id="el"></div><div class="coin" id="coin"><i></i><i></i></div></div></div>
 <div class="sc" id="xi"><div class="grid" id="xg"></div></div>
 <div class="sc" id="mu"><div class="pl a" id="pa"></div><div class="pl b" id="pb"></div><div class="shield"></div><div class="hh" id="hh"></div></div>
 <div class="sc" id="mh"><div class="box"><svg id="mc" viewBox="0 0 1000 500" preserveAspectRatio="none"></svg><div class="lg" id="lg"></div></div></div>
@@ -160,7 +161,7 @@ body.bg{background:radial-gradient(120% 90% at 50% 0%,#0b1a30,#050c18 70%)}
 <div class="sc" id="e100"><div class="burst"></div><div class="ev" id="e100c"></div><div id="cf100"></div></div>
 <div class="sc" id="ww"><div class="cardw" id="wc"></div><div class="stage"><div class="pl3"><svg viewBox="-130 -110 260 220" id="wsv"></svg></div></div><div class="legw" id="wl"></div><div class="wwb" id="wb"></div></div>
 </div><script>
-const Q=new URLSearchParams(location.search),B=document.body;if(Q.get('bg')==='1')B.classList.add('bg');
+const Q=new URLSearchParams(location.search),B=document.body;if(Q.get('bg')==='1')B.classList.add('bg');{const m=Q.get('coin')==='silver'?'silver':'gold',r=document.documentElement.style;r.setProperty('--ch','url(../coins/'+m+'-heads.webp)');r.setProperty('--ct','url(../coins/'+m+'-tails.webp)')}
 const SH=c=>`<svg viewBox="0 0 100 100"><circle cx="50" cy="36" r="17" fill="#26405d" stroke="${c}" stroke-width="2"/><path d="M14 98c0-26 14-38 36-38s36 12 36 38z" fill="${c}" opacity=".9"/></svg>`;
 const DEMO={toss:{a:'Sky High Kings',b:'Hapur Hawks',winner:'a',elected:'bat'},
 xi:{team:'Sky High Kings',players:[['Aarav Sharma','Opener','C'],['Vihaan Rao','Opener'],['Kabir Singh','Top order'],['Rohan Mehta','Middle order'],['Ishaan Verma','All-rounder'],['Aditya Nair','WK-Bat','WK'],['Dev Patel','All-rounder'],['Arjun Reddy','Spinner'],['Karan Joshi','Pacer'],['Yash Gupta','Pacer'],['Neel Iyer','Spinner']]},
