@@ -2412,7 +2412,7 @@ http.createServer(async (req, res) => {
     let b; try { b = JSON.parse(raw); } catch { return out(400, { ok: false, error: 'Bad body' }); }
     if (col === 'players') {   // public player card: the player's own account or an admin shares a small summary so a ?player= link opens on any phone; no phone, email or date of birth
       const c = b.data && b.data.c, str = (v, n) => v == null || (typeof v === 'string' && v.length <= n), num = v => v == null || (Number.isFinite(v) && v >= 0 && v < 1e6);
-      if (!c || c.id !== id || typeof c.name !== 'string' || !c.name.trim() || !str(c.name, 60) || !str(c.role, 20) || !str(c.team, 60) || !str(c.city, 60) || !str(c.shid, 16) || !str(c.bat, 40) || !str(c.bowl, 40) || !num(c.m) || !num(c.r) || !num(c.w) || !num(c.hs) || !num(c.f50) || !num(c.f100)) return out(400, { ok: false, error: 'Invalid player card' });
+      if (!c || c.id !== id || typeof c.name !== 'string' || !c.name.trim() || !str(c.name, 60) || !str(c.role, 20) || !str(c.team, 60) || !str(c.city, 60) || !str(c.shid, 24) || !str(c.bat, 40) || !str(c.bowl, 40) || !num(c.m) || !num(c.r) || !num(c.w) || !num(c.hs) || !num(c.f50) || !num(c.f100)) return out(400, { ok: false, error: 'Invalid player card' });
       b.data = { c: { id, name: c.name.trim(), role: c.role || '', team: c.team || '', city: c.city || '', shid: c.shid || '', bat: c.bat || '', bowl: c.bowl || '', m: c.m || 0, r: c.r || 0, w: c.w || 0, hs: c.hs || 0, f50: c.f50 || 0, f100: c.f100 || 0, at: Date.now() } };
     }
     if (col === 'logos' && req.method === 'PUT') {   // team logo library: admin adds a small image plus the names it matches
