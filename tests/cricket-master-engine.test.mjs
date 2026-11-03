@@ -7,7 +7,7 @@ test("all 13 outs defined; every step has numeric ascending timing",()=>{
       if(i)assert.ok(s[i].at>=s[i-1].at,id+" order")}}
 });
 test("dispatch: show/play/shot/animate, hand preference, left-arm bowler mirror",async()=>{
-  const got=[];const mk=n=>new Proxy({},{get:(_,k)=>(...a)=>got.push([n,k,a])});
+  const got=[];const mk=n=>new Proxy({},{get:(_,k)=>k==="getRigBinder"?undefined:(...a)=>got.push([n,k,a])});
   const e=new MasterCricketEngine({avatar:mk("avatar"),camera:mk("camera"),ball:mk("ball"),wicket:mk("wicket"),graphics:mk("graphics")});
   e.playSequence("OUT-13",{handPreference:"left_hand"});await new Promise(r=>setTimeout(r,1500));
   assert.equal(got.length,4);assert.equal(got[1][0],"graphics");assert.equal(got[3][2][2].handPreference,"left_hand");
