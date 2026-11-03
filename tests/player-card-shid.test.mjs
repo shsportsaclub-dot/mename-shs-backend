@@ -16,3 +16,15 @@ test('player card accepts a full permanent ID (SH-P-YYYYMM-NNNNNN, 18 chars) and
     assert.equal((await fetch(B + '/api/intro/player?id=SH-P-202610-000099')).status, 404);
   } finally { srv.kill(); }
 });
+
+test('shared player link carries a link-preview title and description (og tags)', async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'pco-')), port = 8280, file = path.join(dir, 'd.json');
+  fs.writeFileSync(file, JSON.stringify({ users: {}, shared: { players: { p_og1: { data: { c: { id: 'p_og1', name: 'Hemanth "H" <b>', role: 'AR', team: 'Hapur Titans', m: 90, r: 377, w: 61 } }, updated: 1, owner: 'x' } } } }));
+  const srv = spawn('node', ['server.js'], { env: { ...process.env, PORT: String(port), DATA_FILE: file, SESSION_SECRET: 'x', TRACKER: '0' }, stdio: ['ignore', 'inherit', 'inherit'] });
+  try {
+    const B = `http://127.0.0.1:${port}`; for (let i = 0; i < 40; i++) { try { await fetch(B + '/api/health'); break; } catch { await new Promise(r => setTimeout(r, 250)); } }
+    const h = await (await fetch(B + '/?player=p_og1', { headers: { 'accept-encoding': 'identity' } })).text();
+    assert.match(h, /og:title" content="Hemanth &quot;H&quot; &lt;b&gt; · Scoring Heroes"/); assert.match(h, /90 matches · 377 runs · 61 wickets/); assert.match(h, /og:image" content="https:\/\/127\.0\.0\.1:8280\/icon-512\.png"/);
+    const g = await (await fetch(B + '/?player=nope123', { headers: { 'accept-encoding': 'identity' } })).text(); assert.ok(!/og:title/.test(g));
+  } finally { srv.kill(); }
+});

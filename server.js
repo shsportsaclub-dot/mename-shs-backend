@@ -2309,6 +2309,15 @@ http.createServer(async (req, res) => {
   if (req.method === 'GET' && (path === '/' || path === '/index.html')) {   // serve the app itself, same address as the API
     try {   // the page is ~2.5 MB: build it once, compress it, and let browsers revalidate with an ETag (a 304 costs almost nothing). This is what keeps Render bandwidth low.
       const P = appPage(), inm = String(req.headers['if-none-match'] || ''), ae = String(req.headers['accept-encoding'] || '');
+      const pq = new URL(req.url, 'http://x').searchParams.get('player'), pc = pq && /^[\w-]{3,40}$/.test(pq) && db.shared && db.shared.players && db.shared.players[pq] && db.shared.players[pq].data && db.shared.players[pq].data.c;
+      if (pc) {   // a shared player link: give WhatsApp, Telegram and other link previews the player's name and numbers (public card only)
+        const esc = v => String(v == null ? '' : v).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])), proto = String(req.headers['x-forwarded-proto'] || 'https').split(',')[0], host = String(req.headers.host || ''), origin = /^[\w.:-]+$/.test(host) ? proto + '://' + host : '';
+        const ttl = esc(pc.name + ' · Scoring Heroes'), dsc = esc([pc.role, pc.team, pc.m + ' matches', pc.r + ' runs', pc.w + ' wickets'].filter(Boolean).join(' · ')), img = origin ? esc(origin + '/icon-512.png') : '';
+        const tags = '<title>' + ttl + '</title><meta property="og:type" content="profile"><meta property="og:site_name" content="Scoring Heroes"><meta property="og:title" content="' + ttl + '"><meta property="og:description" content="' + dsc + '"><meta name="description" content="' + dsc + '">' + (img ? '<meta property="og:image" content="' + img + '"><meta name="twitter:card" content="summary"><meta name="twitter:image" content="' + img + '">' : '') + (origin ? '<meta property="og:url" content="' + esc(origin + '/?player=' + pq) + '">' : '');
+        const html2 = P.html.toString('utf8').replace(/<title>[^<]*<\/title>/, '').replace('</head>', tags + '</head>'), hd = { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache', vary: 'accept-encoding' };
+        if (/\bgzip\b/.test(ae)) { const z = zlib.gzipSync(html2, { level: 6 }); res.writeHead(200, { ...hd, 'content-encoding': 'gzip', 'content-length': z.length }); return res.end(z); }
+        res.writeHead(200, hd); return res.end(html2);
+      }
       const base = { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache', etag: P.etag, vary: 'accept-encoding', 'x-sh-commit': String(E.RENDER_GIT_COMMIT || 'local') };
       if (inm === P.etag) { res.writeHead(304, base); return res.end(); }
       if (/\bbr\b/.test(ae)) { res.writeHead(200, { ...base, 'content-encoding': 'br', 'content-length': P.br.length }); return res.end(P.br); }
@@ -2412,8 +2421,8 @@ http.createServer(async (req, res) => {
     let b; try { b = JSON.parse(raw); } catch { return out(400, { ok: false, error: 'Bad body' }); }
     if (col === 'players') {   // public player card: the player's own account or an admin shares a small summary so a ?player= link opens on any phone; no phone, email or date of birth
       const c = b.data && b.data.c, str = (v, n) => v == null || (typeof v === 'string' && v.length <= n), num = v => v == null || (Number.isFinite(v) && v >= 0 && v < 1e6);
-      if (!c || c.id !== id || typeof c.name !== 'string' || !c.name.trim() || !str(c.name, 60) || !str(c.role, 20) || !str(c.team, 60) || !str(c.city, 60) || !str(c.shid, 24) || !str(c.bat, 40) || !str(c.bowl, 40) || !num(c.m) || !num(c.r) || !num(c.w) || !num(c.hs) || !num(c.f50) || !num(c.f100)) return out(400, { ok: false, error: 'Invalid player card' });
-      b.data = { c: { id, name: c.name.trim(), role: c.role || '', team: c.team || '', city: c.city || '', shid: c.shid || '', bat: c.bat || '', bowl: c.bowl || '', m: c.m || 0, r: c.r || 0, w: c.w || 0, hs: c.hs || 0, f50: c.f50 || 0, f100: c.f100 || 0, at: Date.now() } };
+      if (!c || c.id !== id || typeof c.name !== 'string' || !c.name.trim() || !str(c.name, 60) || !str(c.role, 20) || !str(c.team, 60) || !str(c.city, 60) || !str(c.shid, 24) || !str(c.bat, 40) || !str(c.bowl, 40) || !num(c.m) || !num(c.r) || !num(c.w) || !num(c.hs) || !num(c.f50) || !num(c.f100) || (c.lg != null && !/^\d{1,12}$/.test(String(c.lg))) || (c.e != null && !(Array.isArray(c.e) && c.e.length <= 16 && c.e.every(x => Array.isArray(x) && x.length === 2 && typeof x[0] === 'string' && x[0].length <= 20 && typeof x[1] === 'string' && x[1].length <= 20)))) return out(400, { ok: false, error: 'Invalid player card' });
+      b.data = { c: { id, name: c.name.trim(), role: c.role || '', team: c.team || '', city: c.city || '', shid: c.shid || '', bat: c.bat || '', bowl: c.bowl || '', m: c.m || 0, r: c.r || 0, w: c.w || 0, hs: c.hs || 0, f50: c.f50 || 0, f100: c.f100 || 0, lg: c.lg ? String(c.lg) : '', e: Array.isArray(c.e) ? c.e : [], at: Date.now() } };
     }
     if (col === 'logos' && req.method === 'PUT') {   // team logo library: admin adds a small image plus the names it matches
       const l = b.data && b.data.l, okN = Array.isArray(l && l.names) && l.names.length > 0 && l.names.length <= 10 && l.names.every(n => typeof n === 'string' && n.trim() && n.length <= 60);
