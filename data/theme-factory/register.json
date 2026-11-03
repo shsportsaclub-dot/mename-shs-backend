@@ -197,7 +197,8 @@
   ],
   "motion": "slash+slam from left+ripples",
   "sample": "docs/sample_RS_e4.png",
-  "status": "BUILT_PROTOTYPE (CSS real-time, verified headless; NOT 4K rendered, NOT approved)"
+  "status": "BUILT_PROTOTYPE (CSS real-time, verified headless; NOT 4K rendered, NOT approved)",
+  "note": "Reworked to user FOUR_Flash 4-frame storyboard: Entrance / Impact / Hero hold / Exit"
  },
  {
   "id": "SH-RS-V6-SCR-026",
@@ -285,5 +286,311 @@
   "reference": "user-supplied wagon_wheel_real_webgl.html (functional reference only; this build is independent)",
   "sample": "docs/sample_RS_ww.png",
   "status": "BUILT_PROTOTYPE (verified headless; NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-B-01",
+  "name": "Match Opening",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield-b.html?screen=mo",
+  "events": [
+   "MATCH_OPENING"
+  ],
+  "states": [
+   "ENTER",
+   "HOLD",
+   "EXIT",
+   "UPDATE via data()"
+  ],
+  "inventory_source": "user's 30-screen Royal Shield set (names only)",
+  "status": "BUILT_PROTOTYPE (CSS real-time, verified headless; NOT 4K rendered, NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-B-02",
+  "name": "Live Score",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield-b.html?screen=ls",
+  "events": [
+   "LIVE_SCORE"
+  ],
+  "states": [
+   "ENTER",
+   "HOLD",
+   "EXIT",
+   "UPDATE via data()"
+  ],
+  "inventory_source": "user's 30-screen Royal Shield set (names only)",
+  "status": "BUILT_PROTOTYPE (CSS real-time, verified headless; NOT 4K rendered, NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-B-03",
+  "name": "Player Intro",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield-b.html?screen=pi",
+  "events": [
+   "PLAYER_INTRO"
+  ],
+  "states": [
+   "ENTER",
+   "HOLD",
+   "EXIT",
+   "UPDATE via data()"
+  ],
+  "inventory_source": "user's 30-screen Royal Shield set (names only)",
+  "status": "BUILT_PROTOTYPE (CSS real-time, verified headless; NOT 4K rendered, NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-B-04",
+  "name": "Field Placement",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield-b.html?screen=fp",
+  "events": [
+   "FIELD_SET"
+  ],
+  "states": [
+   "ENTER",
+   "HOLD",
+   "EXIT",
+   "UPDATE via data()"
+  ],
+  "inventory_source": "user's 30-screen Royal Shield set (names only)",
+  "status": "BUILT_PROTOTYPE (CSS real-time, verified headless; NOT 4K rendered, NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-B-05",
+  "name": "Pitch Map",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield-b.html?screen=pm",
+  "events": [
+   "PITCH_MAP"
+  ],
+  "states": [
+   "ENTER",
+   "HOLD",
+   "EXIT",
+   "UPDATE via data()"
+  ],
+  "inventory_source": "user's 30-screen Royal Shield set (names only)",
+  "status": "BUILT_PROTOTYPE (CSS real-time, verified headless; NOT 4K rendered, NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-B-06",
+  "name": "Win Probability",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield-b.html?screen=wp",
+  "events": [
+   "WIN_PROB"
+  ],
+  "states": [
+   "ENTER",
+   "HOLD",
+   "EXIT",
+   "UPDATE via data()"
+  ],
+  "inventory_source": "user's 30-screen Royal Shield set (names only)",
+  "status": "BUILT_PROTOTYPE (CSS real-time, verified headless; NOT 4K rendered, NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-B-07",
+  "name": "DRS Tracking",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield-b.html?screen=drs",
+  "events": [
+   "DRS_REVIEW"
+  ],
+  "states": [
+   "ENTER",
+   "HOLD",
+   "EXIT",
+   "UPDATE via data()"
+  ],
+  "inventory_source": "user's 30-screen Royal Shield set (names only)",
+  "status": "BUILT_PROTOTYPE (CSS real-time, verified headless; NOT 4K rendered, NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-B-08",
+  "name": "Bowling Scorecard",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield-b.html?screen=bs",
+  "events": [
+   "BOWLING_CARD"
+  ],
+  "states": [
+   "ENTER",
+   "HOLD",
+   "EXIT",
+   "UPDATE via data()"
+  ],
+  "inventory_source": "user's 30-screen Royal Shield set (names only)",
+  "status": "BUILT_PROTOTYPE (CSS real-time, verified headless; NOT 4K rendered, NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-B-09",
+  "name": "Fall of Wickets",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield-b.html?screen=fw",
+  "events": [
+   "FALL_OF_WICKETS"
+  ],
+  "states": [
+   "ENTER",
+   "HOLD",
+   "EXIT",
+   "UPDATE via data()"
+  ],
+  "inventory_source": "user's 30-screen Royal Shield set (names only)",
+  "status": "BUILT_PROTOTYPE (CSS real-time, verified headless; NOT 4K rendered, NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-B-10",
+  "name": "Run Rate Worm",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield-b.html?screen=wm",
+  "events": [
+   "WORM"
+  ],
+  "states": [
+   "ENTER",
+   "HOLD",
+   "EXIT",
+   "UPDATE via data()"
+  ],
+  "inventory_source": "user's 30-screen Royal Shield set (names only)",
+  "status": "BUILT_PROTOTYPE (CSS real-time, verified headless; NOT 4K rendered, NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-B-11",
+  "name": "Venue Report",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield-b.html?screen=vr",
+  "events": [
+   "VENUE_REPORT"
+  ],
+  "states": [
+   "ENTER",
+   "HOLD",
+   "EXIT",
+   "UPDATE via data()"
+  ],
+  "inventory_source": "user's 30-screen Royal Shield set (names only)",
+  "status": "BUILT_PROTOTYPE (CSS real-time, verified headless; NOT 4K rendered, NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-B-12",
+  "name": "Weather & Pitch",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield-b.html?screen=wx",
+  "events": [
+   "WEATHER"
+  ],
+  "states": [
+   "ENTER",
+   "HOLD",
+   "EXIT",
+   "UPDATE via data()"
+  ],
+  "inventory_source": "user's 30-screen Royal Shield set (names only)",
+  "status": "BUILT_PROTOTYPE (CSS real-time, verified headless; NOT 4K rendered, NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-B-13",
+  "name": "Head to Head",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield-b.html?screen=h2h",
+  "events": [
+   "HEAD_TO_HEAD"
+  ],
+  "states": [
+   "ENTER",
+   "HOLD",
+   "EXIT",
+   "UPDATE via data()"
+  ],
+  "inventory_source": "user's 30-screen Royal Shield set (names only)",
+  "status": "BUILT_PROTOTYPE (CSS real-time, verified headless; NOT 4K rendered, NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-B-14",
+  "name": "Powerplay Analysis",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield-b.html?screen=pp",
+  "events": [
+   "POWERPLAY_DONE"
+  ],
+  "states": [
+   "ENTER",
+   "HOLD",
+   "EXIT",
+   "UPDATE via data()"
+  ],
+  "inventory_source": "user's 30-screen Royal Shield set (names only)",
+  "status": "BUILT_PROTOTYPE (CSS real-time, verified headless; NOT 4K rendered, NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-B-15",
+  "name": "Shot Distribution",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield-b.html?screen=sd",
+  "events": [
+   "SHOT_DIST"
+  ],
+  "states": [
+   "ENTER",
+   "HOLD",
+   "EXIT",
+   "UPDATE via data()"
+  ],
+  "inventory_source": "user's 30-screen Royal Shield set (names only)",
+  "status": "BUILT_PROTOTYPE (CSS real-time, verified headless; NOT 4K rendered, NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-B-16",
+  "name": "Bowler Heatmap",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield-b.html?screen=bh",
+  "events": [
+   "BOWLER_HEAT"
+  ],
+  "states": [
+   "ENTER",
+   "HOLD",
+   "EXIT",
+   "UPDATE via data()"
+  ],
+  "inventory_source": "user's 30-screen Royal Shield set (names only)",
+  "status": "BUILT_PROTOTYPE (CSS real-time, verified headless; NOT 4K rendered, NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-B-17",
+  "name": "Required Run Rate",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield-b.html?screen=rr",
+  "events": [
+   "RRR"
+  ],
+  "states": [
+   "ENTER",
+   "HOLD",
+   "EXIT",
+   "UPDATE via data()"
+  ],
+  "inventory_source": "user's 30-screen Royal Shield set (names only)",
+  "status": "BUILT_PROTOTYPE (CSS real-time, verified headless; NOT 4K rendered, NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-B-18",
+  "name": "Player of the Match",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield-b.html?screen=pom",
+  "events": [
+   "PLAYER_OF_MATCH"
+  ],
+  "states": [
+   "ENTER",
+   "HOLD",
+   "EXIT",
+   "UPDATE via data()"
+  ],
+  "inventory_source": "user's 30-screen Royal Shield set (names only)",
+  "status": "BUILT_PROTOTYPE (CSS real-time, verified headless; NOT 4K rendered, NOT approved)"
  }
 ]

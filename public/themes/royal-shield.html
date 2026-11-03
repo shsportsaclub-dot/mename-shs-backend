@@ -126,6 +126,23 @@ body.bg{background:radial-gradient(120% 90% at 50% 0%,#0b1a30,#050c18 70%)}
 #ww .legw{position:absolute;right:4cqw;top:24cqh;width:17cqw;padding:1.6cqw;background:#08141fd9;border:.15cqw solid var(--gold3);border-radius:.8cqw;font:600 1.6cqw/1 var(--f);opacity:0;transform:translateX(6cqw)}.in #ww .legw{animation:sl .8s .8s both}
 .legw h4{margin:0 0 1.2cqh;font:800 1.5cqw/1 var(--f);color:var(--gold);letter-spacing:.25cqw}.legw div{display:flex;justify-content:space-between;margin:1cqh 0}.legw i{display:inline-block;width:1cqw;height:1cqw;border-radius:50%;margin-right:.7cqw}
 .wwb{position:absolute;left:6cqw;right:6cqw;bottom:3cqh;height:7cqh;white-space:nowrap;display:flex;justify-content:space-between;align-items:center;padding:0 3cqw;background:linear-gradient(90deg,#063a6b,#061827 45%,#061827 55%,#6b1837);border:.15cqw solid var(--gold3);font:800 2cqw/1 var(--f);text-transform:uppercase;opacity:0}.in .wwb{animation:dn .6s 1.4s both}.wwb b{color:var(--gold2);font-size:2.4cqw}
+
+/* FOUR v2: 4-phase storyboard (entrance / impact / hero hold / exit) */
+#e4 .hx{position:absolute;left:24cqw;right:24cqw;top:26cqh;height:38cqh;background:linear-gradient(#0e2038f2,#0a1626f2);clip-path:polygon(9% 0,91% 0,100% 50%,91% 100%,9% 100%,0 50%);opacity:0;transform:scale(.6) rotateX(70deg)}
+#e4 .hx:before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,var(--gold2),var(--gold3),var(--gold));clip-path:polygon(9% 0,91% 0,100% 50%,91% 100%,9% 100%,0 50%,9.6% 2.4%,.9% 50%,9.6% 97.6%,90.4% 97.6%,99.1% 50%,90.4% 2.4%,9.6% 2.4%,9% 0);z-index:1}
+.in #e4 .hx{animation:hxi 1s .2s cubic-bezier(.2,.9,.2,1) both}@keyframes hxi{to{opacity:1;transform:none}}
+#e4 .q{position:absolute;left:24cqw;right:24cqw;top:26cqh;height:38cqh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.6cqh;text-align:center;opacity:0;z-index:2}
+#e4 .q b{font:900 5cqw/1 var(--f);text-transform:uppercase;color:var(--gold2);letter-spacing:.2cqw}#e4 .q i{font:700 2cqw/1 var(--f);font-style:normal;letter-spacing:.25cqw;text-transform:uppercase;color:#dbe7f5}
+.in #e4 .p1{animation:ph 1.4s .6s both}.in #e4 .p2{animation:ph 1.4s 1.9s both}.in #e4 .p3{animation:ph3 2.4s 3.2s both}.in #e4 .p4{animation:ph4 1.4s 5.5s both}
+@keyframes ph{0%{opacity:0;transform:scale(.8)}18%,82%{opacity:1;transform:none}100%{opacity:0;transform:scale(1.1)}}
+@keyframes ph3{0%{opacity:0;transform:scale(.5)}15%,85%{opacity:1;transform:none}100%{opacity:0;transform:scale(1.12)}}
+@keyframes ph4{0%{opacity:0;transform:translateY(2cqh)}20%,100%{opacity:1;transform:none}}
+#e4 .p2 b{font-size:9.5cqw;color:#ffe9a8;-webkit-text-stroke:.35cqw #e8741a;text-shadow:.5cqw .7cqw 0 #e8741a}
+#e4 .p3 b{font-size:12cqw;color:#ffe9a8;-webkit-text-stroke:.3cqw #3a1a00;text-shadow:.3cqw .3cqw 0 #ff9a2e,.6cqw .6cqw 0 #ff8a1a,.9cqw .9cqw 0 #e8741a,1.2cqw 1.2cqw 0 #c05a0c,1.5cqw 1.5cqw 1cqw #0008}
+#e4 .fl{position:absolute;inset:0;background:radial-gradient(circle at 50% 45%,#fff,#ffb347 30%,transparent 60%);opacity:0}.in #e4 .fl{animation:flh .5s 1.9s ease-out}@keyframes flh{0%{opacity:.85}100%{opacity:0}}
+#e4 .ry{position:absolute;left:50%;top:45%;width:90cqw;height:90cqw;margin:-45cqw;background:repeating-conic-gradient(from 0deg,#ffb34744 0 3deg,transparent 3deg 12deg);border-radius:50%;-webkit-mask:radial-gradient(circle,#000 5%,transparent 65%);mask:radial-gradient(circle,#000 5%,transparent 65%);opacity:0}.in #e4 .ry{animation:ryo 2.6s 3.2s both}@keyframes ryo{0%{opacity:0;transform:rotate(0) scale(.3)}25%{opacity:1}100%{opacity:0;transform:rotate(40deg) scale(1)}}
+#e4 .sb2{position:absolute;left:14cqw;right:14cqw;bottom:9cqh;height:8cqh;display:flex;align-items:center;justify-content:space-between;white-space:nowrap;padding:0 3cqw;background:#050d1af0;border:.15cqw solid var(--gold3);border-radius:.8cqw;font:800 1.9cqw/1 var(--f);text-transform:uppercase;opacity:0;transform:translateY(8cqh)}.in #e4 .sb2{animation:sl .7s .5s both}.sb2 b{color:var(--gold2);font-size:2.6cqw}
+#e4 .tp{position:absolute;top:16cqh;width:2cqw;height:30cqh;background:linear-gradient(#5d7fa0,#2a3f55);opacity:0}.tp:after{content:"";position:absolute;left:-3cqw;top:-3cqh;width:8cqw;height:5cqh;background:radial-gradient(#f4f0d8 30%,transparent 31%) 0 0/1.4cqw 1.4cqw}.in #e4 .tp{animation:dn .8s .2s both}
 </style></head><body><div id="st"><div class="beam l"></div><div class="beam r"></div>
 <div class="hd"><b>SCORING HEROES</b><span id="sub"></span></div><div class="ttl" id="ttl"></div>
 <div class="sc" id="toss"><div class="tm a" id="ta"></div><div class="tm b" id="tb"></div><div class="shield"><div class="tw" id="tw"></div><div class="el" id="el"></div><div class="coin" id="coin"><i>SH</i><i>TOSS</i></div></div></div>
@@ -136,7 +153,7 @@ body.bg{background:radial-gradient(120% 90% at 50% 0%,#0b1a30,#050c18 70%)}
 <div class="sc" id="pt"><div class="shield"></div><div class="pn2 a" id="p1"></div><div class="pn2 b" id="p2"></div><div class="pm" id="pm"></div><div class="bar2" id="pbar"></div></div>
 <div class="sc" id="is"><div class="shield"></div><div class="sm" id="ism"></div></div>
 <div class="sc" id="rs"><div class="shield"></div><div class="sm" id="rsm"></div></div>
-<div class="sc" id="e4"><div class="slash"></div><div class="ring"></div><div class="ring r2"></div><div class="ev" id="e4c"></div></div>
+<div class="sc" id="e4"><div class="ry"></div><div class="tp" style="left:6cqw"></div><div class="tp" style="right:6cqw"></div><div class="hx"></div><div id="e4c"></div><div class="fl"></div></div>
 <div class="sc" id="e6"><div class="ball"></div><div class="ev" id="e6c"></div><div id="cf6"></div></div>
 <div class="sc" id="eo"><div class="flash"></div><div class="ev" id="eoc"></div></div>
 <div class="sc" id="e50"><div class="ev" id="e50c"></div></div>
@@ -179,7 +196,7 @@ function render(){const t=D.toss,w=t.winner==='a'?t.a:t.b;
  wl.innerHTML=`<h4>SHOT MAP</h4>${[[6,'SIX'],[4,'FOUR'],[3,'3 RUNS'],[2,'2 RUNS'],[1,'SINGLE']].map(([r,l])=>`<div><span><i style="background:${C[r]}"></i>${l}</span><b>${cn(r)}</b></div>`).join('')}`;
  wb.innerHTML=`<span>${up(w.team)}</span><b>${w.score} · ${w.ov} OV${w.target?' · TARGET '+w.target:''}</b><span>${up(w.opp)}</span>`}
  {const e=D.ev,sub=`${e.r} (${e.b}) · ${e.f} FOURS · ${e.s} SIXES`,CF=n=>Array.from({length:n},(_,i)=>`<i class="cf" style="left:${(i*37)%100}%;--d:${(i%12)*.12+.9}s;--r:${(i*53)%720}deg;background:${['#ffe27a','#38a9ec','#d32f4a','#fff'][i%4]}"></i>`).join('');
- e4c.innerHTML=`<div class="num">4</div><div class="lbl">FOUR</div><div class="nm">${e.n}</div><div class="st">${e.shot}</div><div class="sb">${sub}</div>`;
+ e4c.innerHTML=`<div class="q p1"><b>BOUNDARY INCOMING</b><i>Bat connects · trajectory start</i></div><div class="q p2"><b>FOUR!</b><i>${e.shot}</i></div><div class="q p3"><b>FOUR</b><i>Boundary celebration · ${e.n}</i></div><div class="q p4"><b>BOUNDARY CONFIRMED</b><i>${sub}</i></div><div class="sb2"><span>${D.sc.team}</span><b>${e.score||D.sc.score} · ${e.ov||D.sc.overs} OV</b><span>${e.n} ${e.r} (${e.b})</span></div>`;
  e6c.innerHTML=`<div class="num">6</div><div class="lbl">SIX</div><div class="nm">${e.n}</div><div class="st">${e.shot}</div><div class="sb">${sub}</div>`;cf6.innerHTML=CF(40);
  eoc.innerHTML=`<div class="stm"><b class="a"></b><b class="b"></b><i></i><i></i><i></i></div><div class="lbl">OUT!</div><div class="nm">${e.n}</div><div class="st">${e.how} · b ${e.bowl}${e.fld?' · c '+e.fld:''}</div><div class="sb">${e.r} (${e.b}) · ${e.score} (${e.ov} OV)</div>`;
  e50c.innerHTML=`<div class="rg"><svg viewBox="0 0 220 220"><defs><linearGradient id="gg"><stop offset="0" stop-color="#fff3ba"/><stop offset="1" stop-color="#bf8c38"/></linearGradient></defs><circle class="bg" cx="110" cy="110" r="100"/><circle class="fg" cx="110" cy="110" r="100"/></svg><div class="num">50</div></div><div class="lbl">HALF CENTURY</div><div class="nm">${e.n}</div><div class="sb">${sub}</div>`;
