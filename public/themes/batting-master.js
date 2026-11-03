@@ -69,7 +69,7 @@ export const SHOTS=[
  T('SW_PAD','Paddle Sweep','Sweep','F',-120,{pw:.3,cr:.3,lo:.8,hi:.05,fin:'low'}),
  T('SW_SLOG','Slog Sweep','Sweep','F',-80,{pw:.95,cr:.9,lo:.8,hi:.2,lf:.8,fin:'wrap'}),
  T('SW_REV','Reverse Sweep','Sweep','F',110,{pw:.5,cr:.6,lo:1,hi:.05,fin:'low'}),
- T('SW_SWITCH','Switch Sweep','Sweep','F',100,{pw:.4,cr:.7,lo:1,hi:.05,fin:'low'}),
+ T('SW_SWITCH','Switch Sweep','Sweep','F',100,{pw:.34,cr:.7,lo:1,hi:.05,fin:'low'}),
  T('SW_FINE','Fine Sweep','Sweep','F',-130,{pw:.4,cr:.4,lo:1,hi:.05,fin:'low'}),
  // Helicopter
  T('HEL','Helicopter Shot','Helicopter','F',-10,{pw:1,lf:1,hi:.3,fin:'heli'}),
