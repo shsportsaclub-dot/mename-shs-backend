@@ -65,12 +65,12 @@ export const SHOTS=[
  T('HK_AIR','Aerial Hook','Hook','B',-100,{pw:.85,cr:.95,hi:.78,lf:.8}),
  T('HK_FINE','Fine Hook','Hook','B',-125,{pw:.6,cr:.8,hi:.95,fin:'one'}),
  // Sweep
- T('SW','Conventional Sweep','Sweep','F',-75,{pw:.6,cr:.7,lo:1,hi:.05,fin:'low'}),
- T('SW_PAD','Paddle Sweep','Sweep','F',-120,{pw:.3,cr:.3,lo:.8,hi:.05,fin:'low'}),
- T('SW_SLOG','Slog Sweep','Sweep','F',-80,{pw:.95,cr:.9,lo:.8,hi:.2,lf:.8,fin:'wrap'}),
- T('SW_REV','Reverse Sweep','Sweep','F',110,{pw:.5,cr:.6,lo:1,hi:.05,fin:'low'}),
- T('SW_SWITCH','Switch Sweep','Sweep','F',100,{pw:.34,cr:.7,lo:1,hi:.05,fin:'low'}),
- T('SW_FINE','Fine Sweep','Sweep','F',-130,{pw:.4,cr:.4,lo:1,hi:.05,fin:'low'}),
+ T('SW','Conventional Sweep','Sweep','F',-75,{kn:1,pw:.6,cr:.7,lo:1,hi:.05,fin:'low'}),
+ T('SW_PAD','Paddle Sweep','Sweep','F',-120,{kn:0.85,pw:.3,cr:.3,lo:.8,hi:.05,fin:'low'}),
+ T('SW_SLOG','Slog Sweep','Sweep','F',-80,{kn:0.9,pw:.95,cr:.9,lo:.8,hi:.2,lf:.8,fin:'wrap'}),
+ T('SW_REV','Reverse Sweep','Sweep','F',110,{kn:1,pw:.5,cr:.6,lo:1,hi:.05,fin:'low'}),
+ T('SW_SWITCH','Switch Sweep','Sweep','F',100,{kn:1,pw:.34,cr:.7,lo:1,hi:.05,fin:'low'}),
+ T('SW_FINE','Fine Sweep','Sweep','F',-130,{kn:1,pw:.4,cr:.4,lo:1,hi:.05,fin:'low'}),
  // Helicopter
  T('HEL','Helicopter Shot','Helicopter','F',-10,{pw:1,lf:1,hi:.3,fin:'heli'}),
  T('HEL_FF','Front Foot Helicopter','Helicopter','F',-5,{pw:1,lf:1,hi:.3,fin:'heli'}),
@@ -78,11 +78,11 @@ export const SHOTS=[
  T('HEL_PICK','Pick-up Helicopter','Helicopter','B',-35,{pw:1,lf:.9,hi:.4,cr:.3,fin:'heli'}),
  T('HEL_ONE','One-handed Helicopter Finish','Helicopter','F',-8,{pw:1,lf:1,hi:.3,fin:'heli1'}),
  // Scoop
- T('SC','Scoop','Scoop','F',-170,{pw:.7,lf:.7,lo:1,hi:.1,fin:'low'}),
- T('SC_DIL','Dilscoop','Scoop','F',-165,{pw:.7,lf:.7,lo:1,hi:.1,fin:'low'}),
- T('SC_PAD','Paddle Scoop','Scoop','F',-160,{pw:.4,lf:.5,lo:1,hi:.1,fin:'low'}),
- T('SC_REV','Reverse Scoop','Scoop','F',160,{pw:.6,lf:.6,lo:1,hi:.1,fin:'low'}),
- T('SC_FALL','Falling Scoop','Scoop','F',-170,{pw:.7,lf:.7,lo:1,hi:.1,fin:'low',st:.5}),
+ T('SC','Scoop','Scoop','F',-170,{kn:1,pw:.7,lf:.7,lo:1,hi:.1,fin:'low'}),
+ T('SC_DIL','Dilscoop','Scoop','F',-165,{kn:1,pw:.7,lf:.7,lo:1,hi:.1,fin:'low'}),
+ T('SC_PAD','Paddle Scoop','Scoop','F',-160,{kn:0.9,pw:.4,lf:.5,lo:1,hi:.1,fin:'low'}),
+ T('SC_REV','Reverse Scoop','Scoop','F',160,{kn:1,pw:.6,lf:.6,lo:1,hi:.1,fin:'low'}),
+ T('SC_FALL','Falling Scoop','Scoop','F',-170,{kn:1,pw:.7,lf:.7,lo:1,hi:.1,fin:'low',st:.5}),
  // Ramp
  T('RAMP','Ramp','Ramp','B',-175,{pw:.7,lf:.8,hi:.9,fin:'one'}),
  T('RAMP_REV','Reverse Ramp','Ramp','B',175,{pw:.7,lf:.8,hi:.9,fin:'one'}),
@@ -94,13 +94,13 @@ export const SHOTS=[
  T('LOF_ON','Lofted On Drive','Lofted','F',-25,{pw:.95,lf:1,fin:'wrap'}),
  T('LOF_IO','Inside-out Loft','Lofted','F',55,{pw:.95,lf:1,st:.6,fin:'wrap'}),
  // Slog
- T('SLOG','Slog','Slog','F',-70,{pw:1,lf:.9,cr:1,hi:.5,fin:'wrap'}),
- T('SLOG_CB','Cross-batted Slog','Slog','F',-85,{pw:1,lf:.9,cr:1,hi:.55,fin:'wrap'}),
- T('SLOG_LEG','Leg-side Slog','Slog','F',-80,{pw:1,lf:.9,cr:1,hi:.5,fin:'wrap'}),
+ T('SLOG','Slog','Slog','F',-70,{kn:0.9,pw:1,lf:.9,cr:1,hi:.5,fin:'wrap'}),
+ T('SLOG_CB','Cross-batted Slog','Slog','F',-85,{kn:0.9,pw:1,lf:.9,cr:1,hi:.55,fin:'wrap'}),
+ T('SLOG_LEG','Leg-side Slog','Slog','F',-80,{kn:0.9,pw:1,lf:.9,cr:1,hi:.5,fin:'wrap'}),
  // Unorthodox
  T('UN_SWITCH','Switch Hit','Unorthodox','F',-60,{pw:.9,lf:.7,cr:.6,fin:'switch'}),
  T('UN_REV','Reverse Hit','Unorthodox','F',100,{pw:.8,lf:.5,cr:.7,fin:'wrap'}),
- T('UN_LAP','Lap Shot','Unorthodox','F',-105,{pw:.6,lf:.3,lo:1,hi:.05,fin:'low'}),
+ T('UN_LAP','Lap Shot','Unorthodox','F',-105,{kn:1,pw:.6,lf:.3,lo:1,hi:.05,fin:'low'}),
  T('UN_NOLOOK','No-look Shot','Unorthodox','F',-30,{pw:.65,lf:.5,fin:'one'}),
  T('UN_TENNIS','Tennis-style Shot','Unorthodox','B',-45,{pw:.65,cr:.9,hi:.7,fin:'one'}),
  T('UN_ONE','One-handed Shot','Unorthodox','F',20,{pw:.4,fin:'one'}),
@@ -144,6 +144,7 @@ function rawPose(shot,t,T0){ // t in seconds; T0 timings
    aTop:[L(50,62,hi)+L(0,26,hi)+pw*8+cr*14,-off*34*(.3+cr)+hi*8,L(38,16,pw)],aBot:[L(52,66,hi)+L(0,26,hi)+pw*8+cr*16,off*34*(.3+cr)+hi*8,L(42,14,pw)],
    front:F?[L(26,46,pw)+p.st*20,L(30,44,pw)+lo*20]:B?[8,12]:[10,14],back:F?[-12,L(14,22,pw)]:B?[L(6,14,pw),L(8,14,pw)+lo*20]:[-2,10],
    y:-8-lo*18-(F?4:0),r:[off*.05,0,F?-.15-p.st*.45:B?.1:0],ry:-dir*.15,rx:0};
+ const kn=p.kn||0;if(kn){ct.front=[L(ct.front[0],74,kn),L(ct.front[1],92,kn)];ct.back=[L(ct.back[0],-32,kn),L(ct.back[1],128,kn)];ct.y=L(ct.y,-50,kn);ct.lean=L(ct.lean,30,kn);ct.head=L(ct.head,-22,kn);ct.aTop=[L(ct.aTop[0],78,kn),ct.aTop[1],L(ct.aTop[2],34,kn)];ct.aBot=[L(ct.aBot[0],80,kn),ct.aBot[1],L(ct.aBot[2],34,kn)];bl.front=[L(bl.front[0],40,kn),L(bl.front[1],50,kn)];bl.back=[L(bl.back[0],-15,kn),L(bl.back[1],70,kn)];bl.y=L(bl.y,-30,kn)}
  if(p.fin==='switch'){ct.twist=-tw}
  // arm elevation for loft / low shots
  if(hi>.7){ct.aTop[1]+=18*cr;ct.aBot[1]+=18*cr}
