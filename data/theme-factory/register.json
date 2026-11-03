@@ -266,5 +266,24 @@
   "motion": "crown drop+sunburst+confetti",
   "sample": "docs/sample_RS_e100.png",
   "status": "BUILT_PROTOTYPE (CSS real-time, verified headless; NOT 4K rendered, NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-SCR-030",
+  "name": "Wagon Wheel (3D tilted, data-bound to ball events with ang{a,d})",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield.html?screen=ww",
+  "events": [
+   "WAGON_WHEEL"
+  ],
+  "states": [
+   "ENTER",
+   "HOLD",
+   "EXIT",
+   "UPDATE"
+  ],
+  "api": "shTheme.fromEvents(innings.ev, {n,r,b,f,s,team,opp,score,ov,target})",
+  "reference": "user-supplied wagon_wheel_real_webgl.html (functional reference only; this build is independent)",
+  "sample": "docs/sample_RS_ww.png",
+  "status": "BUILT_PROTOTYPE (verified headless; NOT approved)"
  }
 ]

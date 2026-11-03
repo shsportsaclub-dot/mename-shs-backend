@@ -113,6 +113,19 @@ body.bg{background:radial-gradient(120% 90% at 50% 0%,#0b1a30,#050c18 70%)}
 .crown{width:14cqw;opacity:0;transform:translateY(-20cqh)}.in .crown{animation:cr .9s .8s cubic-bezier(.2,1.4,.3,1) both}@keyframes cr{to{opacity:1;transform:none}}
 .burst{position:absolute;left:50%;top:50%;width:70cqw;height:70cqw;margin:-35cqw;background:repeating-conic-gradient(from 0deg,#ffe27a55 0 4deg,transparent 4deg 15deg);border-radius:50%;-webkit-mask:radial-gradient(circle,#000 10%,transparent 70%);mask:radial-gradient(circle,#000 10%,transparent 70%);opacity:0}.in .burst{animation:bu 5s .2s linear both}@keyframes bu{0%{opacity:0;transform:rotate(0) scale(.2)}15%{opacity:1}100%{opacity:.7;transform:rotate(90deg) scale(1)}}
 #e100 .lbl,#e50 .lbl{color:var(--gold)}
+
+/* WAGON WHEEL */
+#ww .stage{position:absolute;left:23cqw;right:23cqw;top:17cqh;bottom:12cqh;perspective:1600px}
+#ww .pl3{position:absolute;inset:0;transform:rotateX(54deg) rotateZ(-8deg);transform-style:preserve-3d;opacity:0}.in #ww .pl3{animation:wwin 1.2s .3s cubic-bezier(.2,.9,.2,1) both}@keyframes wwin{from{opacity:0;transform:rotateX(90deg) rotateZ(-40deg) scale(.5)}to{opacity:1;transform:rotateX(54deg) rotateZ(-8deg)}}
+.hold #ww .pl3,.in #ww .pl3{filter:drop-shadow(0 3cqh 3cqh #000a)}
+#ww svg{width:100%;height:100%;overflow:visible}
+.shot{stroke-dasharray:1;stroke-dashoffset:1;fill:none;stroke-linecap:round}.in .shot{animation:dr .9s cubic-bezier(.3,.7,.3,1) both;animation-delay:calc(var(--i)*.09s + 1.2s)}@keyframes dr{to{stroke-dashoffset:0}}
+.tip{opacity:0}.in .tip{animation:dn .3s both;animation-delay:calc(var(--i)*.09s + 1.9s)}
+#ww .cardw{position:absolute;left:4cqw;top:24cqh;width:21cqw;padding:2cqw;background:linear-gradient(110deg,#0c2037f2,#0a1a2cb8);border:.15cqw solid var(--gold3);border-left:.5cqw solid var(--gold);border-radius:.8cqw;opacity:0;transform:translateX(-6cqw)}.in #ww .cardw{animation:sl .8s .6s both}
+.cardw small{font:600 1.3cqw/1 var(--f);letter-spacing:.3cqw;color:var(--cy)}.cardw b{display:block;font:800 2.6cqw/1.1 var(--f);margin:1.2cqh 0 .4cqh;text-transform:uppercase}.cardw .rr{font:900 6cqw/1 var(--f);color:var(--gold)}.cardw .rr span{font-size:2.4cqw;color:#9fb2c7;margin-left:.6cqw}.cardw .f{font:600 1.7cqw/1.4 var(--f);color:#dbe7f5;margin-top:1cqh}
+#ww .legw{position:absolute;right:4cqw;top:24cqh;width:17cqw;padding:1.6cqw;background:#08141fd9;border:.15cqw solid var(--gold3);border-radius:.8cqw;font:600 1.6cqw/1 var(--f);opacity:0;transform:translateX(6cqw)}.in #ww .legw{animation:sl .8s .8s both}
+.legw h4{margin:0 0 1.2cqh;font:800 1.5cqw/1 var(--f);color:var(--gold);letter-spacing:.25cqw}.legw div{display:flex;justify-content:space-between;margin:1cqh 0}.legw i{display:inline-block;width:1cqw;height:1cqw;border-radius:50%;margin-right:.7cqw}
+.wwb{position:absolute;left:6cqw;right:6cqw;bottom:3cqh;height:7cqh;white-space:nowrap;display:flex;justify-content:space-between;align-items:center;padding:0 3cqw;background:linear-gradient(90deg,#063a6b,#061827 45%,#061827 55%,#6b1837);border:.15cqw solid var(--gold3);font:800 2cqw/1 var(--f);text-transform:uppercase;opacity:0}.in .wwb{animation:dn .6s 1.4s both}.wwb b{color:var(--gold2);font-size:2.4cqw}
 </style></head><body><div id="st"><div class="beam l"></div><div class="beam r"></div>
 <div class="hd"><b>SCORING HEROES</b><span id="sub"></span></div><div class="ttl" id="ttl"></div>
 <div class="sc" id="toss"><div class="tm a" id="ta"></div><div class="tm b" id="tb"></div><div class="shield"><div class="tw" id="tw"></div><div class="el" id="el"></div><div class="coin" id="coin"><i>SH</i><i>TOSS</i></div></div></div>
@@ -128,6 +141,7 @@ body.bg{background:radial-gradient(120% 90% at 50% 0%,#0b1a30,#050c18 70%)}
 <div class="sc" id="eo"><div class="flash"></div><div class="ev" id="eoc"></div></div>
 <div class="sc" id="e50"><div class="ev" id="e50c"></div></div>
 <div class="sc" id="e100"><div class="burst"></div><div class="ev" id="e100c"></div><div id="cf100"></div></div>
+<div class="sc" id="ww"><div class="cardw" id="wc"></div><div class="stage"><div class="pl3"><svg viewBox="-130 -110 260 220" id="wsv"></svg></div></div><div class="legw" id="wl"></div><div class="wwb" id="wb"></div></div>
 </div><script>
 const Q=new URLSearchParams(location.search),B=document.body;if(Q.get('bg')==='1')B.classList.add('bg');
 const SH=c=>`<svg viewBox="0 0 100 100"><circle cx="50" cy="36" r="17" fill="#26405d" stroke="${c}" stroke-width="2"/><path d="M14 98c0-26 14-38 36-38s36 12 36 38z" fill="${c}" opacity=".9"/></svg>`;
@@ -138,10 +152,11 @@ sc:{team:'Sky High Kings',score:'142/4',overs:'16.2',bat:[['Aarav Sharma',62,38,
 pt:{a:{n:'Aarav Sharma',r:62,b:38},b:{n:'Rohan Mehta',r:24,b:12},total:93,balls:52,wkt:3},
 is:{team:'Sky High Kings',score:'168/6',overs:'20.0',rr:'8.40',bat:[['Aarav Sharma','74 (46)'],['Rohan Mehta','38 (19)']],bowl:[['Yash Gupta','3/24 (4)'],['Neel Iyer','2/31 (4)']]},
 rs:{win:'Sky High Kings',margin:'won by 24 runs',mom:'Aarav Sharma',mom2:'74 (46) & 1 catch',a:'168/6',b:'144/9'},
+ww:{n:'Aarav Sharma',r:72,b:44,f:6,s:4,team:'Sky High Kings',opp:'Hapur Hawks',score:'154/4',ov:'17.3',target:183,shots:[[-2.3,.92,6],[-1.65,.98,4],[-.9,.6,2],[-.32,.95,6],[.3,.42,1],[.92,.96,4],[1.53,.55,3],[2.22,1,6],[2.78,.45,2],[3.43,.9,4],[4.06,1,6],[5.2,.97,4],[5.8,.5,1]]},
 ev:{n:'Aarav Sharma',r:62,b:38,f:6,s:2,shot:'Cover drive',how:'Bowled',bowl:'Yash Gupta',fld:'',score:'142/4',ov:'16.2'},
 mh:{overs:[8,14,6,22,9,5,13,19,7,11,16,4,12,10,28,6,15,9,21,8],wk:{3:1,7:1,12:2,15:1,18:1}}};
 let D=JSON.parse(JSON.stringify(DEMO)),cur=Q.get('screen')||'toss';
-const T={e4:['FOUR','Boundary Four'],e6:['SIX','Boundary Six'],eo:['WICKET','Wicket'],e50:['FIFTY','Half Century'],e100:['CENTURY','Century'],sc:['LIVE SCORECARD','Scorecard'],pt:['PARTNERSHIP','Partnership'],is:['INNINGS SUMMARY','Innings Summary'],rs:['MATCH RESULT','Result'],toss:['MATCH TOSS','Toss Result'],xi:['PLAYING XI','Playing XI'],mu:['BATTER / BOWLER MATCHUP','Player Matchup'],mh:['RUNS PER OVER · MANHATTAN','Manhattan']};
+const T={ww:['WAGON WHEEL','Wagon Wheel'],e4:['FOUR','Boundary Four'],e6:['SIX','Boundary Six'],eo:['WICKET','Wicket'],e50:['FIFTY','Half Century'],e100:['CENTURY','Century'],sc:['LIVE SCORECARD','Scorecard'],pt:['PARTNERSHIP','Partnership'],is:['INNINGS SUMMARY','Innings Summary'],rs:['MATCH RESULT','Result'],toss:['MATCH TOSS','Toss Result'],xi:['PLAYING XI','Playing XI'],mu:['BATTER / BOWLER MATCHUP','Player Matchup'],mh:['RUNS PER OVER · MANHATTAN','Manhattan']};
 const up=s=>String(s).toUpperCase();
 function render(){const t=D.toss,w=t.winner==='a'?t.a:t.b;
  ta.textContent=up(t.a);tb.textContent=up(t.b);ta.className='tm a'+(t.winner==='a'?' w':'');tb.className='tm b'+(t.winner==='b'?' w':'');
@@ -155,6 +170,14 @@ function render(){const t=D.toss,w=t.winner==='a'?t.a:t.b;
  {const i=D.is;ism.innerHTML=`<small>${i.team} · INNINGS</small><div class=sc2>${i.score}</div><div class=ov>${i.overs} OVERS · RUN RATE ${i.rr}</div><div class=ln><div><span>TOP BATTERS</span>${i.bat.map(x=>x[0]+' '+x[1]).join('<br>')}</div><div><span>TOP BOWLERS</span>${i.bowl.map(x=>x[0]+' '+x[1]).join('<br>')}</div></div>`}
  {const r=D.rs;rsm.innerHTML=`<small>MATCH RESULT</small><div class=rs1>${r.win}<br>${r.margin}</div><div class=ov>${r.a} · ${r.b}</div><div class=mm style="margin-top:3cqh"><span style="color:var(--gold);font-size:1.6cqw">PLAYER OF THE MATCH</span><br>${r.mom} · ${r.mom2}</div>`}
 
+ {const w=D.ww,C={1:'#8896a8',2:'#5bc8f5',3:'#5bc8f5',4:'#ffd45a',6:'#ff4d6d'},R=100;let g=`<defs><radialGradient id="gr"><stop offset="0" stop-color="#1f8a68"/><stop offset="1" stop-color="#0c4a3b"/></radialGradient></defs><ellipse cx="0" cy="0" rx="124" ry="124" fill="#0a1a2a" opacity=".6"/><circle r="${R}" fill="url(#gr)" stroke="#ffd45a" stroke-width="2"/>`;
+ for(const k of [.33,.66])g+=`<circle r="${R*k}" fill="none" stroke="#ffffff30" stroke-dasharray="3 4"/>`;g+=`<rect x="-3.5" y="-12" width="7" height="24" fill="#d8c08a" rx="1"/>`;
+ w.shots.forEach((q,i)=>{const a=q[0],d=Math.min(1.05,q[1])*R,x=Math.cos(a)*d,y=Math.sin(a)*d,c=C[Math.min(q[2],6)]||C[1],lift=q[2]===6?-d*.55:q[2]>=4?-d*.2:0,mx=x/2+Math.sin(a)*lift*.0,my=y/2+lift;
+  g+=`<path class="shot" pathLength="1" style="--i:${i}" d="M0 0 Q${mx.toFixed(1)} ${my.toFixed(1)} ${x.toFixed(1)} ${y.toFixed(1)}" stroke="${c}" stroke-width="${q[2]>=4?2.6:1.6}" filter="drop-shadow(0 0 3px ${c})"/><circle class="tip" style="--i:${i}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${q[2]>=4?4:3}" fill="${c}"/>`});
+ wsv.innerHTML=g;const cn=r=>w.shots.filter(q=>q[2]===r).length;
+ wc.innerHTML=`<small>ON STRIKE · BATTER</small><b>${w.n}</b><div class="rr">${w.r}<span>(${w.b})</span></div><div class="f">4s ${w.f} · 6s ${w.s}<br>STRIKE RATE ${(w.r*100/w.b).toFixed(1)}</div>`;
+ wl.innerHTML=`<h4>SHOT MAP</h4>${[[6,'SIX'],[4,'FOUR'],[3,'3 RUNS'],[2,'2 RUNS'],[1,'SINGLE']].map(([r,l])=>`<div><span><i style="background:${C[r]}"></i>${l}</span><b>${cn(r)}</b></div>`).join('')}`;
+ wb.innerHTML=`<span>${up(w.team)}</span><b>${w.score} · ${w.ov} OV${w.target?' · TARGET '+w.target:''}</b><span>${up(w.opp)}</span>`}
  {const e=D.ev,sub=`${e.r} (${e.b}) · ${e.f} FOURS · ${e.s} SIXES`,CF=n=>Array.from({length:n},(_,i)=>`<i class="cf" style="left:${(i*37)%100}%;--d:${(i%12)*.12+.9}s;--r:${(i*53)%720}deg;background:${['#ffe27a','#38a9ec','#d32f4a','#fff'][i%4]}"></i>`).join('');
  e4c.innerHTML=`<div class="num">4</div><div class="lbl">FOUR</div><div class="nm">${e.n}</div><div class="st">${e.shot}</div><div class="sb">${sub}</div>`;
  e6c.innerHTML=`<div class="num">6</div><div class="lbl">SIX</div><div class="nm">${e.n}</div><div class="st">${e.shot}</div><div class="sb">${sub}</div>`;cf6.innerHTML=CF(40);
@@ -167,11 +190,12 @@ function render(){const t=D.toss,w=t.winner==='a'?t.a:t.b;
   s+=`<rect class="bar" style="--i:${i}" x="${x}" y="${y}" width="${pw*.64}" height="${h}" rx="4" fill="${c}"/><text x="${x+pw*.32}" y="${H-Bt+24}" fill="#fff" font-size="15" text-anchor="middle">${i+1}</text><text x="${x+pw*.32}" y="${y-8}" fill="#fff" font-size="15" font-weight="700" text-anchor="middle">${v}</text>`;
   const k=D.mh.wk[i+1];if(k)for(let j=0;j<k;j++)s+=`<circle class="wk" style="--i:${i}" cx="${x+pw*.32}" cy="${y-30-j*20}" r="7" fill="#fff" stroke="#d32f4a" stroke-width="3"/>`});
  mc.innerHTML=s;lg.innerHTML=`<i style="background:#38a9ec"></i>POWERPLAY 1–6<i style="background:#ecb654"></i>MIDDLE 7–15<i style="background:#d32f4a"></i>DEATH 16–20<i style="background:#fff;border-radius:50%"></i>WICKET`}
-function show(n){cur=n;document.querySelectorAll('.sc').forEach(e=>e.classList.toggle('on',e.id===n));ttl.textContent=n==='xi'?'PLAYING XI / '+up(D.xi.team):n==='sc'?'BATTING / '+up(D.sc.team):/^e/.test(n)?'':T[n][0];sub.textContent='ROYAL SHIELD / '+up(T[n][1])}
+function show(n){cur=n;document.querySelectorAll('.sc').forEach(e=>e.classList.toggle('on',e.id===n));ttl.textContent=n==='xi'?'PLAYING XI / '+up(D.xi.team):n==='sc'?'BATTING / '+up(D.sc.team):/^e\d|^eo/.test(n)?'':T[n][0];sub.textContent='ROYAL SHIELD / '+up(T[n][1])}
 window.shTheme={id:'SH-RS-V6',
  state(s){B.classList.remove('in','out');void B.offsetWidth;if(s==='ENTER'){show(cur);B.classList.add('in')}else if(s==='EXIT')B.classList.add('out');else if(s==='HOLD')B.classList.add('in')},
+ fromEvents(evs,info){const sh=(evs||[]).filter(e=>e.ang&&e.r>0&&e.x!=='b'&&e.x!=='lb'&&!e.w).map(e=>[e.ang.a,e.ang.d,e.r]);this.event('WAGON_WHEEL',Object.assign({},D.ww,info||{},{shots:sh}))},
  screen(n){cur=n;this.state('ENTER')},data(d){Object.assign(D,d);render();show(cur)},
- event(ev,p){const map={FOUR:['e4','ev'],SIX:['e6','ev'],WICKET:['eo','ev'],FIFTY:['e50','ev'],HUNDRED:['e100','ev'],SCORECARD_SHOWN:['sc','sc'],PARTNERSHIP_UPDATE:['pt','pt'],INNINGS_ENDED:['is','is'],MATCH_RESULT:['rs','rs'],TOSS_DECIDED:['toss','toss'],XI_ANNOUNCED:['xi','xi'],MATCHUP_SELECTED:['mu','mu'],INNINGS_BREAK:['mh','mh']}[ev];if(map){this.data({[map[1]]:p});this.screen(map[0])}}};
+ event(ev,p){const map={WAGON_WHEEL:['ww','ww'],FOUR:['e4','ev'],SIX:['e6','ev'],WICKET:['eo','ev'],FIFTY:['e50','ev'],HUNDRED:['e100','ev'],SCORECARD_SHOWN:['sc','sc'],PARTNERSHIP_UPDATE:['pt','pt'],INNINGS_ENDED:['is','is'],MATCH_RESULT:['rs','rs'],TOSS_DECIDED:['toss','toss'],XI_ANNOUNCED:['xi','xi'],MATCHUP_SELECTED:['mu','mu'],INNINGS_BREAK:['mh','mh']}[ev];if(map){this.data({[map[1]]:p});this.screen(map[0])}}};
 addEventListener('message',e=>{const d=e.data||{};if(d.shTheme)shTheme[d.fn](...(d.args||[]))});
 render();shTheme.state('ENTER');
 </script></body></html>
