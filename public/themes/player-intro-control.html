@@ -12,7 +12,7 @@
 </style></head><body>
 <div class="pv"><iframe id="f" src="royal-shield-b.html?screen=pi"></iframe></div>
 <div class="bar"><button class="go" id="show">SHOW</button><button id="hide">HIDE</button><button id="nx">NEXT ▶</button><button id="ly">STYLE 1</button></div>
-<div class="tabs" id="tabs"></div><div class="hint" id="src"></div>
+<div class="tabs" id="tabs"></div><div class="hint" id="src"></div><div class="hint" id="live"></div>
 <div class="hint">Tap a player. Name, role, stats fill automatically — no typing.</div>
 <div class="grid" id="g"></div>
 <script>
@@ -34,13 +34,16 @@ const send=(fn,...a)=>f.contentWindow.postMessage({shTheme:1,fn,args:a},'*');
 const pack=(p,t,img)=>({pi:{n:p[0],tm:TEAM[t],rl:p[1].toUpperCase(),img:img||'',role:p[1].replace(' · Captain','')+(p[1].includes('Captain')?' · C':'')+(RL?'':' · '+['Kings','Hawks'][t]),st:p[6]||[['MATCHES',''+p[2]],['RUNS',p[3].toLocaleString('en-IN')],['STRIKE RATE',''+p[4]],['HIGH SCORE',''+p[5]]]}});
 function draw(){g.innerHTML=R[team].map((p,i)=>`<button class="p ${i===cur?'sel':''}" data-i="${i}"><b>${p[0]}</b><small>${p[1]}</small></button>`).join('')}
 const IMG={};async function photo(n){const k=n.toLowerCase().replace(/[^a-z ]/g,'').replace(/\s+/g,' ').trim();if(k in IMG)return IMG[k];let u='';try{const e=encodeURIComponent(n);const a=await (await fetch('/api/faces?names='+e)).json();u=(a.faces&&a.faces[k])||'';if(!u){const b=await (await fetch('/api/avatars?names='+e)).json();u=(b.avatars&&b.avatars[k])||''}}catch(x){}return IMG[k]=u}
-async function show(){const p=R[team][cur];send('data',pack(p,team,p[7]||await photo(p[0])));send('screen','pi')}
+let GK='';try{GK=new URLSearchParams(location.search).get('gk')||((JSON.parse(localStorage.getItem('scoringheroes.v1')||'{}').stream||{}).gfxKey)||''}catch(e){}
+const lv=document.getElementById('live');lv.textContent=GK?'LIVE link ON: SHOW also sends to your stream overlay.':'Live link OFF: open this page with ?gk=YOUR_STREAM_KEY (or set a stream key in the app).';
+async function take(kind,data){if(!GK)return;try{const u='/api/gfx/take?k='+encodeURIComponent(GK)+'&kind='+kind+(data?'&data='+encodeURIComponent(JSON.stringify(data)):'');const j=await (await fetch(u)).json();lv.textContent=j.ok?'LIVE: sent to stream ✔':'LIVE send failed: '+(j.error||'error')}catch(e){lv.textContent='LIVE send failed (offline?)'}}
+async function show(){const p=R[team][cur];const pk=pack(p,team,p[7]||await photo(p[0]));send('data',pk);send('screen','pi');const x=pk.pi;take('player_intro',{n:x.n,team:x.tm,sub:x.rl,cols:x.st.slice(0,4)})}
 g.onclick=e=>{const b=e.target.closest('.p');if(!b)return;cur=+b.dataset.i;draw();show()};
 const tabs=document.getElementById('tabs');tabs.innerHTML=TEAM.map((n,i)=>`<button data-t="${i}" class="${i===0?'on':''}">${n}</button>`).join('');tabs.style.flexWrap='wrap';
 tabs.onclick=e=>{const b=e.target.closest('button');if(!b)return;team=+b.dataset.t;cur=0;[...tabs.children].forEach((x,i)=>x.classList.toggle('on',i===team));draw();show()};
 document.getElementById('src').textContent=RL?'Showing real players from this app ('+R.reduce((s,x)=>s+x.length,0)+').':'No players saved in this browser yet — showing sample roster. Open the app once here and they will load.';
 document.getElementById('show').onclick=show;
-document.getElementById('hide').onclick=()=>send('state','EXIT');
+document.getElementById('hide').onclick=()=>{send('state','EXIT');take('player_hide')};
 document.getElementById('nx').onclick=()=>{cur=(cur+1)%R[team].length;draw();show()};
 const LAY=['royal-shield-b.html?screen=pi','royal-shield-intro-split.html?manual=1'];let ly=0;document.getElementById('ly').onclick=function(){ly=1-ly;this.textContent='STYLE '+(ly+1);f.src=LAY[ly]};
 draw();f.onload=()=>setTimeout(show,300);

@@ -1,0 +1,15 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Player Intro Live Overlay</title>
+<style>html,body{margin:0;height:100%;background:transparent;overflow:hidden}iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:transparent}</style></head><body>
+<iframe id="f"></iframe>
+<script>
+// OBS browser source: /themes/intro-overlay.html?gk=YOUR_STREAM_KEY&style=1|2   (transparent)
+const q=new URLSearchParams(location.search),gk=q.get('gk')||'',st=q.get('style')==='2'?'royal-shield-intro-split.html?manual=1':'royal-shield-b.html?screen=pi';
+const f=document.getElementById('f');f.src=st;const send=(fn,...a)=>f.contentWindow.postMessage({shTheme:1,fn,args:a},'*');
+const fk=n=>String(n||'').toLowerCase().replace(/[^a-z ]/g,'').replace(/\s+/g,' ').trim();
+async function photo(n){try{const e=encodeURIComponent(n),k=fk(n);let a=await (await fetch('/api/faces?names='+e)).json();if(a.faces&&a.faces[k])return a.faces[k];a=await (await fetch('/api/avatars?names='+e)).json();return(a.avatars&&a.avatars[k])||''}catch(x){return''}}
+let after=null;
+async function tick(){if(!gk)return;try{const j=await (await fetch('/api/gfx/poll?k='+encodeURIComponent(gk)+(after==null?'':'&after='+after))).json();if(!j.ok)return;if(after==null){after=j.seq;return}after=j.seq;
+ for(const it of j.items||[]){if(it.kind==='player_hide'||it.kind==='__clear'){send('state','EXIT');continue}
+  if(it.kind==='player_intro'){const d=it.data||{},img=d.photo||await photo(d.n);send('data',{pi:{n:d.n,tm:d.team,rl:d.sub,role:(d.sub||'')+(d.team?' · '+d.team:''),img,st:d.cols||[]}});send('screen','pi')}}}catch(e){}}
+setInterval(tick,1000);tick();
+</script></body></html>
