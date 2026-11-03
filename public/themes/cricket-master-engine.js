@@ -198,6 +198,17 @@ export class MasterCricketEngine {
 
     switch (cmd.action) {
       case "play":
+        // 1. Rig-level constraints (grip, handedness, sockets) before the clip, only when the adapter provides a binder
+        if (typeof adapter.getRigBinder === "function") {
+          const binder = adapter.getRigBinder(cmd.data.actor);
+          if (binder && typeof binder.applyRigConstraints === "function") {
+            binder.applyRigConstraints(cmd.data.actor, cmd.data.clip, {
+              handPreference: options.handPreference || "right_hand",
+              bowlerHand: options.bowlerHand || BOWLER_HAND_TYPES.RIGHT_ARM
+            });
+          }
+        }
+        // 2. Then play the motion clip with expressions & equipment locks
         adapter.play(cmd.data.actor, cmd.data.clip, {
           facialExpression: cmd.data.expression || "neutral",
           handPreference: options.handPreference || "right_hand", // Right or Left Handed support

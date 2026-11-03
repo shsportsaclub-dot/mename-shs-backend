@@ -15,3 +15,11 @@ test("dispatch: show/play/shot/animate, hand preference, left-arm bowler mirror"
   assert.equal(got.find(g=>g[2][0]==="bowler")[2][2].mirror,true);assert.equal(got.find(g=>g[2][0]==="batter")[2][2].mirror,undefined);
   e.playSequence("NOPE");
 });
+
+test("rig binder hook runs before play, and is optional",async()=>{
+  const order=[];const av={getRigBinder:a=>({applyRigConstraints:(actor,clip,o)=>order.push(["bind",actor,o.handPreference])}),play:(a)=>order.push(["play",a])};
+  const e=new MasterCricketEngine({avatar:av});e.playSequence("OUT-10",{handPreference:"left_hand"});await new Promise(r=>setTimeout(r,300));
+  assert.deepEqual(order,[["bind","batter","left_hand"],["play","batter"]]);
+  const e2=new MasterCricketEngine({avatar:{play:()=>order.push("noBinder")}});e2.playSequence("OUT-10");await new Promise(r=>setTimeout(r,300));
+  assert.equal(order.at(-1),"noBinder");
+});
