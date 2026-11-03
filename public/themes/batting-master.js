@@ -136,7 +136,7 @@ function rawPose(shot,t,T0){ // t in seconds; T0 timings
  const dd=Math.max(-160,Math.min(160,dir+(p.tb||0))),TS=-1,BT=-TS*dd*.4*(.5+cr),tw=TS*dd*.06;
  const a=S(0,T0.back,t),c=S(T0.back,T0.hit,t),f=S(T0.hit,T0.fin,t),h=S(T0.fin,T0.hold,t),rec=S(T0.hold,T0.end,t);
  // key poses: stance -> backlift -> contact -> follow-through
- const stance={lean:14,twist:0,head:0,aTop:[35,0,55],aBot:[40,0,60],front:[8,10],back:[-6,10],y:-4,r:[0,0,0],ry:0,rx:0};
+ const stance={lean:26,twist:0,head:-6,hy:45,aTop:[10,0,60],aBot:[12,0,62],front:[18,24],back:[10,24],y:-12,r:[0,0,0],ry:0,rx:0};
  const bl={lean:L(10,4,pw),twist:BT,head:0,aTop:[L(-14,16,hi),0,L(110,140,pw)],aBot:[L(-10,20,hi),0,L(110,140,pw)],front:[10,12],back:[-4,12],y:-4,r:[0,0,0],ry:cr*10,rx:0};
 
  const reach=F?1:0;
@@ -172,9 +172,9 @@ function rawPose(shot,t,T0){ // t in seconds; T0 timings
  return mk(cur)}
 const ct2=v=>Math.max(-95,Math.min(95,v));
 const cl=a=>[Math.max(-60,Math.min(185,a[0])),a[1],Math.max(0,Math.min(150,a[2]))];
-function mk(o){return{lean:o.lean,twist:ct2(o.twist),head:o.head,aL:cl(o.aTop),aR:cl(o.aBot),lL:o.front,lR:o.back,y:o.y,r:o.r||[0,0,0],ry:o.ry||0,rx:o.rx||0,rz:o.rz||0}}
+function mk(o){return{hy:o.hy||0,lean:o.lean,twist:ct2(o.twist),head:o.head,aL:cl(o.aTop),aR:cl(o.aBot),lL:o.front,lR:o.back,y:o.y,r:o.r||[0,0,0],ry:o.ry||0,rx:o.rx||0,rz:o.rz||0}}
 /* mirror a right-hander pose into left-hander space (bat hand + foot + direction re-derived) */
-export function mirrorPose(p){return{lean:p.lean,twist:-p.twist,head:p.head,aL:p.aR,aR:p.aL,lL:p.lR,lR:p.lL,y:p.y,r:[-p.r[0],p.r[1],p.r[2]],ry:-p.ry,rx:p.rx,rz:-p.rz}}
+export function mirrorPose(p){return{hy:-(p.hy||0),lean:p.lean,twist:-p.twist,head:p.head,aL:p.aR,aR:p.aL,lL:p.lR,lR:p.lL,y:p.y,r:[-p.r[0],p.r[1],p.r[2]],ry:-p.ry,rx:p.rx,rz:-p.rz}}
 export const TIMING={back:.42,hit:.52,fin:.62,hold:1.1,end:1.6};
 /* build a clip {dur,f(t)->pose} for shot id and hand ('R'|'L'). contactT = moment of bat-ball contact. */
 export function buildClip(id,hand){const shot=SHOT_BY_ID[id];if(!shot)throw Error('unknown shot '+id);
