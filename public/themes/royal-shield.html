@@ -194,7 +194,7 @@ function show(n){cur=n;document.querySelectorAll('.sc').forEach(e=>e.classList.t
 window.shTheme={id:'SH-RS-V6',
  state(s){B.classList.remove('in','out');void B.offsetWidth;if(s==='ENTER'){show(cur);B.classList.add('in')}else if(s==='EXIT')B.classList.add('out');else if(s==='HOLD')B.classList.add('in')},
  fromEvents(evs,info){const sh=(evs||[]).filter(e=>e.ang&&e.r>0&&e.x!=='b'&&e.x!=='lb'&&!e.w).map(e=>[e.ang.a,e.ang.d,e.r]);this.event('WAGON_WHEEL',Object.assign({},D.ww,info||{},{shots:sh}))},
- screen(n){cur=n;this.state('ENTER')},data(d){Object.assign(D,d);render();show(cur)},
+ screen(n){cur=n;this.state('ENTER')},data(d){for(const k in d)D[k]=(D[k]&&typeof d[k]==='object'&&!Array.isArray(d[k]))?Object.assign({},D[k],d[k]):d[k];render();show(cur)},
  event(ev,p){const map={WAGON_WHEEL:['ww','ww'],FOUR:['e4','ev'],SIX:['e6','ev'],WICKET:['eo','ev'],FIFTY:['e50','ev'],HUNDRED:['e100','ev'],SCORECARD_SHOWN:['sc','sc'],PARTNERSHIP_UPDATE:['pt','pt'],INNINGS_ENDED:['is','is'],MATCH_RESULT:['rs','rs'],TOSS_DECIDED:['toss','toss'],XI_ANNOUNCED:['xi','xi'],MATCHUP_SELECTED:['mu','mu'],INNINGS_BREAK:['mh','mh']}[ev];if(map){this.data({[map[1]]:p});this.screen(map[0])}}};
 addEventListener('message',e=>{const d=e.data||{};if(d.shTheme)shTheme[d.fn](...(d.args||[]))});
 render();shTheme.state('ENTER');

@@ -1,0 +1,40 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Royal Shield Demo Reel</title>
+<style>html,body{margin:0;height:100%;background:#050c18;overflow:hidden;font-family:'Barlow Condensed','Arial Narrow','DejaVu Sans',sans-serif}
+iframe{position:absolute;left:0;top:0;width:100%;height:88vh;border:0;background:transparent}
+#strip{position:absolute;left:0;right:0;bottom:0;height:12vh;background:linear-gradient(90deg,#063a6b,#0a1626 40%,#0a1626 60%,#6b1837);border-top:.25vh solid #e6bd6a;display:flex;align-items:center;gap:1.6vw;padding:0 2vw;color:#fff;box-sizing:border-box}
+#tag{flex:none;background:#e6bd6a;color:#3a2600;font:800 1.7vw/1 'DejaVu Sans',sans-serif;padding:.7vw 1vw;border-radius:.4vw;letter-spacing:.1vw}
+#com{font:600 1.75vw/1.25 'DejaVu Sans',sans-serif;flex:1}#idx{flex:none;color:#e6bd6a;font:700 1.2vw/1 'DejaVu Sans',sans-serif;letter-spacing:.2vw;text-transform:uppercase;text-align:right}
+#gap{position:absolute;left:0;right:0;top:0;height:88vh;display:grid;place-items:center;color:#3a4f6e;font:700 2vw/1 'DejaVu Sans',sans-serif;letter-spacing:.5vw;opacity:0;transition:opacity .4s;z-index:4;pointer-events:none}</style></head>
+<body><iframe id="f"></iframe><div id="gap"></div><div id="strip"><div id="tag">SH LIVE</div><div id="com"></div><div id="idx"></div></div>
+<script>
+/* Own-made demo match: Sky High Kings v Hapur Hawks (SH Premier League, Match 14). All data is invented for this demo. */
+const RS='royal-shield.html?bg=1&screen=';
+const ev=(o)=>({ev:Object.assign({n:'Aarav Sharma',how:'Bowled',bowl:'Imran Qureshi',fld:''},o)});
+const LIST=[
+['Season schedule','sh-tk-00001-scr-001.html?bg=1',7,null,'PRE','Match 14 of the SH Premier League: Sky High Kings host Hapur Hawks at SH Arena. Under lights, a 7:30 start.'],
+['Toss',RS+'toss',6,{toss:{a:'Sky High Kings',b:'Hapur Hawks',winner:'a',elected:'bat'}},'TOSS','Captain Aarav Sharma calls it right. Kings win the toss and will bat first on a dry, true surface.'],
+['Playing XI',RS+'xi',7,null,'XI','Kings unchanged: Aarav and Vihaan to open, Aditya Nair behind the stumps, two spinners and two quicks in the attack.'],
+['Matchup',RS+'mu',6,{mu:{bat:{n:'Aarav Sharma',sr:134.8},bowl:{n:'Imran Qureshi',eco:7.6},balls:46,runs:62,wkts:3}},'1.1','The contest to watch: Aarav Sharma against left-arm pacer Imran Qureshi. 62 runs off 46 balls in their history, and Imran has won the duel three times.'],
+['FOUR',RS+'e4',4.5,ev({r:18,b:11,f:3,s:1,shot:'Cover drive'}),'3.4','Full and wide, Aarav leans into it. Through the covers, no fielder moves. FOUR!'],
+['SIX',RS+'e6',5,ev({r:24,b:14,f:3,s:2,shot:'Lofted over long-on'}),'4.2','Down the track, a flat swing, and that is miles over long-on. SIX! Straight into the stand.'],
+['FIFTY',RS+'e50',5,ev({r:50,b:29,f:5,s:3}),'7.5','A quick single to mid-wicket and the bat goes up. Fifty for Aarav Sharma off 29 balls.'],
+['Scorecard',RS+'sc',6,{sc:{team:'Sky High Kings',score:'142/4',overs:'14.2',bat:[['Aarav Sharma',62,38,6,2,'st'],['Vihaan Rao',31,22,3,1,''],['Kabir Singh',18,15,2,0,'out'],['Rohan Mehta',24,12,1,2,'st']]}},'14.2','Kings are 142 for 4 after 14.2 overs. Aarav is the anchor, Rohan Mehta is arriving with intent.'],
+['Partnership',RS+'pt',6,{pt:{a:{n:'Aarav Sharma',r:62,b:38},b:{n:'Rohan Mehta',r:24,b:12},total:93,balls:52,wkt:3}},'14.2','The third-wicket stand is worth 93 from 52 balls and has taken the game away from Hawks.'],
+['Wagon wheel',RS+'ww',7,{ww:{target:0,score:'154/4',ov:'17.3'}},'17.3','Look at where Aarav scores: every boundary comes square or behind square. Hawks have no answer to the cut.'],
+['Wicket',RS+'eo',4.5,ev({n:'Rohan Mehta',r:24,b:12,f:1,s:2,how:'Bowled',bowl:'Neel Iyer',score:'164/5',ov:'18.1'}),'18.1','Rohan Mehta tries to scoop and misses. Middle stump knocked back! Out! Kings 164 for 5.'],
+['Hundred',RS+'e100',6,ev({r:100,b:52,f:9,s:5,score:'221/5',ov:'19.2'}),'19.2','Aarav Sharma clips it fine, runs hard, and raises the bat: a hundred off 52 balls. The crowd is on its feet.'],
+['Manhattan',RS+'mh',7,null,'20.0','The run-rate story of the innings: a quiet powerplay, 28 in the 15th over, and 21 more at the death.'],
+['Innings summary',RS+'is',6,{is:{team:'Sky High Kings',score:'243/6',overs:'20.0',rr:'12.15',bat:[['Aarav Sharma','112 (58)'],['Vihaan Rao','41 (30)']],bowl:[['Imran Qureshi','2/38 (4)'],['Dev Rathi','2/46 (4)']]}},'END','Kings finish on 243 for 6. Hawks will need to chase the highest total of the season.'],
+['Match result',RS+'rs',6,{rs:{win:'Sky High Kings',margin:'won by 24 runs',mom:'Aarav Sharma',mom2:'112 (58) & 1 catch',a:'243/6',b:'219/8'}},'RESULT','Hawks fall 24 short. Sky High Kings win Match 14, and Aarav Sharma is Player of the Match.']];
+const GAP=+new URLSearchParams(location.search).get('gap')||2.5,f=document.getElementById('f'),com=document.getElementById('com'),tag=document.getElementById('tag'),idx=document.getElementById('idx'),gap=document.getElementById('gap');
+const sl=ms=>new Promise(r=>setTimeout(r,ms)),post=(fn,args)=>f.contentWindow.postMessage({shTheme:1,fn,args:args||[]},'*');
+window.DEMO_LOG=[];
+(async()=>{await sl(800);
+ for(let i=0;i<LIST.length;i++){const [l,src,h,data,t,c]=LIST[i];
+  gap.style.opacity=0;f.src=src;await new Promise(r=>f.onload=r);await sl(150);
+  if(data)post('data',[data]);
+  tag.textContent=t;com.textContent=c;idx.textContent=(i+1)+'/'+LIST.length+' · '+l;DEMO_LOG.push({i,l,t:performance.now()|0});
+  post('state',['ENTER']);await sl(h*1000);post('state',['EXIT']);await sl(900);
+  f.src='about:blank';com.textContent='';tag.textContent='SH LIVE';idx.textContent='';gap.textContent='NEXT: '+(LIST[i+1]?LIST[i+1][0]:'END');gap.style.opacity=1;await sl(GAP*1000)}
+ gap.textContent='END OF REEL';window.DEMO_DONE=true})();
+</script></body></html>
