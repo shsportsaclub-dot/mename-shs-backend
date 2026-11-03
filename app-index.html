@@ -590,6 +590,7 @@ function engText(n,st){
     if(n.tot===0){st.dots++;if(st.dots>=3)t+=` ${st.dots} dot balls in a row.`}else st.dots=0;
     t+=engVoice(n,st,B,pre,dots0)}
   return t}
+window.shBatHand=id=>{try{const p=P(id);return p&&p.bat==='Left-hand'?'L':'R'}catch(e){return'R'}};
 function cNorm(e){return {bat:sh(e.bt),bowl:sh(e.bl),sd:(window.shLine&&(!e.x||e.x==='nb')&&e.r>0&&(e.ang||e.shot))?window.shLine(e.ang,e.shot,(typeof P==='function'&&P(e.bt)||{}).bat,e.r):'',brun:(!e.x||e.x==='nb')?e.r:0,tot:e.r+(e.x==='wd'?1:e.x==='nb'?NBP:0),x:e.x||'',wk:e.w?{out:sh(e.out),kind:e.w,fld:e.fld}:null}}
 function cText(e){return engText(cNorm(e),null)}
 function commentary(m,i){
@@ -13077,7 +13078,7 @@ function human(x,y,z,o){if(!(window.shx&&shx.on()))return human2d(x,y,z,o);
  const f=pr(x,y,z);if(f){if(!(window.shx&&shx.envOk)){ctx.fillStyle='#00000055';ctx.beginPath();ctx.ellipse(f.x,f.y,Math.max(3,f.s*.5),Math.max(1.5,f.s*.16),0,0,7);ctx.fill()}
   if(o.name&&!G.hero){const t=String(o.name),fs=Math.max(11,Math.min(20,f.s*.4));ctx.font='700 '+fs+'px system-ui';const ww=ctx.measureText(t).width+12;ctx.fillStyle='#0b1020e6';ctx.beginPath();ctx.roundRect(f.x-ww/2,f.y-f.s*2.15-fs-6,ww,fs+8,5);ctx.fill();ctx.fillStyle=o.tag||'#fff';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(t,f.x,f.y-f.s*2.15-fs/2-2)}}
  const face=(G.hero&&o.bat&&G.tcam)?[G.tcam.x,G.tcam.z]:o.bowl?[x,-30]:(o.bat||o.ph===4)?[x,30]:o.ph===3||o.ph===5?[x,-30]:[0,0];
- shx.h('c'+(o.ph||0),x,z,{c:o.c,kit:o.bat||o.ph===3?'bat':o.bowl?'bowl':o.ph===4?'wk':o.ph===5?'ump':'field',nm:String(o.name||'').trim().split(/\s+/).slice(-1)[0],face,run:o.run,bat:o.bat,swing:o.swing,stroke:o.stroke,arm:o.bowl?o.arm:0,up:o.catchUp?0:0,catchUp:o.catchUp,hold:!o.run&&!!(o.bat||o.bowl)})}
+ shx.h('c'+(o.ph||0),x,z,{c:o.c,kit:o.bat||o.ph===3?'bat':o.bowl?'bowl':o.ph===4?'wk':o.ph===5?'ump':'field',nm:String(o.name||'').trim().split(/\s+/).slice(-1)[0],face,run:o.run,bat:o.bat,swing:o.swing,stroke:o.stroke,shot:o.shot,hand:o.hand,arm:o.bowl?o.arm:0,up:o.catchUp?0:0,catchUp:o.catchUp,hold:!o.run&&!!(o.bat||o.bowl)})}
 function layout(){const m=CC.m;if(!m)return;if(CC.d)inject(CC.d);const i=Math.max(0,Math.min(m.innings.length-1,m.cur||0)),inn=m.innings[i];if(!inn)return;const tb=T(inn.bat)||{},tw=T(inn.bowl)||{};G.bat.c=tb.color||'#2563eb';G.bowl.c=tw.color||'#dc2626';if(G.bat.c.toLowerCase()===G.bowl.c.toLowerCase())G.bowl.c='#e8e8e8'}
 const field=[[-1,0,-4],[0,1,-6],[1,0,-4],[-24,0,16],[24,0,16],[-30,0,36],[30,0,36],[0,0,48],[-14,0,2],[16,0,3]];
 function frame(t){if(!ctx||!cv||!document.body.contains(cv)){ctx=null;cv=$('ccg');if(!cv){G.raf=0;return}ctx=cv.getContext('2d')}
@@ -13087,7 +13088,7 @@ function frame(t){if(!ctx||!cv||!document.body.contains(cv)){ctx=null;cv=$('ccg'
  // collect characters sorted far -> near
  const L=[],names=G.names,fs=G.fieldPos||field.map(f=>({x:f[0],z:f[2]}));
  L.push({z:21+ (G.bowlZ||0),f:()=>human(G.bowlX||0,0,G.bowlZ==null?21:20.12+G.bowlZ,{c:G.bowl.c,bowl:1,arm:G.arm||0,run:G.bowlRun,name:names.bowl,tag:'#ff6b6b',cap:1,ph:1})});
- L.push({z:-.9,f:()=>human(G.batX==null?-.55:G.batX,0,G.batZ==null?-.5:G.batZ,{c:G.bat.c,bat:1,swing:G.swing||0,dir:1,pads:1,helmet:1,name:names.bat,tag:'#c4f000',run:G.batRun,ph:2,stroke:G.strokeT()})});
+ L.push({z:-.9,f:()=>human(G.batX==null?-.55:G.batX,0,G.batZ==null?-.5:G.batZ,{c:G.bat.c,bat:1,swing:G.swing||0,dir:1,pads:1,helmet:1,name:names.bat,tag:'#c4f000',run:G.batRun,ph:2,stroke:G.strokeT(),shot:G.shotId,hand:G.batHand})});
  L.push({z:19.2,f:()=>human(.9+(G.nsX||0),0,G.nsZ==null?19.6:G.nsZ,{c:G.bat.c,pads:1,helmet:1,run:G.nsRun,ph:3})});
  L.push({z:-3,f:()=>human(0,0,-3.2,{c:G.bowl.c,pads:1,cap:1,ph:4,catchUp:G.wk&&G.wk.catch})});
  L.push({z:19.8,f:()=>human(2.4,0,21.8,{c:'#111827',signal:G.sig,ph:5})});
@@ -13113,6 +13114,7 @@ async function play(k){const e=k.e,m=CC.m;layout();startLoop();{const w=e.w?'WIC
  // run-up
  await tween(900,p=>{G.bowlRun=1;G.bowlZ=9*(1-ease(p));G.arm=0;G.bowlX=0});G.bowlRun=0;G.bowlZ=0;
  // delivery: arm over, ball released
+ try{const BMx=window.shx&&shx.SBP&&shx.SBP.BM;if(BMx){const hd=window.shBatHand?shBatHand(e.bt):'R';let a=e.ang?Math.atan2(Math.cos(e.ang.a),-Math.sin(e.ang.a))*180/Math.PI:0;if(hd==='L')a=-a;G.batHand=hd;G.shotId=BMx.pickShot({shot:e.shot,foot:e.foot,runs:e.r,ang:a,loft:e.r===6,out:!!e.w})}}catch(x){}
  G.st0=(hit||e.w==='Caught')?performance.now()+450:null;
  const wide=e.x==='wd',nb=e.x==='nb',bx=wide?1.6:(e.w==='Bowled'?0:.1);
  G.ball.on=1;await tween(450,p=>{G.arm=Math.PI*p;G.ball.x=0;G.ball.y=2.3;G.ball.z=20.12-p*1});G.arm=0;
@@ -13149,7 +13151,7 @@ async function play(k){const e=k.e,m=CC.m;layout();startLoop();{const w=e.w?'WIC
  } else if(wide){await tween(500,p=>{G.ball.x=1.6+p*.6;G.ball.z=-.1-p*2.8;G.ball.y=.6*(1-p)+.3});G.sig=1}
  else{await tween(450,p=>{G.ball.x=-.2-p*.3;G.ball.z=.2-p*1;G.ball.y=Math.max(.1,.5*(1-p))})}
  const word=e.w?'OUT!':wide?'WIDE':nb?'NO BALL':e.r===6&&hit?'SIX!':e.r===4&&hit?'FOUR!':'';const big=$('ccbig');if(word&&big){big.textContent=word;big.classList.add('on')}
- await wait(word?1800:900);if(big)big.classList.remove('on');G.ball.on=0;G.follow=0;G.swing=0;G.st0=null;G.wk=0;G.sig=0;G.tcam=BASE;G.batX=-.55;G.batZ=-.5;G.nsZ=19.6;await wait(500)}
+ await wait(word?1800:900);if(big)big.classList.remove('on');G.ball.on=0;G.follow=0;G.swing=0;G.st0=null;G.shotId=null;G.wk=0;G.sig=0;G.tcam=BASE;G.batX=-.55;G.batZ=-.5;G.nsZ=19.6;await wait(500)}
 async function pump(){if(CC.playing)return;CC.playing=1;try{while(CC.queue.length){const k=CC.queue.shift();if(CC.queue.length>4){say(text(CC.m,k));paint();continue}await play(k)}}finally{CC.playing=0}}
 /* mid=auto (or no mid): follow whichever match is live right now; switches by itself when a match ends or another starts */
 async function resolveAuto(){const n=Date.now();if(CC.rt&&n-CC.rt<8000)return;CC.rt=n;try{const j=await (await fetch(apiBase()+'/api/shared/matches')).json();const L=((j&&j.items)||[]).filter(x=>x&&x.data&&x.data.m&&x.data.m.status==='live'&&!x.data.m.rm).sort((a,b)=>(b.updated||0)-(a.updated||0));const cur=L.find(x=>x.id===CC.id),pick=cur||L[0];if(pick&&pick.id!==CC.id){CC.id=pick.id;CC.m=null;CC.d=null;CC.shown=null;CC.queue=[];CC.playing=0;render()}}catch(e){}}
@@ -13991,7 +13993,7 @@ let T,SU,ren,scene,cam,gl,gm=new Map(),mats=new Map(),cur=0,hemi,sun;
 const base=()=>apiBase()+'/vendor/';
 X.load=async function(){if(X.loading||X.ready||X.fail)return;X.loading=1;try{
  T=await import(base()+'three.module.js');const GL=await import(base()+'GLTFLoader.js');SU=await import(base()+'SkeletonUtils.js');
- gl=await new GL.GLTFLoader().loadAsync(base()+'Xbot.glb');X.D=await import(base()+'shdress.js');try{X.bat=await import(base()+'shbat.js')}catch(e){console.warn('bat model',e)}try{const SB=await import(base()+'shbody.js'),bs=gl.scene.getObjectByName('Beta_Surface'),bj=gl.scene.getObjectByName('Beta_Joints');if(bs&&bj&&!window.SH_OLDBODY){const ng=SB.build(T,bs);bs.geometry=ng;bj.geometry=SB.tiny(T);X.body=ng.attributes.position.count}}catch(e){console.warn('shx body',e&&e.message)}try{X.S=await import(base()+'shstadium.js')}catch(e){console.warn('shx stadium',e&&e.message)}
+ gl=await new GL.GLTFLoader().loadAsync(base()+'Xbot.glb');X.D=await import(base()+'shdress.js');try{X.bat=await import(base()+'shbat.js')}catch(e){console.warn('bat model',e)}try{X.BTM=await import(base()+'shbatplay.js');X.SBP=X.BTM.create(T)}catch(e){console.warn('shx batting',e&&e.message)}try{const SB=await import(base()+'shbody.js'),bs=gl.scene.getObjectByName('Beta_Surface'),bj=gl.scene.getObjectByName('Beta_Joints');if(bs&&bj&&!window.SH_OLDBODY){const ng=SB.build(T,bs);bs.geometry=ng;bj.geometry=SB.tiny(T);X.body=ng.attributes.position.count}}catch(e){console.warn('shx body',e&&e.message)}try{X.S=await import(base()+'shstadium.js')}catch(e){console.warn('shx stadium',e&&e.message)}
  const cv=document.createElement('canvas');cv.id='shx3';cv.width=1280;cv.height=720;cv.style.cssText='position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none';X.cv=cv;
  ren=new T.WebGLRenderer({canvas:cv,alpha:true,antialias:true});ren.shadowMap.enabled=true;ren.shadowMap.type=T.PCFSoftShadowMap;ren.setPixelRatio(1);ren.setSize(1280,720,false);ren.setClearColor(0x000000,0);
  scene=new T.Scene();hemi=new T.HemisphereLight(0xffffff,0x4a5a40,1.9);scene.add(hemi);sun=new T.DirectionalLight(0xffffff,2.4);sun.position.set(-20,40,-10);scene.add(sun);
@@ -14031,6 +14033,18 @@ function strokePose(B,t,H,amp){amp=amp==null?1:amp;const rc=1-sm(1.3,1.9,t),bk=(
  P(B.nk,'y',.2*bk-.25*sw);P(B.hd,'y',.15*sw-.1*ft);
  P(B.lu,'x',-(.2*cr+.15*sw));P(B.ll,'x',.3*cr+.2*sw);
  P(B.la,'x',-(.7*bk)+.9*sw);P(B.ra,'x',-(.7*bk)+.9*sw);P(B.la,'z',.4*ft);P(B.ra,'z',-.4*ft);return .09*cr+.05*sw}
+/* batting master: baked pose tables (/vendor/batpose/<SHOT>_<R|L>.json, from the 86-shot batting master + two-hand grip solver) drive the striker's whole body, the SH bat and both hands */
+const BTAB={};
+function btab(id,hand){const k=id+'_'+hand,c=BTAB[k];if(c)return c.t||null;BTAB[k]={t:null};fetch(base()+'batpose/'+k+'.json').then(r=>r.ok?r.json():null).then(j=>{if(j)BTAB[k].t=j}).catch(()=>{});return null}
+function batterBT(H,o){const hand=o.hand==='L'?'L':'R';
+ if(!btab('STANCE',hand))return false;   /* tables not loaded yet (or missing): keep the old animation, no double bat */
+ if(!H.bt){H.bt=X.SBP.makeBatter(H.root,H.g,hand);H.btHand=hand}else if(H.btHand!==hand){X.SBP.attachBat(H.bt,hand);H.btHand=hand}
+ if(H.bt.bat)H.bt.bat.visible=true;
+ let tab=null,t=0;const st=o.stroke;
+ if(st!=null){tab=btab(o.shot||'DRV_ST',hand);t=st-.28}   /* contact (clip 0.52 s) lands at stroke 0.8 s, when the ball arrives */
+ if(!tab||t<0){tab=btab('STANCE',hand)||tab;t=0}
+ if(tab)X.SBP.playBaked(H.bt,tab,t);return !!tab}
+function batterOff(H){if(H.bt){if(H.bt.bat)H.bt.bat.visible=false;H.bt.root.position.set(0,0,0);H.bt.root.rotation.set(0,0,0);H.bt.pivot.rotation.set(0,0,0)}}
 const qd=(ax,a)=>new T.Quaternion().setFromAxisAngle(new T.Vector3(ax==='x'?1:0,ax==='y'?1:0,ax==='z'?1:0),a);
 X.begin=()=>{X.list.length=0};
 /* id: stable per person. o: {c colour, face:[x,z], run, up(0..1), swing(0..1), bat, racket, arm(0..1), k scale} */
@@ -14050,15 +14064,16 @@ X.flush=(c,fovDeg,dt,host,y0,opt)=>{if(!X.on())return false;if(!navigator.webdri
   const sp=o.run&&H.sp<.5?3.6:H.sp;const tw=sp<.4?{idle:1,walk:0,run:0}:sp<2.4?{idle:0,walk:1,run:0}:{idle:0,walk:0,run:1};
   for(const n of['idle','walk','run']){H.w[n]+=(tw[n]-H.w[n])*Math.min(1,dt*8);H.acts[n].setEffectiveWeight(H.w[n]);H.acts[n].setEffectiveTimeScale(n==='run'?Math.max(.7,Math.min(1.6,sp/4.2)):n==='walk'?Math.max(.6,Math.min(1.5,sp/1.5)):1)}
   H.mx.update(dt);
+  H.sbp=0;if(o.bat&&X.SBP&&window.SH_BATTING_MASTER===true&&!o.run&&H.sp<.6){H.sbp=batterBT(H,o)?1:0}else batterOff(H);
   const u=o.up||0;H.up+=(u-H.up)*Math.min(1,dt*10);const B=H.bn;
   if(H.up>.02){B.la.quaternion.premultiply(qd('z',2.4*H.up));B.ra.quaternion.premultiply(qd('z',-2.4*H.up))}
   if(o.catchUp){B.la.quaternion.premultiply(qd('z',1.7));B.ra.quaternion.premultiply(qd('z',-1.7))}
-  if(o.bat){const s=o.stroke!=null?0:(o.swing||0);{const ab=o.stroke==null?.5:.5-1.5*sm(0,.2,o.stroke);B.la.quaternion.premultiply(qd('x',ab));B.ra.quaternion.premultiply(qd('x',ab))}if(B.sp)B.sp.quaternion.premultiply(qd('y',-1.3*s+.25))}
+  if(o.bat&&!H.sbp){const s=o.stroke!=null?0:(o.swing||0);{const ab=o.stroke==null?.5:.5-1.5*sm(0,.2,o.stroke);B.la.quaternion.premultiply(qd('x',ab));B.ra.quaternion.premultiply(qd('x',ab))}if(B.sp)B.sp.quaternion.premultiply(qd('y',-1.3*s+.25))}
   if(o.racket&&!o.up){B.ra.quaternion.premultiply(qd('x',-.9))}
   if(o.arm){B.ra.quaternion.premultiply(qd('x',-3.4*Math.min(1,o.arm)))}
-  {const st=X.dbg!=null&&o.bat?X.dbg:o.stroke;H.root.position.y=0;if(o.bat&&st==null)legIK(H,B,true);if(st!=null&&o.bat){const dr=strokePose(B,st,H,o.sa)||0;H.root.position.y=-dr*(o.sa==null?1:o.sa);H.root.updateMatrixWorld(true);P2(B.ll,.15);P2(B.rl,.15);legIK(H,B,false)}}
-  prop(H,o.bat?'bat':o.racket?'racket':'');
-  if(o.bat&&H.prop&&B.lh&&B.lf&&B.la)gripIK(H,B);
+  if(!H.sbp){const st=X.dbg!=null&&o.bat?X.dbg:o.stroke;H.root.position.y=0;if(o.bat&&st==null)legIK(H,B,true);if(st!=null&&o.bat){const dr=strokePose(B,st,H,o.sa)||0;H.root.position.y=-dr*(o.sa==null?1:o.sa);H.root.updateMatrixWorld(true);P2(B.ll,.15);P2(B.rl,.15);legIK(H,B,false)}}
+  prop(H,H.sbp?'':o.bat?'bat':o.racket?'racket':'');
+  if(o.bat&&H.prop&&B.lh&&B.lf&&B.la&&!H.sbp)gripIK(H,B);
   if(H.dress)H.dress.update();
   H.g.visible=true}
  for(const[k,H]of gm)if(H.seen!==cur)H.g.visible=false;

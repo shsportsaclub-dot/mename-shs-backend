@@ -2270,12 +2270,19 @@ http.createServer(async (req, res) => {
         url: f.url, type: f.type === 'mp4' ? 'video/mp4' : 'application/vnd.apple.mpegurl' }));
     return out(200, { ok: true, matchId, territory, feeds, reason: feeds.length ? null : 'No authorized stream configured for this match and territory' });
   }
-  if (req.method === 'GET' && /^\/vendor\/(three\.core\.js|three\.module\.js|GLTFLoader\.js|SkeletonUtils\.js|BufferGeometryUtils\.js|shdress\.js|shstadium\.js|shbody\.js|shbat\.js|shglyph\.js|shfx3d\.js|Xbot\.glb)$/.test(path)) {   // 3D engine and the animated human model used by the game streams
+  if (req.method === 'GET' && /^\/vendor\/(three\.core\.js|three\.module\.js|GLTFLoader\.js|SkeletonUtils\.js|BufferGeometryUtils\.js|shdress\.js|shstadium\.js|shbody\.js|shbat\.js|shbatplay\.js|batting-master\.js|shglyph\.js|shfx3d\.js|Xbot\.glb)$/.test(path)) {   // 3D engine and the animated human model used by the game streams
     try {
       const f = path.slice('/vendor/'.length), body = fs.readFileSync(new URL('./public/vendor/' + f, import.meta.url));
       res.writeHead(200, { 'content-type': f.endsWith('.glb') ? 'model/gltf-binary' : 'text/javascript; charset=utf-8', 'cache-control': 'public, max-age=604800', 'access-control-allow-origin': '*', 'x-content-type-options': 'nosniff' });
       return res.end(body);
     } catch { return out(404, { ok: false, error: 'Asset unavailable' }); }
+  }
+  if (req.method === 'GET' && /^\/vendor\/batpose\/[A-Z0-9_]{2,20}_[LR]\.json$/.test(path)) {   // baked batting pose tables (86 shots x right/left hand)
+    try {
+      const f = path.slice('/vendor/batpose/'.length), body = fs.readFileSync(new URL('./public/vendor/batpose/' + f, import.meta.url));
+      res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'public, max-age=604800', 'access-control-allow-origin': '*', 'x-content-type-options': 'nosniff' });
+      return res.end(body);
+    } catch { return out(404, { ok: false, error: 'Batting pose unavailable' }); }
   }
   if (req.method === 'GET' && /^\/packs\/[a-z0-9_]{3,32}\/(manifest\.json|[A-Z0-9_]{3,24}\/frame_\d{3}\.png)$/.test(path)) {   // drop-in transparent PNG sequence packs
     try {
