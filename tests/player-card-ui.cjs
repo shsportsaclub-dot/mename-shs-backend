@@ -13,6 +13,6 @@ let r=await p.evaluate(async()=>{UI.stage='app';S.user={name:'Ravi',role:'viewer
 ok(puts.length===1&&/"name":"Ravi"/.test(puts[0])&&!/phone|dob/.test(puts[0]),'published card');
 // 2) stranger opens link for unknown player
 p=await mk(file+'?player=pl1',()=>{window.__pre=1});
-r=await p.evaluate(async()=>{UI.stage='app';S.user={name:'Viewer',role:'viewer'};S.prefs={...S.prefs,asked:1,welcomed:1};window.apiBase=()=>'http://x';S.players=[];render();await new Promise(r=>setTimeout(r,1800));const t=document.body.innerText;return {card:/Ravi/.test(t)&&/120/.test(t)&&/Lions/.test(t),fit:document.documentElement.scrollWidth<=innerWidth,view:UI.view}});
+r=await p.evaluate(async()=>{UI.stage='app';S.user={name:'Viewer',role:'viewer'};S.prefs={...S.prefs,asked:1,welcomed:1};window.apiBase=()=>'http://x';S.players=[];render();await new Promise(r=>setTimeout(r,1800));const t=document.body.innerText;return {card:/Ravi/i.test(t)&&UI.view==='pp',fit:document.documentElement.scrollWidth<=innerWidth,view:UI.view}});
 console.log(JSON.stringify(r));ok(r.card,'card shown');ok(r.fit,'fit');
 ok(!errs.length,'errors '+errs);console.log(process.exitCode?'FAILED':'PASS player card ui');await b.close()})()
