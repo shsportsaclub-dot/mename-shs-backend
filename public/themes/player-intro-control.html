@@ -11,7 +11,7 @@
 .hint{color:#9bc1df;font-size:12px;margin:6px 0}
 </style></head><body>
 <div class="pv"><iframe id="f" src="royal-shield-b.html?screen=pi"></iframe></div>
-<div class="bar"><button class="go" id="show">SHOW</button><button id="hide">HIDE</button><button id="nx">NEXT ▶</button></div>
+<div class="bar"><button class="go" id="show">SHOW</button><button id="hide">HIDE</button><button id="nx">NEXT ▶</button><button id="ly">STYLE 1</button></div>
 <div class="tabs"><button id="t0" class="on">SKY HIGH KINGS</button><button id="t1">HAPUR HAWKS</button></div>
 <div class="hint">Tap a player. Name, role, stats fill automatically — no typing.</div>
 <div class="grid" id="g"></div>
@@ -21,7 +21,7 @@ const R=[
 [['Vikram Kumar','All-rounder · Captain',62,1804,145.2,'104*'],['Manav Singh','Opening batter',70,2210,141.6,'101'],['Kabir Anand','Opening batter',55,1650,136.4,'89'],['Rahul Dixit','Top-order batter',77,2390,138.9,'96*'],['Zaid Ali','Wicket-keeper batter',63,1710,150.3,'83'],['Harsh Tyagi','Middle-order batter',68,1480,147.5,'72'],['Pranav Jain','All-rounder',59,1105,140.8,'69'],['Ishaan Bose','Spinner',65,260,108.7,'24'],['Aditya Rana','Fast bowler',73,190,99.9,'21'],['Siddharth Pal','Fast bowler',57,120,94.0,'14*'],['Mohit Chauhan','Spinner',50,85,88.5,'10']]];
 const TEAM=['SKY HIGH KINGS','HAPUR HAWKS'];let team=0,cur=0;const f=document.getElementById('f'),g=document.getElementById('g');
 const send=(fn,...a)=>f.contentWindow.postMessage({shTheme:1,fn,args:a},'*');
-const pack=(p,t,img)=>({pi:{n:p[0],img:img||'',role:p[1].replace(' · Captain','')+(p[1].includes('Captain')?' · C':'')+' · '+['Kings','Hawks'][t],st:p[6]||[['MATCHES',''+p[2]],['RUNS',p[3].toLocaleString('en-IN')],['STRIKE RATE',''+p[4]],['HIGH SCORE',''+p[5]]]}});
+const pack=(p,t,img)=>({pi:{n:p[0],tm:TEAM[t],rl:p[1].toUpperCase(),img:img||'',role:p[1].replace(' · Captain','')+(p[1].includes('Captain')?' · C':'')+' · '+['Kings','Hawks'][t],st:p[6]||[['MATCHES',''+p[2]],['RUNS',p[3].toLocaleString('en-IN')],['STRIKE RATE',''+p[4]],['HIGH SCORE',''+p[5]]]}});
 function draw(){g.innerHTML=R[team].map((p,i)=>`<button class="p ${i===cur?'sel':''}" data-i="${i}"><b>${p[0]}</b><small>${p[1]}</small></button>`).join('')}
 const IMG={};async function photo(n){const k=n.toLowerCase().replace(/[^a-z ]/g,'').replace(/\s+/g,' ').trim();if(k in IMG)return IMG[k];let u='';try{const e=encodeURIComponent(n);const a=await (await fetch('/api/faces?names='+e)).json();u=(a.faces&&a.faces[k])||'';if(!u){const b=await (await fetch('/api/avatars?names='+e)).json();u=(b.avatars&&b.avatars[k])||''}}catch(x){}return IMG[k]=u}
 async function show(){const p=R[team][cur];send('data',pack(p,team,await photo(p[0])));send('screen','pi')}
@@ -30,5 +30,6 @@ g.onclick=e=>{const b=e.target.closest('.p');if(!b)return;cur=+b.dataset.i;draw(
 document.getElementById('show').onclick=show;
 document.getElementById('hide').onclick=()=>send('state','EXIT');
 document.getElementById('nx').onclick=()=>{cur=(cur+1)%R[team].length;draw();show()};
+const LAY=['royal-shield-b.html?screen=pi','royal-shield-intro-split.html?manual=1'];let ly=0;document.getElementById('ly').onclick=function(){ly=1-ly;this.textContent='STYLE '+(ly+1);f.src=LAY[ly]};
 draw();f.onload=()=>setTimeout(show,300);
 </script></body></html>
