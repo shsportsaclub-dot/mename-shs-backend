@@ -849,7 +849,7 @@
 "variant": "0",
 "status": "animated_code_prototype",
 "data": "illustrative",
-"sh_built": ""
+"sh_built": "c?h1"
 },
 {
 "id": "SCR-072",
@@ -861,7 +861,7 @@
 "variant": "1",
 "status": "animated_code_prototype",
 "data": "illustrative",
-"sh_built": ""
+"sh_built": "c?h2"
 },
 {
 "id": "SCR-073",
@@ -873,7 +873,7 @@
 "variant": "2",
 "status": "animated_code_prototype",
 "data": "illustrative",
-"sh_built": ""
+"sh_built": "c?h3"
 },
 {
 "id": "SCR-074",
@@ -885,7 +885,7 @@
 "variant": "3",
 "status": "animated_code_prototype",
 "data": "illustrative",
-"sh_built": ""
+"sh_built": "c?h4"
 },
 {
 "id": "SCR-075",
@@ -897,7 +897,7 @@
 "variant": "4",
 "status": "animated_code_prototype",
 "data": "illustrative",
-"sh_built": ""
+"sh_built": "c?h5"
 },
 {
 "id": "SCR-076",
@@ -909,7 +909,7 @@
 "variant": "5",
 "status": "animated_code_prototype",
 "data": "illustrative",
-"sh_built": ""
+"sh_built": "c?h6"
 },
 {
 "id": "SCR-077",
@@ -921,7 +921,7 @@
 "variant": "6",
 "status": "animated_code_prototype",
 "data": "illustrative",
-"sh_built": ""
+"sh_built": "c?h7"
 },
 {
 "id": "SCR-078",
@@ -933,7 +933,7 @@
 "variant": "7",
 "status": "animated_code_prototype",
 "data": "illustrative",
-"sh_built": ""
+"sh_built": "c?h8"
 },
 {
 "id": "SCR-079",
@@ -945,7 +945,7 @@
 "variant": "8",
 "status": "animated_code_prototype",
 "data": "illustrative",
-"sh_built": ""
+"sh_built": "c?h9"
 },
 {
 "id": "SCR-080",
@@ -957,7 +957,7 @@
 "variant": "9",
 "status": "animated_code_prototype",
 "data": "illustrative",
-"sh_built": "demo strip (not a screen)"
+"sh_built": "c?h10"
 },
 {
 "id": "SCR-081",
@@ -2289,7 +2289,7 @@
 "variant": "0",
 "status": "animated_code_prototype",
 "data": "illustrative",
-"sh_built": ""
+"sh_built": "c?t1"
 },
 {
 "id": "SCR-192",
@@ -2301,7 +2301,7 @@
 "variant": "1",
 "status": "animated_code_prototype",
 "data": "illustrative",
-"sh_built": ""
+"sh_built": "c?t2"
 },
 {
 "id": "SCR-193",
@@ -2313,7 +2313,7 @@
 "variant": "2",
 "status": "animated_code_prototype",
 "data": "illustrative",
-"sh_built": ""
+"sh_built": "c?t3"
 },
 {
 "id": "SCR-194",
@@ -2325,7 +2325,7 @@
 "variant": "3",
 "status": "animated_code_prototype",
 "data": "illustrative",
-"sh_built": ""
+"sh_built": "c?t4"
 },
 {
 "id": "SCR-195",
@@ -2337,7 +2337,7 @@
 "variant": "4",
 "status": "animated_code_prototype",
 "data": "illustrative",
-"sh_built": ""
+"sh_built": "c?t5"
 },
 {
 "id": "SCR-196",
@@ -2349,7 +2349,7 @@
 "variant": "5",
 "status": "animated_code_prototype",
 "data": "illustrative",
-"sh_built": ""
+"sh_built": "c?t6"
 },
 {
 "id": "SCR-197",
@@ -2361,7 +2361,7 @@
 "variant": "6",
 "status": "animated_code_prototype",
 "data": "illustrative",
-"sh_built": ""
+"sh_built": "c?t7"
 },
 {
 "id": "SCR-198",
@@ -2373,7 +2373,7 @@
 "variant": "7",
 "status": "animated_code_prototype",
 "data": "illustrative",
-"sh_built": ""
+"sh_built": "c?t8"
 },
 {
 "id": "SCR-199",
@@ -2385,7 +2385,7 @@
 "variant": "8",
 "status": "animated_code_prototype",
 "data": "illustrative",
-"sh_built": ""
+"sh_built": "c?t9"
 },
 {
 "id": "SCR-200",
@@ -2397,7 +2397,7 @@
 "variant": "9",
 "status": "animated_code_prototype",
 "data": "illustrative",
-"sh_built": ""
+"sh_built": "c?t10"
 },
 {
 "id": "SCR-201",
@@ -2649,7 +2649,7 @@
 "variant": "0",
 "status": "animated_code_prototype",
 "data": "illustrative",
-"sh_built": ""
+"sh_built": "c?w1"
 },
 {
 "id": "SCR-222",
@@ -2661,7 +2661,7 @@
 "variant": "1",
 "status": "animated_code_prototype",
 "data": "illustrative",
-"sh_built": ""
+"sh_built": "c?w2"
 },
 {
 "id": "SCR-223",
@@ -2673,7 +2673,7 @@
 "variant": "2",
 "status": "animated_code_prototype",
 "data": "illustrative",
-"sh_built": ""
+"sh_built": "c?w3"
 },
 {
 "id": "SCR-224",
@@ -2685,7 +2685,7 @@
 "variant": "3",
 "status": "animated_code_prototype",
 "data": "illustrative",
-"sh_built": ""
+"sh_built": "c?w4"
 },
 {
 "id": "SCR-225",
@@ -2697,7 +2697,7 @@
 "variant": "4",
 "status": "animated_code_prototype",
 "data": "illustrative",
-"sh_built": ""
+"sh_built": "c?w5"
 },
 {
 "id": "SCR-226",
@@ -2709,7 +2709,7 @@
 "variant": "5",
 "status": "animated_code_prototype",
 "data": "illustrative",
-"sh_built": "engine lb_runs"
+"sh_built": "c?w6"
 },
 {
 "id": "SCR-227",
@@ -2721,7 +2721,7 @@
 "variant": "6",
 "status": "animated_code_prototype",
 "data": "illustrative",
-"sh_built": ""
+"sh_built": "c?w7"
 },
 {
 "id": "SCR-228",
@@ -2733,7 +2733,7 @@
 "variant": "7",
 "status": "animated_code_prototype",
 "data": "illustrative",
-"sh_built": ""
+"sh_built": "c?w8"
 },
 {
 "id": "SCR-229",
@@ -2745,7 +2745,7 @@
 "variant": "8",
 "status": "animated_code_prototype",
 "data": "illustrative",
-"sh_built": ""
+"sh_built": "c?w9"
 },
 {
 "id": "SCR-230",
@@ -2757,7 +2757,7 @@
 "variant": "9",
 "status": "animated_code_prototype",
 "data": "illustrative",
-"sh_built": ""
+"sh_built": "c?w10"
 },
 {
 "id": "SCR-231",

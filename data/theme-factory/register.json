@@ -592,5 +592,215 @@
   ],
   "inventory_source": "user's 30-screen Royal Shield set (names only)",
   "status": "BUILT_PROTOTYPE (CSS real-time, verified headless; NOT 4K rendered, NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-C-T1",
+  "name": "T1",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield-c.html?screen=t1",
+  "status": "BUILT_PROTOTYPE (CSS real-time, verified headless; NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-C-T2",
+  "name": "T2",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield-c.html?screen=t2",
+  "status": "BUILT_PROTOTYPE (CSS real-time, verified headless; NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-C-T3",
+  "name": "T3",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield-c.html?screen=t3",
+  "status": "BUILT_PROTOTYPE (CSS real-time, verified headless; NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-C-T4",
+  "name": "T4",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield-c.html?screen=t4",
+  "status": "BUILT_PROTOTYPE (CSS real-time, verified headless; NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-C-T5",
+  "name": "T5",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield-c.html?screen=t5",
+  "status": "BUILT_PROTOTYPE (CSS real-time, verified headless; NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-C-T6",
+  "name": "T6",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield-c.html?screen=t6",
+  "status": "BUILT_PROTOTYPE (CSS real-time, verified headless; NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-C-T7",
+  "name": "T7",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield-c.html?screen=t7",
+  "status": "BUILT_PROTOTYPE (CSS real-time, verified headless; NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-C-T8",
+  "name": "T8",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield-c.html?screen=t8",
+  "status": "BUILT_PROTOTYPE (CSS real-time, verified headless; NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-C-T9",
+  "name": "T9",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield-c.html?screen=t9",
+  "status": "BUILT_PROTOTYPE (CSS real-time, verified headless; NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-C-T10",
+  "name": "T10",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield-c.html?screen=t10",
+  "status": "BUILT_PROTOTYPE (CSS real-time, verified headless; NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-C-W1",
+  "name": "W1",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield-c.html?screen=w1",
+  "status": "BUILT_PROTOTYPE (CSS real-time, verified headless; NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-C-W2",
+  "name": "W2",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield-c.html?screen=w2",
+  "status": "BUILT_PROTOTYPE (CSS real-time, verified headless; NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-C-W3",
+  "name": "W3",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield-c.html?screen=w3",
+  "status": "BUILT_PROTOTYPE (CSS real-time, verified headless; NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-C-W4",
+  "name": "W4",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield-c.html?screen=w4",
+  "status": "BUILT_PROTOTYPE (CSS real-time, verified headless; NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-C-W5",
+  "name": "W5",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield-c.html?screen=w5",
+  "status": "BUILT_PROTOTYPE (CSS real-time, verified headless; NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-C-W6",
+  "name": "W6",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield-c.html?screen=w6",
+  "status": "BUILT_PROTOTYPE (CSS real-time, verified headless; NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-C-W7",
+  "name": "W7",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield-c.html?screen=w7",
+  "status": "BUILT_PROTOTYPE (CSS real-time, verified headless; NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-C-W8",
+  "name": "W8",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield-c.html?screen=w8",
+  "status": "BUILT_PROTOTYPE (CSS real-time, verified headless; NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-C-W9",
+  "name": "W9",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield-c.html?screen=w9",
+  "status": "BUILT_PROTOTYPE (CSS real-time, verified headless; NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-C-W10",
+  "name": "W10",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield-c.html?screen=w10",
+  "status": "BUILT_PROTOTYPE (CSS real-time, verified headless; NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-C-H1",
+  "name": "H1",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield-c.html?screen=h1",
+  "status": "BUILT_PROTOTYPE (CSS real-time, verified headless; NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-C-H2",
+  "name": "H2",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield-c.html?screen=h2",
+  "status": "BUILT_PROTOTYPE (CSS real-time, verified headless; NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-C-H3",
+  "name": "H3",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield-c.html?screen=h3",
+  "status": "BUILT_PROTOTYPE (CSS real-time, verified headless; NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-C-H4",
+  "name": "H4",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield-c.html?screen=h4",
+  "status": "BUILT_PROTOTYPE (CSS real-time, verified headless; NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-C-H5",
+  "name": "H5",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield-c.html?screen=h5",
+  "status": "BUILT_PROTOTYPE (CSS real-time, verified headless; NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-C-H6",
+  "name": "H6",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield-c.html?screen=h6",
+  "status": "BUILT_PROTOTYPE (CSS real-time, verified headless; NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-C-H7",
+  "name": "H7",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield-c.html?screen=h7",
+  "status": "BUILT_PROTOTYPE (CSS real-time, verified headless; NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-C-H8",
+  "name": "H8",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield-c.html?screen=h8",
+  "status": "BUILT_PROTOTYPE (CSS real-time, verified headless; NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-C-H9",
+  "name": "H9",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield-c.html?screen=h9",
+  "status": "BUILT_PROTOTYPE (CSS real-time, verified headless; NOT approved)"
+ },
+ {
+  "id": "SH-RS-V6-C-H10",
+  "name": "H10",
+  "theme": "Royal Shield V6",
+  "url": "/themes/royal-shield-c.html?screen=h10",
+  "status": "BUILT_PROTOTYPE (CSS real-time, verified headless; NOT approved)"
  }
 ]
