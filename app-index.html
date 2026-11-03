@@ -14001,7 +14001,7 @@ window.shAvatar={svg,opts,fromImg,styles:STY,beards:BRD,skins:SKIN,hairs:HAIR};
 
 /* 144 REAL 3D HUMANS for every game stream (cricket and all sports): skinned, animated human models (idle, walk, run) drawn with WebGL on top of the stadium, in team colours. Falls back to the flat figures if WebGL or the model is not available. */
 (function(){
-const X=window.shx={ready:0,fail:0,loading:0,list:[],cv:null,on(){return this.ready&&!this.fail}};
+const X=window.shx={ready:0,fail:0,loading:0,list:[],cv:null,get gm(){return gm},on(){return this.ready&&!this.fail}};
 let T,SU,ren,scene,cam,gl,gm=new Map(),mats=new Map(),cur=0,hemi,sun;
 const base=()=>apiBase()+'/vendor/';
 X.load=async function(){if(X.loading||X.ready||X.fail)return;X.loading=1;try{
@@ -14051,7 +14051,7 @@ const BTAB={};
 function btab(id,hand){const k=id+'_'+hand,c=BTAB[k];if(c)return c.t||null;BTAB[k]={t:null};fetch(base()+'batpose/'+k+'.json').then(r=>r.ok?r.json():null).then(j=>{if(j)BTAB[k].t=j}).catch(()=>{});return null}
 function batterBT(H,o){const hand=o.hand==='L'?'L':'R';
  if(!btab('STANCE',hand))return false;   /* tables not loaded yet (or missing): keep the old animation, no double bat */
- if(!H.bt){H.bt=X.SBP.makeBatter(H.root,H.g,hand);H.btHand=hand}else if(H.btHand!==hand){X.SBP.attachBat(H.bt,hand);H.btHand=hand}
+ if(!H.bt){H.bt=X.SBP.makeBatter(H.root,H.g,hand,gl&&gl.scene);H.btHand=hand}else if(H.btHand!==hand){X.SBP.attachBat(H.bt,hand);H.btHand=hand}
  if(H.bt.bat)H.bt.bat.visible=true;
  let tab=null,t=0;const st=o.stroke;
  if(st!=null){tab=btab(o.shot||'DRV_ST',hand);t=st-.28}   /* contact (clip 0.52 s) lands at stroke 0.8 s, when the ball arrives */

@@ -27,10 +27,12 @@ function attachBat(a,hand){if(a.bat){a.bat.parent&&a.bat.parent.remove(a.bat)}co
  const blade=new THREE.Object3D();blade.position.set(0,-.46,0);bat.add(blade);
  hb.add(g);a.bat=g;a.batBlade=blade;a.hand=hand}
 /* model: the cloned Xbot scene; g: its parent group (world position/yaw are owned by the app) */
-function makeBatter(model,g,hand){
+function makeBatter(model,g,hand,ref){
  const root=new THREE.Group(),pivot=new THREE.Group();g.add(root);root.add(pivot);pivot.add(model);
  const bones={};model.traverse(o=>{if(o.isBone){const n=o.name.replace(/^mixamorig:?/,'');if(BONES.includes(n))(bones[n]=bones[n]||[]).push(o)}});
- const rest={};for(const n in bones)rest[n]={q:bones[n].map(b=>b.quaternion.clone()),p:bones[n].map(b=>b.position.clone())};
+ /* rest pose comes from the untouched source model when given (the app's clone is already being moved by its idle mixer) */
+ const rb={};(ref||model).traverse(o=>{if(o.isBone){const n=o.name.replace(/^mixamorig:?/,'');if(BONES.includes(n))(rb[n]=rb[n]||[]).push(o)}});
+ const rest={};for(const n in bones){const src=rb[n]&&rb[n].length===bones[n].length?rb[n]:bones[n];rest[n]={q:src.map(b=>b.quaternion.clone()),p:src.map(b=>b.position.clone())}}
  const a={role:'batter',root,pivot,model,g,bones,rest,home:[0,0,0],face:0,clip:null,t:0,cock:-75,hand};
  a.ck=()=>{g.updateWorldMatrix(true,false);const p=g.getWorldPosition(new THREE.Vector3());return Math.round(p.x*100)+','+Math.round(p.z*100)+','+Math.round(g.rotation.y*100)+'|'};
  g.updateWorldMatrix(true,true);pose(a,{});root.updateMatrixWorld(true);a.fh=Math.min(footPos(a,'Left').y,footPos(a,'Right').y);
