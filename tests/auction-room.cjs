@@ -12,6 +12,6 @@ await p.screenshot({path:'/tmp/bidroom.png'});
 await p.evaluate(()=>A.brBid());await p.waitForTimeout(500);assert(posted&&posted.team==='t1'&&posted.code==='ABC123'&&posted.ver===3,'posted '+JSON.stringify(posted));
 t=await p.evaluate(()=>document.getElementById('app').innerText);assert(/You are leading/.test(t),'leading '+t.slice(0,300));
 // organiser button
-await p.evaluate(()=>{S.user={id:'u1',name:'Org',role:'admin',kind:'Organiser',phone:'+910000000000'};S.prefs={...S.prefs,asked:1,welcomed:1,avDone:1,avSkip:1};UI.stage='app';UI.view='auction';UI.au.tab='home';render();A.auOpen({v:'demo-hcl'});render()});await p.waitForTimeout(300);
+await p.evaluate(()=>{S.user={id:'u1',name:'Org',role:'admin',kind:'Organiser',phone:'+910000000000'};S.prefs={...S.prefs,asked:1,welcomed:1,avDone:1,avSkip:1};UI.stage='app';UI.view='auction';UI.au.tab='home';render();shDemoAuc();A.auOpen({v:'demo-hcl'});render()});await p.waitForTimeout(300);
 assert(await p.evaluate(()=>!!document.querySelector('[data-a=roomOpen]')),'organiser button');
 assert.deepEqual(errs,[]);console.log('PASS auction room');await b.close()})().catch(e=>{console.error('FAIL',e.message);process.exit(1)})

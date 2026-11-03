@@ -8,7 +8,7 @@ const { chromium } = require('playwright');
     UI.stage = 'app'; S.user = { id: 'u1', name: 'Ravi Kumar', nick: 'Ravi', role: 'admin' }; S.prefs = { ...S.prefs, asked: 1, welcomed: 1, lang: 'en' }; const o = {}, w = ms => new Promise(r => setTimeout(r, ms)), T = () => document.getElementById('app').innerText;
     S.teams = [{ id: 'a', name: 'India Lions', short: 'IND', color: '#235bbb', players: [] }]; UI.view = 'teams'; render(); o.enHas = /Create team/.test(T());
     C.setLang('te'); await w(100); o.teNav = /హోమ్/.test(T()) && /మ్యాచ్‌లు/.test(T()); o.teTeams = /టీమ్‌లు/.test(T()); o.teName = /India Lions/.test(T()); o.noEn = !/\bCreate team\b/.test(T()); o.htmlLang = document.documentElement.lang;
-    UI.view = 'book'; UI.gb.tab = 'book'; render(); o.teBook = /గ్రౌండ్ బుక్ చేయండి/.test(T()); const ph = [...document.querySelectorAll('[placeholder]')].map(e => e.placeholder).join('|'); o.ph = ph.length >= 0;
+    S.grounds = [{ id: 'g1', name: 'Main Oval', rate: 2500 }]; UI.view = 'book'; UI.gb.tab = 'book'; render(); o.teBook = /గ్రౌండ్ బుక్ చేయండి/.test(T()); const ph = [...document.querySelectorAll('[placeholder]')].map(e => e.placeholder).join('|'); o.ph = ph.length >= 0;
     UI.view = 'home'; UI.drawer = true; render(); o.drawerSel = !!document.querySelector('.drawer .lp .lpb.on[data-v=te]'); UI.drawer = false;
     C.setLang('hi'); await w(100); UI.view = 'teams'; render(); o.hi = /टीम बनाएं/.test(T()); o.hiName = /India Lions/.test(T());
     const chk={ta:['முகப்பு','Home'],kn:['ಮುಖಪುಟ'],ml:['ഹോം'],bn:['হোম'],mr:['होम'],gu:['હોમ'],pa:['ਹੋਮ'],or:['ହୋମ୍'],ur:['ہوم']};o.multi={};

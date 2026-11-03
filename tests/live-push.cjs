@@ -18,7 +18,7 @@ const { chromium } = require('playwright'), { spawn } = require('node:child_proc
       await pg.evaluate(({ u, base }) => { UI.stage = 'app'; S.user = { ...u.profile, name: u.profile.nick }; S.tok = u.token; S.settings.apiUrl = base; S.prefs = { ...S.prefs, asked: 1, welcomed: 1 }; save(); shLive() }, { u, base });
     }
     await v.waitForTimeout(1500);
-    const mid = await p.evaluate(async () => { const a = S.teams[0], b = S.teams[1], m = newMatch({ a: a.id, b: b.id, overs: 5, toss: a.id, dec: 'bat', xiA: a.players.slice(0, 11), xiB: b.players.slice(0, 11) }); startInnings(m, 0, a.players[0], a.players[1], b.players[0]); commit(); await shPush(); return m.id });
+    const mid = await p.evaluate(async () => { const [a, b] = demoTeams(), m = newMatch({ a: a.id, b: b.id, overs: 5, toss: a.id, dec: 'bat', xiA: a.players.slice(0, 11), xiB: b.players.slice(0, 11) }); startInnings(m, 0, a.players[0], a.players[1], b.players[0]); commit(); await shPush(); return m.id });
     await v.evaluate(() => shPull()); await v.waitForTimeout(800);
     const lat = [];
     for (let k = 1; k <= 3; k++) {
@@ -28,7 +28,7 @@ const { chromium } = require('playwright'), { spawn } = require('node:child_proc
       lat.push(Date.now() - t0);
     }
     // a second match running at the same time: each match updates on its own, at its own moment
-    const mid2 = await p.evaluate(async () => { const a = S.teams[0], b = S.teams[1], m = newMatch({ a: a.id, b: b.id, overs: 5, toss: a.id, dec: 'bat', xiA: a.players.slice(0, 11), xiB: b.players.slice(0, 11) }); startInnings(m, 0, a.players[0], a.players[1], b.players[0]); commit(); await shPush(); return m.id });
+    const mid2 = await p.evaluate(async () => { const [a, b] = demoTeams(), m = newMatch({ a: a.id, b: b.id, overs: 5, toss: a.id, dec: 'bat', xiA: a.players.slice(0, 11), xiB: b.players.slice(0, 11) }); startInnings(m, 0, a.players[0], a.players[1], b.players[0]); commit(); await shPush(); return m.id });
     await v.waitForTimeout(800);
     const t1 = Date.now(); await p.evaluate(id => { const m = S.matches.find(x => x.id === id); ball(m, { r: 4 }); commit() }, mid2);
     await v.waitForFunction(id => { const m = S.matches.find(x => x.id === id); return m && m.innings[0] && m.innings[0].ev.length >= 1 }, mid2, { timeout: 8000, polling: 50 }); lat.push(Date.now() - t1);

@@ -26,7 +26,7 @@ const path=require('node:path');
   }
   const cases=[];
   const cricket=await p.evaluate(async()=>{
-   const a=S.teams[0],b=S.teams[1];
+   const [a,b]=demoTeams();
    const m=newMatch({a:a.id,b:b.id,overs:2,toss:a.id,dec:'bat',xiA:a.players.slice(0,11),xiB:b.players.slice(0,11),umpires:'Local test'});
    startInnings(m,0,a.players[0],a.players[1],b.players[0]);ball(m,{r:4});commit();await shPush();return {id:m.id,score:calc(m,0).runs};
   });

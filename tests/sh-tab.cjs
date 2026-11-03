@@ -6,7 +6,7 @@ await p.goto('file://'+require('path').resolve(__dirname,'../app-index.html'));a
 const ok=(c,m)=>{if(!c){console.error('FAIL',m);process.exitCode=1}};
 const txt=()=>p.evaluate(()=>document.getElementById('app').innerText);
 await p.evaluate(()=>{window.pullLive=async()=>{};window.fetch=()=>new Promise(()=>{});UI.stage='app';S.user={name:'QA',role:'admin',kind:'Scorer'};S.prefs={...S.prefs,asked:1,welcomed:1};
- const a=S.teams[0],c=S.teams[1];
+ const [a,c]=demoTeams();
  const m=newMatch({a:a.id,b:c.id,overs:20,venue:'Test Ground',toss:a.id,dec:'bat',xiA:a.players.slice(0,11),xiB:c.players.slice(0,11),umpires:'U'});S.matches.push(m);window.__m=m.id;
  UI.view='home';UI.hx='sh';render()});
 let t=await txt();

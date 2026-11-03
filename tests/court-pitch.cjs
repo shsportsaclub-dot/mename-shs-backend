@@ -8,7 +8,7 @@ await p.addInitScript(()=>{window.fetch=async(u)=>{u=String(u);const J=o=>({ok:t
  if(/\/api\/fb\/match/.test(u))return J({ok:true,match:{id:'fb5',league:'Premier League',country:'England',state:'2H',live:true,ended:false,started:true,minute:67,home:{id:1,name:'Home FC',short:'HOM',goals:2},away:{id:2,name:'Away FC',short:'AWY',goals:1},events:[{id:1,minute:12,kind:'goal',teamId:1,player:'A Forward'},{id:2,minute:40,kind:'pengoal',teamId:2,player:'B Striker'},{id:3,minute:61,kind:'goal',teamId:1,player:'C Winger'}],lineups:{},stats:[]}});
  return J({ok:true})}});
 await p.goto('file://'+require('path').resolve(__dirname,'../app-index.html'));await p.waitForTimeout(400);
-await p.evaluate(()=>{window.pullLive=async()=>{};window.apiBase=()=>'http://x';UI.stage='app';S.tok='t';S.user={id:'u',name:'T',phone:'1',role:'viewer'};S.prefs=Object.assign({},S.prefs,{asked:1,welcomed:1});UI.live={ok:true,matches:[]};UI.view='home';UI.sport='cricket';render()});
+await p.evaluate(()=>{window.pullLive=async()=>{};window.apiBase=()=>'http://x';UI.stage='app';S.tok='t';S.players=[{id:'pp',name:'P',role:'BAT',team:null}];S.user={id:'u',name:'T',phone:'1',role:'viewer'};S.prefs=Object.assign({},S.prefs,{asked:1,welcomed:1});UI.live={ok:true,matches:[]};UI.view='home';UI.sport='cricket';render()});
 await p.evaluate(()=>A.sgPick({v:'tennis'}));await p.waitForTimeout(1200);
 await p.click('[data-a="sxOpen"]');await p.waitForTimeout(300);
 ok(await p.evaluate(()=>!!document.querySelector('svg[aria-label="Tennis court"]')&&/Sinner/.test(document.body.innerText)&&/serving/.test(document.getElementById('arcap').textContent)),'tennis court');

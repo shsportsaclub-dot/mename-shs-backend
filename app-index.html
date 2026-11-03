@@ -460,8 +460,15 @@ function autoPlay(m,limit){
     else{const q=Math.random();s={r:q<.36?0:q<.64?1:q<.74?2:q<.77?3:q<.89?4:q<.93?6:1}}
     if(s.r>0&&!s.x)s.ang={a:Math.random()*Math.PI*2,d:s.r>=4?1.02:.3+Math.random()*.5};
     ball(m,s);n++}}
+function demoTeams(){
+  const ok=S.teams.filter(t=>(t.players||[]).length>=11);if(ok.length>=2)return ok.slice(0,2);
+  const mk=(n,r,tm,i)=>({id:uid(),name:n,role:r,team:tm,phone:'',bat:'Right-hand',bowl:r==='BOWL'||r==='AR'?'Right-arm fast':'',jersey:i+1,photo:null,demo:true});
+  const D=[['South Africa','SA','#0a7c4a',['Aiden Markram','Ryan Rickelton','Wiaan Mulder','Temba Bavuma','Tristan Stubbs','David Bedingham','Kyle Verreynne','Marco Jansen','Keshav Maharaj','Kagiso Rabada','Lungi Ngidi','Dewald Brevis','Corbin Bosch'],2,['BAT','BAT','AR','BAT','BAT','BAT','WK','AR','BOWL','BOWL','BOWL','BAT','AR']],['Australia','AUS','#c9a400',['Usman Khawaja','Travis Head','Marnus Labuschagne','Steve Smith','Cameron Green','Alex Carey','Mitchell Marsh','Pat Cummins','Mitchell Starc','Nathan Lyon','Josh Hazlewood','Josh Inglis','Scott Boland'],0,['BAT','BAT','BAT','BAT','AR','WK','AR','BOWL','BOWL','BOWL','BOWL','WK','BOWL']]];
+  return D.map(([name,short,color,names,preset,R])=>{let t=S.teams.find(x=>x.demo&&x.name===name);if(t&&(t.players||[]).length>=11)return t;
+   t={id:uid(),name,short,color,preset,logo:null,players:[],demo:true};S.teams.push(t);
+   names.forEach((n,i)=>{const p=mk(n,R[i],t.id,i);S.players.push(p);t.players.push(p.id)});return t})}
 function demoMatch(){
-  const [a,b]=S.teams;
+  const [a,b]=demoTeams();
   const m=newMatch({a:a.id,b:b.id,overs:20,venue:'Newlands, Cape Town',toss:b.id,dec:'bat',xiA:a.players.slice(0,11),xiB:b.players.slice(0,11),umpires:'Demo umpires'});
   const f=m.firstBat,sx=f===a.id?m.xi[a.id]:m.xi[b.id],bx=f===a.id?m.xi[b.id]:m.xi[a.id];
   startInnings(m,0,sx[0],sx[1],bx.find(id=>['BOWL','AR'].includes(P(id).role)));
@@ -12301,6 +12308,7 @@ const SH_ICON='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALAAAACwCAYAAACvt+R
    rules:{min:11,slabs:[{upto:20000000,step:500000},{upto:null,step:1000000}]},reg:{cats:[{n:'A',base:3000000},{n:'B',base:2000000},{n:'C',base:1000000}]},
    teams:T.map((t,i)=>({id:'ht'+(i+1),name:t[0],short:t[1],color:t[2],purse:100000000,players:[],owner:'Demo owner',email:''})),players,cur:null,bid:null,bidTeam:null,hist:[],round:1}};
  const seed=()=>{try{return;if(!S.user||!Array.isArray(S.auc))return;if(S.demoHclGone||S.auc.some(x=>x.id==='demo-hcl'))return;S.auc.unshift(build(S.user.id));commit()}catch(e){}};
+ window.shDemoAuc=()=>{try{if(!S.user)return;S.auc=S.auc||[];if(!S.auc.some(x=>x.id==='demo-hcl'))S.auc.unshift(build(S.user.id));commit()}catch(e){}};
  const r0=render;render=function(){seed();return r0.apply(this,arguments)};
  /* logo in the list card and in the auction page */
  const c0=aucCard;aucCard=function(a){const h=c0.apply(this,arguments);return a.logo?h.replace(/<span class="aucc"[^>]*>[\s\S]*?<\/span>/,`<img class="aucc" src="${a.logo}" alt="" data-lg="1" style="width:76px;height:52px;object-fit:contain;border-radius:8px">`):h};
