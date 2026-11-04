@@ -202,6 +202,8 @@ export function startBot(env = process.env) {
       if (cmd === '/speed' && String(db.data.owner) === String(chat)) { await tg.send(chat, '⏱ Watching CricketData for 2 minutes…'); const r = await speedTest(text.split(/\s+/)[1]); return tg.send(chat, r.join('\n').slice(0, 4000)); }
       if (cmd === '/diag' && String(db.data.owner) === String(chat)) { await tg.send(chat, '🔎 Testing CricketData live…'); const r = await diag(); return tg.send(chat, E.esc(r.join('\n')).slice(0, 4000)); }
       if (cmd === '/status' && String(db.data.owner) === String(chat)) return tg.send(chat, `<pre>${E.esc(JSON.stringify({ ...stats, uptimeMin: Math.round((Date.now() - stats.started) / 60000), users: Object.keys(db.data.users).length, following: Object.keys(db.data.subs).length, matches: followed().length }, null, 1))}</pre>`);
+      if (['/speed', '/diag', '/status'].includes(cmd)) return tg.send(chat, db.data.owner ? '🔒 Owner only.' : '🔒 Owner only. Send /claim first (c-l-a-i-m).');
+      if (/^\/cl[a-z]{2,4}$/.test(cmd)) return tg.send(chat, 'Did you mean /claim ?');
       return tg.send(chat, T(chat)('welcome'), { reply_markup: home(chat) });
     }
     if (u.callback_query) {
