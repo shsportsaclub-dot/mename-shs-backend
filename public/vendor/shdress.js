@@ -51,7 +51,7 @@ function padMesh(T,wk){const g=new T.Group(),W=wk?'#e9e4d2':'#f7f7f4',R=wk?'#d8c
  for(const y of[-.12,.04]){const st=new T.Mesh(new T.BoxGeometry(.17,.018,.04),M(T,S,.7));st.position.set(0,y,0);g.add(st)}
  return g}
 /* batting glove: wrapped fingers, thumb, padded back and a long cuff. +y runs toward the fingertips, +z is the back of the hand (flipped for the left hand by the caller) */
-function gloveMesh(T,wk,side){const g=new T.Group(),inner=new T.Group(),W=wk?'#d8c9a0':'#f4f4f1',P='#e9edf6';inner.name='glv';g.add(inner);
+function gloveMesh(T,wk,side){const g=new T.Group(),inner=new T.Group(),W=wk?'#d8c9a0':'#f4f4f1',P='#e9edf6';inner.name='glv';inner.scale.set(1.38,1.18,1.45);g.add(inner);   /* chunkier gloves like the reference */
  const palm=new T.Mesh(new T.BoxGeometry(.088,.085,.036),M(T,W,.8));palm.position.set(0,.045,0);inner.add(palm);
  const cuff=new T.Mesh(new T.CylinderGeometry(.046,.04,.1,14),M(T,W,.8));cuff.position.set(0,-.04,0);cuff.scale.z=.8;inner.add(cuff);
  const band=new T.Mesh(new T.TorusGeometry(.044,.007,6,16),M(T,'#27386b',.6));band.rotation.x=Math.PI/2;band.position.set(0,-.085,0);band.scale.y=.8;inner.add(band);
