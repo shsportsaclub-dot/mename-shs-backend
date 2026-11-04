@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { telegram } from './lib/telegram.mjs';
 import { cricket } from './lib/cricket.mjs';
 import { store } from './lib/store.mjs';
+import { neonKV } from './lib/neon.mjs';
 import { tr, guessLang, LANGS } from './lib/i18n.mjs';
 import * as E from './lib/engine.mjs';
 
@@ -15,7 +16,8 @@ export function startBot(env = process.env) {
   const tg = telegram({ token: env.TELEGRAM_BOT_TOKEN, base: env.TG_BASE || 'https://api.telegram.org', log });
   const cd = cricket({ key: env.CRIC_API_KEY, base: env.CRIC_BASE || 'https://api.cricapi.com/v1', log });
   const here = path.dirname(fileURLToPath(import.meta.url));
-  const db = store(env.DATA_FILE || path.join(here, 'data', 'bot.json'));
+  const remote = neonKV(env.DATABASE_URL, { base: env.NEON_HTTP_BASE, log });
+  const db = store(env.DATA_FILE || path.join(here, 'data', 'bot.json'), remote, log);
   const POLL_MS = Math.max(1500, Number(env.POLL_MS) || 4000);
   const SECRET = (env.TG_WEBHOOK_SECRET || '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 256);
   const PUBLIC = (env.PUBLIC_URL || env.RENDER_EXTERNAL_URL || '').replace(/\/$/, '');
@@ -280,6 +282,12 @@ export function startBot(env = process.env) {
   // ---------- real-provider self test: is a problem in CricketData's reply, or in our code? ----------
   async function diag() {
     const R = [], ok = (side, pass, what) => R.push(`${pass ? '✅' : '❌'} [${side}] ${what}`);
+    if (!remote) R.push('⚠️ [STORAGE] DATABASE_URL not set: owner/followers are lost on every deploy');
+    else {
+      let saved = false, err = '';
+      try { await db.flush(); saved = !db.info.lastError; err = db.info.lastError || ''; } catch (e) { err = e.message; }
+      ok('STORAGE', db.info.loaded && saved, `Neon: loaded at start ${db.info.loaded ? 'yes' : 'no'}, save now ${saved ? 'ok' : 'failed'}${err ? ' — ' + err : ''}`);
+    }
     const cur = await cd.raw('currentMatches', { offset: '0' });
     ok('PROVIDER', cur.status === 'success', `currentMatches: http ${cur.http}, ${cur.ms} ms, status=${cur.status}${cur.reason ? ', reason=' + cur.reason : ''}${cur.info ? `, hits ${cur.info.hitsToday}/${cur.info.hitsLimit}` : ''}`);
     const rows = Array.isArray(cur.data) ? cur.data : [];
@@ -379,6 +387,8 @@ export function startBot(env = process.env) {
   }
   async function boot() {
     const port = Number(env.PORT) || 10000;
+    await db.load();                                  // owner, users and followers survive deploys
+    log('storage:', remote ? (db.info.loaded ? 'neon loaded' : 'neon FAILED: ' + db.info.lastError) : 'local file only');
     await new Promise(r => server.listen(port, r));
     log('SH Live Line listening on', port, PUBLIC ? 'webhook' : 'long-polling');
     try {

@@ -7,6 +7,6 @@
   "engines": { "node": ">=20.6" },
   "scripts": {
     "start": "node bot.mjs",
-    "test": "node --test test/*.test.mjs"
+    "test": "node --test --test-force-exit test/*.test.mjs"
   }
 }

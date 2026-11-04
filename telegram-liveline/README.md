@@ -9,6 +9,7 @@ Standalone Telegram live-line bot, separate from the Scoring Heroes app. Bot: t.
 - `/claim` (first user becomes owner), `/status`, `/speed` (owner: times CricketData updates for 2 min), `/diag`, `/demo` (owner: sends all 8 event animations): real CricketData self-test marking each check [PROVIDER] or [CODE]
 
 Env: `TELEGRAM_BOT_TOKEN`, `CRIC_API_KEY`, `TG_WEBHOOK_SECRET`, optional `TG_CHANNEL`, `POLL_MS`.
+Storage: set `DATABASE_URL` (Neon) and owner/users/followers survive deploys (table `tg_liveline_state`; `/diag` shows a [STORAGE] line).
 Tests: `npm test` (fake Telegram + fake CricketData). Real-provider check: `/diag` or `GET /diag?s=<TG_WEBHOOK_SECRET>`.
 
 ## Event animations (assets/*.mp4, made by tools/make_animations.py)
