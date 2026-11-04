@@ -453,7 +453,18 @@ const routes = {
     return u ? [200, { ok: true, profile: pub(u) }] : [401, { ok: false, error: 'Not signed in' }];
   },
   'GET /api/live': async () => {
-    try { return [200, await liveMatches()]; }
+    try {
+      const d = await liveMatches();
+      // the list and the match page must show the same score: a match someone is watching has a fresher scorecard in the journal than the cached list
+      if (d && Array.isArray(d.matches)) {
+        d.matches = d.matches.map(m => {
+          if (!m || !m.started || m.ended || !matchWatch.has(m.id)) return m;
+          try { const v = matchJournal.view(m.id), sc = v && Array.isArray(v.score) ? v.score : null; if (sc && sc.length) return { ...m, score: sc.map(x => ({ inning: x.inning, r: x.r, w: x.w, o: x.o })) }; } catch (e) {}
+          return m;
+        });
+      }
+      return [200, d];
+    }
     catch (e) { return [e.code || 502, { ok: false, error: e.message }]; }
   },
   'GET /health': async () => [200, { ok: true, database: { configured: !!DATABASE_URL, connected: neonOk }, version: String(E.RENDER_GIT_COMMIT || '').slice(0, 7) || 'local', commit: E.RENDER_GIT_COMMIT || null, appSha256: crypto.createHash('sha256').update(fs.readFileSync(new URL('./app-index.html', import.meta.url))).digest('hex') }]

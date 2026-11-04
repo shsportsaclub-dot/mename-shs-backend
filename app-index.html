@@ -11474,6 +11474,8 @@ Object.assign(C,{ovAd(v){S.stream.adText=String(v||'').slice(0,140);save()}});
   if(gone&&UI.stage==='app'){try{render()}catch(e){}}
   return gone};
  /* abandoned test matches: started more than 24 hours ago, never finished and fewer than 6 balls scored; removed here and from the shared server copy */
+ /* build stamp: a tiny label so it is always clear which deployed version this phone is running */
+ try{const mt=document.querySelector('meta[name="sh-build"]'),v=mt&&mt.content;if(v&&!/^__/.test(v)){const e=document.createElement('div');e.id='sh-build-stamp';e.textContent='build '+v;e.style.cssText='position:fixed;right:6px;bottom:2px;z-index:2147483000;font:600 9px system-ui;color:#fff;opacity:.4;pointer-events:none;letter-spacing:.4px';document.body.appendChild(e)}}catch(e){}
  window.shPurgeEmpty=function(){const now=Date.now();const dead=[];
   S.matches=S.matches.filter(m=>{if(!m||isDemo(m)||m.ended||m.status==='done'||m.gts||m.rm)return true;const t=m.createdAt||(m.date?Date.parse(m.date):0);if(!t||now-t<DAY)return true;
    const n=(m.innings||[]).reduce((q,i)=>q+((i&&i.ev)||[]).length,0);if(n>=6)return true;dead.push(m.id);return false});
