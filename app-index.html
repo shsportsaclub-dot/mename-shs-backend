@@ -3347,7 +3347,7 @@ async function shPull(only){
       const r=await fetch(apiBase()+'/api/shared/'+col+(only?'/'+only.id:''));const j=await r.json();if(!j.ok)continue;
       for(const it of (j.items||[j.item])){const d=it.data||{},mine=it.owner===me;
         const h=JSON.stringify(d);
-        if(col==='matches'&&d.m){const i=S.matches.findIndex(x=>x.id===it.id);if(i>=0&&!S.matches[i].rm)continue;
+        if(col==='matches'&&d.m){if((S.purged||[]).includes(it.id))continue;const i=S.matches.findIndex(x=>x.id===it.id);if(i>=0&&!S.matches[i].rm)continue;
           if(i>=0&&S.matches[i]._sh===it.updated)continue;
           const m=Object.assign({},d.m,{rm:mine?0:1,_sh:it.updated,by:it.ownerName});
           if(mine&&i<0){Object.values(d.teams||{}).forEach(t=>{if(!S.teams.some(x=>x.id===t.id))S.teams.push(Object.assign({logo:null,preset:null},t))});Object.values(d.players||{}).forEach(p=>{if(!S.players.some(x=>x.id===p.id))S.players.push(p)})}
@@ -11488,6 +11488,7 @@ Object.assign(C,{ovAd(v){S.stream.adText=String(v||'').slice(0,140);save()}});
   S.matches=S.matches.filter(m=>{if(!m||isDemo(m)||m.ended||m.status==='done'||m.gts||m.rm)return true;const t=m.createdAt||(m.date?Date.parse(m.date):0);if(!t||now-t<DAY)return true;
    const n=(m.innings||[]).reduce((q,i)=>q+((i&&i.ev)||[]).length,0);if(n>=6)return true;dead.push(m.id);return false});
   if(!dead.length)return 0;
+  S.purged=(S.purged||[]).concat(dead).slice(-300);
   try{if(typeof shOn==='function'&&shOn())dead.forEach(id=>{fetch(apiBase()+'/api/shared/matches/'+encodeURIComponent(id),{method:'DELETE',headers:{'Authorization':'Bearer '+shTok()}}).catch(()=>{})})}catch(e){}
   if(UI.sid&&dead.includes(UI.sid)){UI.sid=null;if(['match','score'].includes(UI.view))UI.view='home'}
   try{save()}catch(e){}if(UI.stage==='app'){try{render()}catch(e){}}return dead.length};

@@ -2240,6 +2240,19 @@ routes['POST /api/auth/pin'] = async (req, body) => {
 const allow = o => ORIGINS.length === 0 ? '*' : (ORIGINS.includes(o) ? o : 'null');
 const sseClients = new Set();
 const sseSend = o => { const line = `data: ${JSON.stringify(o)}\n\n`; for (const r of sseClients) { try { r.write(line); } catch { sseClients.delete(r); } } };
+/* demo and abandoned test matches expire after 24 hours on the shared server copy too (demo flag, or never finished with fewer than 6 balls) */
+setInterval(() => {
+  try {
+    const bag = db.shared && db.shared.matches, now = Date.now(); if (!bag) return; let n = 0;
+    for (const [id, it] of Object.entries(bag)) {
+      const m = it && it.data && it.data.m; if (!m || m.ended || m.status === 'done') continue;
+      const t = +m.createdAt || +it.created || +it.updated || 0; if (!t || now - t < 864e5) continue;
+      const balls = (m.innings || []).reduce((q, i) => q + (((i && i.ev) || []).length), 0);
+      if (m.demo || m.umpires === 'Demo umpires' || balls < 6) { delete bag[id]; n++; sseSend({ col: 'matches', id, gone: 1 }); }
+    }
+    if (n) saveDb();
+  } catch {}
+}, 30 * 60 * 1000).unref();
 setInterval(() => { for (const r of sseClients) { try { r.write(': ping\n\n'); } catch { sseClients.delete(r); } } }, 20000).unref();
 http.createServer(async (req, res) => {
   const origin = req.headers.origin, path = new URL(req.url, 'http://x').pathname;
