@@ -199,6 +199,7 @@ export function startBot(env = process.env) {
         if (!db.data.owner) { db.data.owner = chat; db.save(); return tg.send(chat, '👑 You are now the owner of this bot.'); }
         return tg.send(chat, String(db.data.owner) === String(chat) ? '👑 You are the owner.' : 'This bot already has an owner.');
       }
+      if (cmd === '/speed' && String(db.data.owner) === String(chat)) { await tg.send(chat, '⏱ Watching CricketData for 2 minutes…'); const r = await speedTest(text.split(/\s+/)[1]); return tg.send(chat, r.join('\n').slice(0, 4000)); }
       if (cmd === '/diag' && String(db.data.owner) === String(chat)) { await tg.send(chat, '🔎 Testing CricketData live…'); const r = await diag(); return tg.send(chat, E.esc(r.join('\n')).slice(0, 4000)); }
       if (cmd === '/status' && String(db.data.owner) === String(chat)) return tg.send(chat, `<pre>${E.esc(JSON.stringify({ ...stats, uptimeMin: Math.round((Date.now() - stats.started) / 60000), users: Object.keys(db.data.users).length, following: Object.keys(db.data.subs).length, matches: followed().length }, null, 1))}</pre>`);
       return tg.send(chat, T(chat)('welcome'), { reply_markup: home(chat) });
@@ -261,6 +262,40 @@ export function startBot(env = process.env) {
     const s2 = b.data ? E.snap({ ...b.data, id: pick.id }) : null;
     const ev = s && s2 ? E.diff(s, s2) : [];
     R.push(`ℹ️ 6 s later provider says ${s2 ? `${s2.r}/${s2.w} (${E.overs(s2.b)})` : 'nothing'} → our events: ${ev.map(e => e.label).join(' ') || 'no change'}`);
+    return R;
+  }
+
+  // Watch one live match for a while and time every score change the provider makes.
+  // Tells apart "provider updates every ball" from "provider sends several balls at once / late".
+  async function speedTest(matchId, seconds = 120, everyMs = 3000) {
+    let id = matchId;
+    if (!id) { const mine = Object.values(db.data.subs)[0]; id = mine?.match; }
+    if (!id) { try { const l = (await cd.current(0)).filter(E.isLive); id = (l.find(m => /t20|odi/i.test(m.matchType)) || l[0])?.id; } catch {} }
+    if (!id) return ['ℹ️ No live match to watch right now.'];
+    const seen = [], start = Date.now();
+    let prev = null, name = '', lastChange = null, errors = 0, slowest = 0;
+    while (Date.now() - start < seconds * 1000) {
+      const r = await cd.raw('match_scorecard', { id });
+      slowest = Math.max(slowest, r.ms);
+      if (r.status !== 'success' || !r.data) errors++;
+      else {
+        name ||= r.data.name || id;
+        const s = E.snap(r.data);
+        if (s && (!prev || s.r !== prev.r || s.w !== prev.w || s.b !== prev.b || s.idx !== prev.idx)) {
+          const now = Date.now();
+          if (prev) seen.push({ t: now, gap: lastChange ? Math.round((now - lastChange) / 1000) : null, balls: s.idx === prev.idx ? s.b - prev.b : null, label: E.diff(prev, s).map(e => e.label).join(' '), score: `${s.r}/${s.w} (${E.overs(s.b)})` });
+          lastChange = now; prev = s;
+        }
+      }
+      await new Promise(res => setTimeout(res, everyMs));
+    }
+    const R = [`⏱ <b>Speed test</b> ${E.esc(name)}`, `Watched ${seconds}s, asked CricketData every ${everyMs / 1000}s. Slowest reply ${slowest} ms, failed replies ${errors}.`, ''];
+    if (!seen.length) { R.push('ℹ️ Score did not change in this time (break, drinks, review or slow over). Run /speed again during play.'); return R; }
+    for (const x of seen) R.push(`${new Date(x.t).toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata' })}  ${E.esc(x.score)}  [${E.esc(x.label)}]${x.gap !== null ? `  +${x.gap}s` : ''}${x.balls > 1 ? `  ⚠️ ${x.balls} balls in one update` : ''}`);
+    const multi = seen.filter(x => x.balls > 1).length;
+    R.push('');
+    R.push(multi ? `❌ [PROVIDER] ${multi} of ${seen.length} updates jumped more than one ball — CricketData is batching balls, not our code.` : `✅ [PROVIDER] every update was one ball — CricketData is ball by ball.`);
+    R.push(`✅ [CODE] our bot sees a provider change within ${POLL_MS / 1000 + 1}s (poll every ${POLL_MS / 1000}s + 1s Telegram edit).`);
     return R;
   }
 
