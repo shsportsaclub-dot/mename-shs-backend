@@ -53,7 +53,37 @@ export function telegram({ token, base = 'https://api.telegram.org', log = () =>
       }
     }, due);
   }
+  // Event animations: upload the MP4 once, then reuse Telegram's file_id for every chat.
+  const fileIds = new Map();
+  async function upload(method, field, chat_id, filePath, extra) {
+    const fs = await import('node:fs/promises');
+    const fd = new FormData();
+    fd.append('chat_id', String(chat_id));
+    for (const [k, v] of Object.entries(extra)) fd.append(k, typeof v === 'string' ? v : JSON.stringify(v));
+    fd.append(field, new Blob([await fs.readFile(filePath)], { type: 'video/mp4' }), filePath.split('/').pop());
+    await pace();
+    const r = await fetch(url(method), { method: 'POST', body: fd, signal: AbortSignal.timeout(30000) });
+    const j = await r.json();
+    if (!j.ok) throw Object.assign(new Error(j.description || 'upload failed'), { code: j.error_code });
+    return j.result;
+  }
+  async function sendAnim(chat_id, name, filePath, caption, effect) {
+    const base = { caption, parse_mode: 'HTML', ...(effect && Number(chat_id) > 0 ? { message_effect_id: effect } : {}) };
+    const go = async extra => {
+      const id = fileIds.get(name);
+      if (id) return call('sendAnimation', { chat_id, animation: id, ...extra });
+      const res = await upload('sendAnimation', 'animation', chat_id, filePath, extra);
+      const fid = res.animation?.file_id || res.document?.file_id || res.video?.file_id;
+      if (fid) fileIds.set(name, fid);
+      return res;
+    };
+    try { return await go(base); }
+    catch (e) {
+      if (base.message_effect_id && /effect/i.test(e.message)) { const { message_effect_id, ...rest } = base; return go(rest); }
+      throw e;
+    }
+  }
   const send = (chat_id, text, extra = {}) => call('sendMessage', { chat_id, text, parse_mode: 'HTML', link_preview_options: { is_disabled: true }, ...extra });
   const answer = (callback_query_id, text) => call('answerCallbackQuery', { callback_query_id, ...(text ? { text } : {}) }).catch(() => {});
-  return { call, send, answer, editCard, _pending: pending };
+  return { call, send, answer, editCard, sendAnim, _fileIds: fileIds, _pending: pending };
 }

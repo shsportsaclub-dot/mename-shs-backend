@@ -89,6 +89,14 @@ export function bowlerBalls(card) {
   return o;
 }
 
+// Wides / no-balls conceded so far in this innings (CricketData bowling rows carry wd / nb).
+export function extras(card) {
+  let wd = 0, nb = 0;
+  for (const b of Array.isArray(card?.bowling) ? card.bowling : []) { wd += Number(b.wd ?? b.wides) || 0; nb += Number(b.nb ?? b.noballs) || 0; }
+  return { wd, nb };
+}
+export const REVIEW_RE = /\b(review|drs|third umpire|tv umpire|upstairs)\b/i;
+
 // Transparent chase model (clearly labelled "model" in the card, never shown as odds).
 // Resources left = balls left x wicket factor; compares with runs needed.
 const WF = [0, 0.18, 0.32, 0.45, 0.56, 0.66, 0.75, 0.83, 0.9, 0.96, 1];
@@ -127,7 +135,7 @@ export function state(m, mem = {}) {
 }
 
 const winDot = p => (p >= 60 ? '🟢' : p >= 40 ? '🟡' : '🔴');
-const BIG = { '0': '•  DOT BALL', '1': '1 RUN', '2': '2 RUNS', '3': '3 RUNS', '4': '4  FOUR!', '5': '5 RUNS', '6': '6  SIX!', W: 'W  WICKET!', Wd: 'WIDE' };
+const BIG = { Nb: 'NO BALL', '0': '•  DOT BALL', '1': '1 RUN', '2': '2 RUNS', '3': '3 RUNS', '4': '4  FOUR!', '5': '5 RUNS', '6': '6  SIX!', W: 'W  WICKET!', Wd: 'WIDE' };
 export const bigLabel = l => BIG[l] || (String(l).startsWith('W') ? `${l}  WICKETS!` : String(l).startsWith('+') ? `${l} runs` : String(l));
 
 export function liveCard(m, mem, T, now = new Date()) {
@@ -161,6 +169,7 @@ export function liveCard(m, mem, T, now = new Date()) {
     if (bw) L.push(`🎳 ${esc(bw.bowler.name)}  ${esc(bw.o)}-${bw.m ?? 0}-${bw.r ?? 0}-${bw.w ?? 0}  Eco ${esc(bw.eco ?? '')}`.trim());
   }
   if (st.partnership && st.partnership.b > 0) L.push(`🤝 ${esc(T('partnership'))}: ${st.partnership.r} (${st.partnership.b})`);
+  if (mem.freeHit) L.push('🟢 <b>FREE HIT</b> — next ball');
   if (mem.last6?.length) L.push(`${esc(T('last6'))}: ${mem.last6.map(x => `[${esc(x)}]`).join(' ')}`);
   if (mem.thisOver?.length) L.push(`${esc(T('thisOver'))}: ${mem.thisOver.map(esc).join(' ')}`);
   if (mem.prevOver) L.push(`↩️ ${esc(T('overDone', { n: mem.prevOver.n, r: mem.prevOver.r }))}${mem.prevOver.balls?.length ? ' — ' + mem.prevOver.balls.map(esc).join(' ') : ''}`);

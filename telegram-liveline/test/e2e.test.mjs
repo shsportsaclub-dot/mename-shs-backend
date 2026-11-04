@@ -12,11 +12,17 @@ test('live line flow: start -> live list -> follow -> ball by ball edits + alert
   // ---- fake Telegram ----
   const calls = []; let mid = 100;
   const tgSrv = http.createServer((q, r) => {
-    let b = ''; q.on('data', c => b += c); q.on('end', () => {
-      const method = q.url.split('/').pop(), body = b ? JSON.parse(b) : {};
+    const chunks = []; q.on('data', c => chunks.push(c)); q.on('end', () => {
+      const b = Buffer.concat(chunks).toString('latin1'), method = q.url.split('/').pop();
+      let body = {};
+      if (/multipart/.test(q.headers['content-type'] || '')) {          // animation upload
+        for (const m of b.matchAll(/name="([^"]+)"(?:; filename="([^"]+)")?\r\n(?:Content-Type: [^\r]+\r\n)?\r\n([\s\S]*?)\r\n--/g)) body[m[1]] = m[2] ? { file: m[2], bytes: m[3].length } : Buffer.from(m[3], 'latin1').toString('utf8').replace(/\r\n/g, '\n');   // multipart turns \n into \r\n (spec); Telegram shows both as a line break
+        body.chat_id = Number(body.chat_id);
+      } else if (b) body = JSON.parse(Buffer.concat(chunks).toString('utf8'));
       assert.ok(q.url.startsWith('/botTEST:TOKEN/'), 'token goes in the URL path');
       calls.push({ method, body });
       r.setHeader('content-type', 'application/json');
+      if (method === 'sendAnimation') { const f = body.animation?.file || body.animation; return r.end(JSON.stringify({ ok: true, result: { message_id: ++mid, animation: { file_id: 'FID:' + (body.animation?.file || String(body.animation).replace(/^FID:/, '') + '.mp4') } } })); }
       if (method === 'sendMessage') return r.end(JSON.stringify({ ok: true, result: { message_id: ++mid, chat: { id: body.chat_id } } }));
       if (method === 'editMessageText' && body.message_id === 9999) return r.end(JSON.stringify({ ok: false, error_code: 400, description: 'Bad Request: message to edit not found' }));
       r.end(JSON.stringify({ ok: true, result: true }));
@@ -30,6 +36,11 @@ test('live line flow: start -> live list -> follow -> ball by ball edits + alert
     { r: 145, w: 2, o: '15.2', batting: bat(53, 32, 20, 15), bo: '2.2' },
     { r: 145, w: 3, o: '15.5', batting: [...bat(53, 32, 20, 16, 'c Kohli b Bumrah'), { batsman: { name: 'Glenn Maxwell' }, r: 0, b: 0, 'dismissal-text': 'batting' }], bo: '2.3' },
     { r: 151, w: 3, o: '16', batting: [...bat(53, 32, 20, 16, 'c Kohli b Bumrah'), { batsman: { name: 'Glenn Maxwell' }, r: 6, b: 3, 'dismissal-text': 'batting' }], bo: '3' },
+    { r: 152, w: 3, o: '16', batting: [...bat(53, 32, 20, 16, 'c Kohli b Bumrah'), { batsman: { name: 'Glenn Maxwell' }, r: 6, b: 3, 'dismissal-text': 'batting' }], bo: '3', wd: 1 },
+    { r: 153, w: 3, o: '16', batting: [...bat(53, 32, 20, 16, 'c Kohli b Bumrah'), { batsman: { name: 'Glenn Maxwell' }, r: 6, b: 3, 'dismissal-text': 'batting' }], bo: '3', wd: 1, nb: 1 },
+    { r: 154, w: 3, o: '16', batting: [...bat(53, 32, 20, 16, 'c Kohli b Bumrah'), { batsman: { name: 'Glenn Maxwell' }, r: 6, b: 3, 'dismissal-text': 'batting' }], bo: '3', wd: 2, nb: 1 },
+    { r: 158, w: 3, o: '16.1', batting: [...bat(53, 32, 20, 16, 'c Kohli b Bumrah'), { batsman: { name: 'Glenn Maxwell' }, r: 10, b: 4, 'dismissal-text': 'batting' }], bo: '3.1', wd: 2, nb: 1 },
+    { r: 158, w: 3, o: '16.1', batting: [...bat(53, 32, 20, 16, 'c Kohli b Bumrah'), { batsman: { name: 'Glenn Maxwell' }, r: 10, b: 4, 'dismissal-text': 'batting' }], bo: '3.1', wd: 2, nb: 1, status: 'India have taken a review against Glenn Maxwell' },
     { r: 190, w: 4, o: '19.4', batting: bat(70, 45, 20, 16, 'c Kohli b Bumrah'), bo: '4', status: 'Australia won by 6 wkts', ended: true },
   ];
   let step = 0;
@@ -39,7 +50,7 @@ test('live line flow: start -> live list -> follow -> ball by ball edits + alert
       id: 'm1', name: 'India vs Australia, 1st T20I', matchType: 't20', venue: 'Wankhede', status: s.status || 'Live', matchStarted: true, matchEnded: !!s.ended,
       teamInfo: [{ name: 'India', shortname: 'IND' }, { name: 'Australia', shortname: 'AUS' }], teams: ['India', 'Australia'],
       score: [{ inning: 'India Inning 1', r: 189, w: 5, o: 20 }, { inning: 'Australia Inning 1', r: s.r, w: s.w, o: s.o }],
-      scorecard: [{ inning: 'Australia Inning 1', batting: s.batting, bowling: [{ bowler: { name: 'Jasprit Bumrah' }, o: s.bo, m: 0, r: 20, w: s.w > 2 ? 1 : 0, eco: 6.5 }] }],
+      scorecard: [{ inning: 'Australia Inning 1', batting: s.batting, bowling: [{ bowler: { name: 'Jasprit Bumrah' }, o: s.bo, m: 0, r: 20, w: s.w > 2 ? 1 : 0, eco: 6.5, wd: s.wd || 0, nb: s.nb || 0 }] }],
     };
   };
   const cdSrv = http.createServer((q, r) => {
@@ -59,6 +70,8 @@ test('live line flow: start -> live list -> follow -> ball by ball edits + alert
   const msg = (text, id = 555, lang = 'en') => ({ update_id: Math.random() * 1e9 | 0, message: { message_id: 1, chat: { id, type: 'private' }, from: { id, language_code: lang }, text } });
   const cb = (data, id = 555) => ({ update_id: Math.random() * 1e9 | 0, callback_query: { id: 'q' + Math.random(), from: { id }, message: { message_id: 5, chat: { id } }, data } });
   const sent = (chat = 555) => calls.filter(c => c.method === 'sendMessage' && c.body.chat_id === chat);
+  const anims = (chat = 555) => calls.filter(c => c.method === 'sendAnimation' && c.body.chat_id === chat);
+  const animName = c => c.body.animation?.file || String(c.body.animation).replace(/^FID:/, '');
   const edits = (chat = 555) => calls.filter(c => c.method === 'editMessageText' && c.body.chat_id === chat);
   try {
     await wait(300);
@@ -100,24 +113,50 @@ test('live line flow: start -> live list -> follow -> ball by ball edits + alert
 
     // ball 15.2: four + Head reaches 50
     step = 2; await wait(3200);
-    const a2 = sent().slice(before).map(c => c.body.text).join('\n');
-    assert.match(a2, /🔥 <b>FOUR!<\/b>\s+AUS 145\/2 \(15\.2\)\n🏏 Travis Head 53/);
-    assert.match(a2, /⭐ <b>Travis Head<\/b> reaches 50!/);
+    const a2 = anims();
+    const four = a2.find(c => animName(c) === 'four.mp4'), fifty = a2.find(c => animName(c) === 'fifty.mp4');
+    assert.ok(four && fifty, 'four + fifty animations sent: ' + a2.map(animName));
+    assert.match(four.body.caption, /🔥 <b>FOUR!<\/b>\s+AUS 145\/2 \(15\.2\)\n🏏 Travis Head 53/);
+    assert.equal(four.body.message_effect_id, '5104841245755180586', 'fire effect in private chat');
+    assert.ok(four.body.animation.bytes > 1000, 'first time the MP4 is uploaded');
+    assert.match(fifty.body.caption, /⭐ <b>Travis Head<\/b> reaches 50!/);
     assert.match(edits().at(-1).body.text, /【 4  FOUR! 】/);
 
     // ball 15.3: wicket
     step = 3; await wait(3200);
-    assert.match(sent().at(-1).body.text, /☝️ <b>WICKET!<\/b>\s+AUS 145\/3 \(15\.5\)\nMitchell Marsh — c Kohli b Bumrah/);
+    assert.equal(animName(anims().at(-1)), 'wicket.mp4');
+    assert.match(anims().at(-1).body.caption, /☝️ <b>WICKET!<\/b>\s+AUS 145\/3 \(15\.5\)\nMitchell Marsh — c Kohli b Bumrah/);
 
     // ball 16.0: six, over ends
     step = 4; await wait(3200);
-    assert.match(sent().at(-1).body.text, /💥 <b>SIX!<\/b>/);
+    assert.equal(animName(anims().at(-1)), 'six.mp4'); assert.match(anims().at(-1).body.caption, /💥 <b>SIX!<\/b>/);
     const c4 = edits().at(-1).body.text;
     assert.match(c4, /Last balls: \[1\] \[4\] \[W\] \[6\]/);
     assert.match(c4, /End of over 16: 11 runs — 1 4 W 6/);
     assert.match(c4, /Glenn Maxwell\s+<b>6<\/b>/);
     assert.match(c4, /Partnership: 6 \(1\)/);
     assert.match(c4, /Win % \(model\): AUS \d+% · IND \d+%/);
+
+    // wide (bowler wd +1, no legal ball)
+    step = 5; await wait(3200);
+    assert.equal(animName(anims().at(-1)), 'wide.mp4'); assert.match(anims().at(-1).body.caption, /WIDE<\/b> \+1/);
+    assert.match(edits().at(-1).body.text, /【 WIDE 】/);
+    // no-ball -> free hit
+    step = 6; await wait(3200);
+    assert.equal(animName(anims().at(-1)), 'freehit.mp4'); assert.match(anims().at(-1).body.caption, /NO BALL<\/b> → 🟢 <b>FREE HIT/);
+    assert.match(edits().at(-1).body.text, /【 NO BALL 】[\s\S]*FREE HIT<\/b> — next ball/);
+    // wide during the free hit: free hit carries over (ICC)
+    step = 7; await wait(3200);
+    assert.match(anims().at(-1).body.caption, /Free hit continues/);
+    assert.match(edits().at(-1).body.text, /FREE HIT<\/b> — next ball/);
+    // legal four off the free hit ends it
+    step = 8; await wait(3200);
+    assert.match(anims().at(-1).body.caption, /FOUR!<\/b> \(off the free hit\)/);
+    assert.ok(!/FREE HIT<\/b> — next ball/.test(edits().at(-1).body.text), 'free hit cleared after the legal ball');
+    assert.ok(typeof anims().at(-1).body.animation === 'string', 'second time the cached file_id is reused');
+    // review wording in status
+    step = 9; await wait(3200);
+    assert.equal(animName(anims().at(-1)), 'review.mp4'); assert.match(anims().at(-1).body.caption, /DRS REVIEW/);
 
     // scorecard + language
     await post(cb('C:m1')); await wait(400);
@@ -131,7 +170,7 @@ test('live line flow: start -> live list -> follow -> ball by ball edits + alert
     assert.ok(Object.values(bot.db.data.subs).find(s => s.chat === 555).cardId > 9999 || sent().at(-1).body.text.includes('గెలుపు'), 'card recreated in Telugu');
 
     // result -> alert + follower released
-    step = 5; await wait(3500);
+    step = 10; await wait(3500);
     assert.ok(sent().some(c => /🏆 ఫలితం[\s\S]*Australia won by 6 wkts/.test(c.body.text)), 'result alert in chosen language');
     assert.equal(Object.values(bot.db.data.subs).filter(s => s.chat === 555).length, 0);
 
