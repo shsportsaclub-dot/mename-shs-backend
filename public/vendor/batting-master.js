@@ -137,7 +137,7 @@ function rawPose(shot,t,T0){ // t in seconds; T0 timings
  const dd=Math.max(-160,Math.min(160,dir+(p.tb||0))),TS=-1,BT=-TS*dd*.4*(.5+cr),tw=TS*dd*.06;
  const a=S(0,T0.back,t),c=S(T0.back,T0.hit,t),f=S(T0.hit,T0.fin,t),h=S(T0.fin,T0.hold,t),rec=S(T0.hold,T0.end,t);
  // key poses: stance -> backlift -> contact -> follow-through
-const stance={lean:34,twist:0,head:-10,hy:45,aTop:[6,2,22],aBot:[8,2,24],front:[34,46],back:[20,44],y:-27,r:[0,0,0],ry:0,rx:0};
+const stance={lean:32,twist:0,head:-6,hy:45,aTop:[6,2,22],aBot:[8,2,24],front:[17,24],back:[10,20],y:-12,r:[0,0,0],ry:0,rx:0};
  const bl={lean:L(10,4,pw),twist:BT,head:0,aTop:[L(-14,16,hi),0,L(110,140,pw)],aBot:[L(-10,20,hi),0,L(110,140,pw)],front:[10,12],back:[-4,12],y:-4,r:[0,0,0],ry:cr*10,rx:0};
 
  const reach=F?1:0;
