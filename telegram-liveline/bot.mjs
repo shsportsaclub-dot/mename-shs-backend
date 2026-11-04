@@ -42,13 +42,42 @@ export function startBot(env = process.env) {
 
   // ---------- match memory ----------
   function memFor(id) {
-    if (!mem.has(id)) mem.set(id, { last6: [], thisOver: [], prevOver: null, lastLabel: null, bowler: null, partnerFrom: null, snap: null, bat: {}, dis: {}, bowlB: {}, ex: { wd: 0, nb: 0 }, freeHit: false, status: '', overStartR: null, ended: false });
+    if (!mem.has(id)) mem.set(id, { last6: [], thisOver: [], prevOver: null, lastLabel: null, bowler: null, partnerFrom: null, snap: null, bat: {}, dis: {}, bowlB: {}, ex: { wd: 0, nb: 0 }, queue: [], post: [], playing: false, freeHit: false, status: '', overStartR: null, ended: false });
     return mem.get(id);
   }
   function dismissals(card) { const o = {}; for (const b of card?.batting || []) if (b.batsman?.name) o[b.batsman.name] = b['dismissal-text'] || ''; return o; }
 
+  // Effects of ONE delivery on the card memory, returning its alerts. Used both for a normal
+  // update and for each ball of a replay. c: { s (score after the ball), prevB, scoreLine, limited, who, scorer }
+  function processBall(M, ev, c) {
+    const alerts = [], { s, scoreLine, limited } = c;
+    if (ev.noball) ev.label = ev.runs > 1 ? `Nb+${ev.runs - 1}` : 'Nb';
+    else if (ev.wide) ev.label = ev.runs > 1 ? `Wd+${ev.runs - 1}` : 'Wd';
+    const wasFreeHit = M.freeHit;
+    // ICC playing conditions (ODI/T20I): every no-ball gives a free hit; it carries over
+    // if the next delivery is a wide or another no-ball, and ends after the next legal ball.
+    if (ev.noball && limited) M.freeHit = true;
+    else if (ev.legal > 0) M.freeHit = false;
+    if (ev.noball) alerts.push({ key: 'noball', anim: limited ? 'freehit' : null, text: t => `🚨 <b>NO BALL</b>${limited ? ' → 🟢 <b>FREE HIT</b>' : ''}  ${E.esc(scoreLine)}` });
+    else if (ev.wide) alerts.push({ key: 'wide', anim: 'wide', text: t => `↔️ <b>WIDE</b> +${ev.runs}  ${E.esc(scoreLine)}${M.freeHit ? '\n🟢 Free hit continues' : ''}` });
+    if (wasFreeHit && ev.legal > 0 && !ev.wkts && ev.boundary) ev.freeHitShot = true;
+    M.lastLabel = ev.label;
+    M.last6 = [...M.last6, ev.label].slice(-6);
+    M.thisOver = [...M.thisOver, ev.label];
+    if (ev.wkts > 0) {
+      M.partnerFrom = { idx: s.idx, r: s.r, b: s.b };
+      alerts.push({ key: 'wicket', anim: 'wicket', text: t => `☝️ <b>${E.esc(t('wicket'))}</b>  ${E.esc(scoreLine)}${c.who ? '\n' + E.esc(c.who) : ''}` });
+    } else if (ev.boundary) {
+      alerts.push({ key: ev.runs === 6 ? 'six' : 'four', anim: ev.runs === 6 ? 'six' : 'four', effect: ev.runs === 6 ? EFFECT.party : EFFECT.fire, text: t => `${ev.runs === 6 ? '💥' : '🔥'} <b>${E.esc(t(ev.runs === 6 ? 'six' : 'four'))}</b>${ev.freeHitShot ? ' (off the free hit)' : ''}  ${E.esc(scoreLine)}${c.scorer ? '\n🏏 ' + E.esc(c.scorer) : ''}` });
+    }
+    const po = Math.floor(c.prevB / 6), no = Math.floor(s.b / 6);
+    if (no > po) { M.prevOver = { n: no, r: M.overStartR === null ? '?' : s.r - M.overStartR, balls: M.thisOver }; M.thisOver = []; M.overStartR = s.r; }
+    return alerts;
+  }
+
   // Turn a new provider reading into card memory + alert texts.
-  function digest(m) {
+  // steps: optional exact per-ball list (from match_bbb) to replay instead of one jump.
+  function digest(m, steps = null) {
     const M = memFor(m.id), s = E.snap(m), card = s ? E.lastInningCard(m.scorecard, s.inning) : null;
     const bat = E.batterRuns(card), bowlB = E.bowlerBalls(card), dis = dismissals(card), ex = E.extras(card);
     const limited = !!E.maxOvers(m.matchType, m.name);
@@ -82,34 +111,17 @@ export function startBot(env = process.env) {
         alerts.push({ key: 'innings', text: (t) => `⏸ <b>${E.esc(t('innings'))}</b>\n${prev ? E.esc(`${E.teamShort(m, prev.inning)} ${prev.r}/${prev.w} (${prev.o})`) : ''}\n${E.esc(m.status || '')}` });
         continue;
       }
+      if (ev.kind === 'ball' && steps) {                     // exact replay: queue every delivery
+        const outs = outNow.map(([n, d]) => `${n} — ${d}`);
+        for (const st of steps) M.queue.push({ m, st, limited, who: st.wicket ? (st.dismissal ? `${st.batsman} — ${st.dismissal}` : outs.shift() || '') : '', scorer: st.batsman && (st.runs === 4 || st.runs === 6) ? st.batsman : '' });
+        stats.replays = (stats.replays || 0) + 1;
+        continue;
+      }
       if (ev.kind === 'ball') {
         // Extras: the bowlers' wd / nb counters tell a wide from a no-ball (score alone cannot).
         const dWd = sameInnings ? ex.wd - (M.ex.wd || 0) : 0, dNb = sameInnings ? ex.nb - (M.ex.nb || 0) : 0;
-        if (ev.legal === 0 && dNb > 0) ev.label = ev.runs > 1 ? `Nb+${ev.runs - 1}` : 'Nb';
-        else if (ev.legal === 0 && dWd > 0) ev.label = ev.runs > 1 ? `Wd+${ev.runs - 1}` : 'Wd';
-        const wasFreeHit = M.freeHit;
-        // ICC playing conditions (ODI/T20I): every no-ball gives a free hit; it carries over
-        // if the next delivery is a wide or another no-ball, and ends after the next legal ball.
-        if (dNb > 0 && limited) M.freeHit = true;
-        else if (ev.legal > 0) M.freeHit = false;
-        if (ev.legal === 0 && dNb > 0) alerts.push({ key: 'noball', anim: limited ? 'freehit' : null, text: t => `🚨 <b>NO BALL</b>${limited ? ' → 🟢 <b>FREE HIT</b>' : ''}  ${E.esc(scoreLine)}` });
-        else if (ev.legal === 0 && dWd > 0) alerts.push({ key: 'wide', anim: 'wide', text: t => `↔️ <b>WIDE</b> +${ev.runs}  ${E.esc(scoreLine)}${M.freeHit ? '\n🟢 Free hit continues' : ''}` });
-        if (wasFreeHit && ev.legal > 0 && !ev.wkts && ev.boundary) ev.freeHitShot = true;
-        M.lastLabel = ev.label;
-        M.last6 = [...M.last6, ev.label].slice(-6);
-        M.thisOver = [...M.thisOver, ev.label];
-        if (ev.wkts > 0) {
-          M.partnerFrom = { idx: s.idx, r: s.r, b: s.b };
-          const who = outNow.map(([n, d]) => `${n} — ${d}`).join('\n');
-          alerts.push({ key: 'wicket', anim: 'wicket', text: t => `☝️ <b>${E.esc(t('wicket'))}</b>  ${E.esc(scoreLine)}\n${E.esc(who)}` });
-        } else if (ev.boundary) {
-          const w = scorer ? `${scorer[0]} ${bat[scorer[0]]}` : '';
-          alerts.push({ key: ev.runs === 6 ? 'six' : 'four', anim: ev.runs === 6 ? 'six' : 'four', effect: ev.runs === 6 ? EFFECT.party : EFFECT.fire, text: t => `${ev.runs === 6 ? '💥' : '🔥'} <b>${E.esc(t(ev.runs === 6 ? 'six' : 'four'))}</b>${ev.freeHitShot ? ' (off the free hit)' : ''}  ${E.esc(scoreLine)}${w ? '\n🏏 ' + E.esc(w) : ''}` });
-        }
-      }
-      if (ev.kind === 'over') {
-        M.prevOver = { n: ev.over, r: M.overStartR === null ? '?' : s.r - M.overStartR, balls: M.thisOver };
-        M.thisOver = []; M.overStartR = s.r;
+        ev.noball = ev.legal === 0 && dNb > 0; ev.wide = ev.legal === 0 && !ev.noball && dWd > 0;
+        alerts.push(...processBall(M, ev, { s, prevB: M.snap.b, scoreLine, limited, who: outNow.map(([n, d]) => `${n} — ${d}`).join('\n'), scorer: scorer ? `${scorer[0]} ${bat[scorer[0]]}` : '' }));
       }
     }
     // DRS: CricketData has no review field, so we watch the match status text for review wording.
@@ -170,14 +182,64 @@ export function startBot(env = process.env) {
       if (!m) return;
       m.id = m.id || id;
       latest.set(id, m);
-      const alerts = digest(m);
+      const steps = await replaySteps(m);
+      const alerts = digest(m, steps);
+      const M = memFor(id);
+      if (M.queue.length || M.playing) { M.post.push(...alerts); startPlayback(id); return; }   // the replay sends them in order
       for (const sub of subsOf(id)) {
         for (const a of alerts) { stats.alerts++; sendAlert(sub.chat, a); }
         await pushCard(sub, m);
-        if (m.matchEnded) { delete db.data.subs[subKey(sub.chat, id)]; db.save(); }
       }
-      if (m.matchEnded) setTimeout(() => mem.delete(id), 60000);
+      finishIfEnded(id, m);
     }));
+  }
+
+  function finishIfEnded(id, m) {
+    if (!m.matchEnded) return;
+    for (const sub of subsOf(id)) delete db.data.subs[subKey(sub.chat, id)];
+    db.save();
+    setTimeout(() => mem.delete(id), 60000);
+  }
+
+  // ---------- ball-by-ball replay ----------
+  // When CricketData jumps several balls at once, read its delivery list (match_bbb) and play the
+  // balls back one at a time with a gap, so the line moves ball by ball. Used only when the
+  // deliveries add up exactly to the score change; otherwise the jump is shown as it came.
+  const REPLAY = env.REPLAY !== '0', GAP_MAX = Number(env.REPLAY_GAP_MS) || 3000;
+  async function replaySteps(m) {
+    if (!REPLAY) return null;
+    const M = memFor(m.id), s = E.snap(m);
+    if (!M.snap || !s || s.idx !== M.snap.idx || s.b - M.snap.b < 2 || s.b < M.snap.b) return null;
+    const r = await cd.raw('match_bbb', { id: m.id });
+    if (r.status !== 'success') { stats.bbbMiss = (stats.bbbMiss || 0) + 1; return null; }
+    const steps = E.ballSteps(E.bbbRows(r.data), M.snap, s);
+    if (!steps) stats.bbbMismatch = (stats.bbbMismatch || 0) + 1;
+    return steps;
+  }
+  const viewAt = (m, st) => ({ ...m, score: [...(m.score || []).slice(0, -1), { ...(m.score || []).at(-1), r: st.r, w: st.w, o: E.overs(st.b) }] });
+  function startPlayback(id) {
+    const M = memFor(id);
+    if (M.playing) return;
+    M.playing = true;
+    const next = async () => {
+      const job = M.queue.shift();
+      if (!job) {                                         // replay done: pending alerts, then the real card
+        M.playing = false;
+        const m = latest.get(id);
+        for (const sub of subsOf(id)) { for (const a of M.post) { stats.alerts++; sendAlert(sub.chat, a); } if (m) await pushCard(sub, m); }
+        M.post = [];
+        if (m) finishIfEnded(id, m);
+        return;
+      }
+      const { m, st } = job, sAfter = { idx: st.idx, inning: st.inning, r: st.r, w: st.w, b: st.b };
+      const view = viewAt(m, st);
+      const alerts = processBall(M, { label: st.label, runs: st.runs, wkts: st.wicket ? 1 : 0, legal: st.legal, wide: st.wide, noball: st.noball, boundary: st.legal === 1 && !st.wicket && (st.runs === 4 || st.runs === 6) }, { s: sAfter, prevB: st.prevB, scoreLine: `${E.teamShort(m, st.inning)} ${st.r}/${st.w} (${E.overs(st.b)})`, limited: job.limited, who: job.who, scorer: job.scorer });
+      if (st.bowler) M.bowler = st.bowler;
+      for (const sub of subsOf(id)) { for (const a of alerts) { stats.alerts++; sendAlert(sub.chat, a); } await pushCard(sub, view); }
+      const gap = Math.max(1300, Math.min(GAP_MAX, Math.floor(12000 / (M.queue.length + 1))));
+      setTimeout(next, M.queue.length ? gap : 600);
+    };
+    next();
   }
 
   // ---------- commands ----------
@@ -328,6 +390,15 @@ export function startBot(env = process.env) {
     ok('CODE', !!s, `read score: ${s ? `${s.r}/${s.w} in ${E.overs(s.b)} ov` : 'nothing (provider score[] empty?)'}`);
     ok('CODE', text.length > 0 && text.length < 4096, `live card built: ${text.length} chars (Telegram limit 4096)`);
     ok('CODE', E.atCrease(card).length > 0 || !card, `batters at crease found: ${E.atCrease(card).map(b => b.batsman?.name).join(', ') || 'none'}`);
+    // Ball-by-ball list used for the replay of batched balls.
+    const bb = await cd.raw('match_bbb', { id: pick.id });
+    const bRows = bb.status === 'success' ? E.bbbRows(bb.data) : [];
+    const raw0 = Array.isArray(bb.data) ? bb.data.at(-1) : Array.isArray(bb.data?.bbb) ? bb.data.bbb.at(-1) : null;
+    ok('PROVIDER', bRows.length > 0, `match_bbb: ${bb.status}${bb.reason ? ' (' + bb.reason + ')' : ''}, ${bRows.length} deliveries${raw0 ? ', fields: ' + Object.keys(raw0).slice(0, 14).join(',') : ''}`);
+    if (bRows.length && s) {
+      const inn = Math.max(...bRows.map(r => r.inning)), legal = bRows.filter(r => r.inning === inn && r.legal).length;
+      ok('CODE', legal === s.b, `replay check: ${legal} legal balls in the list vs ${s.b} in the score${legal === s.b ? '' : ' (replay will fall back to the plain jump)'}`);
+    }
     // Two readings a few seconds apart: does the provider move, and does our diff see it?
     await new Promise(r => setTimeout(r, 6000));
     const b = await cd.raw('match_scorecard', { id: pick.id });

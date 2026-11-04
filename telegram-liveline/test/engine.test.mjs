@@ -83,3 +83,20 @@ test('scorecard table lists both batting and bowling', () => {
   const t = E.scorecardText(match, tr('en'));
   assert.ok(t.includes('<pre>') && t.includes('Travis Head*') && t.includes('David Warner') && t.includes('Jasprit Bumrah'));
 });
+
+test('ball-by-ball replay splits a 4-ball jump exactly, or refuses to guess', async () => {
+  const rows = E.bbbRows({ bbb: [
+    { n: 1, inning: 0, over: 48, ball: 6, runs: 1, batsman: { name: 'A' }, bowler: { name: 'X' } },
+    { n: 2, inning: 0, over: 49, ball: 1, runs: 4, batsman: { name: 'A' }, bowler: { name: 'Y' } },
+    { n: 3, inning: 0, over: 49, ball: 2, runs: 1, extras: 1, extras_type: 'wd', batsman: { name: 'A' }, bowler: { name: 'Y' } },
+    { n: 4, inning: 0, over: 49, ball: 2, runs: 0, dismissal: 'b Y', batsman: { name: 'A' }, bowler: { name: 'Y' } },
+    { n: 5, inning: 0, over: 49, ball: 3, runs: 6, batsman: { name: 'B' }, bowler: { name: 'Y' } },
+    { n: 6, inning: 0, over: 49, ball: 4, runs: 0, batsman: { name: 'B' }, bowler: { name: 'Y' } },
+  ] });
+  const prev = { idx: 1, inning: 'UAE Inning 1', r: 100, w: 2, b: 1 }, next = { idx: 1, inning: 'UAE Inning 1', r: 111, w: 3, b: 5 };
+  const st = E.ballSteps(rows, prev, next);
+  assert.ok(st, 'replay found');
+  assert.deepEqual(st.map(x => x.label), ['4', 'Wd', 'W', '6', '0']);
+  assert.deepEqual(st.map(x => `${x.r}/${x.w} ${E.overs(x.b)}`), ['104/2 0.2', '105/2 0.2', '105/3 0.3', '111/3 0.4', '111/3 0.5']);
+  assert.equal(E.ballSteps(rows, prev, { ...next, r: 115 }), null, 'does not add up -> no guessing');
+});

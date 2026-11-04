@@ -27,3 +27,9 @@ Original characters, each with its own backdrop and its own choreography per eve
 - 4️⃣ Bouncy Digits — the number with eyes, gloves and sneakers (runs, bounces, topples, stretches, spins, rolls)
 - 📣 SH Cheer Squad — wave, high kicks, OUT placards, sway, spin, TV frames, pom-pom shake, pyramid
 Each user picks a style (stored per user); missing clips fall back to the classic set.
+
+## Ball-by-ball replay of batched updates
+CricketData sometimes moves several balls in one update (seen live: 4 balls at once). The bot then reads `match_bbb`
+and plays the deliveries back one at a time (1.3–3 s apart), each with its own running score, card label and alert.
+It only does this when the deliveries add up exactly to the score change; otherwise the jump is shown as it came.
+`/diag` shows the match_bbb health. Turn off with `REPLAY=0`; gap cap `REPLAY_GAP_MS` (default 3000).

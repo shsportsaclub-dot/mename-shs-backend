@@ -205,3 +205,59 @@ export function matchButtonText(m) {
   const t = (m.teamInfo || []).map(x => x.shortname).filter(Boolean).join(' v ') || m.name || 'Match';
   return s ? `${t} · ${teamShort(m, s.inning)} ${s.r}/${s.w} (${overs(s.b)})` : t;
 }
+
+// ---------- ball-by-ball replay ----------
+// CricketData sometimes sends several balls in one update. Its match_bbb list has every delivery,
+// so we can play them back one by one. Field names vary, so the parser is defensive, and the
+// result is only used when it adds up exactly to the score change (otherwise: no guessing).
+const num = x => (x === null || x === undefined || x === '' || isNaN(Number(x)) ? 0 : Number(x));
+const nm = x => (typeof x === 'string' ? x : x?.name || '');
+export function bbbRows(data) {
+  const arr = Array.isArray(data) ? data : Array.isArray(data?.bbb) ? data.bbb : [];
+  return arr.map((r, i) => {
+    const xt = String(r.extras_type ?? r.extrasType ?? r.extra_type ?? r.xtype ?? r.extra ?? '').toLowerCase();
+    const wide = r.wide === true || r.wide === 1 || /\bwd\b|wide/.test(xt) || num(r.wides) > 0;
+    const noball = r.noball === true || r.noball === 1 || /\bnb\b|no.?ball/.test(xt) || num(r.noballs) > 0;
+    const total = r.total_runs ?? r.totalRuns ?? r.runs_total;
+    const runsA = total !== undefined ? num(total) : num(r.runs);
+    const runsB = total !== undefined ? num(total) : num(r.runs) + num(r.extras) + num(r.penalty);
+    const wicket = r.wicket === true || r.wicket === 1 || !!r.dismissal || !!r.dismissal_type || !!r.player_out || r.out === true;
+    return { i, n: num(r.n ?? i), inning: num(r.inning ?? r.innings), over: num(r.over), ball: num(r.ball), runsA, runsB, wide, noball, legal: !wide && !noball, wicket, batsman: nm(r.batsman ?? r.batter), bowler: nm(r.bowler), dismissal: typeof r.dismissal === 'string' ? r.dismissal : nm(r.dismissal) };
+  }).sort((a, b) => a.inning - b.inning || a.over - b.over || a.ball - b.ball || a.n - b.n || a.i - b.i);
+}
+export function ballLabel(st) {
+  if (st.wicket) return 'W';
+  if (st.wide) return st.runs > 1 ? `Wd+${st.runs - 1}` : 'Wd';
+  if (st.noball) return st.runs > 1 ? `Nb+${st.runs - 1}` : 'Nb';
+  return String(st.runs);
+}
+// Steps between two snapshots of the same innings, each with the running score after that ball.
+export function ballSteps(rows, prev, next) {
+  if (!rows?.length || !prev || !next || prev.idx !== next.idx || next.b - prev.b < 1) return null;
+  const inn = Math.max(...rows.map(r => r.inning));
+  const list = rows.filter(r => r.inning === inn);
+  let pos = 0;
+  const withPos = list.map(r => { if (r.legal) pos++; return { ...r, pos }; });
+  if (pos < next.b) return null;                                   // provider list is behind the score
+  let i0 = -1;
+  for (let k = 0; k < withPos.length; k++) if (withPos[k].legal && withPos[k].pos === prev.b) i0 = k;
+  if (prev.b > 0 && i0 < 0) return null;
+  let cand = withPos.slice(i0 + 1).filter(r => r.pos <= next.b);
+  const dr = next.r - prev.r, dw = next.w - prev.w;
+  for (let trim = 0; trim <= 3 && cand.length; trim++) {
+    for (const key of ['runsA', 'runsB']) {
+      const legal = cand.filter(r => r.legal).length, runs = cand.reduce((a, r) => a + r[key], 0), wk = cand.filter(r => r.wicket).length;
+      if (legal === next.b - prev.b && runs === dr && wk === dw) {
+        let r = prev.r, w = prev.w, b = prev.b;
+        return cand.map(x => {
+          r += x[key]; if (x.wicket) w++; const pb = b; if (x.legal) b++;
+          const st = { runs: x[key], wicket: x.wicket, wide: x.wide, noball: x.noball, legal: x.legal ? 1 : 0, batsman: x.batsman, bowler: x.bowler, dismissal: x.dismissal, r, w, b, prevB: pb, idx: next.idx, inning: next.inning };
+          st.label = ballLabel(st); return st;
+        });
+      }
+    }
+    if (cand.at(-1).legal) break;                                   // only trailing extras may be trimmed
+    cand = cand.slice(0, -1);
+  }
+  return null;
+}
