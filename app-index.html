@@ -8084,11 +8084,13 @@ S.stream.scene=S.stream.scene||'bug';S.stream.card=S.stream.card||{t:'Starting s
  }
  const dur=ev=>ev.k==='6'?6.6:ev.k==='4'?6:ev.k==='W'?5:(+ev.k>=1?5.4+ +ev.k*.5:4.4);
  const RU=1.4,DL=.62,TC=RU+DL;
+ /* bowler action from the roster's bowling style (supplied bowler-styles idea): left or right arm, and a shorter, slower run-up for spin */
+ let BWS={spin:0,left:0};
  function pose(ev,t){
   const o={bz:34,bph:0,barm:null,ball:null,sw:0,sx:0,sz:0,nz:20,hit:0,ban:null,fi:-1,fx:0,fz:0,fph:0,fthrow:0,tc:false,show:true,bp:0,imp:0,runPh:0,mv:0};
   if(!ev)return o;
   const th=(hs(ev.seed+'a')-.5)*2.4,line=(hs(ev.seed+'l')-.5)*.5,k=ev.k;
-  o.bz=t<RU?34-13.5*(t/RU):20.5-Math.min(2.5,(t-RU)*2.5);o.bph=t<RU?t*11:t*3;
+  {const S0=BWS.spin?26:34;o.bz=t<RU?S0-(S0-20.5)*(t/RU):20.5-Math.min(2.5,(t-RU)*2.5);o.bph=t<RU?t*(BWS.spin?8:11):t*3}
   o.barm=t>RU-.5?(Math.PI+(t-RU)*5.2):null;
   if(t<RU)o.ball={x:.4,y:1.3,z:o.bz-.2};
   else if(t<TC){const u=(t-RU)/DL,fx=k==='wd'?2.4:line;o.ball={x:.4+(fx-.4)*u,y:k==='W'?(u<.7?2.1*(1-u/.7)**1.1:.5*((u-.7)/.3)):(u<.68?2.1*(1-u/.68)**1.1:.8*((u-.68)/.32)),z:20-20*u}}
@@ -8283,7 +8285,7 @@ S.stream.scene=S.stream.scene||'bug';S.stream.card=S.stream.card||{t:'Starting s
    const base=P(o.x,0,o.z);if(!base)return;const s=base.s;
    if(!(shx.envOk&&!st.flat)){g.fillStyle='rgba(0,0,0,.33)';g.beginPath();g.ellipse(base.x,base.y,Math.max(3,.4*s),Math.max(1.5,.12*s),0,0,TAU);g.fill();}
    if(o.tag&&s>7&&!(st.hh>.02)){const hd=P(o.x,2.05,o.z);if(hd){g.font=`700 ${Math.max(9,Math.min(13,s*.3))}px system-ui`;const tw=g.measureText(o.tag).width+8;g.fillStyle='#000b';g.fillRect(hd.x-tw/2,hd.y-17,tw,15);g.fillStyle='#fff';g.textAlign='center';g.fillText(o.tag,hd.x,hd.y-5)}}
-   shx.h(o.id||'p',o.x,o.z,{photo:(()=>{const f=o.name?face(o.name):null;return avCv(o.name,o.id==='st'||o.id==='ns')})(),c:o.col,pants:o.pants,nohelm:(o.id==='st'||o.id==='ns')&&SPIN(),kit:o.id==='st'||o.id==='ns'?'bat':o.id==='bw'?'bowl':o.id==='um'?'ump':'field',nm:String(o.name||'').trim().split(/\s+/).slice(-1)[0],face:[o.x+Math.sin(o.yaw||0)*10,o.z+Math.cos(o.yaw||0)*10],run:!!o.run,bat:o.id==='st',swing:o.swing||0,stroke:o.stroke,sa:o.sa,arm:o.bwArm||0,up:o.up?1:0,hold:!o.run})}
+   shx.h(o.id||'p',o.x,o.z,{photo:(()=>{const f=o.name?face(o.name):null;return avCv(o.name,o.id==='st'||o.id==='ns')})(),c:o.col,pants:o.pants,nohelm:(o.id==='st'||o.id==='ns')&&SPIN(),kit:o.id==='st'||o.id==='ns'?'bat':o.id==='bw'?'bowl':o.id==='um'?'ump':'field',nm:String(o.name||'').trim().split(/\s+/).slice(-1)[0],face:[o.x+Math.sin(o.yaw||0)*10,o.z+Math.cos(o.yaw||0)*10],run:!!o.run,bat:o.id==='st',swing:o.swing||0,stroke:o.stroke,sa:o.sa,arm:o.bwArm||0,lefty:o.lefty?1:0,up:o.up?1:0,hold:!o.run})}
   const stumps=(z,hit)=>{for(const i of [-.11,0,.11]){const a=P(i,0,z),b=P(i*(1+hit*8)+hit*i*4,.71*(1-hit*.4)+hit*i*2,z-hit*.8*(i===0?1.5:1));if(!a||!b)continue;g.strokeStyle='#f3e6c0';g.lineWidth=Math.max(1,.045*a.s);g.lineCap='butt';g.beginPath();g.moveTo(a.x,a.y);g.lineTo(b.x,b.y);g.stroke()}};
   const short=n=>{const q=String(n||'').trim().split(/\s+/);return q.length>1?q[0][0]+'. '+q.slice(1).join(' '):(n||'')};
   function frame(ts){
@@ -8293,6 +8295,7 @@ S.stream.scene=S.stream.scene||'bug';S.stream.card=S.stream.card||{t:'Starting s
    if(bw!==st.w||bh!==st.h){st.w=bw;st.h=bh;cv.width=bw*dpr;cv.height=bh*dpr}g.setTransform(dpr,0,0,dpr,0,0);Wd=bw;Hd=bh;
    if(!st.cur&&st.q.length){st.cur=st.q.shift();st.t=0;st.did=0}
    if(st.cur){st.t+=dt;if(st.t>dur(st.cur)){st.cur=null}}
+   {const bsr=(ROS.find(p=>nrm(p.name)===nrm(st.who&&st.who.bw))||{}).bs||'';BWS={spin:/spin|break|orthodox|chinaman|googly|slow/i.test(bsr)?1:0,left:/left|lhb|\bla\b/i.test(bsr)?1:0}}
    const ev=st.cur,o=pose(ev,st.t||0),tt=(st.t||0)-TC;
    /* camera: settles behind the batter, eases toward the ball on boundaries, small punch-in at contact */
    const tgx=ev&&o.tc&&(ev.k==='4'||ev.k==='6')&&o.ball?o.ball.x*.1:0;st.camx+=(tgx-st.camx)*Math.min(1,dt*3);CX=st.camx;CZ=CZ0+(ev&&o.tc&&ev.k==='6'?Math.min(1,tt/2)*-2:0);
@@ -8320,7 +8323,7 @@ S.stream.scene=S.stream.scene||'bug';S.stream.card=S.stream.card||{t:'Starting s
    const fin=!!(ev&&ev.k==='W'&&ev.ot!=='BOWLED'&&ev.ot!=='STUMPED'&&st.t>TC+.9&&st.t<TC+3.4);things.push({z:23,f:()=>person({id:'um',x:1.8,z:23,yaw:Math.PI,col:'#d8d8d8',pants:'#222',cap:'#111',la:.15,ra:fin?Math.PI*.92:.15,up:fin?1:0})});
    const bowAct=o.barm!=null&&st.t<TC+.6;
    const cel=!!(ev&&ev.k==='W'&&st.t>TC+.6&&st.t<TC+3.4);
-   things.push({z:o.bz,f:()=>person({id:'bw',bwArm:(bowAct?(1-Math.cos(o.barm))/2:0),up:cel?1:0,x:.3,z:o.bz,yaw:Math.PI,col:cF,pants:pF,cap:cF,name:who.bw,tag:short(who.bw),run:st.t<RU,ph:o.bph,amp:.9,ra:bowAct?o.barm:(cel?Math.PI*(.85+.1*Math.sin(st.t*14)):undefined),la:bowAct?Math.PI*.9:(cel?Math.PI*(.85-.1*Math.sin(st.t*14)):undefined),lean:cel?-.1:st.t>RU?.4:.1})});
+   const LA=BWS.left;things.push({z:o.bz,f:()=>person({id:'bw',lefty:LA,bwArm:(bowAct?(1-Math.cos(o.barm))/2:0),up:cel?1:0,x:LA?-.3:.3,z:o.bz,yaw:Math.PI,col:cF,pants:pF,cap:cF,name:who.bw,tag:short(who.bw),run:st.t<RU,ph:o.bph,amp:.9,ra:LA?(bowAct?Math.PI*.9:(cel?Math.PI*(.85+.1*Math.sin(st.t*14)):undefined)):(bowAct?o.barm:(cel?Math.PI*(.85+.1*Math.sin(st.t*14)):undefined)),la:LA?(bowAct?o.barm:(cel?Math.PI*(.85-.1*Math.sin(st.t*14)):undefined)):(bowAct?Math.PI*.9:(cel?Math.PI*(.85-.1*Math.sin(st.t*14)):undefined)),lean:cel?-.1:st.t>RU?.4:.1})});
    /* non-striker */
    things.push({z:o.nz,f:()=>person({id:'ns',x:-1.3,z:o.nz,yaw:o.mv===0?Math.PI:(o.nz>10?0:Math.PI),col:cB,pants:pB,helmet:'#16204a',name:who.n,tag:o.nz<20&&o.nz>0?short(who.n):null,facingCam:o.mv!==0&&o.nz<10?false:true,run:o.mv!==0&&o.nz>0&&o.nz<20,ph:o.runPh,la:.1,ra:.1})});
    /* striker */
@@ -14107,7 +14110,7 @@ X.flush=(c,fovDeg,dt,host,y0,opt)=>{if(!X.on())return false;if(!navigator.webdri
   if(o.catchUp){B.la.quaternion.premultiply(qd('z',1.7));B.ra.quaternion.premultiply(qd('z',-1.7))}
   if(o.bat&&!H.sbp){const s=o.stroke!=null?0:(o.swing||0);{const ab=o.stroke==null?.5:.5-1.5*sm(0,.2,o.stroke);B.la.quaternion.premultiply(qd('x',ab));B.ra.quaternion.premultiply(qd('x',ab))}if(B.sp)B.sp.quaternion.premultiply(qd('y',-1.3*s+.25))}
   if(o.racket&&!o.up){B.ra.quaternion.premultiply(qd('x',-.9))}
-  if(o.arm){B.ra.quaternion.premultiply(qd('x',-3.4*Math.min(1,o.arm)))}
+  if(o.arm){(o.lefty?B.la:B.ra).quaternion.premultiply(qd('x',-3.4*Math.min(1,o.arm)))}
   if(!H.sbp){const st=X.dbg!=null&&o.bat?X.dbg:o.stroke;H.root.position.y=0;if(o.bat&&st==null)legIK(H,B,true);if(st!=null&&o.bat){const dr=strokePose(B,st,H,o.sa)||0;H.root.position.y=-dr*(o.sa==null?1:o.sa);H.root.updateMatrixWorld(true);P2(B.ll,.15);P2(B.rl,.15);legIK(H,B,false)}}
   prop(H,H.sbp?'':o.bat?'bat':o.racket?'racket':'');
   if(o.bat&&H.prop&&B.lh&&B.lf&&B.la&&!H.sbp)gripIK(H,B);
