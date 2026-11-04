@@ -5,13 +5,16 @@ export function neonKV(connectionString, { base, log = () => {} } = {}) {
   if (!connectionString) return null;
   let host;
   try { host = new URL(connectionString).hostname; } catch { return null; }
-  const hosts = base ? [base] : [`https://${host}/sql`, ...(host.includes('-pooler') ? [`https://${host.replace('-pooler', '')}/sql`] : [])];
+  // Same rule as @neondatabase/serverless: the first host label is replaced by "api"
+  // (ep-xxx-pooler.region.aws.neon.tech -> api.region.aws.neon.tech/sql). Direct host is a fallback.
+  const apiHost = host.replace(/^[^.]+\./, 'api.');
+  const hosts = base ? [base] : [...new Set([`https://${apiHost}/sql`, `https://${host}/sql`, `https://${host.replace('-pooler', '')}/sql`])];
   let good = null;
   async function q(query, params = []) {
     let last;
     for (const u of good ? [good] : hosts) {
       try {
-        const r = await fetch(u, { method: 'POST', headers: { 'content-type': 'application/json', 'Neon-Connection-String': connectionString, 'Neon-Raw-Text-Output': 'true', 'Neon-Array-Mode': 'false' }, body: JSON.stringify({ query, params }), signal: AbortSignal.timeout(15000) });
+        const r = await fetch(u, { method: 'POST', headers: { 'content-type': 'application/json', 'Neon-Connection-String': connectionString, 'Neon-Raw-Text-Output': 'true', 'Neon-Array-Mode': 'false' }, body: JSON.stringify({ query, params }), signal: AbortSignal.timeout(8000) });
         const j = await r.json().catch(() => null);
         if (!r.ok) { last = new Error((j && (j.message || j.error)) || `Neon HTTP ${r.status}`); continue; }
         good = u;
@@ -34,5 +37,6 @@ export function neonKV(connectionString, { base, log = () => {} } = {}) {
       await q('INSERT INTO tg_liveline_state (k, v, updated_at) VALUES ($1, $2, now()) ON CONFLICT (k) DO UPDATE SET v = EXCLUDED.v, updated_at = now()', [k, v]);
     },
     endpoint: () => good,
+    tried: () => hosts.map(u => u.replace(/^https?:\/\//, '').replace(/\/sql$/, '')),
   };
 }

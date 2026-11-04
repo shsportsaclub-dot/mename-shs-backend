@@ -16,7 +16,7 @@ export function store(file, remote = null, log = () => {}) {
     } catch (e) { log('store write failed', e.message); }
   };
   const writeRemote = () => {
-    if (!remote) return saving;
+    if (!remote || !info.loaded) return saving;      // never overwrite the database before we have read it
     const snapshot = JSON.stringify(data);
     saving = saving.then(() => remote.set('state', snapshot)).then(() => { info.lastSave = Date.now(); info.lastError = null; }).catch(e => { info.lastError = e.message; log('neon save failed', e.message); });
     return saving;
@@ -24,14 +24,28 @@ export function store(file, remote = null, log = () => {}) {
   const flush = () => { timer = null; writeFile(); return writeRemote(); };
   const save = () => { if (!timer) timer = setTimeout(flush, 1500); };
   // Load the saved state from Neon before the bot starts answering.
+  // Database copy wins for the owner; users and followers from both copies are kept.
+  const mergeRemote = obj => {
+    if (!obj || typeof obj !== 'object') return;
+    if (obj.owner) data.owner = obj.owner;
+    if (obj.channel) data.channel = obj.channel;
+    data.users = { ...(obj.users || {}), ...data.users };
+    data.subs = { ...(obj.subs || {}), ...data.subs };
+  };
+  let retry = null;
   async function load() {
-    if (!remote) return;
+    if (!remote || info.loaded) return;
     try {
       const v = await remote.get('state');
-      if (v) merge(JSON.parse(v));
+      if (v) mergeRemote(JSON.parse(v));
       info.loaded = true; info.lastError = null;
-      writeFile();
-    } catch (e) { info.lastError = e.message; log('neon load failed', e.message); }
+      if (retry) { clearInterval(retry); retry = null; }
+      writeFile(); writeRemote();
+    } catch (e) {
+      info.lastError = e.message; log('neon load failed', e.message);
+      if (!retry) { retry = setInterval(() => load(), 60000); retry.unref?.(); }   // keep trying in the background
+    }
   }
-  return { data, save, flush, load, info };
+  const stop = () => { if (retry) clearInterval(retry); retry = null; };
+  return { data, save, flush, load, info, stop };
 }

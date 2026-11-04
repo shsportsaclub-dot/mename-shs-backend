@@ -305,7 +305,7 @@ export function startBot(env = process.env) {
     else {
       let saved = false, err = '';
       try { await db.flush(); saved = !db.info.lastError; err = db.info.lastError || ''; } catch (e) { err = e.message; }
-      ok('STORAGE', db.info.loaded && saved, `Neon: loaded at start ${db.info.loaded ? 'yes' : 'no'}, save now ${saved ? 'ok' : 'failed'}${err ? ' — ' + err : ''}`);
+      ok('STORAGE', db.info.loaded && saved, `Neon: ${db.info.loaded ? 'connected via ' + remote.endpoint() : 'NOT connected, tried ' + remote.tried().join(', ')}${err ? ' — ' + err : ''}`);
     }
     const cur = await cd.raw('currentMatches', { offset: '0' });
     ok('PROVIDER', cur.status === 'success', `currentMatches: http ${cur.http}, ${cur.ms} ms, status=${cur.status}${cur.reason ? ', reason=' + cur.reason : ''}${cur.info ? `, hits ${cur.info.hitsToday}/${cur.info.hitsLimit}` : ''}`);
@@ -407,7 +407,7 @@ export function startBot(env = process.env) {
   async function boot() {
     const port = Number(env.PORT) || 10000;
     await db.load();                                  // owner, users and followers survive deploys
-    log('storage:', remote ? (db.info.loaded ? 'neon loaded' : 'neon FAILED: ' + db.info.lastError) : 'local file only');
+    log('storage:', remote ? (db.info.loaded ? 'neon loaded via ' + remote.endpoint() : 'neon FAILED (' + remote.tried().join(', ') + '): ' + db.info.lastError + ' - retrying every minute') : 'local file only');
     await new Promise(r => server.listen(port, r));
     log('SH Live Line listening on', port, PUBLIC ? 'webhook' : 'long-polling');
     try {
@@ -424,7 +424,7 @@ export function startBot(env = process.env) {
     if (PUBLIC) keepTimer = setInterval(() => { if (followed().length) fetch(PUBLIC + '/health').catch(() => {}); }, 9 * 60000);
     return server;
   }
-  const close = () => { stopped = true; clearTimeout(pollTimer); clearInterval(keepTimer); db.flush(); server.close(); };
+  const close = () => { stopped = true; db.stop(); clearTimeout(pollTimer); clearInterval(keepTimer); db.flush(); server.close(); };
   return { boot, close, onUpdate, tick, stats, db, server };
 }
 
