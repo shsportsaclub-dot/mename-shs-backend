@@ -2,6 +2,7 @@
 // Env: TELEGRAM_BOT_TOKEN, CRIC_API_KEY (required); TG_WEBHOOK_SECRET, PUBLIC_URL / RENDER_EXTERNAL_URL,
 //      TG_CHANNEL (e.g. @shsportslive), POLL_MS, DATA_FILE, PORT, TG_BASE / CRIC_BASE (tests only).
 import http from 'node:http';
+import fsx from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { telegram } from './lib/telegram.mjs';
@@ -32,7 +33,7 @@ export function startBot(env = process.env) {
   const subsOf = match => Object.values(db.data.subs).filter(s => s.match === match);
   const followed = () => [...new Set(Object.values(db.data.subs).map(s => s.match))];
 
-  const home = id => ({ inline_keyboard: [[{ text: T(id)('liveBtn'), callback_data: 'L' }, { text: T(id)('upBtn'), callback_data: 'U' }], [{ text: T(id)('langBtn'), callback_data: 'G' }, { text: T(id)('helpBtn'), callback_data: 'H' }]] });
+  const home = id => ({ inline_keyboard: [[{ text: T(id)('liveBtn'), callback_data: 'L' }, { text: T(id)('upBtn'), callback_data: 'U' }], [{ text: T(id)('langBtn'), callback_data: 'G' }, { text: '🎬 Style', callback_data: 'V' }], [{ text: T(id)('helpBtn'), callback_data: 'H' }]] });
   const cardKb = (id, match) => {
     const t = T(id), rows = [[{ text: t('refresh'), callback_data: 'R:' + match }, { text: t('card'), callback_data: 'C:' + match }], [{ text: t('other'), callback_data: 'L' }, { text: t('stop'), callback_data: 'S:' + match }]];
     if (CHANNEL && String(db.data.owner) === String(id)) rows.push([{ text: '📣 Channel ON/OFF', callback_data: 'P:' + match }]);
@@ -127,10 +128,19 @@ export function startBot(env = process.env) {
   const EFFECT = { fire: '5104841245755180586', party: '5046509860389126442', like: '5107584321108051014' };
   const ANIM_DIR = path.join(here, 'assets');
   const animsOn = env.ANIMATIONS !== '0';
+  // Animation themes: 'classic' = graphic set, the rest are character sets (assets/themes/<id>/<event>.mp4).
+  const THEMES = { classic: '✨ Classic graphics', umpire: '🧑‍⚖️ Umpire Ramu (ICC signals)', tiger: '🐯 Sher the Tiger', digits: '4️⃣ Bouncy Digits', cheer: '📣 SH Cheer Squad' };
+
+  const animFile = (theme, name) => {
+    const f = theme && theme !== 'classic' ? path.join(ANIM_DIR, 'themes', theme, name + '.mp4') : null;
+    return f && fsx.existsSync(f) ? [theme + '/' + name, f] : ['classic/' + name, path.join(ANIM_DIR, name + '.mp4')];
+  };
+  const themeOf = chat => (THEMES[db.data.users[chat]?.theme] ? db.data.users[chat].theme : (env.DEFAULT_THEME && THEMES[env.DEFAULT_THEME] ? env.DEFAULT_THEME : 'classic'));
+  const themeMenu = chat => tg.send(chat, '🎬 <b>Animation style</b>\nPick who celebrates 4s, 6s, wickets and more for you:', { reply_markup: { inline_keyboard: Object.entries(THEMES).map(([k, v]) => [{ text: (themeOf(chat) === k ? '✅ ' : '') + v, callback_data: 'Y:' + k }]) } });
   async function sendAlert(chat, a) {
     const text = a.text(T(chat));
     try {
-      if (animsOn && a.anim) return await tg.sendAnim(chat, a.anim, path.join(ANIM_DIR, a.anim + '.mp4'), text, a.effect);
+      if (animsOn && a.anim) { const [key, file] = animFile(themeOf(chat), a.anim); return await tg.sendAnim(chat, key, file, text, a.effect); }
       return await tg.send(chat, text, a.effect && Number(chat) > 0 ? { message_effect_id: a.effect } : {});
     } catch (e) {
       if (e.code === 403) return dropChat(chat);
@@ -234,6 +244,7 @@ export function startBot(env = process.env) {
       if (cmd === '/stop') return stop(chat);
       if (cmd === '/help') return tg.send(chat, T(chat)('help'), { reply_markup: home(chat) });
       if (cmd === '/language' || cmd === '/lang') return langMenu(chat);
+      if (cmd === '/theme' || cmd === '/style') return themeMenu(chat);
       if (cmd === '/claim' || /^\/(cl|ca)[a-z]{2,4}$/.test(cmd)) {   // phone keyboards turn /claim into /clime, /claime ...                         // first person to claim becomes the owner (channel controls)
         if (!db.data.owner) { db.data.owner = chat; db.save(); return tg.send(chat, '👑 You are now the owner of this bot.'); }
         return tg.send(chat, String(db.data.owner) === String(chat) ? '👑 You are the owner.' : 'This bot already has an owner.');
@@ -241,7 +252,8 @@ export function startBot(env = process.env) {
       if (cmd === '/demo' && String(db.data.owner) === String(chat)) {
         const list = [['four', '🔥 <b>FOUR!</b>  demo', EFFECT.fire], ['six', '💥 <b>SIX!</b>  demo', EFFECT.party], ['wicket', '☝️ <b>WICKET!</b>  demo'], ['wide', '↔️ <b>WIDE</b> +1  demo'], ['freehit', '🚨 <b>NO BALL</b> → 🟢 <b>FREE HIT</b>  demo'], ['review', '📺 <b>DRS REVIEW</b>  demo'], ['fifty', '⭐ <b>FIFTY</b>  demo', EFFECT.like], ['hundred', '⭐ <b>CENTURY</b>  demo', EFFECT.party]];
         const res = [];
-        for (const [n, cap, ef] of list) { try { await tg.sendAnim(chat, n, path.join(ANIM_DIR, n + '.mp4'), cap, ef); res.push('✅ ' + n); } catch (e) { res.push('❌ ' + n + ': ' + E.esc(e.message)); } }
+        const th = text.split(/\s+/)[1] && THEMES[text.split(/\s+/)[1]] ? text.split(/\s+/)[1] : themeOf(chat);
+        for (const [n, cap, ef] of list) { const [key, file] = animFile(th, n); try { await tg.sendAnim(chat, key, file, cap, ef); res.push('✅ ' + key); } catch (e) { res.push('❌ ' + key + ': ' + E.esc(e.message)); } }
         return tg.send(chat, res.join('\n'));
       }
       if (cmd === '/speed' && String(db.data.owner) === String(chat)) { await tg.send(chat, '⏱ Watching CricketData for 2 minutes…'); const r = await speedTest(text.split(/\s+/)[1]); return tg.send(chat, r.join('\n').slice(0, 4000)); }
@@ -260,6 +272,13 @@ export function startBot(env = process.env) {
       if (op === 'U') return listUpcoming(chat);
       if (op === 'H') return tg.send(chat, T(chat)('help'), { reply_markup: home(chat) });
       if (op === 'G') return langMenu(chat);
+      if (op === 'V') return themeMenu(chat);
+      if (op === 'Y' && THEMES[arg]) {
+        user(chat).theme = arg; db.save();
+        await tg.send(chat, `✅ Animation style: <b>${E.esc(THEMES[arg])}</b>`);
+        const [key, file] = animFile(arg, 'six');
+        return tg.sendAnim(chat, key, file, '💥 <b>SIX!</b>  preview').catch(() => {});
+      }
       if (op === 'F') return follow(chat, arg);
       if (op === 'S') return stop(chat);
       if (op === 'P') return toggleChannel(chat, arg);
@@ -392,7 +411,7 @@ export function startBot(env = process.env) {
     await new Promise(r => server.listen(port, r));
     log('SH Live Line listening on', port, PUBLIC ? 'webhook' : 'long-polling');
     try {
-      await tg.call('setMyCommands', { commands: [{ command: 'live', description: 'Live matches' }, { command: 'upcoming', description: 'Upcoming matches' }, { command: 'claim', description: 'Owner: lock this bot to you' }, { command: 'speed', description: 'Owner: CricketData speed test' }, { command: 'diag', description: 'Owner: provider vs code check' }, { command: 'demo', description: 'Owner: show all event animations' }, { command: 'stop', description: 'Stop following' }, { command: 'language', description: 'Change language' }, { command: 'help', description: 'Help' }] });
+      await tg.call('setMyCommands', { commands: [{ command: 'live', description: 'Live matches' }, { command: 'upcoming', description: 'Upcoming matches' }, { command: 'claim', description: 'Owner: lock this bot to you' }, { command: 'speed', description: 'Owner: CricketData speed test' }, { command: 'diag', description: 'Owner: provider vs code check' }, { command: 'demo', description: 'Owner: show all event animations' }, { command: 'stop', description: 'Stop following' }, { command: 'language', description: 'Change language' }, { command: 'theme', description: 'Animation style (umpire, tiger ...)' }, { command: 'help', description: 'Help' }] });
       await tg.call('setMyDescription', { description: 'SH Sports Live Line: fastest ball-by-ball cricket scores for every match worldwide. Tap Start, pick a live match, and the score updates by itself every ball.' }).catch(() => {});
       await tg.call('setMyShortDescription', { short_description: 'Fastest ball-by-ball cricket live line' }).catch(() => {});
       if (PUBLIC) await tg.call('setWebhook', { url: PUBLIC + '/tg', allowed_updates: ['message', 'callback_query'], drop_pending_updates: false, ...(SECRET ? { secret_token: SECRET } : {}) });

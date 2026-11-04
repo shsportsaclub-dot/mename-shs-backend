@@ -97,6 +97,12 @@ test('live line flow: start -> live list -> follow -> ball by ball edits + alert
     await post(cb('U')); await wait(300);
     assert.match(sent().at(-1).body.text, /Pakistan vs New Zealand[\s\S]*05 Nov, 02:30 pm IST/);
 
+    // pick a character theme: confirmation + preview animation
+    await post(cb('Y:umpire')); await wait(600);
+    assert.match(sent().at(-1).body.text, /Animation style: <b>🧑‍⚖️ Umpire Ramu/);
+    assert.match(anims().at(-1).body.caption, /SIX!<\/b>  preview/);
+    await post(cb('Y:classic')); await wait(600);
+
     await post(cb('F:m1')); await wait(500);
     const card0 = sent().at(-1);
     assert.match(card0.body.text, /AUS 140\/2<\/b>\s+\(15\.0\/20 ov\)/);

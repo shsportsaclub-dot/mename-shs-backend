@@ -12,7 +12,7 @@ const S = {
     four: 'FOUR!', six: 'SIX!', wicket: 'WICKET!', fifty: 'reaches {mark}!', innings: 'Innings break', result: '🏆 Result',
     overDone: 'End of over {n}: {r} runs', langPick: 'Choose your language:', langSet: 'Language set to English.',
     unavailable: 'Live data is not reachable right now. Try again in a minute.',
-    help: '<b>Commands</b>\n/live - live matches\n/upcoming - upcoming matches\n/stop - stop following\n/language - change language\n\nOne live card per match keeps updating, so your chat is not flooded.',
+    help: '<b>Commands</b>\n/live - live matches\n/upcoming - upcoming matches\n/stop - stop following\n/language - change language\n/theme - animation style (umpire, tiger, digits, cheer)\n\nOne live card per match keeps updating, so your chat is not flooded.',
   },
   hi: {
     welcome: '🏏 <b>SH Sports Live Line</b>\nदुनिया के हर मैच का सबसे तेज़ बॉल-बाय-बॉल स्कोर।\n\n<b>लाइव मैच</b> दबाएँ, मैच चुनें, स्कोर हर गेंद पर अपने आप बदलेगा। चौके, छक्के, विकेट और माइलस्टोन अलर्ट में आएँगे।',
@@ -26,7 +26,7 @@ const S = {
     four: 'चौका!', six: 'छक्का!', wicket: 'विकेट!', fifty: '{mark} पूरे!', innings: 'पारी ब्रेक', result: '🏆 नतीजा',
     overDone: 'ओवर {n} समाप्त: {r} रन', langPick: 'अपनी भाषा चुनें:', langSet: 'भाषा हिन्दी कर दी गई।',
     unavailable: 'लाइव डेटा अभी नहीं मिल रहा। एक मिनट बाद कोशिश करें।',
-    help: '<b>कमांड</b>\n/live - लाइव मैच\n/upcoming - आने वाले मैच\n/stop - फ़ॉलो बंद\n/language - भाषा बदलें',
+    help: '<b>कमांड</b>\n/live - लाइव मैच\n/upcoming - आने वाले मैच\n/stop - फ़ॉलो बंद\n/language - भाषा बदलें\n/theme - एनिमेशन स्टाइल',
   },
   te: {
     welcome: '🏏 <b>SH Sports Live Line</b>\nప్రపంచంలో ప్రతి మ్యాచ్‌కి అత్యంత వేగమైన బాల్-బై-బాల్ స్కోర్.\n\n<b>లైవ్ మ్యాచ్‌లు</b> నొక్కి మ్యాచ్ ఎంచుకోండి, ప్రతి బంతికి స్కోర్ దానంతట అదే మారుతుంది. ఫోర్లు, సిక్స్‌లు, వికెట్లు, మైలురాళ్లు అలర్ట్‌గా వస్తాయి.',
@@ -40,7 +40,7 @@ const S = {
     four: 'ఫోర్!', six: 'సిక్స్!', wicket: 'వికెట్!', fifty: '{mark} పూర్తి!', innings: 'ఇన్నింగ్స్ బ్రేక్', result: '🏆 ఫలితం',
     overDone: 'ఓవర్ {n} ముగిసింది: {r} పరుగులు', langPick: 'మీ భాష ఎంచుకోండి:', langSet: 'భాష తెలుగుకి మార్చాం.',
     unavailable: 'లైవ్ డేటా ఇప్పుడు అందడం లేదు. ఒక నిమిషం తర్వాత ప్రయత్నించండి.',
-    help: '<b>కమాండ్‌లు</b>\n/live - లైవ్ మ్యాచ్‌లు\n/upcoming - రాబోయే మ్యాచ్‌లు\n/stop - ఫాలో ఆపు\n/language - భాష మార్చు',
+    help: '<b>కమాండ్‌లు</b>\n/live - లైవ్ మ్యాచ్‌లు\n/upcoming - రాబోయే మ్యాచ్‌లు\n/stop - ఫాలో ఆపు\n/language - భాష మార్చు\n/theme - యానిమేషన్ స్టైల్',
   },
 };
 export const LANGS = { en: 'English', hi: 'हिन्दी', te: 'తెలుగు' };
