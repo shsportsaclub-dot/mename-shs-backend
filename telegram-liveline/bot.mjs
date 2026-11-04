@@ -195,7 +195,7 @@ export function startBot(env = process.env) {
       if (cmd === '/stop') return stop(chat);
       if (cmd === '/help') return tg.send(chat, T(chat)('help'), { reply_markup: home(chat) });
       if (cmd === '/language' || cmd === '/lang') return langMenu(chat);
-      if (cmd === '/claim') {                         // first person to claim becomes the owner (channel controls)
+      if (cmd === '/claim' || /^\/(cl|ca)[a-z]{2,4}$/.test(cmd)) {   // phone keyboards turn /claim into /clime, /claime ...                         // first person to claim becomes the owner (channel controls)
         if (!db.data.owner) { db.data.owner = chat; db.save(); return tg.send(chat, '👑 You are now the owner of this bot.'); }
         return tg.send(chat, String(db.data.owner) === String(chat) ? '👑 You are the owner.' : 'This bot already has an owner.');
       }
