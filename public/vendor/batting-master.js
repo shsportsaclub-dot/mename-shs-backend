@@ -134,7 +134,7 @@ export const HAND={
 function rawPose(shot,t,T0){ // t in seconds; T0 timings
  const p=shot.p,F=shot.ft==='F',B=shot.ft==='B';
  const dir=shot.dir,off=Math.max(-1,Math.min(1,dir/90)),cr=p.cr,pw=p.pw,hi=p.hi,lf=p.lf,lo=p.lo;
- const dd=Math.max(-160,Math.min(160,dir+(p.tb||0))),TS=-1,BT=-TS*dd*.4*(.5+cr),tw=TS*dd*.06;
+ const xb=/^(Sweep|Slog|Pull)$/.test(shot.fam)?1.7:1,dd=Math.max(-160,Math.min(160,dir+(p.tb||0))),TS=-1,BT=-TS*dd*.4*(.5+cr),tw=TS*dd*.06*xb;   /* cross-bat shots: wider, flatter horizontal bat arc */
  const a=S(0,T0.back,t),c=S(T0.back,T0.hit,t),f=S(T0.hit,T0.fin,t),h=S(T0.fin,T0.hold,t),rec=S(T0.hold,T0.end,t);
  // key poses: stance -> backlift -> contact -> follow-through
 const stance={lean:32,twist:0,head:-6,hy:45,aTop:[6,2,22],aBot:[8,2,24],front:[17,24],back:[10,20],y:-12,r:[0,0,0],ry:0,rx:0};
@@ -142,7 +142,7 @@ const stance={lean:32,twist:0,head:-6,hy:45,aTop:[6,2,22],aBot:[8,2,24],front:[1
 
  const reach=F?1:0;
  let ct={lean:F?L(20,34,pw)+lo*14:B?L(-4,6,pw):10+lo*10,twist:tw,head:F?18:B?8:0,
-   aTop:[L(50,62,hi)+L(0,26,hi)+pw*8+cr*14,-off*34*(.3+cr)+hi*8,L(38,16,pw)],aBot:[L(52,66,hi)+L(0,26,hi)+pw*8+cr*16,off*34*(.3+cr)+hi*8,L(42,14,pw)],
+   aTop:[L(50,62,hi)+L(0,26,hi)+pw*8+cr*14,-off*34*(.3+cr)*xb+hi*8,L(38,16,pw)],aBot:[L(52,66,hi)+L(0,26,hi)+pw*8+cr*16,off*34*(.3+cr)*xb+hi*8,L(42,14,pw)],
    front:F?[L(26,46,pw)+p.st*20,L(30,44,pw)+lo*20]:B?[8,12]:[10,14],back:F?[-12,L(14,22,pw)]:B?[L(6,14,pw),L(8,14,pw)+lo*20]:[-2,10],
    y:-8-lo*18-(F?4:0),r:[off*.05,0,F?-.15-p.st*.45:B?.1:0],ry:-dir*.15,rx:0};
  const kn=p.kn||0;if(kn){ct.front=[L(ct.front[0],74,kn),L(ct.front[1],92,kn)];ct.back=[L(ct.back[0],-32,kn),L(ct.back[1],128,kn)];ct.y=L(ct.y,-50,kn);ct.lean=L(ct.lean,30,kn);ct.head=L(ct.head,-22,kn);ct.aTop=[L(ct.aTop[0],78,kn),ct.aTop[1],L(ct.aTop[2],34,kn)];ct.aBot=[L(ct.aBot[0],80,kn),ct.aBot[1],L(ct.aBot[2],34,kn)];bl.front=[L(bl.front[0],40,kn),L(bl.front[1],50,kn)];bl.back=[L(bl.back[0],-15,kn),L(bl.back[1],70,kn)];bl.y=L(bl.y,-30,kn)}
