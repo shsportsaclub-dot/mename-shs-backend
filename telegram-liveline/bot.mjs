@@ -219,9 +219,13 @@ export function startBot(env = process.env) {
   const viewAt = (m, st) => ({ ...m, score: [...(m.score || []).slice(0, -1), { ...(m.score || []).at(-1), r: st.r, w: st.w, o: E.overs(st.b) }] });
   function startPlayback(id) {
     const M = memFor(id);
+    // Watchdog: a replay may never block the live line. If one has run > 30 s, drop it and show the real score.
+    if (M.playing && Date.now() - (M.playStarted || 0) > 30000) { stats.replayReset = (stats.replayReset || 0) + 1; M.queue = []; M.playing = false; }
     if (M.playing) return;
-    M.playing = true;
-    const next = async () => {
+    if (M.queue.length > 8) { stats.replayTrim = (stats.replayTrim || 0) + 1; M.queue = M.queue.slice(-8); }   // far behind: only the latest balls
+    M.playing = true; M.playStarted = Date.now();
+    const next = async () => { try { await step(); } catch (e) { stats.errors++; log('replay error', e.message); M.queue = []; M.playing = false; const m = latest.get(id); if (m) for (const sub of subsOf(id)) pushCard(sub, m); } };
+    const step = async () => {
       const job = M.queue.shift();
       if (!job) {                                         // replay done: pending alerts, then the real card
         M.playing = false;
