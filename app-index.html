@@ -3856,7 +3856,7 @@ shMigrate();
 const shSuggest=()=>{try{return TZC[Intl.DateTimeFormat().resolvedOptions().timeZone]||''}catch(e){return ''}};
 function shAudit(t){S.cataudit.unshift({t:Date.now(),by:S.user?S.user.name:'',x:t});S.cataudit=S.cataudit.slice(0,100)}
 function shDefaults(){const c=S.prefs.country;return (S.cdef[c]||S.cdef['*']||[]).filter(id=>shGet(id)&&shGet(id).on)}
-function shMine(){return S.prefs.sports.filter(id=>shGet(id)&&shGet(id).on)}
+function shMine(){return S.prefs.sports.filter(id=>id!=='rugby'&&shGet(id)&&shGet(id).on)}   /* rugby is hidden from the quick row for now */
 function shRowIds(){const mine=shMine();const ids=mine.length?mine.slice():['cricket'];const p=S.prefs.primary;if(p&&ids.includes(p)){ids.splice(ids.indexOf(p),1);ids.unshift(p)}return [...new Set(ids)]}
 const shStCls=s=>s==='AVAILABLE'?'ok':s==='LIMITED'?'':'mu';
 const shStTxt=s=>s==='LIMITED'?'Scorer only':s==='COMING SOON'?'Coming soon':s==='DISABLED'?'Disabled':'Available';
@@ -8880,7 +8880,7 @@ const card=m=>`<div class="ig-sq fbc" data-a="fbOpen" data-id="${esc(m.id)}" sty
 
 /* ---------------- 55 WORLD SCORES for basketball, volleyball, handball, rugby (Highlightly through the server; free plan, so lists refresh every few minutes). Only what the provider sends. ---------------- */
 {
- const HLS={basketball:'Basketball',volleyball:'Volleyball',handball:'Handball',rugby:'Rugby',hockey:'Hockey',tennis:'Tennis',baseball:'Baseball','american-football':'American Football'};
+ const HLS={football:'Football',basketball:'Basketball',volleyball:'Volleyball',handball:'Handball',hockey:'Hockey',tennis:'Tennis',baseball:'Baseball','american-football':'American Football'};
  UI.sx=UI.sx||{};
  const load=async(sp,force)=>{
   const x=UI.sx[sp]=UI.sx[sp]||{list:null,err:'',at:0,busy:0};
@@ -8891,7 +8891,7 @@ const card=m=>`<div class="ig-sq fbc" data-a="fbOpen" data-id="${esc(m.id)}" sty
  const st=m=>m.live?(m.state||'Live')+(!m.state&&m.period!=null&&m.period!==''?' · P'+m.period:''):m.ended?'FT':m.startsAt?new Date(m.startsAt).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'-';
  const sc=v=>v==null?'-':v;
  // each sport gets its own icon, accent colour and period wording
- const TH={basketball:{ic:'\u{1F3C0}',c:'#ff8a3d',p:'Q',u:'Quarters'},volleyball:{ic:'\u{1F3D0}',c:'#ffd23d',p:'Set',u:'Sets (points)',sets:1},handball:{ic:'\u{1F93E}',c:'#4fd1c5',p:'H',u:'Halves'},rugby:{ic:'\u{1F3C9}',c:'#7bd88f',p:'H',u:'Halves'},hockey:{ic:'\u{1F3D2}',c:'#5cc8ff',p:'P',u:'Periods'},tennis:{ic:'\u{1F3BE}',c:'#c6f135',p:'Set',u:'Sets (games)',sets:1},baseball:{ic:'⚾',c:'#e8e8ff',p:'Inn',u:'Innings'},'american-football':{ic:'\u{1F3C8}',c:'#c98a5a',p:'Q',u:'Quarters'}};
+ const TH={football:{ic:'\u26BD',c:'#3ddc84',p:'H',u:'Halves'},basketball:{ic:'\u{1F3C0}',c:'#ff8a3d',p:'Q',u:'Quarters'},volleyball:{ic:'\u{1F3D0}',c:'#ffd23d',p:'Set',u:'Sets (points)',sets:1},handball:{ic:'\u{1F93E}',c:'#4fd1c5',p:'H',u:'Halves'},rugby:{ic:'\u{1F3C9}',c:'#7bd88f',p:'H',u:'Halves'},hockey:{ic:'\u{1F3D2}',c:'#5cc8ff',p:'P',u:'Periods'},tennis:{ic:'\u{1F3BE}',c:'#c6f135',p:'Set',u:'Sets (games)',sets:1},baseball:{ic:'⚾',c:'#e8e8ff',p:'Inn',u:'Innings'},'american-football':{ic:'\u{1F3C8}',c:'#c98a5a',p:'Q',u:'Quarters'}};
  const brk=(sp,m)=>{const t=TH[sp];if(!t||!m.periods||!m.periods.length)return '';return `<div style="grid-column:1/-1;display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:4px">${m.periods.map((p,i)=>`<span style="font-size:11px;background:#0a1740;border:1px solid #2a4cb0;border-radius:6px;padding:2px 6px;color:#cfe0ff">${t.p}${i+1} <b>${sc(p[0])}-${sc(p[1])}</b></span>`).join('')}</div>`};
  A.sxTabSet=d=>{const [sp,k]=String(d.v||'').split('|');UI.sxt=UI.sxt||{};UI.sxt[sp]=k;render()};
  window.shWorldScores=function(sp){

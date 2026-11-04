@@ -7,6 +7,8 @@ import { createSportmonks } from './sportmonks.mjs';
 import { createFootball } from './sportmonks-football.mjs';
 import { createHighlightly, SPORTS as HL_SPORTS } from './highlightly.mjs';
 import { createLiveTennis } from './livetennis.mjs';
+import { createEspn, ESPN_SPORTS } from './espnfeed.mjs';
+const ESPN = createEspn();
 import http from 'node:http';
 import crypto from 'node:crypto';
 import zlib from 'node:zlib';
@@ -1803,6 +1805,13 @@ const hlCache = new Map(); let hlDay = { d: '', n: 0 }, tnDay = { d: '', n: 0 };
 const HL_DAILY = +E.HIGHLIGHTLY_DAILY_BUDGET || 85, HL_TTL = (+E.HIGHLIGHTLY_CACHE_SECONDS || 600) * 1000;
 routes['GET /api/sx/live'] = async (req, body, ip) => {
   const sport = String(body.sport || '');
+  const espnOnly = ESPN_SPORTS.includes(sport) && !HL;   // no Highlightly key: free ESPN scoreboards for football and rugby
+  if (espnOnly) {
+    if (limited('sxl:' + ip, 120, 6e4)) return [429, { ok: false, error: 'Too many requests, wait a moment' }];
+    const ek = 'espn' + sport, eh = hlCache.get(ek); if (eh && Date.now() - eh.t < 60e3) return [200, { ok: true, matches: eh.d, updated: new Date(eh.t).toISOString(), source: 'espn' }];
+    try { const d = await ESPN.list(sport); hlCache.set(ek, { t: Date.now(), d }); return [200, { ok: true, matches: d, updated: new Date().toISOString(), source: 'espn' }]; }
+    catch (e) { return eh ? [200, { ok: true, matches: eh.d, stale: true, updated: new Date(eh.t).toISOString(), source: 'espn' }] : [502, { ok: false, error: 'Live feed unavailable right now' }]; }
+  }
   if (!(sport === 'tennis' ? TN : HL)) return [200, { ok: false, error: 'This sport feed is not connected yet' }];
   if (sport !== 'tennis' && !HL_SPORTS.includes(sport)) return [400, { ok: false, error: 'Unknown sport' }];
   if (limited('sxl:' + ip, 120, 6e4)) return [429, { ok: false, error: 'Too many requests, wait a moment' }];
