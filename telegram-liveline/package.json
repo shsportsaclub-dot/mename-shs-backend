@@ -1,0 +1,12 @@
+{
+  "name": "sh-liveline-bot",
+  "version": "1.0.0",
+  "description": "SH Sports Live Line - standalone Telegram ball-by-ball cricket live-line bot",
+  "type": "module",
+  "private": true,
+  "engines": { "node": ">=20.6" },
+  "scripts": {
+    "start": "node bot.mjs",
+    "test": "node --test test/*.test.mjs"
+  }
+}

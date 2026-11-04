@@ -1,0 +1,19 @@
+# Separate Render service for the SH Sports Live Line Telegram bot (not part of scoring-heroes-api).
+services:
+  - type: web
+    name: sh-liveline-bot
+    runtime: node
+    plan: free
+    rootDir: telegram-liveline
+    buildCommand: echo "no dependencies"
+    startCommand: node bot.mjs
+    healthCheckPath: /health
+    envVars:
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: CRIC_API_KEY
+        sync: false
+      - key: TG_WEBHOOK_SECRET
+        generateValue: true
+      - key: POLL_MS
+        value: "4000"
