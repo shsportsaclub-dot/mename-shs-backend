@@ -6,6 +6,15 @@ const FEEDS = {
   rugby: ['rugby','rugby/289234', 'rugby/180659', 'rugby/242041', 'rugby/267979', 'rugby/164205', 'rugby/270557']   // league ids: Six Nations, Rugby Championship, Premiership, Top 14, URC, Super Rugby etc.; ids that return nothing are skipped
 };
 const num = v => (v == null || v === '' || isNaN(+v)) ? null : +v;
+
+// extra facts for the match cards: venue, officials, form string (W/D/L), season record. Only what ESPN sends; missing parts stay null.
+function infoOf(c, h, a) {
+  const v = c.venue || {}, ad = v.address || {}, off = Array.isArray(c.officials) ? c.officials : [];
+  const ref = off.find(o => /referee/i.test(String((o.position && (o.position.displayName || o.position.name)) || ''))) || off[0] || null;
+  const fm = x => { const f = String(x.form || '').toUpperCase().replace(/[^WDL]/g, ''); return f ? f.slice(-5) : null; };
+  const rc = x => { const r = Array.isArray(x.records) ? (x.records.find(q => /total|overall/i.test(String(q.name || q.type || ''))) || x.records[0]) : null; return r && r.summary ? String(r.summary) : null; };
+  return { venue: v.fullName ? String(v.fullName) : null, city: ad.city ? String(ad.city) : null, cap: num(v.capacity), ref: ref && ref.fullName ? String(ref.fullName) : (ref && ref.displayName ? String(ref.displayName) : null), form: [fm(h), fm(a)], rec: [rc(h), rc(a)] };
+}
 export function row(sport, ev, leagueName = '') {
   const c = ev && ev.competitions && ev.competitions[0]; if (!c || !Array.isArray(c.competitors)) return null;
   const h = c.competitors.find(x => x.homeAway === 'home') || c.competitors[0], a = c.competitors.find(x => x.homeAway === 'away') || c.competitors[1]; if (!h || !a) return null;
@@ -13,7 +22,7 @@ export function row(sport, ev, leagueName = '') {
   const tm = x => { const t = x.team || {}; return { id: String(t.id || ''), name: String(t.displayName || t.name || ''), short: String(t.abbreviation || t.shortDisplayName || t.name || ''), img: String(t.logo || ''), score: num(x.score) }; };
   return { id: 'espn' + sport + ':' + ev.id, sport, league: String(leagueName || (ev.league && ev.league.name) || ''), country: '', startsAt: ev.date || '', live, ended,
     state: live ? String(ty.shortDetail || ty.detail || 'Live') : ended ? String(ty.shortDetail || 'Full time') : String(ty.shortDetail || 'Scheduled'),
-    period: num(st.period), clock: live && st.displayClock ? String(st.displayClock) : null, periods: [], home: tm(h), away: tm(a) };
+    period: num(st.period), info: infoOf(c, h, a), clock: live && st.displayClock ? String(st.displayClock) : null, periods: [], home: tm(h), away: tm(a) };
 }
 export function createEspn({ fetchImpl = fetch, base = BASE } = {}) {
   async function one(path, sport) {
