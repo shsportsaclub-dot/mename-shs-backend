@@ -5,6 +5,19 @@ export function neonKV(connectionString, { base, log = () => {} } = {}) {
   if (!connectionString) return null;
   let host;
   try { host = new URL(connectionString).hostname; } catch { return null; }
+  // Never transmit database credentials to an unrelated host.
+  if (!/(^|\\.)neon\\.tech$/i.test(host)) {
+    log('Neon storage disabled: DATABASE_URL is not a Neon host');
+    return null;
+  }
+  if (base) {
+    let endpoint;
+    try { endpoint = new URL(base); } catch { endpoint = null; }
+    if (!endpoint || endpoint.protocol !== 'https:' || !/(^|\\.)neon\\.tech$/i.test(endpoint.hostname)) {
+      log('Neon storage disabled: invalid NEON_HTTP_BASE host');
+      return null;
+    }
+  }
   // Same rule as @neondatabase/serverless: the first host label is replaced by "api"
   // (ep-xxx-pooler.region.aws.neon.tech -> api.region.aws.neon.tech/sql). Direct host is a fallback.
   const apiHost = host.replace(/^[^.]+\./, 'api.');
