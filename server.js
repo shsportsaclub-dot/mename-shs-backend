@@ -2042,7 +2042,7 @@ function mediaStudioBackfill() {
             {title:'SCORECARD',caption:item.summary,durationSeconds:5},
             {title:'FINAL',caption:row.status||'',durationSeconds:4}
           ],music:null,videoUrl:null,rights:'No licensed match footage supplied'},
-          photo:item.photo,at:Date.now(),verified:true});
+          photo:item.photo,players:item.players,research:item.research,playerPerformance:item.playerPerformance,at:Date.now(),verified:true});
         known.add(item.id);created++;
       } catch(e){skipped++;console.error('media studio skip',String(row.id||''),e.message)}
     }
@@ -2085,15 +2085,15 @@ routes['GET /api/media-studio'] = async (req, body, ip) => {
     const row=(db.papers[d]?.world||[]).find(m=>m.id===x.mid);
     if(!row)return {...x,date:d,language:x.language||'en',translationAvailable:false};
     const localized=prepareMedia({...row,ended:true},{language,photo:x.photo});
-    if(!localized.ok)return {...x,date:d,language:x.language||'en',translationAvailable:false};
+    if(!localized.ok)return null;
     return {...x,date:d,language,h:localized.headline,sub:localized.summary,body:localized.paragraphs,
-      posterSvg:localized.posterSvg,epaper:localized.epaper,social:localized.social,
+      posterSvg:localized.posterSvg,epaper:localized.epaper,social:localized.social,players:localized.players,research:localized.research,playerPerformance:localized.playerPerformance,
       reel:{...x.reel,frames:[
         {title:language==='te'?'మ్యాచ్ ఫలితం':language==='hi'?'मैच परिणाम':'MATCH RESULT',caption:localized.headline,durationSeconds:3},
         {title:language==='te'?'స్కోర్ వివరాలు':language==='hi'?'स्कोरकार्ड':'SCORECARD',caption:localized.summary,durationSeconds:5},
         {title:language==='te'?'తుది ఫలితం':language==='hi'?'अंतिम परिणाम':'FINAL RESULT',caption:row.status||'',durationSeconds:4}
       ]}};
-  })).sort((a,b)=>b.at-a.at).slice(0,100);
+  })).filter(Boolean).sort((a,b)=>b.at-a.at).slice(0,100);
   return [200,{ok:true,language,requestedLanguage:selection.requested,languageSelection:selection,defaultLanguage:'en',languageCatalog:'/api/languages',days,items,
     reels:items.map(x=>({id:x.id,mid:x.mid,date:x.date,language:x.language,...x.reel})),
     voice:{status:'not-implemented',note:'No localized audio generated yet'},
