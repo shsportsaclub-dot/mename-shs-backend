@@ -24,6 +24,14 @@ export function prepareMedia(m, {language='en', photo=null}={}) {
     ? (language==='te'?`${winnerName} విజయం — ${winner[2]} ${/run/i.test(winner[3])?'పరుగుల':'వికెట్ల'} తేడాతో`:`${winnerName} win by ${winner[2]} ${winner[3]}`)
     : (language==='te'?`${teams[0]} vs ${teams[1]} — మ్యాచ్ ముగిసింది`:`${teams[0]} vs ${teams[1]} — Match completed`);
   const normalized=innings.map((x,i)=>({name:txt(x.inning||teams[i%2],75).replace(/,.*?(?= Inning)/i,''),runs:Number(x.r),wickets:Number(x.w),overs:txt(x.o,12)}));
+  // Reject ambiguous or misattributed innings instead of publishing a false scorecard.
+  const canonical = value => String(value||'').toLowerCase().replace(/\\s+inning\\s*\\d+.*$/i,'').replace(/[^a-z0-9]/g,'');
+  const teamKeys=teams.map(canonical);
+  if(normalized.length>=2){
+    const inningsTeams=normalized.slice(0,2).map(x=>canonical(x.name));
+    if(inningsTeams.some(x=>!teamKeys.includes(x)) || inningsTeams[0]===inningsTeams[1])
+      return {ok:false,reason:'Scorecard innings team mismatch; manual source verification required'};
+  }
   const summary=normalized.map(x=>`${x.name}: ${x.runs}/${x.wickets}${x.overs?' ('+x.overs+' ov)':''}`).join(' | ');
   const a=normalized[0],b=normalized[1];
   const chasing=b&&a&&b.runs>a.runs;
