@@ -10020,8 +10020,41 @@ try{if(S.settings&&S.settings.mskin==='ca'){S.settings.mskin='cb';try{save()}cat
   kabaddi:'<circle cx="9" cy="4.5" r="2"/><path d="M9 7l-1 6 4 3 1 5M8 13l-4 3M9 9l5-1 3 2"/><path d="M19 13v8"/>',
   badminton:'<path d="M5 19l5-5"/><path d="M10 14l2-6 4-4 4 4-4 4-6 2z"/><path d="M12 8l4 4"/>',
   handball:'<circle cx="16" cy="6" r="3"/><path d="M6 21v-6l-2-4 3-3h4l3 3M10 11l-1 4"/>',
+  baseball:'<circle cx="12" cy="12" r="9"/><path d="M6 5.5c2.5 2.2 2.5 10.8 0 13M18 5.5c-2.5 2.2-2.5 10.8 0 13"/><path d="M7.5 8l1.4.6M8.4 11l1.5.2M8.4 14l1.5-.2M16.5 8l-1.4.6M15.6 11l-1.5.2M15.6 14l-1.5-.2"/>',
+  'american-football':'<ellipse cx="12" cy="12" rx="9.5" ry="5.6" transform="rotate(-35 12 12)"/><path d="M8.5 15.5l7-7M10.5 10.5l1.2 1.2M12.5 8.5l1.2 1.2M9.5 12.5l1.2 1.2M11.5 14.5l1.2 1.2"/>',
   other:'<circle cx="12" cy="12" r="9"/><path d="M12 7v10M7 12h10"/>'};
  const lineIcons={home:'home',matches:'matches',match:'matches',score:'plus',newMatch:'plus',tours:'trophy',teams:'users',players:'users',auction:'trophy',epaper:'news',reels:'reels',social:'reels',profile:'user',settings:'menu',history:'matches',wseries:'trophy',rankings:'trophy'};
+
+ /* sport posters: the same hero poster cricket has, drawn for every other sport (original line-art court + sport colours + own wording) */
+ {const R=(x,y,w,h,r)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}"${r?` rx="${r}"`:''}/>`,C=(x,y,r)=>`<circle cx="${x}" cy="${y}" r="${r}"/>`,L=(a,b,c,d)=>`<path d="M${a} ${b}L${c} ${d}"/>`;
+  const ART={
+   football:R(8,8,184,104)+L(100,8,100,112)+C(100,60,16)+R(8,34,26,52)+R(166,34,26,52)+R(8,46,10,28)+R(182,46,10,28),
+   tennis:R(14,14,172,92)+L(100,14,100,106)+R(14,30,172,60)+L(46,30,46,90)+L(154,30,154,90)+L(46,60,154,60),
+   basketball:R(8,12,184,96,6)+L(100,12,100,108)+C(100,60,14)+R(8,38,34,44)+R(158,38,34,44)+`<path d="M42 44a18 18 0 0 1 0 32M158 44a18 18 0 0 0 0 32"/>`,
+   hockey:R(8,10,184,100,22)+L(100,10,100,110)+C(100,60,12)+L(52,10,52,110)+L(148,10,148,110)+C(26,60,10)+C(174,60,10),
+   volleyball:R(20,16,160,88)+L(100,6,100,114)+L(66,16,66,104)+L(134,16,134,104),
+   badminton:R(20,12,160,96)+L(20,26,180,26)+L(20,94,180,94)+L(100,12,100,108)+L(60,26,60,94)+L(140,26,140,94),
+   kabaddi:R(10,20,180,80)+L(100,20,100,100)+L(60,20,60,100)+L(140,20,140,100)+L(34,20,34,100)+L(166,20,166,100),
+   baseball:`<path d="M100 104L22 54A110 110 0 0 1 178 54Z"/><path d="M100 104L66 70L100 38L134 70Z"/>`+C(100,70,5),
+   rugby:R(8,10,184,100)+L(30,10,30,110)+L(170,10,170,110)+L(66,10,66,110)+L(134,10,134,110)+L(100,10,100,110),
+   handball:R(8,10,184,100)+L(100,10,100,110)+`<path d="M8 38a42 42 0 0 1 42 22a42 42 0 0 1 -42 22M192 38a42 42 0 0 0 -42 22a42 42 0 0 0 42 22"/>`,
+   'american-football':R(8,10,184,100)+[24,40,56,72,88,104,120,136,152,168,184].map(x=>L(x,10,x,110)).join('')};
+  const COPY={
+   football:['KICK. SCORE.','CELEBRATE GOALS.','Every league. Every goal. Every fan.','#16a34a','#052e16'],
+   tennis:['SERVE. RALLY.','OWN THE COURT.','Every set. Every game. Every point.','#2f80ed','#0a1f4a'],
+   basketball:['DRIBBLE. SHOOT.','RULE THE HOOPS.','Every quarter. Every basket. Every buzzer.','#f97316','#3a1204'],
+   hockey:['PUSH. PASS.','FIND THE NET.','Every stick. Every save. Every goal.','#0ea5a4','#052b33'],
+   volleyball:['SPIKE. BLOCK.','TAKE THE SET.','Every rally. Every ace. Every point.','#eab308','#3a2c04'],
+   badminton:['SMASH. DROP.','WIN THE RALLY.','Every shuttle. Every point. Every match.','#a855f7','#2a0a4a'],
+   kabaddi:['RAID. TACKLE.','HOLD YOUR GROUND.','Every raid. Every point. Every hero.','#ef4444','#3b0a0a'],
+   baseball:['SWING. RUN.','ROUND THE BASES.','Every inning. Every pitch. Every run.','#3b82f6','#0b1e46'],
+   rugby:['CARRY. TACKLE.','GROUND THE TRY.','Every scrum. Every try. Every half.','#22c55e','#06301a'],
+   handball:['THROW. SHOOT.','BEAT THE KEEPER.','Every half. Every goal. Every save.','#06b6d4','#04323d'],
+   'american-football':['SNAP. THROW.','REACH THE END ZONE.','Every drive. Every down. Every touchdown.','#e11d48','#3a0614']};
+  const stp=document.createElement('style');stp.textContent='.sh-sp{min-height:150px!important;padding:20px 18px!important;margin:0 0 12px!important;color:#fff;background:linear-gradient(100deg,var(--spb) 0%,var(--spb) 38%,var(--spa) 160%)!important}.sh-sp .art{position:absolute;right:-6px;top:0;bottom:0;width:62%;opacity:.55;display:flex;align-items:center}.sh-sp .art svg{width:100%;height:auto;max-height:100%}.sh-sp .art .fld{fill:none;stroke:#fff;stroke-opacity:.5;stroke-width:1.4}.sh-sp .gl{position:absolute;right:12%;top:50%;width:64px;height:64px;transform:translateY(-50%);fill:none;stroke:var(--spa);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 8px var(--spa))}.sh-sp .sh-visual-copy{max-width:74%;z-index:1}.sh-sp .sh-visual-copy h1{letter-spacing:.4px!important}.sh-sp .sh-visual-copy h1{font-size:clamp(19px,5.4vw,30px)!important;color:#fff!important}.sh-sp .sh-visual-copy h1 span{color:var(--spa)!important;filter:brightness(1.35)}.sh-sp .sh-visual-copy small{color:#ffffffc0!important}.sh-sp .sh-visual-copy p{color:#ffffffd0!important;margin-top:8px!important;font-size:11.5px!important}';document.head.appendChild(stp);
+  window.shSportPoster=sp=>{const c=COPY[sp];if(!c)return '';const ic=SPORT_IC[sp]||SPORT_IC.other;return `<section class="sh-visual-hero sh-sp" aria-label="${esc(sp)} poster" style="--spa:${c[3]};--spb:${c[4]}"><div class="art"><svg class="fld" viewBox="0 0 200 120" preserveAspectRatio="xMidYMid meet" aria-hidden="true">${ART[sp]||''}</svg></div><svg class="gl" viewBox="0 0 24 24" aria-hidden="true">${ic}</svg><div class="sh-visual-copy"><small>YOUR GAME. YOUR STAGE.</small><h1>${c[0]}<br><span>${c[1]}</span></h1><p>${c[2]}</p></div></section>`};
+  const cb0=cbHome;cbHome=function(){const o=cb0.apply(this,arguments),sp=UI.sport||'cricket',pos=o.indexOf('</div>',o.indexOf('class="cbnav"'));if(pos<0)return o;const pt=sp==='cricket'?'<section class="sh-visual-hero" aria-label="Scoring Heroes stadium" style="margin:10px 0 12px;min-height:170px;padding:22px 18px"><div class="sh-visual-copy"><small>YOUR GAME. YOUR STAGE.</small><h1 style="font-size:clamp(22px,6.4vw,34px)!important">PLAY. SCORE.<br><span>CONNECT. CELEBRATE.</span></h1><p>From your local ground to the world.<br>Every match. Every hero.</p></div></section>':(window.shSportPoster?window.shSportPoster(sp):'');return o.slice(0,pos+6)+pt+o.slice(pos+6)};
+  const sbP=shBody;shBody=function(sp){const o=sbP.apply(this,arguments);return (sp&&sp!=='cricket'&&window.shSportPoster?window.shSportPoster(sp):'')+o}}
  const draw=render;
  render=function(){document.documentElement.dataset.visualStage=UI.stage==='welcome'?'welcome':S.user?'app':'auth';draw.apply(this,arguments);
   document.querySelectorAll('.drawer .mi .e,.cbzchips button>span').forEach(el=>{const btn=el.closest('button'),key=lineIcons[btn?.dataset.v]||'dots';el.innerHTML=ic(IC[key]?key:'dots')});
