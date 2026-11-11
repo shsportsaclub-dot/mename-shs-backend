@@ -1,3 +1,4 @@
+import {prepareMedia, publishDecision} from './media-studio/media-engine.mjs';
 // Scoring Heroes backend: OTP SMS from "SH Sports" + magic login link + live cricket proxy.
 // Run npm install, then npm start. Environment may come from Render or dotenv.
 import './env.mjs';
@@ -2018,6 +2019,36 @@ routes['POST /api/admin/status'] = async (req, body) => {
   return [200, out];
 };
 
+// SH Media Studio: rebuild verified result assets for today and previous three IST dates.
+// Historical paper rows are used only if a finished result and scorecard are available.
+function mediaStudioBackfill() {
+  const days = Array.from({length:4},(_,i)=>istDate(Date.now()-i*86400000));
+  let created=0, skipped=0;
+  for(const day of days){
+    const P=db.papers[day];if(!P)continue;
+    P.media ||= [];
+    const known=new Set(P.media.map(x=>x.id));
+    for(const row of P.world||[]){
+      try {
+        const match={...row,ended:true};
+        const item=prepareMedia(match,{language:'te'});
+        const gate=publishDecision(item,known,{autoEnabled:true});
+        if(!gate.publish){skipped++;continue}
+        P.media.push({id:item.id,mid:item.matchId,kind:'result-media',h:item.headline,sub:item.summary,
+          body:item.paragraphs,posterSvg:item.posterSvg,epaper:item.epaper,social:item.social,
+          reel:{status:'storyboard-only',frames:[
+            {title:'MATCH RESULT',caption:item.headline,durationSeconds:3},
+            {title:'SCORECARD',caption:item.summary,durationSeconds:5},
+            {title:'FINAL',caption:row.status||'',durationSeconds:4}
+          ],music:null,videoUrl:null,rights:'No licensed match footage supplied'},
+          photo:item.photo,at:Date.now(),verified:true});
+        known.add(item.id);created++;
+      } catch(e){skipped++;console.error('media studio skip',String(row.id||''),e.message)}
+    }
+  }
+  if(created)saveDb();
+  return {created,skipped,days,stored:days.reduce((n,d)=>n+(db.papers[d]?.media||[]).length,0)};
+}
 async function paperAgentRun() {
   agentStatus.last = Date.now();
   try {
@@ -2033,6 +2064,7 @@ async function paperAgentRun() {
       if (i < 0) { P.world.push(row); added++; } else P.world[i] = row;
     }
     let nr = { made: 0, polished: 0 }; try { nr = await newsroomRun(live); } catch (e) { agentStatus.newsErr = e.message; }
+    agentStatus.media = mediaStudioBackfill();
     agentStatus.news = nr; agentStatus.ai = NEWS_AI_KEY ? NEWS_AI_MODEL : 'rule-based (no ANTHROPIC_API_KEY)';
     for (const d of Object.keys(db.papers).sort().slice(0, -60)) delete db.papers[d];   // keep 60 days
     if (added || true) saveDb();
@@ -2040,11 +2072,20 @@ async function paperAgentRun() {
   } catch (e) { Object.assign(agentStatus, { ok: false, note: e.message, added: 0 }); }
 }
 if (E.PAPER_AGENT !== '0') { setTimeout(paperAgentRun, 60e3); setInterval(paperAgentRun, PAPER_HOURS * 3600e3); }
+// Read-only feed for existing app integration; past four days, newest first.
+routes['GET /api/media-studio'] = async (req, body, ip) => {
+  if(limited('media-read:'+ip,300,36e5))return [429,{ok:false,error:'Too many requests'}];
+  const days=Array.from({length:4},(_,i)=>istDate(Date.now()-i*86400000));
+  const items=days.flatMap(d=>(db.papers[d]?.media||[]).map(x=>({...x,date:d})))
+    .sort((a,b)=>b.at-a.at).slice(0,100);
+  return [200,{ok:true,language:'te',days,items,reels:items.map(x=>({id:x.id,mid:x.mid,date:x.date,...x.reel})),
+    note:'Reels are storyboards, not rendered video. Photos and music require rights.'}];
+};
 routes['GET /api/paper'] = async (req, body) => {
   const day = /^\d{4}-\d\d-\d\d$/.test(body.date || '') ? body.date : istDate();
   const P = db.papers[day] || { world: [], sh: [] };
   const recent = Object.keys(db.papers).sort().slice(-4).flatMap(d => (db.papers[d].news || [])).sort((x, y) => y.t - x.t).slice(0, 40);
-  return [200, { ok: true, date: day, world: P.world, sh: P.sh, news: P.news || [], recent, agent: agentStatus, days: Object.keys(db.papers).sort().slice(-14) }];
+  return [200, { ok: true, date: day, world: P.world, sh: P.sh, news: P.news || [], media: P.media || [], recent, agent: agentStatus, days: Object.keys(db.papers).sort().slice(-14) }];
 };
 routes['POST /api/paper'] = async (req, body, ip) => {
   const phone = readSession((req.headers.authorization || '').replace(/^Bearer /, '')), u = phone && db.users[phone];
