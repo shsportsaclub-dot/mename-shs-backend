@@ -1,0 +1,44 @@
+{
+  "version": "2026-11-12",
+  "status": "manifest-only; image binaries NOT uploaded",
+  "poster": {
+    "master": "User-approved football layout",
+    "aspectRatio": "16:9",
+    "requirements": [
+      "separate image per sport",
+      "no Scoring Heroes logo",
+      "no background watermark",
+      "fixed navy stadium white/gold text rounded frame"
+    ],
+    "sports": [
+      "cricket",
+      "football",
+      "hockey",
+      "badminton",
+      "volleyball",
+      "kabaddi",
+      "basketball",
+      "baseball",
+      "rugby"
+    ],
+    "source": "ChatGPT Library generated poster PNGs; choose approved per-sport images; no unapproved duplicates"
+  },
+  "embossedBalls": {
+    "status": "two 50-icon collection preview sheets located; individual transparent 2048 PNG assets not verified",
+    "collections": [
+      "Cricket Boards & Teams Logo Collection.png",
+      "Indian Cricket Ball Logo Collection.png"
+    ],
+    "requirements": [
+      "individual transparent PNG for each ball",
+      "serial equals PNG filename",
+      "match approved Excel mapping",
+      "no duplicates",
+      "do not claim grid previews are individual files"
+    ]
+  },
+  "deployment": {
+    "render": "not deployed",
+    "assetsUploaded": false
+  }
+}
