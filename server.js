@@ -1,3 +1,4 @@
+import {resolveLanguage, languageCatalog} from './media-studio/languages.mjs';
 import {prepareMedia, publishDecision, normalizeLanguage} from './media-studio/media-engine.mjs';
 // Scoring Heroes backend: OTP SMS from "SH Sports" + magic login link + live cricket proxy.
 // Run npm install, then npm start. Environment may come from Render or dotenv.
@@ -2073,10 +2074,12 @@ async function paperAgentRun() {
 }
 if (E.PAPER_AGENT !== '0') { setTimeout(paperAgentRun, 60e3); setInterval(paperAgentRun, PAPER_HOURS * 3600e3); }
 // Read-only feed for existing app integration; past four days, newest first.
+routes['GET /api/languages'] = async () => [200,{ok:true,...languageCatalog()}];
 routes['GET /api/media-studio'] = async (req, body, ip) => {
   if(limited('media-read:'+ip,300,36e5))return [429,{ok:false,error:'Too many requests'}];
   // Default is English; client sends ?lang=te or ?lang=hi after user selection.
-  const language=normalizeLanguage(body.lang||body.language||'en');
+  const selection=resolveLanguage(body.lang||body.language||'en');
+  const language=selection.articleLanguage;
   const days=Array.from({length:4},(_,i)=>istDate(Date.now()-i*86400000));
   const items=days.flatMap(d=>(db.papers[d]?.media||[]).map(x=>{
     const row=(db.papers[d]?.world||[]).find(m=>m.id===x.mid);
@@ -2091,7 +2094,7 @@ routes['GET /api/media-studio'] = async (req, body, ip) => {
         {title:language==='te'?'తుది ఫలితం':language==='hi'?'अंतिम परिणाम':'FINAL RESULT',caption:row.status||'',durationSeconds:4}
       ]}};
   })).sort((a,b)=>b.at-a.at).slice(0,100);
-  return [200,{ok:true,language,supportedLanguages:['en','te','hi'],defaultLanguage:'en',days,items,
+  return [200,{ok:true,language,requestedLanguage:selection.requested,languageSelection:selection,defaultLanguage:'en',languageCatalog:'/api/languages',days,items,
     reels:items.map(x=>({id:x.id,mid:x.mid,date:x.date,language:x.language,...x.reel})),
     voice:{status:'not-implemented',note:'No localized audio generated yet'},
     note:'Reels are storyboards, not rendered video. Photos and music require rights.'}];
