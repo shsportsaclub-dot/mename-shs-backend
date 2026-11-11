@@ -1,0 +1,27 @@
+{
+  "brand": "Scoring Heroes",
+  "version": 1,
+  "policy": "Use uploaded original asset bytes only; verify SHA256 before publication; never AI redraw",
+  "assets": [
+    {
+      "role": "full-dark-primary",
+      "filename": "1000976455.png",
+      "sha256": "27897534dce210d028a502bc526131b623d98d91929454b388e460905f6b1254"
+    },
+    {
+      "role": "full-dark-secondary",
+      "filename": "1000958501.png",
+      "sha256": "27897534dce210d028a502bc526131b623d98d91929454b388e460905f6b1254"
+    },
+    {
+      "role": "full-light",
+      "filename": "1000958429.jpg",
+      "sha256": "c96c7cefde293abae71d6346c33bdddad14b4ed6d7552457bdffefeb688a5fe5"
+    },
+    {
+      "role": "helmet-icon",
+      "filename": "1000958430.jpg",
+      "sha256": "9842837ac3c8c36eeca2f7f54f5028ec6f3e21d3df3ecfc2c9e03848f8fd8aa7"
+    }
+  ]
+}
