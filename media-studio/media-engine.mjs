@@ -22,19 +22,36 @@ export function prepareMedia(m, {language='en', photo=null}={}) {
   const headline=winner && winnerVerified
     ? (language==='te'?`${winnerName} విజయం — ${winner[2]} ${/run/i.test(winner[3])?'పరుగుల':'వికెట్ల'} తేడాతో`:`${winnerName} win by ${winner[2]} ${winner[3]}`)
     : (language==='te'?`${teams[0]} vs ${teams[1]} — మ్యాచ్ ముగిసింది`:`${teams[0]} vs ${teams[1]} — Match completed`);
-  const summary=innings.map((x,i)=>`${txt(x.inning||teams[i%2],75)}: ${score(x)}`).join(' | ');
+  const normalized=innings.map((x,i)=>({name:txt(x.inning||teams[i%2],75).replace(/,.*?(?= Inning)/i,''),runs:Number(x.r),wickets:Number(x.w),overs:txt(x.o,12)}));
+  const summary=normalized.map(x=>`${x.name}: ${x.runs}/${x.wickets}${x.overs?' ('+x.overs+' ov)':''}`).join(' | ');
+  const a=normalized[0],b=normalized[1];
+  const chasing=b&&a&&b.runs>a.runs;
+  const margin=winnerVerified&&winner?Number(winner[2]):null;
+  const analysis=[];
+  if(a&&b){
+    if(language==='te'){
+      analysis.push(`మొదట బ్యాటింగ్ చేసిన ${a.name} ${a.overs||'నమోదైన'} ఓవర్లలో ${a.runs} పరుగులకు ${a.wickets} వికెట్లు కోల్పోయింది. తరువాత ${b.name} ${b.overs||'నమోదైన'} ఓవర్లలో ${b.runs} పరుగులు చేసి ${b.wickets} వికెట్లు కోల్పోయింది.`);
+      if(chasing&&winnerVerified&&/wkt/i.test(winner[3]))analysis.push(`${b.name} లక్ష్యాన్ని ఛేదించి ${margin} వికెట్ల తేడాతో గెలిచింది. లక్ష్యానికి అవసరమైన పరుగులు ${a.runs+1}; నమోదైన రెండో ఇన్నింగ్స్ స్కోరు ${b.runs}/${b.wickets}.`);
+      else if(!chasing&&winnerVerified&&/run/i.test(winner[3]))analysis.push(`${a.name} ప్రత్యర్థిని ${b.runs} పరుగులకే పరిమితం చేసి ${margin} పరుగుల తేడాతో విజయం సాధించింది.`);
+    }else if(hindi){
+      analysis.push(`पहले दर्ज पारी में ${a.name} ने ${a.overs||'दर्ज'} ओवर में ${a.runs}/${a.wickets} बनाए। अगली पारी में ${b.name} ने ${b.overs||'दर्ज'} ओवर में ${b.runs}/${b.wickets} बनाए।`);
+      if(chasing&&winnerVerified&&/wkt/i.test(winner[3]))analysis.push(`${b.name} ने ${a.runs+1} रन का लक्ष्य हासिल कर ${margin} विकेट से जीत दर्ज की।`);
+      else if(!chasing&&winnerVerified&&/run/i.test(winner[3]))analysis.push(`${a.name} ने विपक्ष को ${b.runs} रन पर रोककर ${margin} रन से जीत दर्ज की।`);
+    }else{
+      analysis.push(`In the first recorded innings, ${a.name} posted ${a.runs}/${a.wickets}${a.overs?' in '+a.overs+' overs':''}. ${b.name} replied with ${b.runs}/${b.wickets}${b.overs?' in '+b.overs+' overs':''}.`);
+      if(chasing&&winnerVerified&&/wkt/i.test(winner[3]))analysis.push(`Chasing a target of ${a.runs+1}, ${b.name} reached ${b.runs}/${b.wickets} to secure a ${margin}-wicket victory.`);
+      else if(!chasing&&winnerVerified&&/run/i.test(winner[3]))analysis.push(`${a.name} defended its total, restricting ${b.name} to ${b.runs} and winning by ${margin} runs.`);
+    }
+  }
   const paragraphs=language==='te' ? [
-    `${teams[0]}, ${teams[1]} మధ్య జరిగిన మ్యాచ్ ముగిసింది. అధికారిక మ్యాచ్ స్థితి: ${result}.`,
-    `స్కోర్ వివరాలు: ${summary}.`,
-    venue?`వేదిక: ${venue}.`:''
+    `${teams[0]}, ${teams[1]} మధ్య మ్యాచ్ ముగిసింది. ఫలితం: ${result}.`,...analysis,
+    `పూర్తి స్కోరు: ${summary}.`,venue?`వేదిక: ${venue}.`:''
   ].filter(Boolean) : hindi ? [
-    `${teams[0]} और ${teams[1]} के बीच मैच समाप्त हुआ। आधिकारिक स्थिति: ${result}।`,
-    `स्कोर: ${summary}।`,
-    venue?`स्थान: ${venue}।`:''
+    `${teams[0]} और ${teams[1]} का मैच समाप्त हुआ। परिणाम: ${result}।`,...analysis,
+    `स्कोरकार्ड: ${summary}।`,venue?`स्थान: ${venue}।`:''
   ].filter(Boolean) : [
-    `The match between ${teams[0]} and ${teams[1]} has finished. Verified status: ${result}.`,
-    `Scorecard: ${summary}.`,
-    venue?`Venue: ${venue}.`:''
+    `${teams[0]} and ${teams[1]} completed their match. Result: ${result}.`,...analysis,
+    `Full recorded score: ${summary}.`,venue?`Venue: ${venue}.`:''
   ].filter(Boolean);
   // No invented wicket-takers, quotes, milestones, photos or highlight clips.
   const licensedPhoto = photo && photo.approved === true && photo.url && photo.license && photo.attribution
@@ -47,8 +64,11 @@ export function prepareMedia(m, {language='en', photo=null}={}) {
     posterSvg:renderPoster({headline,summary,result,venue,teams,language})};
 }
 export function renderPoster({headline,summary,result,venue,teams,language='en'}) {
-  const line=(v,y,size=42,color='#ffffff')=>`<text x="90" y="${y}" font-family="sans-serif" font-size="${size}" font-weight="700" fill="${color}">${esc(txt(v,125))}</text>`;
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350"><defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#07152b"/><stop offset=".6" stop-color="#172b62"/><stop offset="1" stop-color="#772044"/></linearGradient></defs><rect width="1080" height="1350" fill="url(#bg)"/><rect x="40" y="40" width="1000" height="1270" rx="36" fill="none" stroke="#d9bb77" stroke-width="4"/>${line(language==='te'?'మ్యాచ్ నివేదిక':language==='hi'?'मैच रिपोर्ट':'MATCH REPORT',165,34,'#f0c878')}${line(teams.join('  VS  '),310,45)}${line(headline,440,39,'#f0c878')}${line(summary,630,34)}${line(result,770,34)}${line(venue,930,29,'#dddddd')}${line('SCORING HEROES  •  SPORTS DESK',1180,28,'#ffffff')}</svg>`;
+  const wrap=(value,max=27,maxLines=3)=>{const words=String(value||'').split(/\\s+/);const lines=[];let line='';for(const word of words){if((line+' '+word).trim().length>max&&line){lines.push(line);line=word}else line=(line+' '+word).trim()}if(line)lines.push(line);return lines.slice(0,maxLines).map((x,i,a)=>i===maxLines-1&&lines.length>maxLines?x.slice(0,max-1)+'…':x)};
+  const lines=(value,y,size,max,maxLines,color='#fff',weight=700)=>wrap(value,max,maxLines).map((v,i)=>`<text x="84" y="${y+i*size*1.32}" font-family="Noto Sans,Arial,sans-serif" font-size="${size}" font-weight="${weight}" fill="${color}">${esc(v)}</text>`).join('');
+  const left=String(teams?.[0]||'TEAM 1'),right=String(teams?.[1]||'TEAM 2');
+  const parsed=String(summary).split(' | ').slice(0,2);
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350"><defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#07152b"/><stop offset=".55" stop-color="#132b5b"/><stop offset="1" stop-color="#47173d"/></linearGradient></defs><rect width="1080" height="1350" fill="url(#bg)"/><rect x="42" y="42" width="996" height="1266" rx="30" fill="none" stroke="#d9bb77" stroke-width="3"/><text x="84" y="133" font-size="32" font-weight="800" letter-spacing="4" fill="#f0c878">SCORING HEROES</text><text x="84" y="181" font-size="23" fill="#c7d2e5">SPORTS DESK  /  MATCH RESULT</text><path d="M84 212H996" stroke="#d9bb77" stroke-width="2"/>${lines(left,290,40,38,2)}<text x="84" y="392" font-size="28" fill="#f0c878">VERSUS</text>${lines(right,452,40,38,2)}<rect x="70" y="520" width="940" height="170" rx="20" fill="#091a36" stroke="#506080"/>${lines(headline,575,40,39,2,'#f0c878')}${parsed.map((v,i)=>lines(v,770+i*130,34,44,2,'#fff',650)).join('')}${lines(result,1060,28,58,2,'#f0c878')}${lines(venue,1162,26,62,2,'#d4dceb',500)}<text x="84" y="1260" font-size="23" font-weight="700" fill="#f0c878">VERIFIED SCORECARD • SCORING HEROES</text></svg>`;
 }
 export function publishDecision(prepared, existingIds=new Set(), {autoEnabled=false}={}) {
   if (!prepared?.ok || !prepared.verified) return {publish:false,reason:'Unverified match'};
