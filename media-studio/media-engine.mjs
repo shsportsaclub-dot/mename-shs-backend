@@ -66,7 +66,8 @@ export function prepareMedia(m, {language='en', photo=null}={}) {
     }
     if(/rain|reduced/i.test(result)) analysis.push(language==='te'?'అధికారిక ఫలితంలో వర్షం వల్ల ఓవర్లు తగ్గినట్లు పేర్కొన్నారు.':language==='hi'?'आधिकारिक परिणाम में बारिश से ओवर घटने का उल्लेख है।':'The official result notes a rain-related reduction in overs.');
   }
-  const playerPerformance=performanceInsights(m.scorecard || m.playerScorecard || {});
+  const rawCard=m.scorecard || m.playerScorecard || {};
+  const playerPerformance=performanceInsights(rawCard);
   const photoSearches=playerPerformance.batters.slice(0,2).concat(playerPerformance.bowlers.slice(0,2)).filter((p,i,a)=>a.findIndex(q=>q.name===p.name&&q.team===p.team)===i).map(p=>playerPhotoSearch(p.name,p.team));
   const paragraphs=language==='te' ? [
     `${teams[0]}, ${teams[1]} మధ్య మ్యాచ్ ముగిసింది. ఫలితం: ${result}.`,...analysis,
@@ -82,11 +83,13 @@ export function prepareMedia(m, {language='en', photo=null}={}) {
   // No invented wicket-takers, quotes, milestones, photos or highlight clips.
   const licensedPhoto = photo && photo.approved === true && photo.url && photo.license && photo.attribution
     ? {url:String(photo.url),license:txt(photo.license,80),attribution:txt(photo.attribution,250)} : null;
+  const players=[...new Map([...playerPerformance.batters,...playerPerformance.bowlers].map(p=>[p.name.toLowerCase()+'|'+p.team.toLowerCase(),{name:p.name,team:p.team}])).values()];
+  const research={status:playerPerformance.hasPlayerData?'scorecard-players-available':'external-research-needed',matchQuery:[teams.join(' vs '),competition,venue,'scorecard'].filter(Boolean).join(' '),matchSearchUrl:'https://www.google.com/search?q='+encodeURIComponent([teams.join(' vs '),competition,venue,'scorecard'].filter(Boolean).join(' ')),playerPhotoSearches:photoSearches};
   const key = `sh-media-${m.id}-final`;
   return {ok:true,id:key,matchId:m.id,language,kind:'result',verified:true,headline,summary,paragraphs,
     social:{caption:`${headline}\n${summary}\n${analysis[0]||''}\n#ScoringHeroes #MatchResult`,format:'4:5',imageRequired:false},
     epaper:{title:headline,subtitle:competition,body:paragraphs,format:'A4',photo:licensedPhoto},
-    photo:licensedPhoto,playerPerformance,photoSearches,publication:'internal-auto-eligible',externalPublishing:'disabled-without-account-permissions',
+    photo:licensedPhoto,players,playerPerformance,photoSearches,research,publication:'internal-auto-eligible',externalPublishing:'disabled-without-account-permissions',
     posterSvg:renderPoster({headline,summary,result,venue,teams,language})};
 }
 export function renderPoster({headline,summary,result,venue,teams,language='en'}) {
