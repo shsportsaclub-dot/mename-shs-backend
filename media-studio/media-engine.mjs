@@ -64,7 +64,7 @@ export function prepareMedia(m, {language='en', photo=null}={}) {
     posterSvg:renderPoster({headline,summary,result,venue,teams,language})};
 }
 export function renderPoster({headline,summary,result,venue,teams,language='en'}) {
-  const wrap=(value,max=27,maxLines=3)=>{const words=String(value||'').split(/\\s+/);const lines=[];let line='';for(const word of words){if((line+' '+word).trim().length>max&&line){lines.push(line);line=word}else line=(line+' '+word).trim()}if(line)lines.push(line);return lines.slice(0,maxLines).map((x,i,a)=>i===maxLines-1&&lines.length>maxLines?x.slice(0,max-1)+'…':x)};
+  const wrap=(value,max=27,maxLines=3)=>{const words=String(value||'').split(/\s+/);const lines=[];let line='';for(const word of words){if((line+' '+word).trim().length>max&&line){lines.push(line);line=word}else line=(line+' '+word).trim()}if(line)lines.push(line);return lines.slice(0,maxLines).map((x,i,a)=>i===maxLines-1&&lines.length>maxLines?x.slice(0,max-1)+'…':x)};
   const lines=(value,y,size,max,maxLines,color='#fff',weight=700)=>wrap(value,max,maxLines).map((v,i)=>`<text x="84" y="${y+i*size*1.32}" font-family="Noto Sans,Arial,sans-serif" font-size="${size}" font-weight="${weight}" fill="${color}">${esc(v)}</text>`).join('');
   const left=String(teams?.[0]||'TEAM 1'),right=String(teams?.[1]||'TEAM 2');
   const parsed=String(summary).split(' | ').slice(0,2);
