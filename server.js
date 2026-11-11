@@ -2396,6 +2396,13 @@ http.createServer(async (req, res) => {
       return res.end(body);
     } catch { return out(404, { ok: false, error: 'Theme screen unavailable' }); }
   }
+  if (req.method === 'GET' && (path === '/media-studio' || path === '/media-studio/')) {
+    try {
+      const html = fs.readFileSync(new URL('./public/media-studio.html', import.meta.url));
+      res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff', 'content-security-policy': "default-src 'self'; img-src 'self' data:; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self'; base-uri 'none'; object-src 'none'" });
+      return res.end(html);
+    } catch { return out(404, { ok: false, error: 'Media Studio preview unavailable' }); }
+  }
   if (req.method === 'GET' && path === '/broadcast-demo') {
     try {
       const html = fs.readFileSync(new URL('./public/broadcast-router-demo.html', import.meta.url));
