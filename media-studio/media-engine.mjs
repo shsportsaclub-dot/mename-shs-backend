@@ -43,6 +43,20 @@ export function prepareMedia(m, {language='en', photo=null}={}) {
       else if(!chasing&&winnerVerified&&/run/i.test(winner[3]))analysis.push(`${a.name} defended its total, restricting ${b.name} to ${b.runs} and winning by ${margin} runs.`);
     }
   }
+  // Derived strictly from recorded innings; no invented player contributions.
+  if(a&&b){
+    const balls=o=>{const m=/^(\d+)(?:\.(\d))?$/.exec(String(o||''));return m?Number(m[1])*6+Number(m[2]||0):0};
+    const first=balls(a.overs),second=balls(b.overs);
+    if(first&&second){
+      const r1=(a.runs*6/first).toFixed(2),r2=(b.runs*6/second).toFixed(2);
+      analysis.push(language==='te'
+        ? 'రెండు ఇన్నింగ్స్‌ల రన్‌రేట్లు వరుసగా '+r1+', '+r2+' పరుగులు/ఓవర్.'
+        : language==='hi'
+        ? 'दोनों पारियों की रन गति क्रमशः '+r1+' और '+r2+' रन प्रति ओवर रही।'
+        : 'The recorded run rates were '+r1+' and '+r2+' runs per over respectively.');
+    }
+    if(/rain|reduced/i.test(result)) analysis.push(language==='te'?'అధికారిక ఫలితంలో వర్షం వల్ల ఓవర్లు తగ్గినట్లు పేర్కొన్నారు.':language==='hi'?'आधिकारिक परिणाम में बारिश से ओवर घटने का उल्लेख है।':'The official result notes a rain-related reduction in overs.');
+  }
   const paragraphs=language==='te' ? [
     `${teams[0]}, ${teams[1]} మధ్య మ్యాచ్ ముగిసింది. ఫలితం: ${result}.`,...analysis,
     `పూర్తి స్కోరు: ${summary}.`,venue?`వేదిక: ${venue}.`:''
@@ -58,7 +72,7 @@ export function prepareMedia(m, {language='en', photo=null}={}) {
     ? {url:String(photo.url),license:txt(photo.license,80),attribution:txt(photo.attribution,250)} : null;
   const key = `sh-media-${m.id}-final`;
   return {ok:true,id:key,matchId:m.id,language,kind:'result',verified:true,headline,summary,paragraphs,
-    social:{caption:`${headline}\n${summary}\n#ScoringHeroes #MatchResult`,format:'4:5',imageRequired:false},
+    social:{caption:`${headline}\n${summary}\n${analysis[0]||''}\n#ScoringHeroes #MatchResult`,format:'4:5',imageRequired:false},
     epaper:{title:headline,subtitle:competition,body:paragraphs,format:'A4',photo:licensedPhoto},
     photo:licensedPhoto,publication:'internal-auto-eligible',externalPublishing:'disabled-without-account-permissions',
     posterSvg:renderPoster({headline,summary,result,venue,teams,language})};
