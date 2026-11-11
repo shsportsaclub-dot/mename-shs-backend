@@ -25,7 +25,7 @@ export function prepareMedia(m, {language='en', photo=null}={}) {
     : (language==='te'?`${teams[0]} vs ${teams[1]} — మ్యాచ్ ముగిసింది`:`${teams[0]} vs ${teams[1]} — Match completed`);
   const normalized=innings.map((x,i)=>({name:txt(x.inning||teams[i%2],75).replace(/,.*?(?= Inning)/i,''),runs:Number(x.r),wickets:Number(x.w),overs:txt(x.o,12)}));
   // Reject ambiguous or misattributed innings instead of publishing a false scorecard.
-  const canonical = value => String(value||'').toLowerCase().replace(/\\s+inning\\s*\\d+.*$/i,'').replace(/[^a-z0-9]/g,'');
+  const canonical = value => String(value||'').toLowerCase().replace(new RegExp('\\s+inning\\s*\\d+.*$','i'),'').replace(/[^a-z0-9]/g,'');
   const teamKeys=teams.map(canonical);
   if(normalized.length>=2){
     const inningsTeams=normalized.slice(0,2).map(x=>canonical(x.name));
