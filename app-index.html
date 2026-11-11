@@ -1588,7 +1588,7 @@ const wWhen=m=>{try{const t=m.time?new Date(m.time+(/Z|\+/.test(m.time)?'':'Z'))
   let me='';try{me=Intl.DateTimeFormat().resolvedOptions().timeZone}catch(e){}
   if(m.tz&&me&&m.tz!==me){try{if(t.toLocaleString('en-IN',Object.assign({timeZone:m.tz},F))===mine)return mine;const v=t.toLocaleString('en-IN',Object.assign({timeZone:m.tz,timeZoneName:'short'},F));return mine+' your time ('+v+' at the ground)'}catch(e){}}
   return mine}catch(e){return m.date||''}};
-function wSplit(m){const p=String(m.name||'').split(',').map(x=>x.trim());return{teams:p[0]||m.name,desc:p.slice(1,-1).join(', '),series:p.length>2?p[p.length-1]:(p[1]||m.type||'')}}
+function wSplit(m){const p=String(m.name||'').split(',').map(x=>x.trim());return{teams:p[0]||m.name,desc:p.slice(1,-1).join(', '),series:p.length>3&&/^[\d\-\/ ]{4,9}$/.test(p[p.length-1])?p[p.length-2]+' '+p[p.length-1]:(p.length>2?p[p.length-1]:(p[1]||m.type||''))}}
 function wTeamScore(m,t){const n=String(t.name||'').toLowerCase();const x=(m.score||[]).filter(z=>String(z.inning||'').toLowerCase().replace(/ inning.*/,'')===n);return x.length?x.map(z=>z.r+'/'+z.w+' <span class="mu">('+z.o+')</span>').join(' &amp; '):''}
 function wBadge(t){const i=String(t.short||t.name||'?').slice(0,3).toUpperCase();return t.img&&!/placeholder|default|icon512|icon192|cricapi\.com\/img\/icon/i.test(t.img)?`<img class="logo" src="${esc(t.img)}" width="26" height="26" alt="${esc(i)}" onerror="this.outerHTML='<span class=&quot;tbadge&quot;>'+this.alt+'</span>'">`:`<span class="tbadge">${esc(i)}</span>`}
 function wCard(m){
@@ -4561,7 +4561,7 @@ function igStories(){let L=[];try{L=ownNews().filter(a=>a.kind!=='preview')}catc
  ${rest.map(a=>`<a class="ig-st" href="#art/${encodeURIComponent(a.key)}"><b>${esc(a.title)}</b><small>${esc(a.by)}${a.t?' | '+esc(cbAgo(new Date(a.t).toISOString())):''}</small></a>`).join('')}`}
 XV.wseries=function(){const all=UI.live&&UI.live.ok?UI.live.matches:[],ser={};all.forEach(m=>{const k=wSplit(m).series;if(k){ser[k]=ser[k]||{n:0,live:0};ser[k].n++;if(m.started&&!m.ended)ser[k].live++}});
  const L=Object.entries(ser).sort((a,b)=>b[1].live-a[1].live||b[1].n-a[1].n);
- return `<div class="bar"><h2>Browse series</h2></div>${L.length?L.map(([k,v])=>`<button class="ig-ser" data-a="hser" data-v="${esc(k)}"><b>${esc(k)}</b><span>${v.n} match${v.n>1?'es':''}${v.live?' | '+v.live+' live':''}</span></button>`).join(''):'<div class="empty">Series appear when the live feed has matches.</div>'}`};
+ return `<div class="bar"><h2>Browse series</h2></div>${L.length?L.map(([k,v])=>`<button class="ig-ser" data-a="serOpen" data-v="${esc(k)}"><b>${esc(k)}</b><span>${v.n} match${v.n>1?'es':''}${v.live?' | '+v.live+' live':''}</span></button>`).join(''):'<div class="empty">Series appear when the live feed has matches.</div>'}`};
 {const st=document.createElement('style');st.textContent='.ig-lead{display:block;text-decoration:none;color:#fff;background:linear-gradient(155deg,#0a1f5c,#e11d2e);border-radius:16px;padding:16px;margin-bottom:10px}.ig-lead small{opacity:.85;font:700 11px var(--ui);letter-spacing:.6px;text-transform:uppercase}.ig-lead b{display:block;font:800 21px/1.2 var(--ui);margin:6px 0}.ig-lead span{font:500 13.5px/1.4 var(--ui);opacity:.95;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}.ig-st{display:block;text-decoration:none;color:var(--tx);background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px 14px;margin-bottom:8px}.ig-st b{display:block;font:600 15px/1.3 var(--ui)}.ig-st small{color:var(--mu);font-size:12px}.ig-ser{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;text-align:left;background:var(--card);border:1px solid var(--bd);color:var(--tx);border-radius:12px;padding:14px;margin-bottom:8px;cursor:pointer}.ig-ser b{font:600 15px var(--ui);min-width:0}.ig-ser span{color:var(--mu);font-size:12px;flex:none}';document.head.appendChild(st)}
 const igShSq=m=>{const A_=T(m.a),B_=T(m.b),live=m.status==='live'||m.status==='break',done=m.status==='done';
  const row=t=>{const i=m.innings.findIndex(x=>x.bat===t.id);const k=i>=0?calc(m,i):null;return `<div class="tr">${logo(t,26)}<b>${esc(t.name.length>11&&t.short?t.short:t.name)}</b><span>${k?k.runs+'-'+k.wk+' ('+fmtOv(k.lg)+')':''}</span></div>`};
@@ -12801,6 +12801,43 @@ XV.tours=function(){const o=t0.apply(this,arguments),G=serGroups(),j=UI.live;
  <div class="vd" style="padding-top:6px"><h3 style="margin:0 0 6px">Your tournaments</h3></div>`;
  return typeof o==='string'?html+o:o};
 Object.assign(A,{serOpen(d){const G=serGroups().find(g=>g.name===d.v);if(!G)return;if(G.live||G.up){UI.sch={f:'all',s:d.v};UI.view='sched'}else{UI.arc={t:'res',f:'all',s:d.v,y:G.max?new Date(G.max).getFullYear():new Date().getFullYear()};UI.view='arch'}render();window.scrollTo&&window.scrollTo(0,0)}});
+}
+
+
+/* ---- Series detail page: tap a series and see its live, upcoming and finished matches, a points table worked out from the results, and the teams ---- */
+{const E=x=>esc(x==null?'':String(x)),typ2=m=>String(m.type||'').toUpperCase().slice(0,6);
+ const inSer=n=>((UI.live&&UI.live.ok?UI.live.matches:[])||[]).filter(m=>(wSplit(m).series||'Other')===n);
+ const tmOf=m=>{try{if(m.time){const t=new Date(m.time+(/Z|\+/.test(m.time)?'':'Z'));if(!isNaN(t))return t.getTime()}if(m.date){const t=new Date(m.date+'T00:00:00');if(!isNaN(t))return t.getTime()}}catch(e){}return 0};
+ const quota=m=>{const t=String(m.type||'').toLowerCase();return t.startsWith('t10')?10:t.startsWith('t20')?20:t==='odi'?50:t.startsWith('list')?50:0};
+ const balls=o=>{const x=+o||0,w=Math.floor(x);return w*6+Math.round((x-w)*10)};
+ const teamIdx=(m,nm)=>{const n=String(nm||'').toLowerCase().trim();return (m.teams||[]).findIndex(t=>n&&(String(t.name||'').toLowerCase()===n||n.startsWith(String(t.name||'').toLowerCase())))};
+ const table=M=>{const T={};let nrr=1;
+  M.filter(m=>m.ended).forEach(m=>{const tm=(m.teams||[]).slice(0,2);if(tm.length<2)return;tm.forEach(t=>{T[t.name]=T[t.name]||{name:t.name,short:t.short,img:t.img,p:0,w:0,l:0,t:0,nr:0,d:0,pts:0,rf:0,bf:0,ra:0,ba:0}});
+   const st=String(m.status||''),mw=/^(.+?)\s+won\b/i.exec(st),q=quota(m);
+   const A=T[tm[0].name],B=T[tm[1].name];A.p++;B.p++;
+   if(/abandon|no result|washed|called off|cancel/i.test(st)){A.nr++;B.nr++}
+   else if(/\btied?\b/i.test(st)&&!mw){A.t++;B.t++}
+   else if(/\bdraw/i.test(st)){A.d++;B.d++}
+   else if(mw){const wi=teamIdx(m,mw[1]);if(wi===0){A.w++;B.l++}else if(wi===1){B.w++;A.l++}}
+   const inn=[0,0].map(()=>null);(m.score||[]).forEach(z=>{const k=teamIdx(m,String(z.inning||'').replace(/\s+inning.*$/i,''));if(k>=0&&!inn[k])inn[k]={r:+z.r||0,w:+z.w||0,o:+z.o||0}});
+   if(q&&inn[0]&&inn[1]&&!/abandon|no result/i.test(st)){const bl=x=>x.w>=10?q*6:balls(x.o);[[A,B,0,1],[B,A,1,0]].forEach(([x,y,i,j])=>{x.rf+=inn[i].r;x.bf+=bl(inn[i]);x.ra+=inn[j].r;x.ba+=bl(inn[j])})}});
+  const R=Object.values(T);R.forEach(x=>{x.pts=x.w*2+x.t+x.nr;x.nrr=(x.bf&&x.ba)?(x.rf/(x.bf/6)-x.ra/(x.ba/6)):null});
+  return R.sort((a,b)=>b.pts-a.pts||(b.nrr==null?-9:b.nrr)-(a.nrr==null?-9:a.nrr)||b.w-a.w)};
+ const row=m=>{const live=m.started&&!m.ended,tm=(m.teams||[]).slice(0,2),nm=tm.map(t=>t.short||t.name).join(' v ')||wSplit(m).teams,ds=wSplit(m).desc;
+  return `<div class="scr" data-a="wOpen" data-id="${E(m.id)}"><div class="tm">${live?'LIVE':m.ended?'RES':E(wWhen(m).split(',')[0]||'')}<small>${live?'now':m.ended?'':''}</small></div><div class="nm">${E(tm.map(t=>t.name).join(' vs ')||wSplit(m).teams)}<div class="mu sm" style="font-weight:400;margin-top:3px">${E([ds,m.venue].filter(Boolean).join(' · '))}</div>${m.started||m.ended?`<div style="margin-top:4px;font-size:12px;color:#dcc58d;font-weight:500">${E(m.status||'')}</div>`:`<div class="mu sm" style="margin-top:4px">${E(wWhen(m))}</div>`}</div><span class="ft ${live?'lv':''}">${E(typ2(m)||'')}</span></div>`};
+ XV.serdet=function(){const D=UI.sd||{},n=D.name,M=inSer(n),tab=D.tab||'m';
+  if(!UI.live||!UI.live.ok)return `<div class="bar"><h2>${E(n||'Series')}</h2></div><div class="card mu">Series matches load from the live feed.</div>`;
+  const live=M.filter(m=>m.started&&!m.ended).sort((a,b)=>tmOf(a)-tmOf(b)),up=M.filter(m=>!m.started&&!m.ended).sort((a,b)=>tmOf(a)-tmOf(b)),rec=M.filter(m=>m.ended).sort((a,b)=>tmOf(b)-tmOf(a));
+  const mn=Math.min(...M.map(tmOf).filter(Boolean)),mx=Math.max(0,...M.map(tmOf)),f=t=>new Date(t).toLocaleDateString('en-IN',{day:'numeric',month:'short'}),fm=M[0]?typ2(M[0]):'';
+  const tabs=[['m','Matches'],['pt','Points table'],['tm','Teams']];
+  let body='';
+  if(tab==='m'){const sec=(h,L)=>L.length?`<div class="vd" style="padding:10px 0 4px"><h3 style="margin:0">${h} (${L.length})</h3></div>${L.map(row).join('')}`:'';body=sec('Live now',live)+sec('Upcoming',up)+sec('Completed',rec)||'<div class="card mu">No matches in the feed for this series.</div>'}
+  else if(tab==='pt'){const R=table(M),lim=quota(M[0]||{});
+   body=R.length?`<div class="card" style="overflow-x:auto;padding:0"><table style="width:100%;border-collapse:collapse;text-align:center;font-size:13px"><tr style="color:#9fb3c8;font-size:11px"><th style="text-align:left;padding:10px">TEAM</th><th>P</th><th>W</th><th>L</th>${R.some(x=>x.t)?'<th>T</th>':''}${R.some(x=>x.d)?'<th>D</th>':''}${R.some(x=>x.nr)?'<th>NR</th>':''}${lim?'<th>NRR</th>':''}<th>PTS</th></tr>${R.map((x,i)=>`<tr style="border-top:1px solid #ffffff14"><td style="text-align:left;padding:10px;font-weight:600;white-space:nowrap">${i+1}. ${E(x.short||x.name)}</td><td>${x.p}</td><td>${x.w}</td><td>${x.l}</td>${R.some(y=>y.t)?`<td>${x.t}</td>`:''}${R.some(y=>y.d)?`<td>${x.d}</td>`:''}${R.some(y=>y.nr)?`<td>${x.nr}</td>`:''}${lim?`<td>${x.nrr==null?'-':(x.nrr>=0?'+':'')+x.nrr.toFixed(3)}</td>`:''}<td><b>${x.pts}</b></td></tr>`).join('')}</table></div><div class="mu sm" style="margin-top:8px">${lim?'Worked out by Scoring Heroes from the finished matches in this series: 2 points for a win, 1 each for a tie or no result. NRR uses full overs for all-out innings. The official table may differ (group splits, penalties, tie-break rules).':'First-class and Test series have their own points rules, so only played, won, lost and drawn are counted here from the results.'}</div>`:'<div class="card mu">The table appears after the first match in this series is finished.</div>'}
+  else{const seen={};M.forEach(m=>(m.teams||[]).forEach(t=>{if(t&&t.name)seen[t.name]=t}));const L=Object.values(seen);body=L.length?`<div class="card">${L.map(t=>`<div class="row" style="padding:8px 0;border-top:1px solid #ffffff12;align-items:center;gap:10px">${typeof wBadge==='function'?wBadge(t):''}<b>${E(t.name)}</b></div>`).join('')}</div>`:'<div class="card mu">No teams in the feed for this series.</div>'}
+  return `<button type="button" class="hubb" data-a="go" data-v="tours">‹ Series</button><div class="vd" style="padding-bottom:4px"><h2 style="margin:6px 0 2px">${E(n)}</h2><div class="mu sm">${mn&&isFinite(mn)?f(mn)+(mx>mn?' - '+f(mx):'')+' · ':''}${M.length} match${M.length===1?'':'es'}${fm?' · '+E(fm):''}${live.length?' · <b style="color:#e11d2e">'+live.length+' live</b>':''}</div></div>
+  <div class="hh-tabs">${tabs.map(([k,l])=>`<button class="${tab===k?'on':''}" data-a="sdTab" data-v="${k}">${l}</button>`).join('')}</div>${body}`};
+ Object.assign(A,{sdTab(d){UI.sd=UI.sd||{};UI.sd.tab=d.v;render()},serOpen(d){UI.sd={name:d.v,tab:'m'};UI.view='serdet';render();window.scrollTo&&window.scrollTo(0,0)}});
 }
 
 /* ---- 130 Branded backdrop everywhere + team logo library that matches names automatically ---- */
