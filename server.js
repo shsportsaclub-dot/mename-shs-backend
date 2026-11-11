@@ -2275,6 +2275,7 @@ http.createServer(async (req, res) => {
     res.write('retry: 2000\n\n'); sseClients.add(res); req.on('close', () => sseClients.delete(res)); return;
   }
   const STATIC = { '/manifest.webmanifest': 'application/manifest+json', '/sw.js': 'application/javascript', '/icon-192.png': 'image/png', '/icon-512.png': 'image/png', '/icon-maskable.png': 'image/png', '/apple-touch-icon.png': 'image/png' };
+  if (req.method === 'GET' && /^\/posters\/[a-z0-9-]+\.webp$/.test(path)) { try { const f = fs.readFileSync(new URL('./public' + path, import.meta.url)); res.writeHead(200, { 'content-type': 'image/webp', 'cache-control': 'public, max-age=604800', 'access-control-allow-origin': '*' }); return res.end(f); } catch { /* fall through */ } }
   const em = /^\/emblems\/[a-z-]+\.webp$/.exec(path);
   const lg = /^\/logos\/[a-z0-9._-]+\.(webp|png|jpg|jpeg|svg|json)$/i.exec(path);
   if (req.method === 'GET' && lg) { try { const f = fs.readFileSync(new URL('./public' + path, import.meta.url)); const x = lg[1].toLowerCase(); res.writeHead(200, { 'content-type': x === 'json' ? 'application/json' : x === 'svg' ? 'image/svg+xml' : x === 'jpg' ? 'image/jpeg' : 'image/' + x, 'cache-control': x === 'json' ? 'no-cache' : 'public, max-age=86400', 'access-control-allow-origin': '*' }); return res.end(f); } catch { /* fall through */ } }
