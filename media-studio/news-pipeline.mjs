@@ -27,18 +27,27 @@ export function newJob(item, now = Date.now()) {
 const mark = (job, status, note, now) => { job.status = status; job.updatedAt = now; job.history = (job.history||[]).concat({ at: now, status, ...(note?{note:cap(note,160)}:{}) }).slice(-12); return job; };
 // ---- image generation service (free providers; chosen by env) ----
 const sniff = b => b.length>12 && ((b[0]===0xFF&&b[1]===0xD8)?'image/jpeg':(b[0]===0x89&&b[1]===0x50)?'image/png':(b.slice(0,4).toString()==='RIFF'&&b.slice(8,12).toString()==='WEBP')?'image/webp':'');
-export async function generateImage({prompt, seed, provider='auto', hfToken='', fetchImpl=fetch, timeoutMs=60000, width=1024, height=1280}) {
-  const use = provider==='auto' ? (hfToken?'huggingface':'pollinations') : provider;
+export async function generateImage({prompt, seed, provider='auto', hfToken='', openaiKey='', openaiModel='', fetchImpl=fetch, timeoutMs=60000, width=1024, height=1280}) {
+  const use = provider==='auto' ? ((openaiKey&&openaiModel)?'openai':hfToken?'huggingface':'pollinations') : provider;
+  if (use==='openai' && !(openaiKey&&openaiModel)) return {ok:false,permanent:true,provider:use,error:'OPENAI_API_KEY and OPENAI_IMAGE_MODEL must both be set'};
   if (use==='none') return {ok:false,permanent:true,error:'Image provider disabled'};
   const ctl = new AbortController(), timer = setTimeout(()=>ctl.abort(), timeoutMs);
   try {
     let r;
-    if (use==='huggingface') r = await fetchImpl('https://router.huggingface.co/hf-inference/models/black-forest-labs/FLUX.1-schnell', {method:'POST',signal:ctl.signal,headers:{authorization:'Bearer '+hfToken,'content-type':'application/json',accept:'image/png'},body:JSON.stringify({inputs:prompt,parameters:{width,height,seed}})});
+    if (use==='openai') {
+      r = await fetchImpl('https://api.openai.com/v1/images/generations', {method:'POST',signal:ctl.signal,headers:{authorization:'Bearer '+openaiKey,'content-type':'application/json'},body:JSON.stringify({model:openaiModel,prompt,size:'1024x1536',n:1})});
+      if (!r.ok) return {ok:false,provider:use,error:'OpenAI HTTP '+r.status};
+      const j = await r.json(), d = j?.data?.[0];
+      if (d?.b64_json) r = {ok:true,headers:{get:()=> 'image/png'},arrayBuffer:async()=>Buffer.from(d.b64_json,'base64')};
+      else if (d?.url) r = await fetchImpl(d.url,{signal:ctl.signal});
+      else return {ok:false,provider:use,error:'OpenAI returned no image'};
+    }
+    else if (use==='huggingface') r = await fetchImpl('https://router.huggingface.co/hf-inference/models/black-forest-labs/FLUX.1-schnell', {method:'POST',signal:ctl.signal,headers:{authorization:'Bearer '+hfToken,'content-type':'application/json',accept:'image/png'},body:JSON.stringify({inputs:prompt,parameters:{width,height,seed}})});
     else r = await fetchImpl(`https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=${width}&height=${height}&seed=${seed}&nologo=true&model=flux`, {signal:ctl.signal});
     if (!r.ok) return {ok:false,provider:use,error:'Image service HTTP '+r.status};
     const buf = Buffer.from(await r.arrayBuffer()), mime = sniff(buf);
     if (!mime) return {ok:false,provider:use,error:'Image service returned a non-image'};
-    if (buf.length > 4e6) return {ok:false,provider:use,error:'Image too large'};
+    if (buf.length > 6e6) return {ok:false,provider:use,error:'Image too large'};
     return {ok:true,provider:use,mime,bytes:buf};
   } catch (e) { return {ok:false,provider:use,error:e.name==='AbortError'?'Image service timed out':String(e.message||e).slice(0,120)}; }
   finally { clearTimeout(timer); }

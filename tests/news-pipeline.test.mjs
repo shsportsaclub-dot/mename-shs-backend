@@ -52,3 +52,10 @@ test('poster contains caption, source and disclosure; no markup injection',()=>{
   assert.ok(!/AI-generated/.test(renderNewsPoster(j,null)));
   assert.ok(!('prompt' in publicJob(j).image));
 });
+test('openai provider: used when key+model set, sends model from env, decodes b64',async()=>{
+  let seen;const fetchImpl=async(u,o)=>{seen={u,o};return {ok:true,json:async()=>({data:[{b64_json:PNG.toString('base64')}]})}};
+  const r=await generateImage({prompt:'p',seed:1,openaiKey:'k',openaiModel:'m-x',fetchImpl});
+  assert.equal(r.ok,true);assert.equal(r.provider,'openai');assert.equal(JSON.parse(seen.o.body).model,'m-x');assert.match(seen.o.headers.authorization,/Bearer k/);
+  const bad=await generateImage({prompt:'p',seed:1,provider:'openai',openaiKey:'k',fetchImpl});
+  assert.equal(bad.ok,false);assert.equal(bad.permanent,true);
+});
