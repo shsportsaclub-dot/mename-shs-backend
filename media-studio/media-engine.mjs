@@ -98,7 +98,7 @@ export function renderPoster({headline,summary,result,venue,teams,language='en'}
  const wrap=(s,max=26,limit=3)=>{const words=String(s||'').split(/\\s+/),out=[];let line='';for(const word of words){if((line+' '+word).trim().length>max&&line){out.push(line);line=word}else line=(line+' '+word).trim()}if(line)out.push(line);return out.slice(0,limit)};
  const textLines=(value,x,y,size,max=26,limit=3,color='#fff',weight=800)=>wrap(value,max,limit).map((s,i)=>'<text x="'+x+'" y="'+(y+i*size*1.27)+'" font-family="Noto Sans,Arial,sans-serif" font-size="'+size+'" font-weight="'+weight+'" fill="'+color+'">'+safe(s)+'</text>').join('');
  const parts=String(summary||'').split(' | ').slice(0,2);
- const scores=parts.map((p,i)=>{const m=p.match(/^(.*?):\\s*(\\d+\\/\\d+)/);return {name:m?.[1]||teams?.[i]||'',score:m?.[2]||''}});
+ const scores=parts.map((p,i)=>{const colon=p.indexOf(':');const tail=colon>=0?p.slice(colon+1).trim():'';const match=tail.match(new RegExp('^[0-9]+/[0-9]+'));return {name:colon>=0?p.slice(0,colon).trim():(teams?.[i]||''),score:match?.[0]||''}});
  const [a,b]=scores;
  const stars=Array.from({length:45},(_,i)=>'<circle cx="'+((i*193+67)%1080)+'" cy="'+((i*311+29)%920)+'" r="'+(i%3+1)+'" fill="#fff" opacity=".12"/>').join('');
  return `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350">
