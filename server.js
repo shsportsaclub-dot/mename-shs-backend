@@ -2127,7 +2127,7 @@ const NEWS_IMG_DIR = path.join(path.dirname(DATA_FILE), 'news-img');
 const newsImgFile = id => path.join(NEWS_IMG_DIR, String(id).replace(/[^a-z0-9-]/gi, '') + '.bin');
 let newsPipeBusy = false;
 async function newsGenerate(job) {
-  const r = await generateImage({ prompt: job.image.prompt, seed: job.image.seed, provider: E.NEWS_IMAGE_PROVIDER || 'auto', hfToken: E.HF_TOKEN || '', openaiKey: E.OPENAI_API_KEY || '', openaiModel: E.OPENAI_IMAGE_MODEL || '' });
+  const r = await generateImage({ prompt: job.image.prompt, seed: job.image.seed, provider: E.NEWS_IMAGE_PROVIDER || 'auto', hfToken: E.HF_TOKEN || '', openaiKey: E.OPENAI_API_KEY || '', openaiModel: E.OPENAI_IMAGE_MODEL || '', googleKey: E.GOOGLE_API_KEY || E.GEMINI_API_KEY || '', googleModel: E.GOOGLE_IMAGE_MODEL || '' });
   if (r.ok) { try { fs.mkdirSync(NEWS_IMG_DIR, { recursive: true }); fs.writeFileSync(newsImgFile(job.jobId), r.bytes); job.image.mime = r.mime; } catch {} }
   return r;
 }

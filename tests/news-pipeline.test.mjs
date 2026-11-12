@@ -59,3 +59,9 @@ test('openai provider: used when key+model set, sends model from env, decodes b6
   const bad=await generateImage({prompt:'p',seed:1,provider:'openai',openaiKey:'k',fetchImpl});
   assert.equal(bad.ok,false);assert.equal(bad.permanent,true);
 });
+test('google provider: uses key header + env model, decodes inlineData; refuses without model',async()=>{
+  let seen;const fetchImpl=async(u,o)=>{seen={u,o};return {ok:true,json:async()=>({candidates:[{content:{parts:[{text:'x'},{inlineData:{mimeType:'image/png',data:PNG.toString('base64')}}]}}]})}};
+  const r=await generateImage({prompt:'p',seed:1,googleKey:'gk',googleModel:'m-g',fetchImpl});
+  assert.equal(r.ok,true);assert.equal(r.provider,'google');assert.match(seen.u,/models\/m-g:generateContent$/);assert.equal(seen.o.headers['x-goog-api-key'],'gk');
+  const bad=await generateImage({prompt:'p',seed:1,provider:'google',googleKey:'gk',fetchImpl});assert.equal(bad.permanent,true);
+});

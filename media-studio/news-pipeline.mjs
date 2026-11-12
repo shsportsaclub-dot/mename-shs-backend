@@ -27,14 +27,22 @@ export function newJob(item, now = Date.now()) {
 const mark = (job, status, note, now) => { job.status = status; job.updatedAt = now; job.history = (job.history||[]).concat({ at: now, status, ...(note?{note:cap(note,160)}:{}) }).slice(-12); return job; };
 // ---- image generation service (free providers; chosen by env) ----
 export const sniff = b => b.length>12 && ((b[0]===0xFF&&b[1]===0xD8)?'image/jpeg':(b[0]===0x89&&b[1]===0x50)?'image/png':(b.slice(0,4).toString()==='RIFF'&&b.slice(8,12).toString()==='WEBP')?'image/webp':'');
-export async function generateImage({prompt, seed, provider='auto', hfToken='', openaiKey='', openaiModel='', fetchImpl=fetch, timeoutMs=60000, width=1024, height=1280}) {
-  const use = provider==='auto' ? ((openaiKey&&openaiModel)?'openai':hfToken?'huggingface':'pollinations') : provider;
+export async function generateImage({prompt, seed, provider='auto', hfToken='', openaiKey='', openaiModel='', googleKey='', googleModel='', fetchImpl=fetch, timeoutMs=60000, width=1024, height=1280}) {
+  const use = provider==='auto' ? ((openaiKey&&openaiModel)?'openai':(googleKey&&googleModel)?'google':hfToken?'huggingface':'pollinations') : provider;
+  if (use==='google' && !(googleKey&&googleModel)) return {ok:false,permanent:true,provider:use,error:'GOOGLE_API_KEY and GOOGLE_IMAGE_MODEL must both be set'};
   if (use==='openai' && !(openaiKey&&openaiModel)) return {ok:false,permanent:true,provider:use,error:'OPENAI_API_KEY and OPENAI_IMAGE_MODEL must both be set'};
   if (use==='none') return {ok:false,permanent:true,error:'Image provider disabled'};
   const ctl = new AbortController(), timer = setTimeout(()=>ctl.abort(), timeoutMs);
   try {
     let r;
-    if (use==='openai') {
+    if (use==='google') {
+      r = await fetchImpl('https://generativelanguage.googleapis.com/v1/models/'+encodeURIComponent(googleModel)+':generateContent', {method:'POST',signal:ctl.signal,headers:{'x-goog-api-key':googleKey,'content-type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{responseModalities:['TEXT','IMAGE']}})});
+      if (!r.ok) return {ok:false,provider:use,error:'Google HTTP '+r.status};
+      const j = await r.json(), part = (j?.candidates?.[0]?.content?.parts||[]).find(x=>(x.inlineData||x.inline_data)?.data), d = part && (part.inlineData||part.inline_data);
+      if (!d) return {ok:false,provider:use,error:'Google returned no image'};
+      r = {ok:true,headers:{get:()=> d.mimeType||d.mime_type||'image/png'},arrayBuffer:async()=>Buffer.from(d.data,'base64')};
+    }
+    else if (use==='openai') {
       r = await fetchImpl('https://api.openai.com/v1/images/generations', {method:'POST',signal:ctl.signal,headers:{authorization:'Bearer '+openaiKey,'content-type':'application/json'},body:JSON.stringify({model:openaiModel,prompt,size:'1024x1536',n:1})});
       if (!r.ok) return {ok:false,provider:use,error:'OpenAI HTTP '+r.status};
       const j = await r.json(), d = j?.data?.[0];
