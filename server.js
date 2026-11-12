@@ -2228,6 +2228,18 @@ routes['GET /api/news-jobs'] = async (req, body, ip) => {
   const jobs = Object.values(db.newsJobs || {}).filter(j => status === 'all' || j.status === status).sort((a, b) => (b.publishedAt || b.createdAt) - (a.publishedAt || a.createdAt)).slice(0, limit).map(publicJob);
   return [200, { ok: true, jobs, pipeline: agentStatus.newsMedia || null }];
 };
+routes['GET /api/news-image-check'] = async (req, body, ip) => {   // free metadata call (no image generated, no cost): is the Google key valid and does the model exist?
+  if (limited('nj-check:' + ip, 20, 36e5)) return [429, { ok: false, error: 'Too many requests' }];
+  const key = E.GOOGLE_API_KEY || E.GEMINI_API_KEY || '', model = E.GOOGLE_IMAGE_MODEL || '', out = { ok: true, google: { keySet: !!key, modelSet: !!model, model: model || null } };
+  if (!key || !model) { out.google.verdict = !key ? 'GOOGLE_API_KEY is not set in Render' : 'GOOGLE_IMAGE_MODEL is not set in Render'; return [200, out]; }
+  try {
+    const r = await fetch((E.GOOGLE_API_BASE || 'https://generativelanguage.googleapis.com') + '/v1/models/' + encodeURIComponent(model), { headers: { 'x-goog-api-key': key }, signal: AbortSignal.timeout(15000) });
+    let msg = ''; try { const j = await r.json(); msg = String(j?.error?.message || j?.name || '').replace(key, '***').slice(0, 160); } catch {}
+    out.google.http = r.status; out.google.message = msg;
+    out.google.verdict = r.ok ? 'KEY VALID and model exists' : r.status === 404 ? 'Key accepted but model name not found: change GOOGLE_IMAGE_MODEL' : (r.status === 400 || r.status === 401 || r.status === 403) ? 'KEY REJECTED by Google (invalid, restricted, or API not enabled)' : r.status === 429 ? 'Key valid but rate/quota limited' : 'Unexpected response';
+  } catch (e) { out.google.verdict = 'Could not reach Google: ' + String(e.message).slice(0, 80); }
+  return [200, out];
+};
 routes['GET /api/news-qa'] = async (req, body, ip) => {
   if (limited('nj-qa:' + ip, 120, 36e5)) return [429, { ok: false, error: 'Too many requests' }];
   const jobs = Object.values(db.newsJobs || {}), by = s => jobs.filter(j => j.status === s).length;
