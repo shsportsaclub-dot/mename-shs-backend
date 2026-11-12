@@ -2225,6 +2225,7 @@ async function matchArtRun() {
       const rec = db.matchArt[row.id];
       if (rec && rec.pv !== 2 && rec.status === 'generated') { rec.status = 'regen'; rec.attempts = 0; }   // new match-specific brief: replace the generic picture (old one stays until the new one passes QA)
       if (rec && !rec.fix1 && rec.status !== 'generated' && (rec.qa?.failed || []).some(f => /verified-teams/.test(f))) { rec.fix1 = 1; rec.status = 'queued'; rec.attempts = 0; }   // earlier QA bug (team objects) rejected good posters: retry them
+      if (rec && !rec.fix2 && rec.status !== 'generated' && (rec.qa?.failed || []).some(f => /verified-teams/.test(f))) { rec.fix2 = 1; rec.status = 'queued'; rec.attempts = 0; }   // QA expected performer-strip text that chips replace: retry
       if (rec && (rec.status === 'generated' || rec.status === 'fallback' || (rec.status === 'failed' && (rec.attempts >= 3 || Date.now() - rec.at < 6e5)))) continue;
       if (CRIC_KEY && !cardOf(row.id) && /^[0-9a-f-]{20,}$/i.test(String(row.id)) && out.cards < 8 && !limited('mcard', 40, 36e5)) {
         const rc = (db.matchArt[row.id] ||= { status: 'queued', attempts: 0, seed: seedFor('m-' + row.id) });
@@ -2247,7 +2248,7 @@ async function matchArtRun() {
         const u = await MEDIA_STORE.put(`match/${row.id}.${extOf(g.mime)}`.replace(/[^a-zA-Z0-9._\/-]/g, '_'), g.bytes, g.mime); if (u.ok) assetUrl = u.url;
         const p = await MEDIA_STORE.put(`match/${row.id}-poster.svg`.replace(/[^a-zA-Z0-9._\/-]/g, '_'), Buffer.from(m.posterSvg), 'image/svg+xml'); if (p.ok) posterUrl = p.url;
       }
-      const expect = [...chips.flatMap(c => [c.name.slice(0, 20), c.line.slice(0, 18)]), ...(m.performers ? [...m.performers.bat, ...m.performers.bowl] : []), ...(m.innings || []).flatMap(i => [String(i.runs) + (i.wickets < 10 ? '/' + i.wickets : '')]), ...(row.teams || []).slice(0, 2).map(t => typeof t === 'string' ? t : t && t.name).filter(Boolean)];
+      const expect = [...chips.flatMap(c => [c.name.slice(0, 20), c.line.slice(0, 18)]), ...(!chips.length && m.performers ? [...m.performers.bat, ...m.performers.bowl] : []), ...(m.innings || []).flatMap(i => [String(i.runs) + (i.wickets < 10 ? '/' + i.wickets : '')]), ...(row.teams || []).slice(0, 2).map(t => typeof t === 'string' ? t : t && t.name).filter(Boolean)];
       const qjob = { jobId: 'mj-' + row.id, title: m.headline, image: { status: 'generated' }, asset: posterUrl ? { url: posterUrl } : null };
       const qa = await qaJob({ job: qjob, image: { mime: g.mime, bytes: g.bytes }, svg: m.posterSvg, jobs: { ...others, ...(db.newsJobs || {}) }, requireAsset: !!MEDIA_STORE, expect });
       r0.qa = { passed: qa.passed, failed: qa.checks.filter(c => !c.ok).map(c => c.name + (c.note ? ' (' + c.note + ')' : '')), at: Date.now() };
