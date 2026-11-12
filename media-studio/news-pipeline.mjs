@@ -2,7 +2,7 @@
 // Pure and dependency-injected so every step can be tested without network access.
 import crypto from 'node:crypto';
 const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-export const STATUS = Object.freeze({queued:'queued',imaging:'imaging',ready:'ready',published:'published',failed:'failed'});
+export const STATUS = Object.freeze({queued:'queued',imaging:'imaging',ready:'ready',published:'published',failed:'failed',review:'manual_review'});
 export const canonTitle = t => String(t||'').toLowerCase().replace(/\s+[-–|]\s+[^-–|]{2,40}$/,'').replace(/[^a-z0-9ऀ-෿ ]+/g,' ').replace(/\s+/g,' ').trim();
 // Same story from the same outlet always maps to the same ID, whatever tracking query the link carries.
 export const jobIdFor = item => 'nj-' + crypto.createHash('sha1').update(canonTitle(item?.title)).digest('hex').slice(0,14);
@@ -26,7 +26,7 @@ export function newJob(item, now = Date.now()) {
 }
 const mark = (job, status, note, now) => { job.status = status; job.updatedAt = now; job.history = (job.history||[]).concat({ at: now, status, ...(note?{note:cap(note,160)}:{}) }).slice(-12); return job; };
 // ---- image generation service (free providers; chosen by env) ----
-const sniff = b => b.length>12 && ((b[0]===0xFF&&b[1]===0xD8)?'image/jpeg':(b[0]===0x89&&b[1]===0x50)?'image/png':(b.slice(0,4).toString()==='RIFF'&&b.slice(8,12).toString()==='WEBP')?'image/webp':'');
+export const sniff = b => b.length>12 && ((b[0]===0xFF&&b[1]===0xD8)?'image/jpeg':(b[0]===0x89&&b[1]===0x50)?'image/png':(b.slice(0,4).toString()==='RIFF'&&b.slice(8,12).toString()==='WEBP')?'image/webp':'');
 export async function generateImage({prompt, seed, provider='auto', hfToken='', openaiKey='', openaiModel='', fetchImpl=fetch, timeoutMs=60000, width=1024, height=1280}) {
   const use = provider==='auto' ? ((openaiKey&&openaiModel)?'openai':hfToken?'huggingface':'pollinations') : provider;
   if (use==='openai' && !(openaiKey&&openaiModel)) return {ok:false,permanent:true,provider:use,error:'OPENAI_API_KEY and OPENAI_IMAGE_MODEL must both be set'};
@@ -73,8 +73,8 @@ export function renderNewsPoster(job, image = null) {
 }
 // ---- orchestration (dependency-injected) ----
 // store: object keyed by jobId, persisted by the caller. Returns what happened so the host can log and save.
-export async function runPipeline({items=[], store, generate, now=()=>Date.now(), maxNew=5, maxProcess=2, maxAgeMs=3*864e5, autoPublish=true, maxAttempts=3, keep=300}) {
-  const out = {created:0, duplicates:0, imaged:0, published:0, failed:0, fallback:0, stale:0};
+export async function runPipeline({items=[], store, generate, now=()=>Date.now(), maxNew=5, maxProcess=2, maxAgeMs=3*864e5, autoPublish=true, maxAttempts=3, keep=300, finalize=null}) {
+  const out = {created:0, review:0, duplicates:0, imaged:0, published:0, failed:0, fallback:0, stale:0};
   const known = new Set(Object.keys(store)), titles = new Set(Object.values(store).map(j=>canonTitle(j.title)));
   for (const it of items) {
     if (out.created >= maxNew) break;
@@ -93,10 +93,15 @@ export async function runPipeline({items=[], store, generate, now=()=>Date.now()
       else if (job.attempts >= maxAttempts || r?.permanent) { job.image = {...job.image, status:'fallback', kind:'graphic', error:cap(r?.error,120)}; mark(job, STATUS.ready, 'image unavailable, using original graphic', now()); out.fallback++; }
       else { job.image = {...job.image, error:cap(r?.error,120)}; mark(job, STATUS.failed, r?.error||'image failed', now()); out.failed++; continue; }
     }
+    if (finalize && job.status === STATUS.ready) {            // store permanently + automatic QA; a failing AI image falls back to the original graphic
+      let f = await finalize(job);
+      if (!f?.passed && job.image?.status === 'generated') { job.image = {...job.image, status:'fallback', kind:'graphic', error:'QA: '+cap((f?.checks||[]).filter(c=>!c.ok).map(c=>c.name).join(','),100)}; f = await finalize(job); }
+      if (!f?.passed) { mark(job, STATUS.review, 'QA failed: '+cap((f?.checks||[]).filter(c=>!c.ok).map(c=>c.name+' '+c.note).join('; '),160), now()); out.review++; continue; }
+    }
     if (autoPublish && job.status === STATUS.ready) { job.publishedAt = now(); mark(job, STATUS.published, 'published to Scoring Heroes feed', now()); out.published++; }
   }
   const all = Object.values(store).sort((a,b)=>b.createdAt-a.createdAt);
   for (const j of all.slice(keep)) if (j.status===STATUS.published) delete store[j.jobId];   // old published jobs age out; the title index above still blocks recent repeats
   return out;
 }
-export const publicJob = j => ({jobId:j.jobId,title:j.title,caption:j.caption,source:j.source,status:j.status,attempts:j.attempts,createdAt:j.createdAt,publishedAt:j.publishedAt,image:{status:j.image?.status,kind:j.image?.kind,provider:j.image?.provider||null,disclosure:j.image?.disclosure,generatedAt:j.image?.generatedAt||null},posterUrl:'/api/news-poster?job='+encodeURIComponent(j.jobId),history:j.history});
+export const publicJob = j => ({jobId:j.jobId,title:j.title,caption:j.caption,source:j.source,status:j.status,attempts:j.attempts,createdAt:j.createdAt,publishedAt:j.publishedAt,image:{status:j.image?.status,kind:j.image?.kind,provider:j.image?.provider||null,disclosure:j.image?.disclosure,generatedAt:j.image?.generatedAt||null},assetUrl:j.image?.assetUrl||null,posterAssetUrl:j.asset?.url||null,qa:j.qa?{passed:j.qa.passed,at:j.qa.at,failed:j.qa.checks.filter(c=>!c.ok).map(c=>c.name)}:null,posterUrl:'/api/news-poster?job='+encodeURIComponent(j.jobId),history:j.history});

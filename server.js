@@ -1,6 +1,8 @@
 import {resolveLanguage, languageCatalog} from './media-studio/languages.mjs';
 import {prepareMedia, publishDecision, normalizeLanguage} from './media-studio/media-engine.mjs';
 import {runPipeline, generateImage, renderNewsPoster, publicJob} from './media-studio/news-pipeline.mjs';
+import {storageFromEnv} from './media-studio/media-storage.mjs';
+import {qaJob} from './media-studio/media-qa.mjs';
 // Scoring Heroes backend: OTP SMS from "SH Sports" + magic login link + live cricket proxy.
 // Run npm install, then npm start. Environment may come from Render or dotenv.
 import './env.mjs';
@@ -2129,14 +2131,37 @@ async function newsGenerate(job) {
   if (r.ok) { try { fs.mkdirSync(NEWS_IMG_DIR, { recursive: true }); fs.writeFileSync(newsImgFile(job.jobId), r.bytes); job.image.mime = r.mime; } catch {} }
   return r;
 }
+const MEDIA_STORE = storageFromEnv(E);   // Supabase Storage or Cloudflare R2; null = local disk only
+const extOf = m => m === 'image/jpeg' ? 'jpg' : m === 'image/webp' ? 'webp' : 'png';
+async function newsImageBytes(job) {
+  if (job.image?.status !== 'generated') return null;
+  try { return { mime: job.image.mime || 'image/png', bytes: fs.readFileSync(newsImgFile(job.jobId)) }; } catch {}
+  if (job.image.assetUrl) { try { const r = await fetch(job.image.assetUrl); if (r.ok) return { mime: job.image.mime || 'image/png', bytes: Buffer.from(await r.arrayBuffer()) }; } catch {} }
+  return null;
+}
+// Before publishing: save the picture and the finished poster permanently, record the public URLs, run automatic QA.
+async function newsFinalize(job) {
+  const image = await newsImageBytes(job);
+  if (job.image?.status === 'generated' && !image) return { passed: false, checks: [{ name: 'image-exists', ok: false, note: 'image bytes missing' }] };
+  const svg = renderNewsPoster(job, image);
+  if (MEDIA_STORE) {
+    job.asset = null; delete job.image.assetUrl;
+    if (image) { const u = await MEDIA_STORE.put(`news/${job.jobId}.${extOf(image.mime)}`, image.bytes, image.mime); if (u.ok) job.image.assetUrl = u.url; else job.image.storageError = u.error; }
+    const p = await MEDIA_STORE.put(`news/${job.jobId}-poster.svg`, Buffer.from(svg), 'image/svg+xml');
+    if (p.ok) job.asset = { url: p.url, provider: MEDIA_STORE.provider, key: p.key, at: Date.now() };
+  }
+  const qa = await qaJob({ job, image, svg, jobs: db.newsJobs, requireAsset: !!MEDIA_STORE });
+  if (job.asset?.url) { /* assetUrl image check uses the poster URL below */ }
+  job.qa = qa; return qa;
+}
 async function newsPipelineRun() {
   if (newsPipeBusy) return null; newsPipeBusy = true;
   try {
     db.newsJobs ||= {};
     let items = []; try { const [, d] = await routes['GET /api/news']({}, { lang: 'en' }); items = (d && d.items) || []; } catch {}
-    const out = await runPipeline({ items, store: db.newsJobs, generate: newsGenerate, autoPublish: E.NEWS_MEDIA_AUTO !== '0' });
-    if (out.created || out.imaged || out.published || out.failed || out.fallback) saveDb();
-    agentStatus.newsMedia = { ...out, at: Date.now(), provider: E.NEWS_IMAGE_PROVIDER || (E.HF_TOKEN ? 'huggingface' : 'pollinations') };
+    const out = await runPipeline({ items, store: db.newsJobs, generate: newsGenerate, finalize: newsFinalize, autoPublish: E.NEWS_MEDIA_AUTO !== '0' });
+    if (out.created || out.imaged || out.published || out.failed || out.fallback || out.review) saveDb();
+    agentStatus.newsMedia = { ...out, storage: MEDIA_STORE ? MEDIA_STORE.provider : 'local-disk-only', at: Date.now(), provider: E.NEWS_IMAGE_PROVIDER || (E.HF_TOKEN ? 'huggingface' : 'pollinations') };
     return out;
   } catch (e) { agentStatus.newsMedia = { error: String(e.message).slice(0, 120), at: Date.now() }; return null; }
   finally { newsPipeBusy = false; }
@@ -2147,6 +2172,15 @@ routes['GET /api/news-jobs'] = async (req, body, ip) => {
   const status = String(body.status || 'published'), limit = Math.max(1, Math.min(60, Number(body.limit) || 30));
   const jobs = Object.values(db.newsJobs || {}).filter(j => status === 'all' || j.status === status).sort((a, b) => (b.publishedAt || b.createdAt) - (a.publishedAt || a.createdAt)).slice(0, limit).map(publicJob);
   return [200, { ok: true, jobs, pipeline: agentStatus.newsMedia || null }];
+};
+routes['GET /api/news-qa'] = async (req, body, ip) => {
+  if (limited('nj-qa:' + ip, 120, 36e5)) return [429, { ok: false, error: 'Too many requests' }];
+  const jobs = Object.values(db.newsJobs || {}), by = s => jobs.filter(j => j.status === s).length;
+  const pub = jobs.filter(j => j.status === 'published'), hashes = pub.map(j => j.image?.sha256).filter(Boolean);
+  return [200, { ok: true, storage: MEDIA_STORE ? MEDIA_STORE.provider : 'local-disk-only', total: jobs.length, published: by('published'), review: by('manual_review'), failed: by('failed'), queued: by('queued'),
+    qaPassed: pub.filter(j => j.qa && j.qa.passed).length, withPermanentUrl: pub.filter(j => j.asset && j.asset.url).length, aiImages: pub.filter(j => j.image?.status === 'generated').length, fallbackGraphics: pub.filter(j => j.image?.status === 'fallback').length,
+    duplicateImages: hashes.length - new Set(hashes).size, providers: [...new Set(pub.map(j => j.image?.provider).filter(Boolean))],
+    sample: pub.slice(-5).map(j => ({ jobId: j.jobId, qa: j.qa ? j.qa.passed : null, posterAssetUrl: j.asset?.url || null, posterUrl: '/api/news-poster?job=' + j.jobId })) }];
 };
 routes['POST /api/admin/news-jobs/run'] = async (req) => {
   const phone = readSession((req.headers.authorization || '').replace(/^Bearer /, '')), u = phone && db.users[phone];
@@ -2394,11 +2428,8 @@ http.createServer(async (req, res) => {
       const id = String(new URL(req.url, 'http://x').searchParams.get('job') || '').slice(0, 40), job = (db.newsJobs || {})[id];
       if (!job || job.status === 'queued') return out(404, { ok: false, error: 'Poster not available' });
       if (limited('nposter:' + (req.socket.remoteAddress || ''), 600, 36e5)) return out(429, { ok: false, error: 'Too many requests' });
-      let image = null;
-      if (job.image && job.image.status === 'generated') {
-        try { image = { mime: job.image.mime || 'image/png', bytes: fs.readFileSync(newsImgFile(id)) }; }
-        catch { const r = await newsGenerate(job); if (r.ok) image = { mime: r.mime, bytes: r.bytes }; }   // file lost after a redeploy: same seed, same picture
-      }
+      let image = await newsImageBytes(job);
+      if (!image && job.image && job.image.status === 'generated') { const r = await newsGenerate(job); if (r.ok) image = { mime: r.mime, bytes: r.bytes }; }   // nothing stored anywhere: same seed, same picture
       res.writeHead(200, { 'content-type': 'image/svg+xml; charset=utf-8', 'cache-control': 'public, max-age=300', 'access-control-allow-origin': '*', 'x-content-type-options': 'nosniff' });
       return res.end(renderNewsPoster(job, image));
     } catch (e) { return out(500, { ok: false, error: 'Poster failed' }); }
