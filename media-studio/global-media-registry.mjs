@@ -55,3 +55,26 @@ export function planStory(story={}) {
  const gate=evaluateStory(story);
  return {key:dedupeKey(story),gate,outputs:gate.eligible?['epaper-draft','social-poster-draft','reel-storyboard']:[],externalPublish:false,notes:'External publication requires authorized accounts, asset licenses and rendered-output QA.'};
 }
+
+/**
+ * Mandatory artwork policy. A missing source photo must never produce a blank
+ * story image or an unlicensed copy of a search-result thumbnail.
+ * The research adapter is deliberately external: a Google search URL is NOT
+ * evidence of image rights and does not imply search was executed.
+ */
+export function planArtwork(story={}) {
+ const q=[story.sport,story.competition,story.teams?.join(' vs '),story.date,story.headline].filter(Boolean).join(' ');
+ const researchUrl='https://www.google.com/search?q='+encodeURIComponent(q);
+ const media=(story.media||[]).filter(m=>m&&m.kind==='photo');
+ const licensed=media.find(m=>https(m.url)&&m.approved===true&&clean(m.license)&&clean(m.attribution)&&m.subjectVerified===true);
+ const gate=evaluateStory(story);
+ return {
+  eventId:clean(story.eventId),researchUrl,
+  mode:licensed?'verified-licensed-photo':'original-illustration',
+  sourcePhoto:licensed?{url:licensed.url,license:licensed.license,attribution:licensed.attribution}:null,
+  originalArtworkRequired:!licensed,
+  renderRequired:true,
+  publishAllowed:gate.eligible,
+  safeguards:['No hotlinked search thumbnails','No invented player likeness','Clearly label illustrations','Render and inspect output before publication']
+ };
+}
