@@ -81,13 +81,13 @@ export function prepareMedia(m, {language='en', photo=null}={}) {
   ].filter(Boolean);
   if(playerPerformance.hasPlayerData) paragraphs.splice(Math.min(2,paragraphs.length),0,...playerPerformance.paragraphs);
   // No invented wicket-takers, quotes, milestones, photos or highlight clips.
-  const licensedPhoto = photo && photo.approved === true && photo.url && photo.license && photo.attribution
-    ? {url:String(photo.url),license:txt(photo.license,80),attribution:txt(photo.attribution,250)} : null;
+  const licensedPhoto = photo && photo.approved === true && /^https:\/\//i.test(String(photo.url||'')) && photo.license && photo.attribution && photo.subjectVerified === true
+    ? {url:String(photo.url),approved:true,subjectVerified:true,license:txt(photo.license,80),attribution:txt(photo.attribution,250)} : null;
   const players=[...new Map([...playerPerformance.batters,...playerPerformance.bowlers].map(p=>[p.name.toLowerCase()+'|'+p.team.toLowerCase(),{name:p.name,team:p.team}])).values()];
   const research={status:playerPerformance.hasPlayerData?'scorecard-players-available':'external-research-needed',matchQuery:[teams.join(' vs '),competition,venue,'scorecard'].filter(Boolean).join(' '),matchSearchUrl:'https://www.google.com/search?q='+encodeURIComponent([teams.join(' vs '),competition,venue,'scorecard'].filter(Boolean).join(' ')),playerPhotoSearches:photoSearches};
   const key = `sh-media-${m.id}-final`;
   return {ok:true,id:key,matchId:m.id,language,kind:'result',verified:true,headline,summary,paragraphs,
-    social:{caption:`${headline}\n${summary}\n${analysis[0]||''}\n#ScoringHeroes #MatchResult`,format:'4:5',imageRequired:false},
+    social:{caption:`${headline}\n${summary}\n${analysis[0]||''}\n#ScoringHeroes #MatchResult`,format:'4:5',imageRequired:true},
     epaper:{title:headline,subtitle:competition,body:paragraphs,format:'A4',photo:licensedPhoto},
     photo:licensedPhoto,players,playerPerformance,photoSearches,research,publication:'internal-auto-eligible',externalPublishing:'disabled-without-account-permissions',
     posterSvg:renderPoster({headline,summary,result,venue,teams,language})};
