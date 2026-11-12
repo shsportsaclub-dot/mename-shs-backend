@@ -92,12 +92,47 @@ export function prepareMedia(m, {language='en', photo=null}={}) {
     photo:licensedPhoto,players,playerPerformance,photoSearches,research,publication:'internal-auto-eligible',externalPublishing:'disabled-without-account-permissions',
     posterSvg:renderPoster({headline,summary,result,venue,teams,language})};
 }
+// Original illustrated match poster. No third-party image or fake player likeness.
 export function renderPoster({headline,summary,result,venue,teams,language='en'}) {
-  const wrap=(value,max=27,maxLines=3)=>{const words=String(value||'').split(/\s+/);const lines=[];let line='';for(const word of words){if((line+' '+word).trim().length>max&&line){lines.push(line);line=word}else line=(line+' '+word).trim()}if(line)lines.push(line);return lines.slice(0,maxLines).map((x,i,a)=>i===maxLines-1&&lines.length>maxLines?x.slice(0,max-1)+'…':x)};
-  const lines=(value,y,size,max,maxLines,color='#fff',weight=700)=>wrap(value,max,maxLines).map((v,i)=>`<text x="84" y="${y+i*size*1.32}" font-family="Noto Sans,Arial,sans-serif" font-size="${size}" font-weight="${weight}" fill="${color}">${esc(v)}</text>`).join('');
-  const left=String(teams?.[0]||'TEAM 1'),right=String(teams?.[1]||'TEAM 2');
-  const parsed=String(summary).split(' | ').slice(0,2);
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350"><defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#07152b"/><stop offset=".55" stop-color="#132b5b"/><stop offset="1" stop-color="#47173d"/></linearGradient></defs><rect width="1080" height="1350" fill="url(#bg)"/><rect x="42" y="42" width="996" height="1266" rx="30" fill="none" stroke="#d9bb77" stroke-width="3"/><text x="84" y="133" font-size="32" font-weight="800" letter-spacing="4" fill="#f0c878">SCORING HEROES</text><text x="84" y="181" font-size="23" fill="#c7d2e5">SPORTS DESK  /  MATCH RESULT</text><path d="M84 212H996" stroke="#d9bb77" stroke-width="2"/>${lines(left,290,40,38,2)}<text x="84" y="392" font-size="28" fill="#f0c878">VERSUS</text>${lines(right,452,40,38,2)}<rect x="70" y="520" width="940" height="170" rx="20" fill="#091a36" stroke="#506080"/>${lines(headline,575,40,39,2,'#f0c878')}${parsed.map((v,i)=>lines(v,770+i*130,34,44,2,'#fff',650)).join('')}${lines(result,1060,28,58,2,'#f0c878')}${lines(venue,1162,26,62,2,'#d4dceb',500)}<text x="84" y="1260" font-size="23" font-weight="700" fill="#f0c878">VERIFIED SCORECARD • SCORING HEROES</text></svg>`;
+ const safe=(v,n=160)=>esc(String(v??'').slice(0,n));
+ const wrap=(s,max=26,limit=3)=>{const words=String(s||'').split(/\\s+/),out=[];let line='';for(const word of words){if((line+' '+word).trim().length>max&&line){out.push(line);line=word}else line=(line+' '+word).trim()}if(line)out.push(line);return out.slice(0,limit)};
+ const textLines=(value,x,y,size,max=26,limit=3,color='#fff',weight=800)=>wrap(value,max,limit).map((s,i)=>'<text x="'+x+'" y="'+(y+i*size*1.27)+'" font-family="Noto Sans,Arial,sans-serif" font-size="'+size+'" font-weight="'+weight+'" fill="'+color+'">'+safe(s)+'</text>').join('');
+ const parts=String(summary||'').split(' | ').slice(0,2);
+ const scores=parts.map((p,i)=>{const m=p.match(/^(.*?):\\s*(\\d+\\/\\d+)/);return {name:m?.[1]||teams?.[i]||'',score:m?.[2]||''}});
+ const [a,b]=scores;
+ const stars=Array.from({length:45},(_,i)=>'<circle cx="'+((i*193+67)%1080)+'" cy="'+((i*311+29)%920)+'" r="'+(i%3+1)+'" fill="#fff" opacity=".12"/>').join('');
+ return `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350">
+ <defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#050b1c"/><stop offset=".55" stop-color="#10335b"/><stop offset="1" stop-color="#100f2b"/></linearGradient><linearGradient id="gold" x2="1" y2="1"><stop stop-color="#fff1b8"/><stop offset=".5" stop-color="#d6a14e"/><stop offset="1" stop-color="#ffe5a2"/></linearGradient><radialGradient id="glow"><stop stop-color="#18b9e1" stop-opacity=".46"/><stop offset="1" stop-color="#18b9e1" stop-opacity="0"/></radialGradient><filter id="shadow"><feDropShadow dx="0" dy="15" stdDeviation="18" flood-opacity=".5"/></filter></defs>
+ <rect width="1080" height="1350" fill="url(#bg)"/>${stars}
+ <circle cx="760" cy="420" r="480" fill="url(#glow)"/>
+ <path d="M0 0H1080V280L0 680Z" fill="#ffffff" opacity=".035"/>
+ <path d="M0 910Q540 710 1080 950V1350H0Z" fill="#040c1e" opacity=".78"/>
+ <g opacity=".16" stroke="#b7e5ff" fill="none"><ellipse cx="540" cy="1110" rx="520" ry="105" stroke-width="6"/><ellipse cx="540" cy="1110" rx="350" ry="65" stroke-width="4"/><path d="M540 930V1260M0 1110H1080" stroke-width="3"/></g>
+ <g transform="translate(610 255) rotate(-24)" filter="url(#shadow)">
+ <path d="M140 330L140 110Q140 60 185 60H280Q325 60 325 110V330Q325 365 285 365H180Q140 365 140 330Z" fill="#d8a96e" stroke="#ffe3a3" stroke-width="10"/>
+ <path d="M185 70V353M228 70V355M278 70V355" stroke="#9a6c3f" stroke-width="4" opacity=".6"/>
+ <rect x="215" y="365" width="40" height="240" rx="16" fill="#201d25" stroke="#b6a47d" stroke-width="7"/>
+ <path d="M219 410H251M219 445H251M219 480H251M219 515H251M219 550H251" stroke="#e6c57a" stroke-width="6"/>
+ </g>
+ <g transform="translate(750 590)" filter="url(#shadow)"><circle r="116" fill="#ad1235" stroke="#ff5c6b" stroke-width="8"/><path d="M-70 -88Q15 0 -70 88M-47 -104Q40 0 -47 104" fill="none" stroke="#f8e6c6" stroke-width="5" stroke-dasharray="8 8"/><circle cx="-34" cy="-40" r="48" fill="#ff9d9d" opacity=".14"/></g>
+ <rect x="40" y="40" width="1000" height="1270" rx="26" fill="none" stroke="url(#gold)" stroke-width="3"/>
+ <rect x="70" y="74" width="500" height="76" rx="12" fill="#050c20" opacity=".84"/>
+ <text x="94" y="126" font-family="Arial,sans-serif" font-size="37" font-weight="900" letter-spacing="3" fill="url(#gold)">SCORING HEROES</text>
+ <text x="84" y="202" font-family="Arial,sans-serif" font-size="23" font-weight="700" letter-spacing="6" fill="#c6d9ee">GLOBAL SPORTS DESK</text>
+ <rect x="82" y="252" width="300" height="50" rx="25" fill="#d7a354"/><text x="106" y="286" font-family="Arial" font-size="25" font-weight="900" fill="#0a1730">MATCH RESULT</text>
+ ${textLines(headline,80,385,58,25,3,'#ffffff')}
+ <path d="M82 715H998" stroke="url(#gold)" stroke-width="4"/>
+ <rect x="78" y="750" width="924" height="245" rx="24" fill="#071329" stroke="#bd965d" stroke-width="2" opacity=".97"/>
+ ${textLines(a?.name||teams?.[0],110,808,28,26,2,'#cddff0',700)}
+ ${textLines(a?.score,110,920,64,12,1,'#f9d58b')}
+ <path d="M532 775V968" stroke="#b79c73" stroke-width="2" opacity=".7"/>
+ ${textLines(b?.name||teams?.[1],565,808,28,24,2,'#cddff0',700)}
+ ${textLines(b?.score,565,920,64,12,1,'#f9d58b')}
+ ${textLines(result,86,1070,27,62,2,'#fff2ce',700)}
+ ${textLines(venue,86,1160,24,67,2,'#b9c9de',500)}
+ <path d="M82 1225H998" stroke="#ad8952" stroke-width="2"/>
+ <text x="84" y="1272" font-family="Arial" font-size="23" font-weight="800" letter-spacing="2" fill="#f6d99b">ORIGINAL MATCH GRAPHIC • SCORING HEROES</text>
+ </svg>`;
 }
 export function publishDecision(prepared, existingIds=new Set(), {autoEnabled=false}={}) {
   if (!prepared?.ok || !prepared.verified) return {publish:false,reason:'Unverified match'};
