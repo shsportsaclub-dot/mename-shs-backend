@@ -2075,27 +2075,46 @@ async function paperAgentRun() {
 if (E.PAPER_AGENT !== '0') { setTimeout(paperAgentRun, 60e3); setInterval(paperAgentRun, PAPER_HOURS * 3600e3); }
 // Read-only feed for existing app integration; past four days, newest first.
 routes['GET /api/languages'] = async () => [200,{ok:true,...languageCatalog()}];
+// Finished matches from the last four IST days: stored paper rows first, then the live feed (so posters never wait for the paper agent).
+async function mediaRows() {
+  const days = Array.from({length:4},(_,i)=>istDate(Date.now()-i*86400000)), rows = [], seen = new Set();
+  for (const d of days) for (const r of (db.papers[d]?.world || [])) if (r && !seen.has(r.id)) { seen.add(r.id); rows.push({ row: r, date: d, stored: (db.papers[d]?.media || []).find(x => x.mid === r.id) }); }
+  try {
+    const live = await liveMatches();
+    for (const m of live.matches || []) {
+      if (!m.ended || seen.has(m.id)) continue;
+      const when = Date.parse(/Z$|[+-]\d\d:?\d\d$/.test(m.time || '') ? m.time : (m.time || '') + 'Z');
+      const d = when ? istDate(when) : ''; if (!days.includes(d)) continue;
+      seen.add(m.id); rows.push({ row: { id: m.id, name: m.name, type: m.type, venue: m.venue, status: m.status, time: m.time, teams: (m.teams || []).slice(0, 2), score: (m.score || []).slice(0, 4) }, date: d, stored: null });
+    }
+  } catch {}
+  return rows;
+}
 routes['GET /api/media-studio'] = async (req, body, ip) => {
   if(limited('media-read:'+ip,300,36e5))return [429,{ok:false,error:'Too many requests'}];
   // Default is English; client sends ?lang=te or ?lang=hi after user selection.
   const selection=resolveLanguage(body.lang||body.language||'en');
   const language=selection.articleLanguage;
-  const days=Array.from({length:4},(_,i)=>istDate(Date.now()-i*86400000));
-  const items=days.flatMap(d=>(db.papers[d]?.media||[]).map(x=>{
-    const row=(db.papers[d]?.world||[]).find(m=>m.id===x.mid);
-    if(!row)return {...x,date:d,language:x.language||'en',translationAvailable:false};
-    const localized=prepareMedia({...row,ended:true},{language,photo:x.photo});
-    if(!localized.ok)return null;
-    return {...x,date:d,language,h:localized.headline,sub:localized.summary,body:localized.paragraphs,
-      posterSvg:localized.posterSvg,epaper:localized.epaper,social:localized.social,players:localized.players,research:localized.research,playerPerformance:localized.playerPerformance,
-      reel:{...x.reel,frames:[
+  const lite=body.lite==='1', limit=Math.max(1,Math.min(100,Number(body.limit)||100));
+  const rows=await mediaRows();
+  const items=[];
+  for (const {row,date,stored} of rows) {
+    const localized=prepareMedia({...row,ended:true},{language,photo:stored?.photo||null});
+    if(!localized.ok)continue;
+    const it={id:localized.id,mid:row.id,kind:'result-media',date,language,at:stored?.at||Date.parse(row.time||'')||0,verified:true,h:localized.headline,sub:localized.summary,body:localized.paragraphs,
+      epaper:localized.epaper,social:localized.social,players:localized.players,research:localized.research,playerPerformance:localized.playerPerformance,photo:localized.photo,scoreless:localized.scoreless,
+      posterUrl:'/api/media-poster?mid='+encodeURIComponent(row.id)+'&lang='+language,
+      reel:{status:'storyboard-only',frames:[
         {title:language==='te'?'మ్యాచ్ ఫలితం':language==='hi'?'मैच परिणाम':'MATCH RESULT',caption:localized.headline,durationSeconds:3},
-        {title:language==='te'?'స్కోర్ వివరాలు':language==='hi'?'स्कोरकार्ड':'SCORECARD',caption:localized.summary,durationSeconds:5},
-        {title:language==='te'?'తుది ఫలితం':language==='hi'?'अंतिम परिणाम':'FINAL RESULT',caption:row.status||'',durationSeconds:4}
-      ]}};
-  })).filter(Boolean).sort((a,b)=>b.at-a.at).slice(0,100);
-  return [200,{ok:true,language,requestedLanguage:selection.requested,languageSelection:selection,defaultLanguage:'en',languageCatalog:'/api/languages',days,items,
-    reels:items.map(x=>({id:x.id,mid:x.mid,date:x.date,language:x.language,...x.reel})),
+        ...(localized.summary?[{title:language==='te'?'స్కోర్ వివరాలు':language==='hi'?'स्कोरकार्ड':'SCORECARD',caption:localized.summary,durationSeconds:5}]:[]),
+        {title:language==='te'?'తుది ఫలితం':language==='hi'?'अंतिम परिणाम':'FINAL RESULT',caption:row.status||'',durationSeconds:4}],music:null,videoUrl:null,rights:'No licensed match footage supplied'}};
+    if(!lite)it.posterSvg=localized.posterSvg;
+    items.push(it);
+  }
+  items.sort((a,b)=>b.at-a.at);
+  const days=Array.from({length:4},(_,i)=>istDate(Date.now()-i*86400000)), out=items.slice(0,limit);
+  return [200,{ok:true,language,requestedLanguage:selection.requested,languageSelection:selection,defaultLanguage:'en',languageCatalog:'/api/languages',days,items:out,
+    reels:out.map(x=>({id:x.id,mid:x.mid,date:x.date,language:x.language,...x.reel})),
     voice:{status:'not-implemented',note:'No localized audio generated yet'},
     note:'Reels are storyboards, not rendered video. Photos and music require rights.'}];
 };
@@ -2332,6 +2351,17 @@ http.createServer(async (req, res) => {
   if (req.method === 'GET' && path === '/api/shared-stream') {   // live push: viewers hear about a saved match the moment the scorer's save lands
     res.writeHead(200, { 'content-type': 'text/event-stream', 'cache-control': 'no-cache, no-transform', connection: 'keep-alive', 'x-accel-buffering': 'no', 'access-control-allow-origin': allow(origin), vary: 'origin' });
     res.write('retry: 2000\n\n'); sseClients.add(res); req.on('close', () => sseClients.delete(res)); return;
+  }
+  if (req.method === 'GET' && path === '/api/media-poster') {   // result poster as a real image URL, so apps can show it with a plain <img>
+    try {
+      const q = new URL(req.url, 'http://x').searchParams, mid = String(q.get('mid') || '').slice(0, 64);
+      if (limited('media-poster:' + (req.socket.remoteAddress || ''), 600, 36e5)) return out(429, { ok: false, error: 'Too many requests' });
+      const hit = (await mediaRows()).find(x => x.row.id === mid);
+      const m = hit && prepareMedia({ ...hit.row, ended: true }, { language: resolveLanguage(q.get('lang') || 'en').articleLanguage });
+      if (!m || !m.ok) return out(404, { ok: false, error: 'Poster not available for this match' });
+      res.writeHead(200, { 'content-type': 'image/svg+xml; charset=utf-8', 'cache-control': 'public, max-age=300', 'access-control-allow-origin': '*', 'x-content-type-options': 'nosniff' });
+      return res.end(m.posterSvg);
+    } catch (e) { return out(500, { ok: false, error: 'Poster failed' }); }
   }
   const STATIC = { '/manifest.webmanifest': 'application/manifest+json', '/sw.js': 'application/javascript', '/icon-192.png': 'image/png', '/icon-512.png': 'image/png', '/icon-maskable.png': 'image/png', '/apple-touch-icon.png': 'image/png' };
   if (req.method === 'GET' && /^\/balls\/[a-z0-9_]+\.webp$/.test(path)) { try { const f = fs.readFileSync(new URL('./public' + path, import.meta.url)); res.writeHead(200, { 'content-type': 'image/webp', 'cache-control': 'public, max-age=604800', 'access-control-allow-origin': '*' }); return res.end(f); } catch { /* fall through */ } }
