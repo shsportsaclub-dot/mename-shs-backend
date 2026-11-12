@@ -2131,6 +2131,7 @@ async function newsGenerate(job) {
   const day = istDate(), cap = Math.max(0, parseInt(E.NEWS_IMAGE_DAILY_MAX || '0', 10));   // optional daily spending guard for paid image APIs; 0 or unset = no limit
   const spend = db.newsSpend = db.newsSpend && db.newsSpend.day === day ? db.newsSpend : { day, n: 0 };
   if (cap > 0 && paidImages() && spend.n >= cap) return { ok: false, permanent: true, provider: 'cap', error: 'Daily paid-image cap reached (' + cap + ')' };
+  if (!paidImages() && (E.NEWS_IMAGE_PROVIDER || 'auto') !== 'none') await new Promise(r => setTimeout(r, 5200));   // free Pollinations allows about 1 request per 5 s per IP
   const r = await generateImage({ prompt: job.image.prompt, seed: job.image.seed, provider: E.NEWS_IMAGE_PROVIDER || 'auto', hfToken: E.HF_TOKEN || '', openaiKey: E.OPENAI_API_KEY || '', openaiModel: E.OPENAI_IMAGE_MODEL || '', googleKey: E.GOOGLE_API_KEY || E.GEMINI_API_KEY || '', googleModel: E.GOOGLE_IMAGE_MODEL || '' });
   if (paidImages() && /^(openai|google)$/.test(r.provider || '')) { spend.n++; saveDb(); }
   if (r.ok) { try { fs.mkdirSync(NEWS_IMG_DIR, { recursive: true }); fs.writeFileSync(newsImgFile(job.jobId), r.bytes); job.image.mime = r.mime; } catch {} }
@@ -2164,7 +2165,7 @@ async function newsPipelineRun() {
   try {
     db.newsJobs ||= {};
     let items = []; try { const [, d] = await routes['GET /api/news']({}, { lang: 'en' }); items = (d && d.items) || []; } catch {}
-    const out = await runPipeline({ items, store: db.newsJobs, generate: newsGenerate, finalize: newsFinalize, autoPublish: E.NEWS_MEDIA_AUTO !== '0' });
+    const out = await runPipeline({ items, store: db.newsJobs, generate: newsGenerate, finalize: newsFinalize, maxNew: +E.NEWS_MAX_PER_RUN || 200, maxProcess: +E.NEWS_MAX_PER_RUN || 200, autoPublish: E.NEWS_MEDIA_AUTO !== '0' });
     if (out.created || out.imaged || out.published || out.failed || out.fallback || out.review) saveDb();
     agentStatus.newsMedia = { ...out, storage: MEDIA_STORE ? MEDIA_STORE.provider : 'local-disk-only', at: Date.now(), provider: E.NEWS_IMAGE_PROVIDER || (E.HF_TOKEN ? 'huggingface' : 'pollinations') };
     return out;
