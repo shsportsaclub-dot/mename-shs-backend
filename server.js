@@ -2228,6 +2228,61 @@ routes['GET /api/news-jobs'] = async (req, body, ip) => {
   const jobs = Object.values(db.newsJobs || {}).filter(j => status === 'all' || j.status === status).sort((a, b) => (b.publishedAt || b.createdAt) - (a.publishedAt || a.createdAt)).slice(0, limit).map(publicJob);
   return [200, { ok: true, jobs, pipeline: agentStatus.newsMedia || null }];
 };
+// ---- Match chat (viewing lounge) + first-party analytics / sponsor tracking: all in-house, no third-party service ----
+const chatPhone = req => readSession((req.headers.authorization || '').replace(/^Bearer /, ''));
+const roomOf = v => String(v || '').replace(/[^a-zA-Z0-9_|:.\-]/g, '').slice(0, 60);
+const CHAT_BAD = new RegExp('(' + ['fuck', 'shit', 'bitch', 'asshole', 'bastard', 'cunt', 'dick', 'slut', 'porn', ...String(E.CHAT_BLOCK || '').split(',').map(x => x.trim()).filter(Boolean)].map(w => w.replace(/[^a-z0-9]/gi, '')).filter(Boolean).join('|') + ')', 'i');
+routes['GET /api/chat'] = async (req, body, ip) => {
+  if (limited('chat-r:' + ip, 1500, 36e5)) return [429, { ok: false, error: 'Too many requests' }];
+  const room = roomOf(body.room), since = Number(body.since) || 0; if (!room) return [400, { ok: false, error: 'room required' }];
+  const list = ((db.chat || {})[room] || []).filter(m => !m.hidden && m.t > since).slice(-60).map(m => ({ id: m.id, t: m.t, nick: m.nick, text: m.text }));
+  return [200, { ok: true, room, now: Date.now(), messages: list }];
+};
+routes['POST /api/chat'] = async (req, body, ip) => {
+  const phone = chatPhone(req), u = phone && db.users[phone]; if (!u || u.guest) return [401, { ok: false, error: 'Sign in to chat' }];
+  const room = roomOf(body.room); let text = String(body.text || '').replace(/\s+/g, ' ').trim().slice(0, 200);
+  if (!room || !text) return [400, { ok: false, error: 'Write a message' }];
+  if (limited('chat-w:' + phone, 30, 6e5)) return [429, { ok: false, error: 'Slow down for a moment' }];
+  const last = (db.chatLast ||= {})[phone] || 0; if (Date.now() - last < 2500) return [429, { ok: false, error: 'Wait a few seconds between messages' }];
+  if (/https?:\/\/|www\.|\.(com|in|net|org|me|ly)\b|\b\d{10}\b/i.test(text)) return [400, { ok: false, error: 'Links and phone numbers are not allowed in chat' }];
+  if (CHAT_BAD.test(text.replace(/[^a-z0-9]/gi, ''))) return [400, { ok: false, error: 'Please keep the chat friendly' }];
+  if (u.chatBan && u.chatBan > Date.now()) return [403, { ok: false, error: 'Chat is paused for your account' }];
+  db.chatLast[phone] = Date.now();
+  const chat = (db.chat ||= {}), arr = (chat[room] ||= []);
+  const msg = { id: crypto.randomUUID().slice(0, 8), t: Date.now(), nick: String(u.nick || u.name || 'Fan').slice(0, 20), by: phone, text, rep: [] };
+  arr.push(msg); if (arr.length > 150) arr.splice(0, arr.length - 150);
+  const cut = Date.now() - 7 * 864e5; for (const k of Object.keys(chat)) if (!chat[k].length || chat[k][chat[k].length - 1].t < cut) delete chat[k];   // rooms idle for 7 days are dropped
+  saveDb(); return [200, { ok: true, message: { id: msg.id, t: msg.t, nick: msg.nick, text: msg.text } }];
+};
+routes['POST /api/chat/report'] = async (req, body) => {
+  const phone = chatPhone(req), u = phone && db.users[phone]; if (!u || u.guest) return [401, { ok: false, error: 'Sign in to report' }];
+  const m = ((db.chat || {})[roomOf(body.room)] || []).find(x => x.id === String(body.id)); if (!m) return [404, { ok: false, error: 'Message not found' }];
+  if (!m.rep.includes(phone)) m.rep.push(phone); if (m.rep.length >= 3) m.hidden = true; saveDb(); return [200, { ok: true, hidden: !!m.hidden }];
+};
+routes['POST /api/admin/chat'] = async (req, body) => {
+  const phone = chatPhone(req), u = phone && db.users[phone]; if (!u) return [401, { ok: false, error: 'Please sign in again' }];
+  promote(u, phone); if (u.role !== 'admin') return [403, { ok: false, error: 'Admin only' }];
+  const arr = (db.chat || {})[roomOf(body.room)] || [], m = arr.find(x => x.id === String(body.id)); if (!m) return [404, { ok: false, error: 'Message not found' }];
+  m.hidden = true; if (body.ban && db.users[m.by]) db.users[m.by].chatBan = Date.now() + 24 * 36e5; saveDb(); return [200, { ok: true }];
+};
+const TRACK_EV = new Set(['view', 'ad_imp', 'ad_click', 'share', 'chat_open']);
+routes['POST /api/track'] = async (req, body, ip) => {   // counters only (no personal data): per day, per event, per screen/ad id
+  if (limited('track:' + ip, 600, 36e5)) return [429, { ok: false }];
+  const ev = String(body.ev || ''), id = String(body.id || '').replace(/[^a-zA-Z0-9_|:.\-]/g, '').slice(0, 40); if (!TRACK_EV.has(ev)) return [400, { ok: false }];
+  const day = istDate(), st = ((db.stats ||= {})[day] ||= {}), k = id ? ev + ':' + id : ev;
+  if (Object.keys(st).length < 400 || st[k] != null) st[k] = (st[k] || 0) + 1;
+  for (const d of Object.keys(db.stats)) if (d < istDate(Date.now() - 45 * 864e5)) delete db.stats[d];
+  return [200, { ok: true }];
+};
+routes['GET /api/admin/stats'] = async (req) => {
+  const phone = chatPhone(req), u = phone && db.users[phone]; if (!u) return [401, { ok: false, error: 'Please sign in again' }];
+  promote(u, phone); if (u.role !== 'admin') return [403, { ok: false, error: 'Admin only' }];
+  const days = Object.keys(db.stats || {}).sort().slice(-14), tot = {}, perDay = days.map(d => ({ day: d, views: Object.entries(db.stats[d]).filter(([k]) => k === 'view' || k.startsWith('view:')).reduce((a, [, v]) => a + v, 0), imp: Object.entries(db.stats[d]).filter(([k]) => k.startsWith('ad_imp')).reduce((a, [, v]) => a + v, 0), clicks: Object.entries(db.stats[d]).filter(([k]) => k.startsWith('ad_click')).reduce((a, [, v]) => a + v, 0) }));
+  for (const d of days) for (const [k, v] of Object.entries(db.stats[d])) tot[k] = (tot[k] || 0) + v;
+  const ads = (homeCfg().ads || []).map(a => { const i = tot['ad_imp:' + a.id] || 0, c = tot['ad_click:' + a.id] || 0; return { id: a.id, title: a.title || '', impressions: i, clicks: c, ctr: i ? Math.round(c / i * 1000) / 10 : 0 }; });
+  const screens = Object.entries(tot).filter(([k]) => k.startsWith('view:')).map(([k, v]) => ({ screen: k.slice(5), views: v })).sort((a, b) => b.views - a.views).slice(0, 15);
+  return [200, { ok: true, days: perDay, ads, screens, chatRooms: Object.keys(db.chat || {}).length, chatMessages: Object.values(db.chat || {}).reduce((a, r) => a + r.length, 0) }];
+};
 routes['GET /api/news-image-check'] = async (req, body, ip) => {   // free metadata call (no image generated, no cost): is the Google key valid and does the model exist?
   if (limited('nj-check:' + ip, 20, 36e5)) return [429, { ok: false, error: 'Too many requests' }];
   const key = E.GOOGLE_API_KEY || E.GEMINI_API_KEY || '', model = E.GOOGLE_IMAGE_MODEL || '', out = { ok: true, google: { keySet: !!key, modelSet: !!model, model: model || null } };

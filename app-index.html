@@ -9060,7 +9060,7 @@ const card=m=>`<div class="ig-sq fbc" data-a="fbOpen" data-id="${esc(m.id)}" sty
    if(adm&&!F.length&&!links.length&&!pins.length)o+=`<div class="hh-box"><div class="mu sm">Admin: add your YouTube channel, social links and pinned posts in Services (More → Server status). Viewers see this section only after you add something.</div></div>`}
   // Ads
   const ads=c.ads||[];
-  if(ads.length)o+=`<div class="sec"><h3>Sponsored</h3></div><div id="shad" style="position:relative;margin-bottom:12px">${ads.map((a,i)=>{const im=`<img src="${esc(a.img)}" alt="${esc(a.title||'Sponsor')}" style="width:100%;max-height:160px;object-fit:cover;border-radius:12px;display:block">`;return `<div class="shad-s" style="${i?'display:none':''}">${a.link?`<a href="${esc(a.link)}" target="_blank" rel="noopener sponsored">${im}</a>`:im}</div>`}).join('')}${ads.length>1?`<div style="display:flex;gap:5px;justify-content:center;margin-top:6px">${ads.map((_,i)=>`<i class="shad-d" style="width:7px;height:7px;border-radius:50%;background:${i?'#7f8aa8':'var(--ac)'}"></i>`).join('')}</div>`:''}</div>`;
+  if(ads.length)o+=`<div class="sec"><h3>Sponsored</h3></div><div id="shad" style="position:relative;margin-bottom:12px">${ads.map((a,i)=>{const im=`<img src="${esc(a.img)}" alt="${esc(a.title||'Sponsor')}" style="width:100%;max-height:160px;object-fit:cover;border-radius:12px;display:block">`;return `<div class="shad-s" data-ad="${esc(a.id)}" style="${i?'display:none':''}">${a.link?`<a href="${esc(a.link)}" target="_blank" rel="noopener sponsored">${im}</a>`:im}</div>`}).join('')}${ads.length>1?`<div style="display:flex;gap:5px;justify-content:center;margin-top:6px">${ads.map((_,i)=>`<i class="shad-d" style="width:7px;height:7px;border-radius:50%;background:${i?'#7f8aa8':'var(--ac)'}"></i>`).join('')}</div>`:''}</div>`;
   return o};
  setInterval(()=>{const w=document.getElementById('shad');if(!w)return;const S2=[...w.querySelectorAll('.shad-s')];if(S2.length<2)return;let i=S2.findIndex(x=>x.style.display!=='none');i=(i+1)%S2.length;S2.forEach((x,k)=>x.style.display=k===i?'':'none');w.querySelectorAll('.shad-d').forEach((d,k)=>d.style.background=k===i?'var(--ac)':'#7f8aa8')},5000);
  // place it right under the match cards
@@ -14399,6 +14399,41 @@ Object.assign(A,{async momShare(d){const m=UI.mom.find(x=>x.id===d.id);if(!m)ret
   A.momSave(d);toast('Saved. Open your social app and attach it.')},
  async momSave(d){const m=UI.mom.find(x=>x.id===d.id);if(!m)return;const {blob,name}=await f(m,d.k),u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{a.remove();URL.revokeObjectURL(u)},4000)}});
 const l0=XV.live3d;XV.live3d=function(){const o=l0.apply(this,arguments);return typeof o==='string'&&o.includes('id="l3f"')&&!o.includes('id="momx"')?o+'<div id="momx">'+html()+'</div>':o};
+})();
+
+/* ---- 140 Match chat (viewing lounge) + first-party analytics and sponsor tracking: all served by our own backend ---- */
+(function(){
+ const api=p=>apiBase()+p, qs=s=>document.querySelector(s);
+ const jpost=async(p,b)=>{const r=await fetch(api(p),{method:'POST',headers:{'content-type':'application/json',authorization:'Bearer '+(S.tok||'')},body:JSON.stringify(b||{})});let j={};try{j=await r.json()}catch(e){}return j};
+ // analytics: counters only, no personal data
+ const sent=new Set();
+ window.shTrack=function(ev,id){try{if(!apiBase())return;const k=ev+':'+(id||'');if(ev!=='view'&&sent.has(k))return;if(ev!=='view')sent.add(k);fetch(api('/api/track'),{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({ev,id}),keepalive:true}).catch(()=>{})}catch(e){}};
+ let lastView='';const r0=render;render=function(){const o=r0.apply(this,arguments);try{if(UI.view&&UI.view!==lastView){lastView=UI.view;shTrack('view',UI.view)}}catch(e){}return o};
+ // sponsor banners: impression when a banner is on screen, click when tapped
+ try{const io=window.IntersectionObserver&&new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting&&e.target.style.display!=='none'){const id=e.target.getAttribute('data-ad');if(id)shTrack('ad_imp',id)}}),{threshold:.5});
+  setInterval(()=>{document.querySelectorAll('.shad-s[data-ad]').forEach(el=>{if(io&&!el.__tr){el.__tr=1;io.observe(el)}if(el.style.display!=='none'&&el.getBoundingClientRect().top<innerHeight&&el.getBoundingClientRect().bottom>0)shTrack('ad_imp',el.getAttribute('data-ad'))})},3000)}catch(e){}
+ document.addEventListener('click',e=>{const a=e.target.closest&&e.target.closest('.shad-s[data-ad] a');if(a)shTrack('ad_click',a.closest('.shad-s').getAttribute('data-ad'))},true);
+ // chat
+ const room=()=>{if(UI.view==='sxmatch'&&UI.sxm)return 'x:'+UI.sxm.sp+':'+UI.sxm.id;const m=typeof curM==='function'?curM():null;return m?'c:'+m.id:''};
+ const box=rm=>`<div class="box" id="shchat" data-room="${esc(rm)}" style="margin:12px 14px 90px"><h3>Match chat</h3><div class="mu sm" style="margin-bottom:6px">Fans talk here. Be friendly. No links or phone numbers.</div><div id="shchm" style="max-height:260px;overflow:auto;display:flex;flex-direction:column;gap:6px;margin-bottom:8px"><div class="mu sm">Loading…</div></div>${S.user&&!S.user.guest&&S.tok?`<div style="display:flex;gap:6px"><input id="shchi" maxlength="200" placeholder="Say something…" autocomplete="off" style="flex:1;min-width:0"><button class="btn" id="shchs">Send</button></div><div class="mu sm" id="shche" style="color:#e65;min-height:16px"></div>`:`<div class="mu sm">Sign in to join the chat.</div>`}</div>`;
+ const wrap=k=>{const f=XV[k];if(!f)return;XV[k]=function(){const o=f.apply(this,arguments);if(typeof o!=='string')return o;const rm=room();if(!rm||o.includes('id="shchat"'))return o;return o+box(rm)}};
+ wrap('match');wrap('sxmatch');
+ let since=0,curRoom='',busy=0;
+ const draw=(list,reset)=>{const w=qs('#shchm');if(!w)return;if(reset)w.innerHTML='';const mine=(S.user&&S.user.nick)||'';if(reset&&!list.length)w.innerHTML='<div class="mu sm">No messages yet. Start the chat!</div>';else{if(w.firstChild&&w.firstChild.className==='mu sm'&&list.length)w.innerHTML='';
+  const near=w.scrollHeight-w.scrollTop-w.clientHeight<60;for(const m of list){if(w.querySelector('[data-id="'+m.id+'"]'))continue;const d=document.createElement('div');d.setAttribute('data-id',m.id);d.style.cssText='font-size:13px;line-height:1.35';d.innerHTML='<b style="color:var(--ac)">'+esc(m.nick)+'</b> '+esc(m.text)+' <a href="#" data-rp="'+esc(m.id)+'" style="color:#8a94b0;font-size:11px;text-decoration:none">report</a>';w.appendChild(d)}if(near)w.scrollTop=w.scrollHeight}};
+ const poll=async()=>{const el=qs('#shchat');if(!el||busy||document.hidden)return;busy=1;try{const rm=el.getAttribute('data-room');const reset=rm!==curRoom;if(reset){curRoom=rm;since=0;shTrack('chat_open',rm.split(':')[0])}const r=await fetch(api('/api/chat?room='+encodeURIComponent(rm)+'&since='+since),{cache:'no-store'});const j=await r.json();if(j.ok){draw(j.messages,reset&&since===0);for(const m of j.messages)since=Math.max(since,m.t)}}catch(e){}busy=0};
+ setInterval(poll,4000);setTimeout(poll,600);
+ let rd=0;const o2=render;render=function(){const o=o2.apply(this,arguments);curRoom='';setTimeout(poll,300);return o};
+ const send=async()=>{const i=qs('#shchi'),er=qs('#shche'),el=qs('#shchat');if(!i||!el)return;const t=i.value.trim();if(!t)return;er.textContent='';i.disabled=true;const j=await jpost('/api/chat',{room:el.getAttribute('data-room'),text:t});i.disabled=false;if(j.ok){i.value='';draw([j.message],false);since=Math.max(since,j.message.t)}else er.textContent=j.error||'Could not send';i.focus()};
+ document.addEventListener('click',e=>{if(e.target&&e.target.id==='shchs'){e.preventDefault();send()}const rp=e.target.closest&&e.target.closest('[data-rp]');if(rp){e.preventDefault();const el=qs('#shchat');jpost('/api/chat/report',{room:el&&el.getAttribute('data-room'),id:rp.getAttribute('data-rp')}).then(j=>{rp.textContent=j.ok?'reported':'sign in to report';if(j.hidden)rp.closest('[data-id]').remove()})}});
+ document.addEventListener('keydown',e=>{if(e.target&&e.target.id==='shchi'&&e.key==='Enter'){e.preventDefault();send()}});
+ // admin: stats card in Services
+ const sv=XV.svc;if(sv)XV.svc=function(){const o=sv.apply(this,arguments);if(typeof o!=='string'||!S.user||S.user.role!=='admin'||o.includes('id="shstats"'))return o;setTimeout(loadStats,200);return o+'<div class="box" id="shstats" style="margin:12px 14px 90px"><h3>Usage and sponsor stats</h3><div class="mu sm">Loading…</div></div>'};
+ const loadStats=async()=>{const el=qs('#shstats');if(!el)return;try{const r=await fetch(api('/api/admin/stats'),{headers:{authorization:'Bearer '+(S.tok||'')}});const j=await r.json();if(!j.ok){el.innerHTML='<h3>Usage and sponsor stats</h3><div class="mu sm">'+esc(j.error||'Not available')+'</div>';return}
+  const days=j.days.slice(-7).map(d=>`<tr><td>${esc(d.day.slice(5))}</td><td>${d.views}</td><td>${d.imp}</td><td>${d.clicks}</td></tr>`).join('');
+  const ads=j.ads.map(a=>`<tr><td>${esc(a.title||a.id)}</td><td>${a.impressions}</td><td>${a.clicks}</td><td>${a.ctr}%</td></tr>`).join('');
+  const sc=j.screens.slice(0,8).map(x=>`<tr><td>${esc(x.screen)}</td><td>${x.views}</td></tr>`).join('');
+  el.innerHTML=`<h3>Usage and sponsor stats</h3><div class="mu sm">Counters only, last 14 days. Chat: ${j.chatMessages} messages in ${j.chatRooms} rooms.</div><table style="width:100%;font-size:13px;margin-top:6px"><tr><th align=left>Day</th><th>Screens</th><th>Ad views</th><th>Ad taps</th></tr>${days||'<tr><td colspan=4>No data yet</td></tr>'}</table><table style="width:100%;font-size:13px;margin-top:8px"><tr><th align=left>Sponsor</th><th>Views</th><th>Taps</th><th>CTR</th></tr>${ads||'<tr><td colspan=4>No banners</td></tr>'}</table><table style="width:100%;font-size:13px;margin-top:8px"><tr><th align=left>Top screens</th><th>Views</th></tr>${sc||'<tr><td colspan=2>No data yet</td></tr>'}</table>`}catch(e){}};
 })();
 </script>
 </body>
