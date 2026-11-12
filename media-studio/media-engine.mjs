@@ -12,7 +12,7 @@ const LABELS={
  te:{noResult:'ఫలితం లేదు',drawn:'మ్యాచ్ డ్రా',tied:'మ్యాచ్ టై',completed:'మ్యాచ్ ముగిసింది',tag:'మ్యాచ్ ఫలితం',desk:'గ్లోబల్ స్పోర్ట్స్ డెస్క్',foot:'ఒరిజినల్ మ్యాచ్ గ్రాఫిక్ • స్కోరింగ్ హీరోస్',overs:'ఓవర్లు',final:'ఫలితం'},
  hi:{noResult:'कोई परिणाम नहीं',drawn:'मैच ड्रा',tied:'मैच टाई',completed:'मैच समाप्त',tag:'मैच परिणाम',desk:'ग्लोबल स्पोर्ट्स डेस्क',foot:'ओरिजिनल मैच ग्राफिक • स्कोरिंग हीरोज़',overs:'ओवर',final:'परिणाम'}};
 const validId = x => /^[a-z0-9-]{1,64}$/i.test(String(x||''));
-export function prepareMedia(m, {language='en', photo=null, artwork=null}={}) {
+export function prepareMedia(m, {language='en', photo=null, artwork=null, perfChips=null}={}) {
   language=normalizeLanguage(language);
   if (!validId(m?.id)) throw new Error('Invalid match ID');
   if (!isFinal(m)) return {ok:false,reason:'Final result not verified; do not publish'};
@@ -86,6 +86,11 @@ export function prepareMedia(m, {language='en', photo=null, artwork=null}={}) {
   }
   const rawCard=m.scorecard || m.playerScorecard || {};
   const playerPerformance=performanceInsights(rawCard);
+  // Verified top performers shown on the poster (from the scorecard only; none when no scorecard exists).
+  const shortName=n=>{n=String(n||'').trim();if(n.length<=20)return n;const w=n.split(/\s+/);return (w.length>1?w[0][0]+'. '+w.slice(-1)[0]:n).slice(0,20)};
+  const pick=(arr,tm)=>{const out=[];for(const t of tm){const f=arr.find(x=>x.team&&x.team.toLowerCase()===String(t).toLowerCase()&&!out.includes(x));if(f)out.push(f)}for(const x of arr){if(out.length>=2)break;if(!out.includes(x))out.push(x)}return out.slice(0,2)};
+  const performers={bat:pick(playerPerformance.batters.filter(x=>x.runs>0),m.teams?(m.teams||[]).slice(0,2).map(t=>typeof t==='string'?t:t?.name):[]).map(x=>shortName(x.name)+' '+x.runs+(x.balls!=null?' ('+x.balls+')':'')),
+   bowl:pick(playerPerformance.bowlers.filter(x=>x.wickets>0),[]).map(x=>shortName(x.name)+' '+x.wickets+(x.runsConceded!=null?'/'+x.runsConceded:' wkts'))};
   const photoSearches=playerPerformance.batters.slice(0,2).concat(playerPerformance.bowlers.slice(0,2)).filter((p,i,a)=>a.findIndex(q=>q.name===p.name&&q.team===p.team)===i).map(p=>playerPhotoSearch(p.name,p.team));
   const paragraphs=language==='te' ? [
     `${teams[0]}, ${teams[1]} మధ్య మ్యాచ్ ముగిసింది. ఫలితం: ${result}.`,...analysis,
@@ -109,19 +114,31 @@ export function prepareMedia(m, {language='en', photo=null, artwork=null}={}) {
     epaper:{title:headline,subtitle:competition,body:paragraphs,format:'A4',photo:licensedPhoto},
     photo:licensedPhoto,players,playerPerformance,photoSearches,research,publication:'internal-auto-eligible',externalPublishing:'disabled-without-account-permissions',
     scoreless:!normalized.length,innings:normalized,
-    posterSvg:renderPoster({headline,summary,result,venue,teams,language,innings:normalized,artwork})};
+    performers,posterSvg:renderPoster({headline,summary,result,venue,teams,language,innings:normalized,artwork,performers,chips:perfChips})};
 }
 // Original illustrated match poster. No third-party image or fake player likeness.
 // Font stack covers Latin, Telugu and Devanagari on Android/iOS/desktop; the SVG is shown as an <img> so it cannot load web fonts.
 const FONT='"Noto Sans","Noto Sans Telugu","Noto Sans Devanagari","Telugu Sangam MN","Gautami","Kohinoor Telugu","Kohinoor Devanagari",Arial,sans-serif';
 // artwork: {mime, b64} = AI illustration (no text/names inside it). It replaces the generic bat-and-ball drawing; all text stays deterministic.
 export function renderPoster(o) {
-  const svg=renderPosterBase(o), a=o&&o.artwork;
+  const a=o&&o.artwork, chipsOn=!!(a&&a.b64&&/^image\/(png|jpeg|webp)$/.test(a.mime||'')&&Array.isArray(o.chips)&&o.chips.some(x=>x&&x.name&&x.line));
+  const svg=renderPosterBase(chipsOn?{...o,performers:null}:o);   // chips replace the text strip so the same figures are not printed twice
   if(!a||!a.b64||!/^image\/(png|jpeg|webp)$/.test(a.mime||''))return svg;
   const layer='<image href="data:'+a.mime+';base64,'+a.b64+'" x="0" y="0" width="1080" height="740" preserveAspectRatio="xMidYMid slice"/><rect x="0" y="0" width="1080" height="740" fill="#050b1c" opacity=".42"/><rect x="0" y="300" width="1080" height="440" fill="#050b1c" opacity=".38"/><text x="1040" y="722" text-anchor="end" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#e6eefb" opacity=".85">AI-generated illustration</text>\n';
-  return svg.replace(/ <g transform="translate\(640 330\)[^\n]*\n/,'').replace(/ <g transform="translate\(800 640\)[^\n]*\n/,'').replace(' <rect x="40" y="40" width="1000"',layer+' <rect x="40" y="40" width="1000"');
+  const perf=(Array.isArray(o.chips)?o.chips:[]).slice(0,2).filter(x=>x&&x.name&&x.line);
+  let chipSvg='',credit='';
+  perf.forEach((x,i)=>{const y=290+i*140,nm=esc(String(x.name).slice(0,20)),ln=esc(String(x.line).slice(0,18)),role=esc(String(x.role||'').slice(0,16)),ph=x.photo&&x.photo.b64&&/^image\/(png|jpeg|webp)$/.test(x.photo.mime||'');
+   chipSvg+='<g><rect x="636" y="'+y+'" width="380" height="124" rx="20" fill="#071329" opacity=".9" stroke="#bd965d" stroke-width="2"/>'
+    +(ph?'<clipPath id="pc'+i+'"><circle cx="702" cy="'+(y+62)+'" r="46"/></clipPath><image href="data:'+x.photo.mime+';base64,'+x.photo.b64+'" x="656" y="'+(y+16)+'" width="92" height="92" preserveAspectRatio="xMidYMid slice" clip-path="url(#pc'+i+')"/><circle cx="702" cy="'+(y+62)+'" r="46" fill="none" stroke="#f9d58b" stroke-width="3"/>'
+        :'<circle cx="702" cy="'+(y+62)+'" r="46" fill="#10335b" stroke="#bd965d" stroke-width="3"/><text x="702" y="'+(y+72)+'" text-anchor="middle" font-family="Arial,sans-serif" font-size="26" font-weight="900" fill="#f9d58b">'+esc(String(x.role||'').toLowerCase().includes('bowl')?'BWL':'BAT')+'</text>')
+    +'<text x="764" y="'+(y+36)+'" font-family="Arial,sans-serif" font-size="15" font-weight="800" letter-spacing="2" fill="#9fb4cf">'+role.toUpperCase()+'</text>'
+    +'<text x="764" y="'+(y+70)+'" font-family="Arial,sans-serif" font-size="27" font-weight="800" fill="#ffffff">'+nm+'</text>'
+    +'<text x="764" y="'+(y+106)+'" font-family="Arial,sans-serif" font-size="30" font-weight="900" fill="#f9d58b">'+ln+'</text></g>';
+   if(ph&&x.photo.credit)credit+=(credit?'; ':'')+esc(String(x.photo.credit).slice(0,90));});
+  if(credit)chipSvg+='<text x="1016" y="616" text-anchor="end" font-family="Arial,sans-serif" font-size="14" fill="#e6eefb" opacity=".9">Photo: '+credit+' (Wikimedia Commons)</text>';
+  return svg.replace(/ <g transform="translate\(640 330\)[^\n]*\n/,'').replace(/ <g transform="translate\(800 640\)[^\n]*\n/,'').replace(' <rect x="40" y="40" width="1000"',layer+chipSvg+' <rect x="40" y="40" width="1000"');
 }
-function renderPosterBase({headline,summary,result,venue,teams,language='en',innings=null}) {
+function renderPosterBase({headline,summary,result,venue,teams,language='en',innings=null,performers=null}) {
  const L=LABELS[normalizeLanguage(language)]||LABELS.en;
  const safe=(v,n=160)=>esc(String(v??'').slice(0,n));
  // Word wrap by character budget (counts grapheme-ish code points so Telugu/Hindi do not overflow).
@@ -159,6 +176,7 @@ function renderPosterBase({headline,summary,result,venue,teams,language='en',inn
  ${textLines(L.desk,84,202,23,40,1,'#c6d9ee',700)}
  <rect x="82" y="252" width="330" height="50" rx="25" fill="#d7a354"/>${textLines(L.tag,106,286,25,22,1,'#0a1730',900)}
  ${textLines(headline,80,385,hs,hmax,4,'#ffffff')}
+ ${performers&&(performers.bat.length||performers.bowl.length)?`<rect x="78" y="632" width="924" height="76" rx="14" fill="#071329" opacity=".78"/>${performers.bat.length?textLines('BAT  '+performers.bat.join('   |   '),102,664,25,64,1,'#f9d58b',800):''}${performers.bowl.length?textLines('BOWL  '+performers.bowl.join('   |   '),102,698,25,64,1,'#cddff0',800):''}`:''}
  <path d="M82 715H998" stroke="url(#gold)" stroke-width="4"/>
  ${box}
  ${textLines(result,86,1066,27,60,3,'#fff2ce',700)}

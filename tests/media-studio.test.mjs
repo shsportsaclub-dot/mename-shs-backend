@@ -30,3 +30,18 @@ test('artwork replaces the bat-and-ball drawing, keeps exact text and the AI lab
   assert.match(art.posterSvg,/data:image\/png;base64,AAAA/);assert.match(art.posterSvg,/AI-generated illustration/);assert.match(art.posterSvg,/92\/5/);
   assert.equal(prepareMedia({id:'x1',ended:true,status:'Rwanda Women won by 18 runs',teams:['Rwanda Women','Uganda Women'],score:[]},{language:'en',artwork:{mime:'text/html',b64:'x'}}).posterSvg.includes('data:text/html'),false);
 });
+test('poster shows verified top performers from the scorecard, and nothing when there is no scorecard',()=>{
+  const mk=sc=>prepareMedia({id:'p1',ended:true,status:'Rwanda Women won by 18 runs',teams:['Rwanda Women','Uganda Women'],score:[{inning:'Rwanda Women Inning 1',r:92,w:5,o:18},{inning:'Uganda Women Inning 1',r:74,w:6,o:18}],scorecard:sc},{language:'en'});
+  const a=mk({batting:[{name:'Aisha Mukamana',team:'Rwanda Women',runs:41,balls:36},{name:'Grace Nakato',team:'Uganda Women',runs:30,balls:33}],bowling:[{name:'Beatrice Uwase',team:'',wickets:3,runsConceded:11}]});
+  assert.deepEqual(a.performers.bat,['Aisha Mukamana 41 (36)','Grace Nakato 30 (33)']);assert.deepEqual(a.performers.bowl,['Beatrice Uwase 3/11']);
+  assert.match(a.posterSvg,/Aisha Mukamana 41 \(36\)/);assert.match(a.posterSvg,/Beatrice Uwase 3\/11/);
+  const b=mk(null);assert.equal(b.performers.bat.length+b.performers.bowl.length,0);assert.doesNotMatch(b.posterSvg,/BAT  /);
+});
+test('performer chips: names, figures and photo credit on the poster; strip not duplicated',()=>{
+  const row={id:'p1',ended:true,status:'Rwanda Women won by 18 runs',teams:['Rwanda Women','Uganda Women'],score:[{inning:'Rwanda Women Inning 1',r:92,w:5,o:18},{inning:'Uganda Women Inning 1',r:74,w:6,o:18}],scorecard:{batting:[{name:'Jane Doe',team:'Rwanda Women',runs:104,balls:60}],bowling:[{name:'Ann Bowler',team:'Uganda Women',wickets:5,runsConceded:23}]}};
+  const chips=[{name:'Jane Doe',role:'Top scorer',line:'104 (60)',photo:{mime:'image/jpeg',b64:'BBBB',credit:'A. Author, CC BY-SA 4.0'}},{name:'Ann Bowler',role:'Best bowler',line:'5/23'}];
+  const m=prepareMedia(row,{language:'en',artwork:{mime:'image/png',b64:'AAAA'},perfChips:chips});
+  assert.match(m.posterSvg,/Jane Doe/);assert.match(m.posterSvg,/104 \(60\)/);assert.match(m.posterSvg,/CC BY-SA 4\.0/);assert.match(m.posterSvg,/Wikimedia Commons/);assert.match(m.posterSvg,/data:image\/jpeg;base64,BBBB/);
+  assert.doesNotMatch(m.posterSvg,/BAT  /);
+  const strip=prepareMedia(row,{language:'en'});assert.match(strip.posterSvg,/BAT/);
+});

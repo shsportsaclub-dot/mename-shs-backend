@@ -14,6 +14,20 @@ export function buildImagePrompt(title) {
   const mood = /century|hundred|record|win|won|victory|title|champion|trophy|final/.test(t) ? 'triumphant celebration, golden confetti' : /injur|ban|out of|ruled out|setback|lose|lost|defeat/.test(t) ? 'tense, emotional, rain and floodlights' : /auction|sign|transfer|squad|named/.test(t) ? 'team announcement atmosphere, spotlight' : 'dramatic match atmosphere';
   return `Original cinematic ${sport} illustration for a news poster, ${mood}, packed stadium under floodlights at night, generic unnamed athletes seen as silhouettes or from behind, rich navy and gold colour palette, vertical 4:5 composition, no text, no letters, no numbers, no logos, no watermark, no real person likeness`;
 }
+
+// Match-specific artwork brief: built from the verified match record (format, women's/men's, kit colours, what actually happened).
+// Never names or depicts a real person: figures are generic and unnamed, so nothing can pass as a photograph of a real player.
+const KIT = [[/india/,'sky-blue and navy'],[/australia/,'green and gold'],[/new zealand/,'black'],[/england/,'navy blue and white'],[/pakistan/,'dark green'],[/south africa/,'green and gold'],[/west indies/,'maroon'],[/sri lanka/,'navy blue and yellow'],[/bangladesh/,'green and red'],[/afghanistan/,'blue and red'],[/zimbabwe/,'red and yellow'],[/ireland/,'green'],[/scotland/,'navy blue'],[/netherlands/,'orange'],[/nepal/,'red and blue'],[/uganda/,'yellow, black and red'],[/rwanda/,'blue and yellow'],[/kenya/,'red and green'],[/namibia/,'blue and red'],[/uae|emirates|desert|abu dhabi/,'white and red']];
+const kitOf = n => (KIT.find(([re]) => re.test(String(n||'').toLowerCase()))||[0,''])[1];
+export function buildMatchImagePrompt({headline='', teams=[], type='', name='', performance=null, innings=[]}={}) {
+  const all = [headline, name, ...(teams||[])].join(' '), women = /\bwomen|womens|women's|\bwbbl|\bwpl\b/i.test(all);
+  const fmt = /test|first.class|four.day/i.test(type+' '+name) ? 'Test match in white clothing' : /t10/i.test(type+' '+name) ? 'T10 match in coloured kit' : /odi|50.over/i.test(type+' '+name) ? 'one-day match in coloured kit' : 'T20 match in coloured kit';
+  const a = kitOf(teams[0]), b = kitOf(teams[1]);
+  const bat = performance && performance.batters && performance.batters[0], bowl = performance && performance.bowlers && performance.bowlers[0];
+  const lost = /no result|abandon|rain|washed/i.test(headline), tied = /\btied\b|\bdraw/i.test(headline);
+  const moment = bat && bat.runs >= 100 ? 'a batter celebrating a century with the bat and helmet raised, team-mates applauding' : bowl && bowl.wickets >= 5 ? 'a bowler celebrating a five-wicket haul with arms outstretched as team-mates run in' : bat && bat.runs >= 50 ? 'a batter raising the bat to a crowd for a half-century' : lost ? 'rain clouds over an empty floodlit cricket ground, covers on the pitch' : tied ? 'two teams standing together on the field after a tied finish' : /won by \d+ runs/i.test(headline) ? 'a fielding side celebrating the final wicket in a huddle' : /won by \d+ wick/i.test(headline) ? 'two batters embracing at the crease as the winning runs are scored' : 'a decisive moment of a cricket match with players celebrating';
+  return `Original cinematic ${women ? "women's " : ''}cricket illustration for a match-result poster: ${moment}. ${fmt}. ` + (a || b ? `One team wears ${a || 'dark'} kit and the other wears ${b || 'dark'} kit, with plain shirts that have no logos or lettering. ` : '') + `${women ? 'The cricketers are women. ' : ''}Floodlit stadium, packed stands, rich navy and gold colour palette, vertical 4:5 composition, athletes seen as generic unnamed figures from behind or in silhouette, faces not shown or not identifiable, no text, no letters, no numbers, no logos, no flags, no watermark. Leave the upper-left area calm and darker for overlaid text.`;
+}
 export const seedFor = id => parseInt(crypto.createHash('sha1').update(id).digest('hex').slice(0,7),16);
 const cap = (s,n) => String(s||'').replace(/\s+/g,' ').trim().slice(0,n);
 export function newJob(item, now = Date.now()) {

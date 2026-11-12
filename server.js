@@ -1,8 +1,9 @@
 import {resolveLanguage, languageCatalog} from './media-studio/languages.mjs';
 import {prepareMedia, publishDecision, normalizeLanguage} from './media-studio/media-engine.mjs';
-import {runPipeline, generateImage, renderNewsPoster, publicJob, buildImagePrompt, seedFor, sniff} from './media-studio/news-pipeline.mjs';
+import {runPipeline, generateImage, renderNewsPoster, publicJob, buildImagePrompt, buildMatchImagePrompt, seedFor, sniff} from './media-studio/news-pipeline.mjs';
 import {storageFromEnv} from './media-studio/media-storage.mjs';
 import {qaJob} from './media-studio/media-qa.mjs';
+import {findPlayerPhoto} from './media-studio/player-photo.mjs';
 // Scoring Heroes backend: OTP SMS from "SH Sports" + magic login link + live cricket proxy.
 // Run npm install, then npm start. Environment may come from Render or dotenv.
 import './env.mjs';
@@ -2102,7 +2103,7 @@ routes['GET /api/media-studio'] = async (req, body, ip) => {
   const rows=await mediaRows();
   const items=[];
   for (const {row,date,stored} of rows) {
-    const localized=prepareMedia({...row,ended:true},{language,photo:stored?.photo||null,artwork:artOf(row.id)});
+    const localized=prepWithArt(row,{language,photo:stored?.photo||null});
     if(!localized.ok)continue;
     const it={id:localized.id,mid:row.id,kind:'result-media',date,language,at:stored?.at||Date.parse(row.time||'')||0,verified:true,h:localized.headline,sub:localized.summary,body:localized.paragraphs,
       epaper:localized.epaper,social:localized.social,players:localized.players,research:localized.research,playerPerformance:localized.playerPerformance,photo:localized.photo,scoreless:localized.scoreless,
@@ -2165,43 +2166,94 @@ const ART = new Map();                                   // mid -> { mime, b64, 
 const artFile = mid => path.join(NEWS_IMG_DIR, 'm-' + String(mid).replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 60) + '.bin');
 function artOf(mid) {
   if (ART.has(mid)) return ART.get(mid);
-  const rec = (db.matchArt || {})[mid]; if (!rec || rec.status !== 'generated') return null;
+  const rec = (db.matchArt || {})[mid]; if (!rec || !/^(generated|regen|failed)$/.test(rec.status)) return null;   // a replacement that is still being retried keeps showing the previous picture
   try { const b = fs.readFileSync(artFile(mid)); const a = { mime: rec.mime || 'image/png', b64: b.toString('base64'), v: String(rec.sha256 || '').slice(0, 8) }; ART.set(mid, a); return a; } catch {}
   if (rec.assetUrl && !rec.loading) { rec.loading = true; fetch(rec.assetUrl).then(async r => { if (r.ok) { const b = Buffer.from(await r.arrayBuffer()); try { fs.mkdirSync(NEWS_IMG_DIR, { recursive: true }); fs.writeFileSync(artFile(mid), b); } catch {} ART.set(mid, { mime: rec.mime || 'image/png', b64: b.toString('base64'), v: String(rec.sha256 || '').slice(0, 8) }); } }).catch(() => {}).finally(() => { rec.loading = false; }); }
   return null;
 }
+const cardOf = id => (db.matchArt && db.matchArt[id] && db.matchArt[id].card) || null;
+const withCard = row => ({ ...row, ended: true, scorecard: cardOf(row.id) });
+function buildCard(sc) {   // top batting/bowling figures of a finished match, from the provider scorecard
+  const batting = [], bowling = [];
+  for (const inn of (sc && sc.scorecard) || []) {
+    const team = String(inn.inning || '').replace(/\s+Inning.*$/i, '');
+    for (const b of inn.batting || []) { const n = b && b.batsman && b.batsman.name; if (n && Number.isFinite(+b.r)) batting.push({ name: String(n).slice(0, 60), team, runs: +b.r, balls: Number.isFinite(+b.b) ? +b.b : null, fours: +b['4s'] || 0, sixes: +b['6s'] || 0 }); }
+    for (const b of inn.bowling || []) { const n = b && b.bowler && b.bowler.name; if (n && Number.isFinite(+b.w)) bowling.push({ name: String(n).slice(0, 60), team: '', wickets: +b.w, runsConceded: Number.isFinite(+b.r) ? +b.r : null }); }
+  }
+  batting.sort((x, y) => y.runs - x.runs); bowling.sort((x, y) => y.wickets - x.wickets || (x.runsConceded ?? 999) - (y.runsConceded ?? 999));
+  return batting.length || bowling.length ? { batting: batting.slice(0, 6), bowling: bowling.slice(0, 6) } : null;
+}
+// Top performers (scorecard only) as poster chips; a licensed Wikimedia Commons photo is added only when one was verified.
+const phKey = (n, t) => (String(n).toLowerCase().replace(/[^a-z ]/g, '').replace(/\s+/g, ' ').trim() + '|' + String(t || '').toLowerCase().trim()).slice(0, 90);
+const phFile = k => path.join(NEWS_IMG_DIR, 'pp-' + crypto.createHash('sha1').update(k).digest('hex').slice(0, 16) + '.bin');
+const PH = new Map();
+function photoOf(name, team) {
+  const k = phKey(name, team); if (PH.has(k)) return PH.get(k);
+  const rec = (db.playerPhotos || {})[k]; if (!rec || !rec.ok) return null;
+  try { const b = fs.readFileSync(phFile(k)); const v = { mime: rec.mime, b64: b.toString('base64'), credit: rec.credit }; PH.set(k, v); return v; } catch { return null; }
+}
+function chipsFor(prep) {
+  const pp = prep && prep.playerPerformance, out = []; if (!pp) return out;
+  const b = (pp.batters || []).find(x => x.runs > 0), w = (pp.bowlers || []).find(x => x.wickets > 0);
+  if (b) out.push({ name: b.name, role: 'Top scorer', line: b.runs + (b.balls != null ? ' (' + b.balls + ')' : ''), photo: photoOf(b.name, b.team) });
+  if (w) out.push({ name: w.name, role: 'Best bowler', line: w.wickets + (w.runsConceded != null ? '/' + w.runsConceded : ' wkts'), photo: photoOf(w.name, w.team) });
+  return out;
+}
+function prepWithArt(row, opts) {
+  const art = artOf(row.id), first = prepareMedia(withCard(row), opts); if (!art || !first.ok) return first;
+  return prepareMedia(withCard(row), { ...opts, artwork: art, perfChips: chipsFor(first) });
+}
+async function ensurePlayerPhotos(prep) {
+  const pp = prep && prep.playerPerformance; if (!pp || process.env.PLAYER_PHOTOS === '0') return;
+  db.playerPhotos ||= {};
+  for (const x of [(pp.batters || []).find(x => x.runs > 0), (pp.bowlers || []).find(x => x.wickets > 0)].filter(Boolean)) {
+    const k = phKey(x.name, x.team), rec = db.playerPhotos[k];
+    if (rec && (rec.ok ? fs.existsSync(phFile(k)) : Date.now() - rec.at < 7 * 864e5)) continue;
+    const r = await findPlayerPhoto(x.name);
+    if (r.ok) { try { fs.mkdirSync(NEWS_IMG_DIR, { recursive: true }); fs.writeFileSync(phFile(k), r.bytes); } catch {} db.playerPhotos[k] = { ok: true, mime: r.mime, credit: r.credit, page: r.page, license: r.license, name: x.name, at: Date.now() }; PH.delete(k); }
+    else db.playerPhotos[k] = { ok: false, reason: r.reason, name: x.name, at: Date.now() };
+    saveDb();
+  }
+}
 let matchArtBusy = false;
 async function matchArtRun() {
   if (matchArtBusy) return null; matchArtBusy = true;
-  const out = { made: 0, fallback: 0, review: 0 };
+  const out = { made: 0, fallback: 0, review: 0, cards: 0 };
   try {
     db.matchArt ||= {};
     for (const { row } of await mediaRows()) {
       const rec = db.matchArt[row.id];
+      if (rec && rec.pv !== 2 && rec.status === 'generated') { rec.status = 'regen'; rec.attempts = 0; }   // new match-specific brief: replace the generic picture (old one stays until the new one passes QA)
       if (rec && !rec.fix1 && rec.status !== 'generated' && (rec.qa?.failed || []).some(f => /verified-teams/.test(f))) { rec.fix1 = 1; rec.status = 'queued'; rec.attempts = 0; }   // earlier QA bug (team objects) rejected good posters: retry them
       if (rec && (rec.status === 'generated' || rec.status === 'fallback' || (rec.status === 'failed' && (rec.attempts >= 3 || Date.now() - rec.at < 6e5)))) continue;
-      const m0 = prepareMedia({ ...row, ended: true }, { language: 'en' }); if (!m0.ok) continue;
-      const r0 = db.matchArt[row.id] = rec || { status: 'queued', attempts: 0, seed: seedFor('m-' + row.id), prompt: buildImagePrompt(m0.headline + ' ' + (m0.summary || '')) };
+      if (CRIC_KEY && !cardOf(row.id) && /^[0-9a-f-]{20,}$/i.test(String(row.id)) && out.cards < 8 && !limited('mcard', 40, 36e5)) {
+        const rc = (db.matchArt[row.id] ||= { status: 'queued', attempts: 0, seed: seedFor('m-' + row.id) });
+        if (!rc.cardTried || Date.now() - rc.cardTried > 6 * 36e5) { rc.cardTried = Date.now(); out.cards++; try { const [r] = await cricFresh('match_scorecard', row.id, 6 * 36e5); const c = r && r.ok && buildCard(r.data); if (c) rc.card = c; } catch {} saveDb(); }
+      }
+      const m0 = prepareMedia(withCard(row), { language: 'en' }); if (!m0.ok) continue;
+      const r0 = db.matchArt[row.id] = db.matchArt[row.id] || { status: 'queued', attempts: 0, seed: seedFor('m-' + row.id) };
+      r0.prompt = buildMatchImagePrompt({ headline: m0.headline, teams: (row.teams || []).slice(0, 2).map(t => typeof t === 'string' ? t : t && t.name), type: row.type, name: row.name, performance: m0.playerPerformance, innings: m0.innings }); r0.pv = 2;
       r0.attempts++; r0.at = Date.now();
       const job = { jobId: 'mj-' + row.id, image: { prompt: r0.prompt, seed: r0.seed } };
+      await ensurePlayerPhotos(m0);
       const g = await newsGenerate(job);
-      if (!g.ok) { r0.status = (g.permanent || r0.attempts >= 3) ? 'fallback' : 'failed'; r0.error = String(g.error || '').slice(0, 100); if (r0.status === 'fallback') out.fallback++; saveDb(); continue; }
+      if (!g.ok) { r0.status = (g.permanent || r0.attempts >= 3) ? (fs.existsSync(artFile(row.id)) ? 'generated' : 'fallback') : 'failed'; r0.error = String(g.error || '').slice(0, 100); if (r0.status === 'fallback') out.fallback++; saveDb(); continue; }
       const sha = crypto.createHash('sha256').update(g.bytes).digest('hex');
-      fs.writeFileSync(artFile(row.id), g.bytes);
       const art = { mime: g.mime, b64: g.bytes.toString('base64') };
-      const m = prepareMedia({ ...row, ended: true }, { language: 'en', artwork: art });
+      const chips = chipsFor(m0), m = prepareMedia(withCard(row), { language: 'en', artwork: art, perfChips: chips });
       const others = Object.fromEntries(Object.entries(db.matchArt).filter(([k, v]) => k !== row.id && v.sha256).map(([k, v]) => [k, { jobId: k, image: { sha256: v.sha256 } }]));
       let assetUrl = null, posterUrl = null;
       if (MEDIA_STORE) {
         const u = await MEDIA_STORE.put(`match/${row.id}.${extOf(g.mime)}`.replace(/[^a-zA-Z0-9._\/-]/g, '_'), g.bytes, g.mime); if (u.ok) assetUrl = u.url;
         const p = await MEDIA_STORE.put(`match/${row.id}-poster.svg`.replace(/[^a-zA-Z0-9._\/-]/g, '_'), Buffer.from(m.posterSvg), 'image/svg+xml'); if (p.ok) posterUrl = p.url;
       }
-      const expect = [...(m.innings || []).flatMap(i => [String(i.runs) + (i.wickets < 10 ? '/' + i.wickets : '')]), ...(row.teams || []).slice(0, 2).map(t => typeof t === 'string' ? t : t && t.name).filter(Boolean)];
+      const expect = [...chips.flatMap(c => [c.name.slice(0, 20), c.line.slice(0, 18)]), ...(m.performers ? [...m.performers.bat, ...m.performers.bowl] : []), ...(m.innings || []).flatMap(i => [String(i.runs) + (i.wickets < 10 ? '/' + i.wickets : '')]), ...(row.teams || []).slice(0, 2).map(t => typeof t === 'string' ? t : t && t.name).filter(Boolean)];
       const qjob = { jobId: 'mj-' + row.id, title: m.headline, image: { status: 'generated' }, asset: posterUrl ? { url: posterUrl } : null };
       const qa = await qaJob({ job: qjob, image: { mime: g.mime, bytes: g.bytes }, svg: m.posterSvg, jobs: { ...others, ...(db.newsJobs || {}) }, requireAsset: !!MEDIA_STORE, expect });
-      Object.assign(r0, { sha256: sha, mime: g.mime, provider: g.provider, assetUrl, posterAssetUrl: posterUrl, qa: { passed: qa.passed, failed: qa.checks.filter(c => !c.ok).map(c => c.name + (c.note ? ' (' + c.note + ')' : '')), at: Date.now() } });
-      if (qa.passed) { r0.status = 'generated'; ART.set(row.id, { ...art, v: sha.slice(0, 8) }); out.made++; }
-      else { r0.status = r0.attempts >= 3 ? 'fallback' : 'failed'; try { fs.unlinkSync(artFile(row.id)); } catch {} out.review++; }
+      r0.qa = { passed: qa.passed, failed: qa.checks.filter(c => !c.ok).map(c => c.name + (c.note ? ' (' + c.note + ')' : '')), at: Date.now() };
+      if (qa.passed) Object.assign(r0, { sha256: sha, mime: g.mime, provider: g.provider, assetUrl, posterAssetUrl: posterUrl });
+      if (qa.passed) { try { fs.mkdirSync(NEWS_IMG_DIR, { recursive: true }); fs.writeFileSync(artFile(row.id), g.bytes); } catch {} r0.status = 'generated'; ART.set(row.id, { ...art, v: sha.slice(0, 8) }); out.made++; }
+      else { r0.status = (r0.attempts >= 3 && !ART.has(row.id)) ? 'fallback' : (r0.attempts >= 3 ? 'generated' : 'failed'); out.review++; }
       saveDb();
     }
   } catch (e) { out.error = String(e.message).slice(0, 100); }
@@ -2563,7 +2615,7 @@ http.createServer(async (req, res) => {
       const q = new URL(req.url, 'http://x').searchParams, mid = String(q.get('mid') || '').slice(0, 64);
       if (limited('media-poster:' + (req.socket.remoteAddress || ''), 600, 36e5)) return out(429, { ok: false, error: 'Too many requests' });
       const hit = (await mediaRows()).find(x => x.row.id === mid);
-      const m = hit && prepareMedia({ ...hit.row, ended: true }, { language: resolveLanguage(q.get('lang') || 'en').articleLanguage, artwork: artOf(mid) });
+      const m = hit && prepWithArt(hit.row, { language: resolveLanguage(q.get('lang') || 'en').articleLanguage });
       if (!m || !m.ok) return out(404, { ok: false, error: 'Poster not available for this match' });
       res.writeHead(200, { 'content-type': 'image/svg+xml; charset=utf-8', 'cache-control': 'public, max-age=300', 'access-control-allow-origin': '*', 'x-content-type-options': 'nosniff' });
       return res.end(m.posterSvg);

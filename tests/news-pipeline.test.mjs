@@ -65,3 +65,11 @@ test('google provider: uses key header + env model, decodes inlineData; refuses 
   assert.equal(r.ok,true);assert.equal(r.provider,'google');assert.match(seen.u,/models\/m-g:generateContent$/);assert.equal(seen.o.headers['x-goog-api-key'],'gk');
   const bad=await generateImage({prompt:'p',seed:1,provider:'google',googleKey:'gk',fetchImpl});assert.equal(bad.permanent,true);
 });
+import {buildMatchImagePrompt} from '../media-studio/news-pipeline.mjs';
+test('match brief uses real match facts but never names a person',()=>{
+  const p=buildMatchImagePrompt({headline:'Rwanda Women win by 18 runs',teams:['Rwanda Women','Uganda Women'],type:'T20',name:'Uganda Women vs Rwanda Women, Womens Victoria T20I',performance:{batters:[{name:'Jane Doe',team:'Rwanda Women',runs:104}],bowlers:[]}});
+  assert.match(p,/women's cricket/);assert.match(p,/century/);assert.match(p,/blue and yellow/);assert.match(p,/yellow, black and red/);assert.match(p,/T20/);
+  assert.doesNotMatch(p,/Jane|Doe|Rwanda|Uganda/);
+  const r=buildMatchImagePrompt({headline:'India vs New Zealand — No result',teams:['India','New Zealand'],type:'ODI',performance:null});assert.match(r,/rain clouds/);assert.match(r,/one-day/);assert.doesNotMatch(r,/women/i);
+  const t=buildMatchImagePrompt({headline:'Mumbai won by an innings and 25 runs',teams:['Mumbai','Delhi'],type:'Test',performance:{batters:[],bowlers:[{name:'X',wickets:6}]}});assert.match(t,/five-wicket/);assert.match(t,/white clothing/);
+});
