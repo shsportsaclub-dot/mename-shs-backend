@@ -2128,9 +2128,9 @@ const newsImgFile = id => path.join(NEWS_IMG_DIR, String(id).replace(/[^a-z0-9-]
 let newsPipeBusy = false;
 const paidImages = () => (E.NEWS_IMAGE_PROVIDER || 'auto') !== 'pollinations' && (E.NEWS_IMAGE_PROVIDER || 'auto') !== 'none' && ((E.OPENAI_API_KEY && E.OPENAI_IMAGE_MODEL) || (E.GOOGLE_API_KEY || E.GEMINI_API_KEY) && E.GOOGLE_IMAGE_MODEL);
 async function newsGenerate(job) {
-  const day = istDate(), cap = Math.max(0, parseInt(E.NEWS_IMAGE_DAILY_MAX || '40', 10));   // daily spending guard for paid image APIs
+  const day = istDate(), cap = Math.max(0, parseInt(E.NEWS_IMAGE_DAILY_MAX || '0', 10));   // optional daily spending guard for paid image APIs; 0 or unset = no limit
   const spend = db.newsSpend = db.newsSpend && db.newsSpend.day === day ? db.newsSpend : { day, n: 0 };
-  if (paidImages() && spend.n >= cap) return { ok: false, permanent: true, provider: 'cap', error: 'Daily paid-image cap reached (' + cap + ')' };
+  if (cap > 0 && paidImages() && spend.n >= cap) return { ok: false, permanent: true, provider: 'cap', error: 'Daily paid-image cap reached (' + cap + ')' };
   const r = await generateImage({ prompt: job.image.prompt, seed: job.image.seed, provider: E.NEWS_IMAGE_PROVIDER || 'auto', hfToken: E.HF_TOKEN || '', openaiKey: E.OPENAI_API_KEY || '', openaiModel: E.OPENAI_IMAGE_MODEL || '', googleKey: E.GOOGLE_API_KEY || E.GEMINI_API_KEY || '', googleModel: E.GOOGLE_IMAGE_MODEL || '' });
   if (paidImages() && /^(openai|google)$/.test(r.provider || '')) { spend.n++; saveDb(); }
   if (r.ok) { try { fs.mkdirSync(NEWS_IMG_DIR, { recursive: true }); fs.writeFileSync(newsImgFile(job.jobId), r.bytes); job.image.mime = r.mime; } catch {} }
