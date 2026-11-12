@@ -1,5 +1,6 @@
 import {resolveLanguage, languageCatalog} from './media-studio/languages.mjs';
 import {prepareMedia, publishDecision, normalizeLanguage} from './media-studio/media-engine.mjs';
+import {runPipeline, generateImage, renderNewsPoster, publicJob} from './media-studio/news-pipeline.mjs';
 // Scoring Heroes backend: OTP SMS from "SH Sports" + magic login link + live cricket proxy.
 // Run npm install, then npm start. Environment may come from Render or dotenv.
 import './env.mjs';
@@ -2118,6 +2119,42 @@ routes['GET /api/media-studio'] = async (req, body, ip) => {
     voice:{status:'not-implemented',note:'No localized audio generated yet'},
     note:'Reels are storyboards, not rendered video. Photos and music require rights.'}];
 };
+// ---- SH Media Studio news pipeline: Google News RSS -> job (unique Job ID) -> AI illustration -> poster -> internal publication.
+// One job per story (title-based ID), so a published story is never posted twice. NEWS_MEDIA_AUTO=0 stops automatic publishing.
+const NEWS_IMG_DIR = path.join(path.dirname(DATA_FILE), 'news-img');
+const newsImgFile = id => path.join(NEWS_IMG_DIR, String(id).replace(/[^a-z0-9-]/gi, '') + '.bin');
+let newsPipeBusy = false;
+async function newsGenerate(job) {
+  const r = await generateImage({ prompt: job.image.prompt, seed: job.image.seed, provider: E.NEWS_IMAGE_PROVIDER || 'auto', hfToken: E.HF_TOKEN || '' });
+  if (r.ok) { try { fs.mkdirSync(NEWS_IMG_DIR, { recursive: true }); fs.writeFileSync(newsImgFile(job.jobId), r.bytes); job.image.mime = r.mime; } catch {} }
+  return r;
+}
+async function newsPipelineRun() {
+  if (newsPipeBusy) return null; newsPipeBusy = true;
+  try {
+    db.newsJobs ||= {};
+    let items = []; try { const [, d] = await routes['GET /api/news']({}, { lang: 'en' }); items = (d && d.items) || []; } catch {}
+    const out = await runPipeline({ items, store: db.newsJobs, generate: newsGenerate, autoPublish: E.NEWS_MEDIA_AUTO !== '0' });
+    if (out.created || out.imaged || out.published || out.failed || out.fallback) saveDb();
+    agentStatus.newsMedia = { ...out, at: Date.now(), provider: E.NEWS_IMAGE_PROVIDER || (E.HF_TOKEN ? 'huggingface' : 'pollinations') };
+    return out;
+  } catch (e) { agentStatus.newsMedia = { error: String(e.message).slice(0, 120), at: Date.now() }; return null; }
+  finally { newsPipeBusy = false; }
+}
+if (E.NEWS_MEDIA_AUTO !== '0' && E.PAPER_AGENT !== '0') { setTimeout(newsPipelineRun, 90e3).unref?.(); setInterval(newsPipelineRun, Math.max(5, +E.NEWS_PIPELINE_MIN || 10) * 60e3).unref?.(); }
+routes['GET /api/news-jobs'] = async (req, body, ip) => {
+  if (limited('nj-read:' + ip, 300, 36e5)) return [429, { ok: false, error: 'Too many requests' }];
+  const status = String(body.status || 'published'), limit = Math.max(1, Math.min(60, Number(body.limit) || 30));
+  const jobs = Object.values(db.newsJobs || {}).filter(j => status === 'all' || j.status === status).sort((a, b) => (b.publishedAt || b.createdAt) - (a.publishedAt || a.createdAt)).slice(0, limit).map(publicJob);
+  return [200, { ok: true, jobs, pipeline: agentStatus.newsMedia || null }];
+};
+routes['POST /api/admin/news-jobs/run'] = async (req) => {
+  const phone = readSession((req.headers.authorization || '').replace(/^Bearer /, '')), u = phone && db.users[phone];
+  if (!u) return [401, { ok: false, error: 'Please sign in again' }];
+  if (u.role !== 'admin') return [403, { ok: false, error: 'Only an admin can run this' }];
+  const out = await newsPipelineRun();
+  return [200, { ok: !!out, run: out, pipeline: agentStatus.newsMedia || null }];
+};
 routes['GET /api/paper'] = async (req, body) => {
   const day = /^\d{4}-\d\d-\d\d$/.test(body.date || '') ? body.date : istDate();
   const P = db.papers[day] || { world: [], sh: [] };
@@ -2351,6 +2388,20 @@ http.createServer(async (req, res) => {
   if (req.method === 'GET' && path === '/api/shared-stream') {   // live push: viewers hear about a saved match the moment the scorer's save lands
     res.writeHead(200, { 'content-type': 'text/event-stream', 'cache-control': 'no-cache, no-transform', connection: 'keep-alive', 'x-accel-buffering': 'no', 'access-control-allow-origin': allow(origin), vary: 'origin' });
     res.write('retry: 2000\n\n'); sseClients.add(res); req.on('close', () => sseClients.delete(res)); return;
+  }
+  if (req.method === 'GET' && path === '/api/news-poster') {   // news poster as an image URL: AI picture behind the caption, or the original graphic when no picture exists
+    try {
+      const id = String(new URL(req.url, 'http://x').searchParams.get('job') || '').slice(0, 40), job = (db.newsJobs || {})[id];
+      if (!job || job.status === 'queued') return out(404, { ok: false, error: 'Poster not available' });
+      if (limited('nposter:' + (req.socket.remoteAddress || ''), 600, 36e5)) return out(429, { ok: false, error: 'Too many requests' });
+      let image = null;
+      if (job.image && job.image.status === 'generated') {
+        try { image = { mime: job.image.mime || 'image/png', bytes: fs.readFileSync(newsImgFile(id)) }; }
+        catch { const r = await newsGenerate(job); if (r.ok) image = { mime: r.mime, bytes: r.bytes }; }   // file lost after a redeploy: same seed, same picture
+      }
+      res.writeHead(200, { 'content-type': 'image/svg+xml; charset=utf-8', 'cache-control': 'public, max-age=300', 'access-control-allow-origin': '*', 'x-content-type-options': 'nosniff' });
+      return res.end(renderNewsPoster(job, image));
+    } catch (e) { return out(500, { ok: false, error: 'Poster failed' }); }
   }
   if (req.method === 'GET' && path === '/api/media-poster') {   // result poster as a real image URL, so apps can show it with a plain <img>
     try {
