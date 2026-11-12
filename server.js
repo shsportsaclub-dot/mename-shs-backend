@@ -2276,6 +2276,16 @@ async function newsPipelineRun() {
   finally { newsPipeBusy = false; }
 }
 if (E.NEWS_MEDIA_AUTO !== '0' && E.PAPER_AGENT !== '0') { setTimeout(newsPipelineRun, 90e3).unref?.(); setInterval(newsPipelineRun, Math.max(5, +E.NEWS_PIPELINE_MIN || 10) * 60e3).unref?.(); }
+// Only serve photographs already matched to an exact cricketer and cleared for reuse.
+routes['GET /api/media-player-photo'] = async (req, body, ip) => {
+  const name = String(body.name || '').trim(), team = String(body.team || '').trim();
+  if (!name || !team || name.length > 90 || team.length > 100) return [400, {ok:false,error:'Player name and team required'}];
+  const key = phKey(name, team), rec = (db.playerPhotos || {})[key];
+  if (!rec?.ok || !rec.license || !rec.credit) return [404, {ok:false,error:'No verified reusable player photograph'}];
+  const photo = photoOf(name, team);
+  if (!photo) return [404, {ok:false,error:'Verified photograph not available on this server'}];
+  return [200, {ok:true,name,team,mime:photo.mime,photoDataUrl:'data:'+photo.mime+';base64,'+photo.b64,credit:rec.credit,license:rec.license,source:rec.page}];
+};
 routes['GET /api/news-jobs'] = async (req, body, ip) => {
   if (limited('nj-read:' + ip, 300, 36e5)) return [429, { ok: false, error: 'Too many requests' }];
   const status = String(body.status || 'published'), limit = Math.max(1, Math.min(60, Number(body.limit) || 30));
