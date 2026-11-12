@@ -4,8 +4,9 @@
 <script>
 const $=id=>document.getElementById(id);let items=[],tab='social',lastFeedSignature='',lastCheckedAt=0;const AUTO_CHECK_MS=60000;
 // Only approved local brand files may be displayed. Never replace with generated art.
-const officialBrand={full:'/media-studio/brand/1000976455.png',light:'/media-studio/brand/1000958429.jpg',icon:'/media-studio/brand/1000958430.jpg'};
-function verifiedBrandImage(url){return new Promise(resolve=>{const i=new Image();i.onload=()=>resolve(i.naturalWidth>0?url:null);i.onerror=()=>resolve(null);i.src=url})}
+// Approved brand files are currently missing from the deployed public directory. Avoid broken-image requests; restore only after verified assets are committed.
+const officialBrand={full:'',light:'',icon:''};
+function verifiedBrandImage(url){if(!url)return Promise.resolve(null);return new Promise(resolve=>{const i=new Image();i.onload=()=>resolve(i.naturalWidth>0?url:null);i.onerror=()=>resolve(null);i.src=url})}
 async function showOfficialBrand(){const url=await verifiedBrandImage(officialBrand.full);if(!url)return;const img=$('official-brand');img.src=url;img.style.display='inline-block';$('brand-text').style.display='none'}
 showOfficialBrand();const lang=$('lang');
 function el(tag,cls,text){const x=document.createElement(tag);if(cls)x.className=cls;if(text!==undefined)x.textContent=String(text);return x}
