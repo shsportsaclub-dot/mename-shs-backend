@@ -1,6 +1,6 @@
 import {resolveLanguage, languageCatalog} from './media-studio/languages.mjs';
 import {prepareMedia, publishDecision, normalizeLanguage} from './media-studio/media-engine.mjs';
-import {runPipeline, generateImage, renderNewsPoster, publicJob} from './media-studio/news-pipeline.mjs';
+import {runPipeline, generateImage, renderNewsPoster, publicJob, buildImagePrompt, seedFor, sniff} from './media-studio/news-pipeline.mjs';
 import {storageFromEnv} from './media-studio/media-storage.mjs';
 import {qaJob} from './media-studio/media-qa.mjs';
 // Scoring Heroes backend: OTP SMS from "SH Sports" + magic login link + live cricket proxy.
@@ -2102,11 +2102,11 @@ routes['GET /api/media-studio'] = async (req, body, ip) => {
   const rows=await mediaRows();
   const items=[];
   for (const {row,date,stored} of rows) {
-    const localized=prepareMedia({...row,ended:true},{language,photo:stored?.photo||null});
+    const localized=prepareMedia({...row,ended:true},{language,photo:stored?.photo||null,artwork:artOf(row.id)});
     if(!localized.ok)continue;
     const it={id:localized.id,mid:row.id,kind:'result-media',date,language,at:stored?.at||Date.parse(row.time||'')||0,verified:true,h:localized.headline,sub:localized.summary,body:localized.paragraphs,
       epaper:localized.epaper,social:localized.social,players:localized.players,research:localized.research,playerPerformance:localized.playerPerformance,photo:localized.photo,scoreless:localized.scoreless,
-      posterUrl:'/api/media-poster?mid='+encodeURIComponent(row.id)+'&lang='+language,
+      posterUrl:'/api/media-poster?mid='+encodeURIComponent(row.id)+'&lang='+language+(artOf(row.id)?'&v='+artOf(row.id).v:''),
       reel:{status:'storyboard-only',frames:[
         {title:language==='te'?'మ్యాచ్ ఫలితం':language==='hi'?'मैच परिणाम':'MATCH RESULT',caption:localized.headline,durationSeconds:3},
         ...(localized.summary?[{title:language==='te'?'స్కోర్ వివరాలు':language==='hi'?'स्कोरकार्ड':'SCORECARD',caption:localized.summary,durationSeconds:5}]:[]),
@@ -2132,7 +2132,7 @@ async function newsGenerate(job) {
   const spend = db.newsSpend = db.newsSpend && db.newsSpend.day === day ? db.newsSpend : { day, n: 0 };
   if (cap > 0 && paidImages() && spend.n >= cap) return { ok: false, permanent: true, provider: 'cap', error: 'Daily paid-image cap reached (' + cap + ')' };
   if (!paidImages() && (E.NEWS_IMAGE_PROVIDER || 'auto') !== 'none') await new Promise(r => setTimeout(r, 5200));   // free Pollinations allows about 1 request per 5 s per IP
-  const r = await generateImage({ prompt: job.image.prompt, seed: job.image.seed, provider: E.NEWS_IMAGE_PROVIDER || 'auto', hfToken: E.HF_TOKEN || '', openaiKey: E.OPENAI_API_KEY || '', openaiModel: E.OPENAI_IMAGE_MODEL || '', googleKey: E.GOOGLE_API_KEY || E.GEMINI_API_KEY || '', googleModel: E.GOOGLE_IMAGE_MODEL || '' });
+  const r = await generateImage({ prompt: job.image.prompt, seed: job.image.seed, provider: E.NEWS_IMAGE_PROVIDER || 'auto', hfToken: E.HF_TOKEN || '', openaiKey: E.OPENAI_API_KEY || '', openaiModel: E.OPENAI_IMAGE_MODEL || '', googleKey: E.GOOGLE_API_KEY || E.GEMINI_API_KEY || '', googleModel: E.GOOGLE_IMAGE_MODEL || '', googleBase: E.GOOGLE_API_BASE || '' });
   if (paidImages() && /^(openai|google)$/.test(r.provider || '')) { spend.n++; saveDb(); }
   if (r.ok) { try { fs.mkdirSync(NEWS_IMG_DIR, { recursive: true }); fs.writeFileSync(newsImgFile(job.jobId), r.bytes); job.image.mime = r.mime; } catch {} }
   return r;
@@ -2160,6 +2160,54 @@ async function newsFinalize(job) {
   if (job.asset?.url) { /* assetUrl image check uses the poster URL below */ }
   job.qa = qa; return qa;
 }
+// ---- Match posters: one AI illustration per verified match, stored permanently, QA-checked; the poster keeps exact text from the match record ----
+const ART = new Map();                                   // mid -> { mime, b64, v }
+const artFile = mid => path.join(NEWS_IMG_DIR, 'm-' + String(mid).replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 60) + '.bin');
+function artOf(mid) {
+  if (ART.has(mid)) return ART.get(mid);
+  const rec = (db.matchArt || {})[mid]; if (!rec || rec.status !== 'generated') return null;
+  try { const b = fs.readFileSync(artFile(mid)); const a = { mime: rec.mime || 'image/png', b64: b.toString('base64'), v: String(rec.sha256 || '').slice(0, 8) }; ART.set(mid, a); return a; } catch {}
+  if (rec.assetUrl && !rec.loading) { rec.loading = true; fetch(rec.assetUrl).then(async r => { if (r.ok) { const b = Buffer.from(await r.arrayBuffer()); try { fs.mkdirSync(NEWS_IMG_DIR, { recursive: true }); fs.writeFileSync(artFile(mid), b); } catch {} ART.set(mid, { mime: rec.mime || 'image/png', b64: b.toString('base64'), v: String(rec.sha256 || '').slice(0, 8) }); } }).catch(() => {}).finally(() => { rec.loading = false; }); }
+  return null;
+}
+let matchArtBusy = false;
+async function matchArtRun() {
+  if (matchArtBusy) return null; matchArtBusy = true;
+  const out = { made: 0, fallback: 0, review: 0 };
+  try {
+    db.matchArt ||= {};
+    for (const { row } of await mediaRows()) {
+      const rec = db.matchArt[row.id];
+      if (rec && (rec.status === 'generated' || rec.status === 'fallback' || (rec.status === 'failed' && (rec.attempts >= 3 || Date.now() - rec.at < 6e5)))) continue;
+      const m0 = prepareMedia({ ...row, ended: true }, { language: 'en' }); if (!m0.ok) continue;
+      const r0 = db.matchArt[row.id] = rec || { status: 'queued', attempts: 0, seed: seedFor('m-' + row.id), prompt: buildImagePrompt(m0.headline + ' ' + (m0.summary || '')) };
+      r0.attempts++; r0.at = Date.now();
+      const job = { jobId: 'mj-' + row.id, image: { prompt: r0.prompt, seed: r0.seed } };
+      const g = await newsGenerate(job);
+      if (!g.ok) { r0.status = (g.permanent || r0.attempts >= 3) ? 'fallback' : 'failed'; r0.error = String(g.error || '').slice(0, 100); if (r0.status === 'fallback') out.fallback++; saveDb(); continue; }
+      const sha = crypto.createHash('sha256').update(g.bytes).digest('hex');
+      fs.writeFileSync(artFile(row.id), g.bytes);
+      const art = { mime: g.mime, b64: g.bytes.toString('base64') };
+      const m = prepareMedia({ ...row, ended: true }, { language: 'en', artwork: art });
+      const others = Object.fromEntries(Object.entries(db.matchArt).filter(([k, v]) => k !== row.id && v.sha256).map(([k, v]) => [k, { jobId: k, image: { sha256: v.sha256 } }]));
+      let assetUrl = null, posterUrl = null;
+      if (MEDIA_STORE) {
+        const u = await MEDIA_STORE.put(`match/${row.id}.${extOf(g.mime)}`.replace(/[^a-zA-Z0-9._\/-]/g, '_'), g.bytes, g.mime); if (u.ok) assetUrl = u.url;
+        const p = await MEDIA_STORE.put(`match/${row.id}-poster.svg`.replace(/[^a-zA-Z0-9._\/-]/g, '_'), Buffer.from(m.posterSvg), 'image/svg+xml'); if (p.ok) posterUrl = p.url;
+      }
+      const expect = [...(m.innings || []).flatMap(i => [String(i.runs) + (i.wickets < 10 ? '/' + i.wickets : '')]), ...(row.teams || []).slice(0, 2)];
+      const qjob = { jobId: 'mj-' + row.id, title: m.headline, image: { status: 'generated' }, asset: posterUrl ? { url: posterUrl } : null };
+      const qa = await qaJob({ job: qjob, image: { mime: g.mime, bytes: g.bytes }, svg: m.posterSvg, jobs: { ...others, ...(db.newsJobs || {}) }, requireAsset: !!MEDIA_STORE, expect });
+      Object.assign(r0, { sha256: sha, mime: g.mime, provider: g.provider, assetUrl, posterAssetUrl: posterUrl, qa: { passed: qa.passed, failed: qa.checks.filter(c => !c.ok).map(c => c.name + (c.note ? ' (' + c.note + ')' : '')), at: Date.now() } });
+      if (qa.passed) { r0.status = 'generated'; ART.set(row.id, { ...art, v: sha.slice(0, 8) }); out.made++; }
+      else { r0.status = r0.attempts >= 3 ? 'fallback' : 'failed'; try { fs.unlinkSync(artFile(row.id)); } catch {} out.review++; }
+      saveDb();
+    }
+  } catch (e) { out.error = String(e.message).slice(0, 100); }
+  finally { matchArtBusy = false; }
+  agentStatus.matchArt = { ...out, at: Date.now() };
+  return out;
+}
 async function newsPipelineRun() {
   if (newsPipeBusy) return null; newsPipeBusy = true;
   try {
@@ -2168,6 +2216,7 @@ async function newsPipelineRun() {
     const out = await runPipeline({ items, store: db.newsJobs, generate: newsGenerate, finalize: newsFinalize, maxNew: +E.NEWS_MAX_PER_RUN || 200, maxProcess: +E.NEWS_MAX_PER_RUN || 200, autoPublish: E.NEWS_MEDIA_AUTO !== '0' });
     if (out.created || out.imaged || out.published || out.failed || out.fallback || out.review) saveDb();
     agentStatus.newsMedia = { ...out, storage: MEDIA_STORE ? MEDIA_STORE.provider : 'local-disk-only', at: Date.now(), provider: E.NEWS_IMAGE_PROVIDER || (E.HF_TOKEN ? 'huggingface' : 'pollinations') };
+    matchArtRun().catch(() => {});
     return out;
   } catch (e) { agentStatus.newsMedia = { error: String(e.message).slice(0, 120), at: Date.now() }; return null; }
   finally { newsPipeBusy = false; }
@@ -2186,6 +2235,7 @@ routes['GET /api/news-qa'] = async (req, body, ip) => {
   return [200, { ok: true, storage: MEDIA_STORE ? MEDIA_STORE.provider : 'local-disk-only', total: jobs.length, published: by('published'), review: by('manual_review'), failed: by('failed'), queued: by('queued'),
     qaPassed: pub.filter(j => j.qa && j.qa.passed).length, withPermanentUrl: pub.filter(j => j.asset && j.asset.url).length, aiImages: pub.filter(j => j.image?.status === 'generated').length, fallbackGraphics: pub.filter(j => j.image?.status === 'fallback').length,
     duplicateImages: hashes.length - new Set(hashes).size, providers: [...new Set(pub.map(j => j.image?.provider).filter(Boolean))],
+    matches: (() => { const A = Object.values(db.matchArt || {}); return { total: A.length, generated: A.filter(x => x.status === 'generated').length, fallback: A.filter(x => x.status === 'fallback').length, failed: A.filter(x => x.status === 'failed').length, qaPassed: A.filter(x => x.qa && x.qa.passed).length, withPermanentUrl: A.filter(x => x.posterAssetUrl).length, providers: [...new Set(A.map(x => x.provider).filter(Boolean))] }; })(),
     sample: pub.slice(-5).map(j => ({ jobId: j.jobId, qa: j.qa ? j.qa.passed : null, posterAssetUrl: j.asset?.url || null, posterUrl: '/api/news-poster?job=' + j.jobId })) }];
 };
 routes['POST /api/admin/news-jobs/run'] = async (req) => {
@@ -2445,7 +2495,7 @@ http.createServer(async (req, res) => {
       const q = new URL(req.url, 'http://x').searchParams, mid = String(q.get('mid') || '').slice(0, 64);
       if (limited('media-poster:' + (req.socket.remoteAddress || ''), 600, 36e5)) return out(429, { ok: false, error: 'Too many requests' });
       const hit = (await mediaRows()).find(x => x.row.id === mid);
-      const m = hit && prepareMedia({ ...hit.row, ended: true }, { language: resolveLanguage(q.get('lang') || 'en').articleLanguage });
+      const m = hit && prepareMedia({ ...hit.row, ended: true }, { language: resolveLanguage(q.get('lang') || 'en').articleLanguage, artwork: artOf(mid) });
       if (!m || !m.ok) return out(404, { ok: false, error: 'Poster not available for this match' });
       res.writeHead(200, { 'content-type': 'image/svg+xml; charset=utf-8', 'cache-control': 'public, max-age=300', 'access-control-allow-origin': '*', 'x-content-type-options': 'nosniff' });
       return res.end(m.posterSvg);

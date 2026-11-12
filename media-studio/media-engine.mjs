@@ -12,7 +12,7 @@ const LABELS={
  te:{noResult:'ఫలితం లేదు',drawn:'మ్యాచ్ డ్రా',tied:'మ్యాచ్ టై',completed:'మ్యాచ్ ముగిసింది',tag:'మ్యాచ్ ఫలితం',desk:'గ్లోబల్ స్పోర్ట్స్ డెస్క్',foot:'ఒరిజినల్ మ్యాచ్ గ్రాఫిక్ • స్కోరింగ్ హీరోస్',overs:'ఓవర్లు',final:'ఫలితం'},
  hi:{noResult:'कोई परिणाम नहीं',drawn:'मैच ड्रा',tied:'मैच टाई',completed:'मैच समाप्त',tag:'मैच परिणाम',desk:'ग्लोबल स्पोर्ट्स डेस्क',foot:'ओरिजिनल मैच ग्राफिक • स्कोरिंग हीरोज़',overs:'ओवर',final:'परिणाम'}};
 const validId = x => /^[a-z0-9-]{1,64}$/i.test(String(x||''));
-export function prepareMedia(m, {language='en', photo=null}={}) {
+export function prepareMedia(m, {language='en', photo=null, artwork=null}={}) {
   language=normalizeLanguage(language);
   if (!validId(m?.id)) throw new Error('Invalid match ID');
   if (!isFinal(m)) return {ok:false,reason:'Final result not verified; do not publish'};
@@ -109,12 +109,19 @@ export function prepareMedia(m, {language='en', photo=null}={}) {
     epaper:{title:headline,subtitle:competition,body:paragraphs,format:'A4',photo:licensedPhoto},
     photo:licensedPhoto,players,playerPerformance,photoSearches,research,publication:'internal-auto-eligible',externalPublishing:'disabled-without-account-permissions',
     scoreless:!normalized.length,innings:normalized,
-    posterSvg:renderPoster({headline,summary,result,venue,teams,language,innings:normalized})};
+    posterSvg:renderPoster({headline,summary,result,venue,teams,language,innings:normalized,artwork})};
 }
 // Original illustrated match poster. No third-party image or fake player likeness.
 // Font stack covers Latin, Telugu and Devanagari on Android/iOS/desktop; the SVG is shown as an <img> so it cannot load web fonts.
 const FONT='"Noto Sans","Noto Sans Telugu","Noto Sans Devanagari","Telugu Sangam MN","Gautami","Kohinoor Telugu","Kohinoor Devanagari",Arial,sans-serif';
-export function renderPoster({headline,summary,result,venue,teams,language='en',innings=null}) {
+// artwork: {mime, b64} = AI illustration (no text/names inside it). It replaces the generic bat-and-ball drawing; all text stays deterministic.
+export function renderPoster(o) {
+  const svg=renderPosterBase(o), a=o&&o.artwork;
+  if(!a||!a.b64||!/^image\/(png|jpeg|webp)$/.test(a.mime||''))return svg;
+  const layer='<image href="data:'+a.mime+';base64,'+a.b64+'" x="0" y="0" width="1080" height="740" preserveAspectRatio="xMidYMid slice"/><rect x="0" y="0" width="1080" height="740" fill="#050b1c" opacity=".42"/><rect x="0" y="300" width="1080" height="440" fill="#050b1c" opacity=".38"/><text x="1040" y="722" text-anchor="end" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#e6eefb" opacity=".85">AI-generated illustration</text>\n';
+  return svg.replace(/ <g transform="translate\(640 330\)[^\n]*\n/,'').replace(/ <g transform="translate\(800 640\)[^\n]*\n/,'').replace(' <rect x="40" y="40" width="1000"',layer+' <rect x="40" y="40" width="1000"');
+}
+function renderPosterBase({headline,summary,result,venue,teams,language='en',innings=null}) {
  const L=LABELS[normalizeLanguage(language)]||LABELS.en;
  const safe=(v,n=160)=>esc(String(v??'').slice(0,n));
  // Word wrap by character budget (counts grapheme-ish code points so Telugu/Hindi do not overflow).

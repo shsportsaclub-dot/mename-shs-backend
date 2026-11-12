@@ -22,3 +22,11 @@ test('poster wraps long text and never leaves unwrapped lines',()=>{
   const svg=renderPoster({headline:'Papua New Guinea Women win by 7 wickets over United States of America Women',summary:'',result:'x '.repeat(80),venue:'v '.repeat(80),teams:['A','B'],innings:[]});
   for(const m of svg.matchAll(/<text[^>]*>([^<]*)<\/text>/g))assert.ok([...m[1]].length<=70,'line too long: '+m[1].slice(0,40));
 });
+test('artwork replaces the bat-and-ball drawing, keeps exact text and the AI label',()=>{
+  const T=n=>[{name:n[0]},{name:n[1]}];
+  const base=prepareMedia({id:'x1',ended:true,status:'Rwanda Women won by 18 runs',teams:['Rwanda Women','Uganda Women'],score:[{inning:'Rwanda Women Inning 1',r:92,w:5,o:18},{inning:'Uganda Women Inning 1',r:74,w:6,o:18}]},{language:'en'});
+  const art=prepareMedia({id:'x1',ended:true,status:'Rwanda Women won by 18 runs',teams:['Rwanda Women','Uganda Women'],score:[{inning:'Rwanda Women Inning 1',r:92,w:5,o:18},{inning:'Uganda Women Inning 1',r:74,w:6,o:18}]},{language:'en',artwork:{mime:'image/png',b64:'AAAA'}});
+  assert.match(base.posterSvg,/translate\(640 330\)/);assert.doesNotMatch(art.posterSvg,/translate\(640 330\)/);
+  assert.match(art.posterSvg,/data:image\/png;base64,AAAA/);assert.match(art.posterSvg,/AI-generated illustration/);assert.match(art.posterSvg,/92\/5/);
+  assert.equal(prepareMedia({id:'x1',ended:true,status:'Rwanda Women won by 18 runs',teams:['Rwanda Women','Uganda Women'],score:[]},{language:'en',artwork:{mime:'text/html',b64:'x'}}).posterSvg.includes('data:text/html'),false);
+});

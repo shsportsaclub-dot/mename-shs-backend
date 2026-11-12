@@ -6,13 +6,14 @@ const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>
 const text = svg => svg.replace(/<image[^>]*>/g,'').replace(/<[^>]+>/g,' ').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/\s+/g,' ');
 export const tokens = title => String(title).match(/[A-Za-zऀ-౿]*[A-Z0-9ऀ-౿][A-Za-z0-9ऀ-౿]*(?:[\/\-.][A-Za-z0-9]+)*/g) || [];
 // jobs: all stored jobs (for duplicate detection). image: {bytes,mime}|null. svg: composed poster. assetUrl: permanent URL or ''.
-export async function qaJob({job, image, svg, jobs = {}, fetchImpl = fetch, requireAsset = false}) {
+export async function qaJob({job, image, svg, jobs = {}, fetchImpl = fetch, requireAsset = false, expect = []}) {
   const checks = [], add = (name, ok, note = '') => checks.push({name, ok: !!ok, note});
   const flat = text(svg || ''), words = tokens(job.title);
   add('poster-composed', svg && svg.startsWith('<svg') && /viewBox="0 0 1080 1350"/.test(svg), 'poster is 1080x1350');
   const missing = words.filter(w => !flat.toLowerCase().includes(w.toLowerCase()));
   add('names-and-numbers-in-poster', !missing.length, missing.length ? 'missing: ' + missing.slice(0, 6).join(', ') : words.length + ' tokens present');
-  add('job-id-and-source', flat.includes(job.jobId.slice(3, 11).toUpperCase()) && (!job.source?.name || flat.includes(job.source.name)), '');
+  if (/^nj-/.test(job.jobId)) add('job-id-and-source', flat.includes(job.jobId.slice(3, 11).toUpperCase()) && (!job.source?.name || flat.includes(job.source.name)), '');
+  if (expect.length) { const lost = expect.filter(x => x && !flat.toLowerCase().includes(String(x).toLowerCase())); add('verified-teams-and-scores-in-poster', !lost.length, lost.length ? 'missing: ' + lost.join(', ') : expect.length + ' values present'); }
   if (job.image?.status === 'generated') {
     add('image-exists', image && image.bytes?.length > 5000, image ? image.bytes.length + ' bytes' : 'no image');
     add('image-decodes', image && sniff(image.bytes), image ? String(sniff(image.bytes)) : '');
