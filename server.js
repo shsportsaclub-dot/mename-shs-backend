@@ -2178,6 +2178,7 @@ async function matchArtRun() {
     db.matchArt ||= {};
     for (const { row } of await mediaRows()) {
       const rec = db.matchArt[row.id];
+      if (rec && !rec.fix1 && rec.status !== 'generated' && (rec.qa?.failed || []).some(f => /verified-teams/.test(f))) { rec.fix1 = 1; rec.status = 'queued'; rec.attempts = 0; }   // earlier QA bug (team objects) rejected good posters: retry them
       if (rec && (rec.status === 'generated' || rec.status === 'fallback' || (rec.status === 'failed' && (rec.attempts >= 3 || Date.now() - rec.at < 6e5)))) continue;
       const m0 = prepareMedia({ ...row, ended: true }, { language: 'en' }); if (!m0.ok) continue;
       const r0 = db.matchArt[row.id] = rec || { status: 'queued', attempts: 0, seed: seedFor('m-' + row.id), prompt: buildImagePrompt(m0.headline + ' ' + (m0.summary || '')) };
@@ -2195,7 +2196,7 @@ async function matchArtRun() {
         const u = await MEDIA_STORE.put(`match/${row.id}.${extOf(g.mime)}`.replace(/[^a-zA-Z0-9._\/-]/g, '_'), g.bytes, g.mime); if (u.ok) assetUrl = u.url;
         const p = await MEDIA_STORE.put(`match/${row.id}-poster.svg`.replace(/[^a-zA-Z0-9._\/-]/g, '_'), Buffer.from(m.posterSvg), 'image/svg+xml'); if (p.ok) posterUrl = p.url;
       }
-      const expect = [...(m.innings || []).flatMap(i => [String(i.runs) + (i.wickets < 10 ? '/' + i.wickets : '')]), ...(row.teams || []).slice(0, 2)];
+      const expect = [...(m.innings || []).flatMap(i => [String(i.runs) + (i.wickets < 10 ? '/' + i.wickets : '')]), ...(row.teams || []).slice(0, 2).map(t => typeof t === 'string' ? t : t && t.name).filter(Boolean)];
       const qjob = { jobId: 'mj-' + row.id, title: m.headline, image: { status: 'generated' }, asset: posterUrl ? { url: posterUrl } : null };
       const qa = await qaJob({ job: qjob, image: { mime: g.mime, bytes: g.bytes }, svg: m.posterSvg, jobs: { ...others, ...(db.newsJobs || {}) }, requireAsset: !!MEDIA_STORE, expect });
       Object.assign(r0, { sha256: sha, mime: g.mime, provider: g.provider, assetUrl, posterAssetUrl: posterUrl, qa: { passed: qa.passed, failed: qa.checks.filter(c => !c.ok).map(c => c.name + (c.note ? ' (' + c.note + ')' : '')), at: Date.now() } });
@@ -2302,7 +2303,7 @@ routes['GET /api/news-qa'] = async (req, body, ip) => {
   return [200, { ok: true, storage: MEDIA_STORE ? MEDIA_STORE.provider : 'local-disk-only', total: jobs.length, published: by('published'), review: by('manual_review'), failed: by('failed'), queued: by('queued'),
     qaPassed: pub.filter(j => j.qa && j.qa.passed).length, withPermanentUrl: pub.filter(j => j.asset && j.asset.url).length, aiImages: pub.filter(j => j.image?.status === 'generated').length, fallbackGraphics: pub.filter(j => j.image?.status === 'fallback').length,
     duplicateImages: hashes.length - new Set(hashes).size, providers: [...new Set(pub.map(j => j.image?.provider).filter(Boolean))],
-    matches: (() => { const A = Object.values(db.matchArt || {}); return { total: A.length, generated: A.filter(x => x.status === 'generated').length, fallback: A.filter(x => x.status === 'fallback').length, failed: A.filter(x => x.status === 'failed').length, qaPassed: A.filter(x => x.qa && x.qa.passed).length, withPermanentUrl: A.filter(x => x.posterAssetUrl).length, providers: [...new Set(A.map(x => x.provider).filter(Boolean))] }; })(),
+    matches: (() => { const A = Object.values(db.matchArt || {}); return { total: A.length, generated: A.filter(x => x.status === 'generated').length, fallback: A.filter(x => x.status === 'fallback').length, failed: A.filter(x => x.status === 'failed').length, reasons: Object.entries(A.flatMap(x => (x.qa?.failed || []).concat(x.error ? ['error: ' + x.error] : [])).reduce((m, k) => (m[k] = (m[k] || 0) + 1, m), {})).slice(0, 6), qaPassed: A.filter(x => x.qa && x.qa.passed).length, withPermanentUrl: A.filter(x => x.posterAssetUrl).length, providers: [...new Set(A.map(x => x.provider).filter(Boolean))] }; })(),
     sample: pub.slice(-5).map(j => ({ jobId: j.jobId, qa: j.qa ? j.qa.passed : null, posterAssetUrl: j.asset?.url || null, posterUrl: '/api/news-poster?job=' + j.jobId })) }];
 };
 routes['POST /api/admin/news-jobs/run'] = async (req) => {
