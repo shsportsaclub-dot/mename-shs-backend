@@ -1,0 +1,20 @@
+// Live hero: win bar appears even when type/overs are missing (inferred from "ODI"), and provider odds > probability > blank.
+const {chromium}=require('playwright');
+(async()=>{const b=await chromium.launch(),p=await b.newPage({viewport:{width:390,height:844}}),errs=[];p.on('pageerror',e=>errs.push(e.message));
+const ok=(c,m)=>{if(!c){console.log('FAIL',m);process.exitCode=1}};
+await p.goto('file://'+require('path').resolve(__dirname,'../app-index.html'));await p.waitForTimeout(400);
+await p.evaluate(()=>{window.pullLive=async()=>{};window.fetch=()=>new Promise(()=>{});window.apiBase=()=>'http://x';UI.stage='app';S.user={id:'u1',name:'T',phone:'9999999999',role:'viewer'};S.prefs=Object.assign({},S.prefs,{asked:1,welcomed:1});
+ UI.wm={m:{id:'z9',name:'India v New Zealand, 4th ODI',started:true,ended:false,teams:[{name:'India',short:'IND'},{name:'New Zealand',short:'NZ'}],score:[{inning:'New Zealand Inning 1',r:280,w:8,o:50},{inning:'India Inning 1',r:120,w:2,o:20}],status:'Live'},mi:{},sc:{scorecard:[]},bb:{bbb:[]},tab:'live'};UI.view='wmatch';UI.wo={};render()});await p.waitForTimeout(300);
+const base=await p.evaluate(()=>({bar:!!document.querySelector('.hero .wbar'),left:/OVERS LEFT/.test(document.querySelector('.hero').innerText),odd:!!document.querySelector('.hero .podd')}));
+ok(base.bar&&base.left,'win bar + overs left without type: '+JSON.stringify(base));ok(!base.odd,'no odds line when provider gives none');
+await p.evaluate(()=>{UI.wo.z9={t:Date.now(),p:{India:60,IND:60,'New Zealand':40,NZ:40},d:{mode:'odds',source:'provider',home:'1.65',away:'2.30'}};render()});await p.waitForTimeout(200);
+const o=await p.evaluate(()=>document.querySelector('.hero .podd')&&document.querySelector('.hero .podd').innerText.replace(/\s+/g,' '));
+ok(o&&/1\.65/.test(o)&&/2\.30/.test(o)&&/PROVIDER ODDS/.test(o),'odds line '+o);
+await p.evaluate(()=>{UI.wo.z9.d={mode:'probability',source:'market',home:'60.0%',away:'40.0%'};render()});await p.waitForTimeout(200);
+const q=await p.evaluate(()=>document.querySelector('.hero .podd').innerText.replace(/\s+/g,' '));ok(/60\.0%/.test(q)&&/WIN PROBABILITY/.test(q),'prob line '+q);
+await p.evaluate(()=>{UI.wo.z9.d=null;render()});await p.waitForTimeout(200);
+ok(!(await p.evaluate(()=>!!document.querySelector('.hero .podd'))),'blank when none');
+await p.evaluate(()=>{UI.wo.z9.d={mode:'odds',source:'provider',home:'1.65',away:'2.30'};render()});await p.waitForTimeout(200);
+await p.locator('.hero').screenshot({path:'/tmp/claude-0/pt/hero-odds.png'});
+const ov=await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth);ok(!ov,'no horizontal overflow');
+ok(!errs.length,errs.join(';'));await b.close();if(!process.exitCode)console.log('PASS: provider odds');})();

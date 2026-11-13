@@ -668,8 +668,8 @@ routes['GET /api/legacy-player-profile'] = async (req, body) => {
     },
     matches, matchGroups, linkedExternalProfile, careerStats: null, note: 'Captured match links are browsing references only; player participation and totals are not independently verified' }];
 };
-// Market-implied win chance. Odds come from The Odds API (ODDS_API_KEY). Only the derived percentage ever leaves the server, never a price.
-const ODDS_KEY = E.ODDS_API_KEY || '';
+// Market-implied win chance. Odds come from The Odds API (ODDS_API_KEY). Server returns percentages plus an optional informational display (provider odds > probability > blank).
+const ODDS_KEY = E.ODDS_API_KEY || '', ODDS_BASE = E.ODDS_API_BASE || 'https://api.the-odds-api.com';
 let oddsC = { t: 0, ev: [], left: null, err: '' };
 async function refreshOdds() {
   if (!ODDS_KEY) return oddsC;
@@ -677,10 +677,10 @@ async function refreshOdds() {
   if (Date.now() - oddsC.t < ttl) return oddsC;
   oddsC.t = Date.now();
   try {
-    const sj = await (await fetch(`https://api.the-odds-api.com/v4/sports/?apiKey=${encodeURIComponent(ODDS_KEY)}`, { signal: AbortSignal.timeout(10000) })).json();
+    const sj = await (await fetch(`${ODDS_BASE}/v4/sports/?apiKey=${encodeURIComponent(ODDS_KEY)}`, { signal: AbortSignal.timeout(10000) })).json();
     const keys = (Array.isArray(sj) ? sj : []).filter(x => x && /^cricket/.test(x.key) && x.active).map(x => x.key).slice(0, 6), ev = [];
     for (const k of keys) {
-      const r = await fetch(`https://api.the-odds-api.com/v4/sports/${k}/odds/?regions=uk,eu&markets=h2h&oddsFormat=decimal&apiKey=${encodeURIComponent(ODDS_KEY)}`, { signal: AbortSignal.timeout(10000) });
+      const r = await fetch(`${ODDS_BASE}/v4/sports/${k}/odds/?regions=uk,eu&markets=h2h&oddsFormat=decimal&apiKey=${encodeURIComponent(ODDS_KEY)}`, { signal: AbortSignal.timeout(10000) });
       const left = Number(r.headers.get('x-requests-remaining')); if (Number.isFinite(left)) oddsC.left = left;
       const j = await r.json(); if (Array.isArray(j)) ev.push(...j);
     }
@@ -689,15 +689,15 @@ async function refreshOdds() {
   return oddsC;
 }
 function impliedProbs(e) {   // average of every bookmaker's margin-free 2-way probability
-  const acc = {}; let n = 0;
+  const acc = {}, px = {}, pn = {}; let n = 0;
   for (const b of e.bookmakers || []) {
     const h = (b.markets || []).find(m => m.key === 'h2h'); if (!h) continue;
     const o = (h.outcomes || []).filter(x => x && Number(x.price) > 1 && x.name !== 'Draw'); if (o.length !== 2) continue;
     const inv = o.map(x => 1 / Number(x.price)), tot = inv[0] + inv[1];
-    o.forEach((x, i) => { acc[x.name] = (acc[x.name] || 0) + inv[i] / tot * 100; }); n++;
+    o.forEach((x, i) => { acc[x.name] = (acc[x.name] || 0) + inv[i] / tot * 100; px[x.name] = (px[x.name] || 0) + Number(x.price); pn[x.name] = (pn[x.name] || 0) + 1; }); n++;
   }
   if (!n) return null;
-  const out = {}; for (const k of Object.keys(acc)) out[k] = Math.round(acc[k] / n * 10) / 10; return { probs: out, books: n };
+  const out = {}, od = {}; for (const k of Object.keys(acc)) { out[k] = Math.round(acc[k] / n * 10) / 10; od[k] = Math.round(px[k] / pn[k] * 100) / 100; } return { probs: out, odds: od, books: n };
 }
 routes['GET /api/win-odds'] = async (req, body) => {
   const id = String(body.id || '').slice(0, 64);
@@ -708,7 +708,12 @@ routes['GET /api/win-odds'] = async (req, body) => {
   const key = pairKey(m), e = oddsC.ev.find(x => [normT(x.home_team), normT(x.away_team)].sort().join('|') === key && Math.abs(dayOf(x.commence_time) - dayOf(m.time || m.date)) <= 864e5);
   const ip = e && impliedProbs(e); if (!ip) return [200, { ok: true, available: false, reason: 'no-market' }];
   const probs = {}; for (const t of m.teams || []) { const hit = Object.keys(ip.probs).find(n => normT(n) === normT(t.name)); if (hit) { probs[t.name] = ip.probs[hit]; if (t.short) probs[t.short] = ip.probs[hit]; } }
-  return Object.keys(probs).length < 2 ? [200, { ok: true, available: false, reason: 'team-names' }] : [200, { ok: true, available: true, probs, books: ip.books }];
+  if (Object.keys(probs).length < 2) return [200, { ok: true, available: false, reason: 'team-names' }];
+  // Display slot rule: provider odds first, else probability, else blank (see odds-probability.mjs).
+  const t2 = (m.teams || []).slice(0, 2), hit = t => Object.keys(ip.probs).find(n => normT(n) === normT(t.name));
+  const hn = t2[0] && hit(t2[0]), an = t2[1] && hit(t2[1]);
+  const display = hn && an ? oddsOrWinningProbability({ odds: E.SHOW_PROVIDER_ODDS === '0' ? null : { home: ip.odds[hn], away: ip.odds[an] }, probabilities: { home: ip.probs[hn], away: ip.probs[an], source: 'market' } }) : null;
+  return [200, { ok: true, available: true, probs, books: ip.books, display: display && display.mode !== 'unavailable' ? display : null }];
 };
 routes['GET /api/scoreboard-market'] = async (req, body) => {
   const id = String(body.id || '').trim();
