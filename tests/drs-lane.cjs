@@ -33,6 +33,11 @@ if(hasM){await p.click('[data-a=dxSet][data-k=onf][data-v=not]');const before=aw
 else console.log('NOTE: no live match in seed; logging path not exercised');
 ok(!(await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth)),'drs no overflow 390');
 await p.screenshot({path:'/tmp/claude-0/pt/drsx.png',fullPage:false});
+// --- send to TV
+await p.evaluate(()=>{UI.view='drsx';render()});
+for(const seg of ['heat','snd','trk','line','vd']){await p.evaluate(()=>{UI.dx.kind='lbw';render()});await p.click('[data-a=dxAir][data-v='+seg+']');const h=await p.evaluate(()=>{UI.ovScene='drs';const v=UI.view;UI.view='stream';const r=overlayHTML();UI.view=v;return r});ok(/dxa/.test(h)&&/<svg|dxvd/.test(h),'TV segment '+seg)}
+await p.click('[data-a=dxAir][data-v=off]');ok(await p.evaluate(()=>!S.stream.dxlive),'TV cleared');
+ok(await p.evaluate(()=>{UI.ovScene='break';const v=UI.view;UI.view='stream';const r=overlayHTML();UI.view=v;return !/dxl/.test(r)}),'no lane on break card');
 // --- lane
 await p.evaluate(()=>{UI.view='lane';render()});await p.waitForTimeout(150);
 const add=async(type,text,sp)=>{await p.selectOption('form[data-f=lnAdd] select[name=type]',type);await p.fill('form[data-f=lnAdd] input[name=text]',text);await p.fill('form[data-f=lnAdd] input[name=sponsor]',sp||'');await p.click('form[data-f=lnAdd] button');await p.waitForTimeout(120)};
