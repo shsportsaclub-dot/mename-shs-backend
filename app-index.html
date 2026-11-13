@@ -15403,6 +15403,75 @@ if(window.shTk){
  window.shRb={data,html,SAMPLE};
 }
 
+
+/* ---------------- BROADCAST BOARD PACK: ?scene=manhattan (runs per over chart), ?scene=bowlcard (bowling card + fall of wickets), ?scene=strip (auto FOUR/SIX/WICKET banner), ?scene=zone (sponsor segment lower third). Original designs. ---------------- */
+{
+ const E=s=>esc(String(s==null?'':s));
+ const q=k=>{try{return new URLSearchParams(location.search).get(k)}catch(e){return null}};
+ const SC=['manhattan','bowlcard','strip','zone'];
+ const sceneNow=()=>{try{if(location.hash==='#overlay')return q('scene')||'';if(UI.view==='stream'&&UI.ovScene)return UI.ovScene}catch(e){}return''};
+ const rn=(id,css)=>css.replace(/\.([a-zA-Z_][\w-]*)/g,(m,c)=>c===id?m:'.'+id+'-'+c);
+ const rh=(id,h)=>h.replace(/class="([^"]*)"/g,(m,c)=>'class="'+c.split(/\s+/).filter(Boolean).map(t=>t===id?t:id+'-'+t).join(' ')+'"');
+ const fmt=n=>{try{return fmtOv(n)}catch(e){return String(n)}};
+ const sh=id=>{try{const n=String(nm(id)||'').trim().split(/\s+/);return (n.length>1?n[0][0]+' '+n[n.length-1]:n[0]).toUpperCase()}catch(e){return ''}};
+ const FT=`.ft{display:grid;grid-template-columns:1fr 20cqw 1fr;height:6.4cqh;font-weight:900;color:#fff;font-size:1.5cqw;letter-spacing:.06em}
+.ft>div{display:flex;align-items:center;justify-content:center;gap:1cqw;background:linear-gradient(#f6f9ff,#cfdbef);color:#10224a}.ft>div b{font-size:2cqw;color:#c2410c}
+.ft .c{background:linear-gradient(#ff8a1f,#d9480f);color:#fff;font-size:3.4cqw;clip-path:polygon(4% 0,96% 0,100% 100%,0 100%)}.ft .c b{color:#fff;font-size:3.4cqw}`;
+ /* manhattan */
+ const mhCSS=rn('mh',`.mh{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:60cqw;font-family:'Arial Narrow',Arial,sans-serif;text-transform:uppercase;filter:drop-shadow(0 2cqh 3cqh #000a);animation:mhIn .6s cubic-bezier(.2,1,.3,1) both;animation-delay:calc(0s - var(--e,0s))}@keyframes mhIn{from{opacity:0;transform:translate(-50%,-46%)}}
+.hd{display:flex;align-items:center;gap:1.4cqw;padding:1.4cqh 2cqw;background:linear-gradient(90deg,var(--c,#1d4ed8),#0b1533);color:#fff;border-radius:1.2cqh 1.2cqh 0 0}.hd b{font-size:2.4cqw;font-weight:900;letter-spacing:.04em}.hd small{font-size:1.2cqw;color:#bcd0f5;letter-spacing:.1em}
+.pl{position:relative;height:36cqh;background:linear-gradient(#18274d,#0d1630);padding:2cqh 2cqw 3.2cqh 5cqw;display:flex;align-items:flex-end;gap:.7cqw}
+.gl{position:absolute;left:5cqw;right:2cqw;height:0;border-top:.12cqw dashed #8aa3d433}.gl i{position:absolute;left:-3.4cqw;top:-1.2cqh;font:700 1.1cqw Arial;color:#9fb6e6;font-style:normal}
+.bc{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;position:relative;z-index:1}.bc em{position:absolute;bottom:-2.6cqh;font:700 1.1cqw Arial;color:#9fb6e6;font-style:normal}
+.br{width:100%;background:linear-gradient(#ffffff,#b9cdf0);border-radius:.4cqw .4cqw 0 0;height:calc(var(--h)*1%);transform-origin:bottom;animation:mhG .8s cubic-bezier(.2,1,.3,1) both;animation-delay:calc(var(--i)*.07s - var(--e,0s))}.br.hi{background:linear-gradient(#ffb066,#f2640f)}
+@keyframes mhG{from{transform:scaleY(0)}}.bc u{position:absolute;width:1.1cqw;height:1.1cqw;border-radius:50%;background:#ff3b5c;box-shadow:0 0 .8cqw #ff3b5c;text-decoration:none;bottom:calc(var(--h)*1% + 3.6cqh);animation:mhW 1.2s ease-in-out infinite;animation-delay:calc(0s - var(--e,0s))}@keyframes mhW{50%{opacity:.35}}
+.bc b{position:absolute;bottom:calc(var(--h)*1% + 1.6cqh);font:900 1.2cqw Arial;color:#fff}${FT}`);
+ const mhHTML=(m,i,o)=>{const k=calc(m,i),L=overList(m,i),T0=T(m.innings[i].bat),tot=Math.max(1,mx(m)||m.overs||L.length),mxr=Math.max(10,...L.map(x=>x.t)),top=Math.ceil(mxr/4)*4,ex=k.ex.wd+k.ex.nb+k.ex.b+k.ex.lb;
+  const n=Math.max(L.length,m.overs||L.length);const bars=Array.from({length:n},(_,j)=>{const x=L[j];if(!x)return `<div class="bc"><em>${j+1}</em></div>`;const w=x.b.filter(b=>b.cls==='w').length;return `<div class="bc" style="--h:${Math.max(3,x.t/top*100).toFixed(1)};--i:${j}"><div class="br${x.t>=12?' hi':''}"></div>${w?'<u></u>':''}<b>${x.t}</b><em>${x.n}</em></div>`}).join('');
+  const gl=[0,1,2,3].map(g=>`<div class="gl" style="bottom:calc(3.2cqh + ${(g+1)*25}% * .78)"><i>${Math.round(top*(g+1)/4)}</i></div>`).join('');
+  return `<div class="mh" style="--c:${E(T0.color||'#1d4ed8')};--e:${o}s"><div class="hd"><b>${E(T0.name)}</b><small>RUNS PER OVER · ${E(m.name||'')}</small></div><div class="pl">${gl}${bars}</div><div class="ft"><div>EXTRAS <b>${ex}</b></div><div class="c"><b>${k.runs}-${k.wk}</b></div><div>OVERS <b>${fmt(k.lg)}</b></div></div></div>`};
+ /* bowling card */
+ const bcCSS=rn('bc',`.bc{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:60cqw;font-family:'Arial Narrow',Arial,sans-serif;text-transform:uppercase;filter:drop-shadow(0 2cqh 3cqh #000a);animation:bcIn .6s cubic-bezier(.2,1,.3,1) both;animation-delay:calc(0s - var(--e,0s))}@keyframes bcIn{from{opacity:0;transform:translate(-50%,-46%)}}
+.hd{display:flex;align-items:center;gap:1.4cqw;padding:1.4cqh 2cqw;background:linear-gradient(90deg,var(--c,#0f766e),#0b1533);color:#fff;border-radius:1.2cqh 1.2cqh 0 0}.hd b{font-size:2.4cqw;font-weight:900}.hd small{font-size:1.2cqw;color:#bcd0f5;letter-spacing:.1em}
+.tb{background:linear-gradient(#18274d,#0d1630);padding:.8cqh 2cqw 1.2cqh;color:#e8f0ff}.rw{display:grid;grid-template-columns:1fr repeat(5,7cqw);align-items:center;height:5.4cqh;font-size:1.6cqw;font-weight:800;border-bottom:.12cqw solid #8aa3d426;animation:bcR .5s ease-out both;animation-delay:calc(var(--i)*.09s - var(--e,0s))}@keyframes bcR{from{opacity:0;transform:translateX(-3cqw)}}.rw span{text-align:center}.rw span:first-child{text-align:left}.rw.h{height:4cqh;font-size:1.1cqw;color:#ff9a3d;letter-spacing:.14em;animation:none}.rw b{color:#fff}.rw .w{color:#ffd24a;font-size:1.9cqw}
+.fw{background:linear-gradient(#0d1630,#0a1127);padding:1cqh 2cqw 1.2cqh;color:#e8f0ff}.fw h4{margin:0 0 .6cqh;font-size:1.1cqw;letter-spacing:.2em;color:#ff9a3d}.fw div{display:flex;gap:.6cqw}.fw span{flex:1;text-align:center;font-size:1.2cqw;color:#9fb6e6;padding:.4cqh 0;background:#ffffff0d;border-radius:.4cqw}.fw span b{display:block;font-size:1.7cqw;color:#fff}.fw span.d{opacity:.28}${FT}`);
+ const bcHTML=(m,i,o)=>{const k=calc(m,i),B=T(m.innings[i].bowl),ev=m.innings[i].ev,ids=Object.keys(k.bowl).filter(id=>k.bowl[id].b>0||k.bowl[id].r>0);
+  const dots=id=>ev.filter(e=>e.bl===id&&!e.x&&e.r===0).length,ex=k.ex.wd+k.ex.nb+k.ex.b+k.ex.lb;
+  const rows=ids.slice(0,6).map((id,j)=>{const b=k.bowl[id];return `<div class="rw" style="--i:${j}"><span>${E(sh(id))}</span><span>${fmt(b.b)}</span><span>${dots(id)}</span><span>${b.r}</span><span class="w">${b.w}</span><span>${b.b?(b.r*BPO/b.b).toFixed(1):'0.0'}</span></div>`}).join('');
+  const ord=['1ST','2ND','3RD'],fw=Array.from({length:10},(_,j)=>{const f=k.fow[j];return `<span class="${f?'':'d'}">${ord[j]||(j+1)+'TH'}<b>${f?f.r:'–'}</b></span>`}).join('');
+  return `<div class="bc" style="--c:${E(B.color||'#0f766e')};--e:${o}s"><div class="hd"><b>${E(B.name)}</b><small>BOWLING · ${E(m.name||'')}</small></div><div class="tb"><div class="rw h"><span></span><span>OVERS</span><span>DOTS</span><span>RUNS</span><span>WICKETS</span><span>ECONOMY</span></div>${rows||'<div class="rw"><span>–</span></div>'}</div><div class="fw"><h4>FALL OF WICKETS</h4><div>${fw}</div></div><div class="ft"><div>EXTRAS <b>${ex}</b></div><div class="c"><b>${T(m.innings[i].bat)&&k.runs}-${k.wk}</b></div><div>OVERS <b>${fmt(k.lg)}</b></div></div></div>`};
+ /* event strip */
+ const EV={four:['FOUR','#ff7a00','#ffb347'],six:['SIX','#12b76a','#6ee7a8'],wicket:['WICKET','#e11d48','#ff6b87'],nb:['NO BALL','#7c3aed','#b794ff'],wd:['WIDE','#0ea5e9','#7dd3fc']};
+ const esCSS=rn('es',`.es{position:absolute;left:50%;bottom:13cqh;transform:translateX(-50%);width:80cqw;height:11cqh;overflow:hidden;font-family:Impact,'Arial Black',sans-serif;text-transform:uppercase;font-style:italic;filter:drop-shadow(0 1.2cqh 1.6cqh #000b);animation:esIn .5s cubic-bezier(.2,1,.3,1) both,esOut .5s ease-in 4.1s both;animation-delay:calc(0s - var(--e,0s)),calc(4.1s - var(--e,0s))}
+@keyframes esIn{from{transform:translateX(-50%) scaleX(.2);opacity:0}}@keyframes esOut{to{transform:translateX(-50%) translateY(6cqh);opacity:0}}
+.bg{position:absolute;inset:0;background:linear-gradient(100deg,#0b1533,var(--a) 45%,var(--b) 55%,#0b1533);clip-path:polygon(3% 0,100% 0,97% 100%,0 100%)}
+.st{position:absolute;inset:0;background:repeating-linear-gradient(110deg,transparent 0 3cqw,#ffffff22 3cqw 4.5cqw);animation:esS 1.6s linear infinite;animation-delay:calc(0s - var(--e,0s))}@keyframes esS{to{background-position:9cqw 0}}
+.tx{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:3cqw;color:#fff;text-shadow:.3cqw .3cqw 0 #0008}.tx b{font-size:7.4cqw;letter-spacing:.08em;line-height:1;animation:esP .5s ease-out both;animation-delay:calc(.15s - var(--e,0s))}@keyframes esP{from{transform:scale(1.8);opacity:0}}.tx small{font:800 1.8cqw Arial,sans-serif;font-style:normal;letter-spacing:.1em;color:#fff;background:#0007;padding:.6cqh 1.2cqw;border-radius:.5cqw;max-width:26cqw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}`);
+ const evOf=(m,i)=>{const ev=m.innings[i].ev,e=ev[ev.length-1];if(!e)return null;const t=e.w?'wicket':e.x==='nb'?'nb':e.x==='wd'?'wd':(!e.x&&e.r===6)?'six':(!e.x&&e.r===4)?'four':null;if(!t)return null;let sub='';try{sub=e.w?(nm(e.out||e.bt)+(e.bl?' b '+nm(e.bl):'')):(e.bt?nm(e.bt):'')}catch(x){}return{t,sub:String(sub).toUpperCase(),n:ev.length}};
+ const esHTML=(t,sub,o)=>{const c=EV[t]||EV.four;return `<div class="es" style="--a:${c[1]};--b:${c[2]};--e:${o}s"><div class="bg"></div><div class="st"></div><div class="tx"><b>${c[0]}</b>${sub?`<small>${E(sub)}</small>`:''}</div></div>`};
+ /* sponsor zone */
+ const znCSS=rn('zn',`.zn{position:absolute;left:3cqw;bottom:13cqh;display:flex;align-items:stretch;height:9cqh;font-family:'Arial Narrow',Arial,sans-serif;text-transform:uppercase;filter:drop-shadow(0 1cqh 1.4cqh #000a);animation:znIn .7s cubic-bezier(.2,1,.3,1) both;animation-delay:calc(0s - var(--e,0s))}@keyframes znIn{from{opacity:0;transform:translateX(-12cqw)}}
+.bd{width:9cqh;background:linear-gradient(#22c55e,#0e7a3a);display:flex;align-items:center;justify-content:center;color:#fff;font:900 2.2cqw Arial;border-radius:.8cqh 0 0 .8cqh}.tt{display:flex;flex-direction:column;justify-content:center;padding:0 2.4cqw 0 1.6cqw;background:linear-gradient(#ffffff,#dfe7f5);color:#10224a;min-width:22cqw;clip-path:polygon(0 0,100% 0,96% 100%,0 100%);position:relative;overflow:hidden}.tt b{font-size:2.3cqw;font-weight:900;letter-spacing:.04em}.tt small{font-size:1.2cqw;color:#2a6b3c;font-weight:800;letter-spacing:.12em}.tt::after{content:'';position:absolute;top:0;bottom:0;width:5cqw;background:linear-gradient(100deg,transparent,#22c55e44,transparent);animation:znS 3.4s linear infinite;animation-delay:calc(0s - var(--e,0s))}@keyframes znS{from{left:-6cqw}to{left:100%}}`);
+ const znHTML=(t,s,o)=>`<div class="zn" style="--e:${o}s"><div class="bd">${E(String(s).replace(/[^A-Za-z0-9]/g,'').slice(0,2)||'SP')}</div><div class="tt"><small>PRESENTED BY ${E(s)}</small><b>${E(t)}</b></div></div>`;
+ const sty=document.createElement('style');sty.textContent=mhCSS+bcCSS+esCSS+znCSS+'.bpr{position:absolute;inset:0;container-type:size;pointer-events:none;overflow:hidden}@media (prefers-reduced-motion:reduce){.bpr *{animation-duration:.01s!important;animation-iteration-count:1!important}}';document.head.appendChild(sty);
+ const o0=overlayHTML;overlayHTML=function(){const sc=sceneNow();if(SC.indexOf(sc)<0)return o0.apply(this,arguments);
+  try{UI.bp=UI.bp||{t0:Date.now(),key:'',t:0};const e=((Date.now()-UI.bp.t0)/1000).toFixed(2),w=h=>`<div class="ovroot ov" data-t="sh"><div class="bpr">${h}</div></div>`;
+   if(sc==='zone')return w(rh('zn',znHTML(q('t')||'POWERPLAY ZONE',q('s')||'Sponsor',e)));
+   const m=ovMatch(),s=m&&st(m);if(!s)return w('');const i=Math.min(s.i,m.innings.length-1);
+   if(sc==='manhattan')return w(rh('mh',mhHTML(m,i,e)));
+   if(sc==='bowlcard')return w(rh('bc',bcHTML(m,i,e)));
+   const f=q('ev');if(f&&EV[f])return w(rh('es',esHTML(f,q('sub')||'',e)));
+   const v=evOf(m,i),key=i+':'+m.innings[i].ev.length;if(UI.bp.key!==key){if(UI.bp.key&&v)UI.bp.t=Date.now();UI.bp.key=key;UI.bp.ev=v}
+   const age=(Date.now()-UI.bp.t)/1000;if(!UI.bp.t||age>4.8||!UI.bp.ev)return w('');
+   return w(rh('es',esHTML(UI.bp.ev.t,UI.bp.ev.sub,age.toFixed(2))))}catch(err){return o0.apply(this,arguments)}};
+ {Object.assign(A,{bpCopy(d){const u=location.href.split('#')[0].split('?')[0]+'?scene='+d.v+(d.x||'')+'#overlay';try{navigator.clipboard.writeText(u);toast('URL copied')}catch(x){toast(u,6000)}}});
+  const vs=vStream;vStream=function(){let h=vs.apply(this,arguments);if(!can())return h;
+   const L=[['manhattan','Runs per over chart','',''],['bowlcard','Bowling card + fall of wickets','',''],['strip','Auto FOUR / SIX / WICKET banner','',''],['zone','Sponsor segment lower third','&t=POWERPLAY%20ZONE&s=Your%20Sponsor','']];
+   const bx=`<div class="card"><h3>Broadcast boards (4)</h3><div class="mu sm" style="margin-bottom:6px">OBS Browser Sources. The banner shows itself on every four, six, wicket, wide and no-ball. Sponsor segment: change <code>t</code> and <code>s</code> in the URL.</div>${L.map(x=>`<div class="item" style="flex-wrap:wrap;gap:6px"><b style="flex:1;min-width:150px">${x[1]}</b><button class="btn sm ghost" data-a="ovPrev" data-v="${x[0]}">Preview</button><button class="btn sm" data-a="bpCopy" data-v="${x[0]}" data-x="${x[2]}">Copy OBS URL</button></div>`).join('')}</div>`;
+   const i=h.indexOf('<div class="g2"><div class="card"><h3>Overlay settings</h3>');return i<0?h+bx:h.slice(0,i)+bx+h.slice(i)}}
+ window.shBp={SC,EV};
+}
+
 </script>
 </body>
 </html>

@@ -1,0 +1,23 @@
+const {chromium}=require('playwright');
+(async()=>{const b=await chromium.launch(),p=await b.newPage({viewport:{width:1280,height:720}}),errs=[];p.on('pageerror',e=>errs.push(e.message));
+const ok=(c,m)=>{if(!c){console.log('FAIL',m);process.exitCode=1}};
+await p.addInitScript(()=>{window.fetch=()=>new Promise(()=>{})});
+const base='file://'+require('path').resolve(__dirname,'../app-index.html');
+await p.goto(base+'?scene=manhattan#overlay');await p.waitForTimeout(400);
+await p.evaluate(()=>{S.matches=[];const nmz=['Clarke','Omarzai','Hasan','Rao','Iqbal','Shah','Nair','Dar','Ali','Khan','Roy','Razzaq','Malik','Zaidi','Lone','Bose','Sen','Gill','Vaz','Pir','Tej','Mir'];S.players=nmz.map((n,i)=>({id:'p'+i,name:n+' X',role:'BAT',team:i<11?'a':'b'}));S.teams=[{id:'a',name:'United Tigers',short:'UNT',color:'#7c3aed',players:S.players.slice(0,11).map(p=>p.id)},{id:'b',name:'Emirates Eagles',short:'EME',color:'#0f766e',players:S.players.slice(11).map(p=>p.id)}];const m=newMatch({a:'a',b:'b',overs:10,toss:'a',dec:'bat',xiA:S.teams[0].players,xiB:S.teams[1].players,venue:'H'});m.name='ABU DHABI T10';startInnings(m,0,'p0','p1','p11');m.status='live';
+ const inn=m.innings[0];inn.cur.bl='p11';let n=0;
+ const seq=[1,1,0,4,0,1, 6,4,'W',1,6,1, 2,4,'wd',4,0,1,1, 'W',1,1,2,0,0, 4,4,6,1,0,1, 0,1,2,1,1,0, 6,0,1,4,1,1, 1,1,0,2,4,1];
+ seq.forEach(x=>{if(!inn.cur.s)inn.cur.s='p'+(2+(n++%8));if(x==='wd')ball(m,{x:'wd',r:0});else if(x==='W')ball(m,{r:0,w:1,out:inn.cur.s});else ball(m,{r:x});const lg=calc(m,0).lg;if(lg>0&&lg%6===0&&x!=='wd')inn.cur.bl='p'+(11+(lg/6)%4)});
+ S.stream.mid=m.id;save()});
+const meas=sel=>p.evaluate(sel=>{const w=document.querySelector(sel);if(!w)return null;const r=w.getBoundingClientRect();return{w:r.width,h:r.height,t:w.innerText.replace(/\n+/g,' '),an:document.getAnimations().length,over:document.documentElement.scrollWidth>innerWidth}},sel);
+await p.goto(base+'?scene=manhattan#overlay');await p.waitForTimeout(1800);let r=await meas('.mh');console.log(JSON.stringify(r));
+ok(r&&r.w>600&&/EXTRAS/.test(r.t)&&/OVERS/.test(r.t)&&/UNITED TIGERS/.test(r.t),'manhattan');ok(await p.evaluate(()=>document.querySelectorAll('.mh-br').length>=8),'bars');ok(await p.evaluate(()=>document.querySelectorAll('.mh-bc u').length>=1),'wicket marker');await p.screenshot({path:'/tmp/claude-0/vid/bp_mh.png'});
+await p.goto(base+'?scene=bowlcard#overlay');await p.waitForTimeout(1800);r=await meas('.bc');console.log(JSON.stringify(r));
+ok(r&&/WICKETS/.test(r.t)&&/ECONOMY/.test(r.t)&&/FALL OF WICKETS/.test(r.t)&&/1ST/.test(r.t),'bowlcard');ok(await p.evaluate(()=>document.querySelectorAll('.bc-rw').length>=3),'rows');await p.screenshot({path:'/tmp/claude-0/vid/bp_bc.png'});
+for(const e of ['four','six','wicket','nb','wd']){await p.goto(base+'?scene=strip&ev='+e+'&sub=Clarke%20b%20Razzaq#overlay');await p.waitForTimeout(1100);r=await meas('.es');ok(r&&r.w>800&&new RegExp(e==='nb'?'NO BALL':e==='wd'?'WIDE':e.toUpperCase()).test(r.t),'strip '+e+' '+JSON.stringify(r));if(e==='four'||e==='wicket')await p.screenshot({path:'/tmp/claude-0/vid/bp_es_'+e+'.png'})}
+await p.goto(base+'?scene=strip#overlay');await p.waitForTimeout(900);ok(await p.evaluate(()=>!document.querySelector('.es')),'strip idle hidden');
+await p.evaluate(()=>{ball(S.matches[0],{r:4});save()});await p.waitForTimeout(2000);ok(await p.evaluate(()=>!!document.querySelector('.es')&&/FOUR/.test(document.querySelector('.es').innerText)),'strip auto four');
+await p.waitForTimeout(4500);ok(await p.evaluate(()=>!document.querySelector('.es')),'strip auto hides');
+await p.goto(base+'?scene=zone&t=Powerplay%20Zone&s=Spotify#overlay');await p.waitForTimeout(1200);r=await meas('.zn');ok(r&&/POWERPLAY ZONE/.test(r.t)&&/SPOTIFY/.test(r.t),'zone '+JSON.stringify(r));await p.screenshot({path:'/tmp/claude-0/vid/bp_zn.png'});
+await p.goto(base);await p.waitForTimeout(300);ok(await p.evaluate(()=>{window.pullLive=async()=>{};UI.stage='app';S.user={id:'u1',name:'T',phone:'9999999999',role:'admin'};S.prefs=Object.assign({},S.prefs,{asked:1,welcomed:1});UI.view='stream';render();return /Broadcast boards \(4\)/.test(document.body.innerHTML)}),'Stream card');
+ok(!errs.length,errs.join(';'));await b.close();if(!process.exitCode)console.log('PASS: board pack');})();
