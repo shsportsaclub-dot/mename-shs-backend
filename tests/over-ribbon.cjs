@@ -20,5 +20,6 @@ await p.evaluate(()=>{ball(S.matches[0],{r:6});save()});await p.waitForTimeout(1
 ok(await p.evaluate(()=>document.querySelectorAll('.rb-bl.rb-n').length>=0),'pop ok');
 // unknown scene unaffected, pos=top
 await p.goto(base+'?scene=ribbon&pos=top#overlay');await p.waitForTimeout(900);ok(await p.evaluate(()=>!!document.querySelector('.rbw.top')),'top position');
+await p.goto(base+'?scene=tvbar#overlay');await p.waitForTimeout(1600);{const r2=await p.evaluate(()=>{const w=document.querySelector('.rb.rb-tv');if(!w)return null;const r=w.getBoundingClientRect();return{w:r.width,h:r.height,t:w.innerText.replace(/\n+/g,' '),boxes:document.querySelectorAll('.rb-bx i').length}});console.log(JSON.stringify(r2));ok(r2&&r2.w>900&&r2.boxes===6&&/OVER/.test(r2.t)&&/OV/.test(r2.t),'tvbar');await p.screenshot({path:'/tmp/claude-0/vid/tv1.png'})}
 await p.goto(base);await p.waitForTimeout(300);ok(await p.evaluate(()=>{window.pullLive=async()=>{};UI.stage='app';S.user={id:'u1',name:'T',phone:'9999999999',role:'admin'};S.prefs=Object.assign({},S.prefs,{asked:1,welcomed:1});UI.view='stream';render();return /Over Ribbon/.test(document.body.innerHTML)}),'Stream card');
 ok(!errs.length,errs.join(';'));await b.close();if(!process.exitCode)console.log('PASS: over ribbon');})();

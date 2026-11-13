@@ -4,3 +4,4 @@ Original design from the user's reference (batters / score hub / bowler + ball-b
 - Strip: last 3 overs, each with over number and runs in over; hexagon beads: dot slate, 1-3 sky, four amber, six green (glow), wicket crimson (blink), wide/no-ball violet; newest ball pops in.
 - OBS: `?scene=ribbon` (`&pos=top` for top). Stream tab card has preview + Copy URL.
 - Test: tests/over-ribbon.cjs
+- `?scene=tvbar`: compact one-row score card (crests, batters, hub, bowler, OVER boxes)
