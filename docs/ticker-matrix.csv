@@ -1,0 +1,447 @@
+id,group,trigger,context,formats,ticker_shows,lane_text,vfx_family,data,theme,motion,priority
+TK001,A Ball outcome,Dot ball,plain dot,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",dot-ball pulse + dots this over,Dot ball. {bowler} keeps it tight.,hush ring,entered,Monsoon,slide,2
+TK002,A Ball outcome,Dot ball,3rd dot in a row,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",pressure meter,Dot ball. {bowler} keeps it tight.,hush ring,entered,Temple bell,flip,2
+TK003,A Ball outcome,Dot ball,dot after a boundary,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",reset beat,Dot ball. {bowler} keeps it tight.,hush ring,entered,Railway board,unroll,2
+TK004,A Ball outcome,Dot ball,6th dot = maiden building,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",maiden tracker,Dot ball. {bowler} keeps it tight.,hush ring,entered,Matchbox,drop,2
+TK005,A Ball outcome,Dot ball,dot to a set batter (30+),"T20,ODI,Test,T10,Hundred,6-a-side,Gully",set-batter stall,Dot ball. {bowler} keeps it tight.,hush ring,entered,Ink and paper,spin,2
+TK006,A Ball outcome,Single run,rotating strike,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",1 run; strike indicator moves; equation if chase,{batter} takes {w}.,strike swap,entered,Circuit board,stack,2
+TK007,A Ball outcome,Single run,to bring up a milestone,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",1 run; strike indicator moves; equation if chase,{batter} takes {w}.,strike swap,entered,Desert dune,radar,2
+TK008,A Ball outcome,Single run,last ball of the over (strike change),"T20,ODI,Test,T10,Hundred,6-a-side,Gully",1 run; strike indicator moves; equation if chase,{batter} takes {w}.,strike swap,entered,Ocean wave,ripple,2
+TK009,A Ball outcome,Single run,while chasing (need updates),"T20,ODI,Test,T10,Hundred,6-a-side,Gully",1 run; strike indicator moves; equation if chase,{batter} takes {w}.,strike swap,entered,Forge and anvil,shutter,2
+TK010,A Ball outcome,Two run,rotating strike,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",2 run; strike indicator moves; equation if chase,{batter} takes {w}.,strike swap,entered,Kite festival,magnet,2
+TK011,A Ball outcome,Two run,to bring up a milestone,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",2 run; strike indicator moves; equation if chase,{batter} takes {w}.,strike swap,entered,Neon bazaar,slide,2
+TK012,A Ball outcome,Two run,last ball of the over (strike change),"T20,ODI,Test,T10,Hundred,6-a-side,Gully",2 run; strike indicator moves; equation if chase,{batter} takes {w}.,strike swap,entered,Jungle vine,flip,2
+TK013,A Ball outcome,Two run,while chasing (need updates),"T20,ODI,Test,T10,Hundred,6-a-side,Gully",2 run; strike indicator moves; equation if chase,{batter} takes {w}.,strike swap,entered,Space dock,unroll,2
+TK014,A Ball outcome,Three run,rotating strike,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",3 run; strike indicator moves; equation if chase,{batter} takes {w}.,strike swap,entered,Chalkboard,drop,2
+TK015,A Ball outcome,Three run,to bring up a milestone,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",3 run; strike indicator moves; equation if chase,{batter} takes {w}.,strike swap,entered,Glass aquarium,spin,2
+TK016,A Ball outcome,Three run,last ball of the over (strike change),"T20,ODI,Test,T10,Hundred,6-a-side,Gully",3 run; strike indicator moves; equation if chase,{batter} takes {w}.,strike swap,entered,Lantern,stack,2
+TK017,A Ball outcome,Three run,while chasing (need updates),"T20,ODI,Test,T10,Hundred,6-a-side,Gully",3 run; strike indicator moves; equation if chase,{batter} takes {w}.,strike swap,entered,Mosaic tile,radar,2
+TK018,A Ball outcome,FOUR,ground shot,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",ground-hugging path + rope ripple,FOUR! {batter} {runs}({balls}).,four,entered,Rangoli,ripple,2
+TK019,A Ball outcome,FOUR,edge / lucky,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",edge streak,FOUR! {batter} {runs}({balls}).,four,entered,Cassette tape,shutter,2
+TK020,A Ball outcome,FOUR,overthrow four,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",overthrow tag,FOUR! {batter} {runs}({balls}).,four,entered,Pinball,magnet,2
+TK021,A Ball outcome,FOUR,first four of innings,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",first-boundary stamp,FOUR! {batter} {runs}({balls}).,four,entered,Bollywood poster,slide,2
+TK022,A Ball outcome,FOUR,2nd four in the over,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",boundary count in over,FOUR! {batter} {runs}({balls}).,four,entered,Tabla beat,flip,2
+TK023,A Ball outcome,FOUR,3 fours in the over,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",over-of-fours banner,FOUR! {batter} {runs}({balls}).,four,entered,Spice market,unroll,2
+TK024,A Ball outcome,FOUR,back-to-back fours,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",double-boundary combo,FOUR! {batter} {runs}({balls}).,four,entered,Cinema reel,drop,2
+TK025,A Ball outcome,FOUR,boundary count milestone (10th),"T20,ODI,Test,T10,Hundred,6-a-side,Gully",boundary counter,FOUR! {batter} {runs}({balls}).,four,entered,Lighthouse,spin,2
+TK026,A Ball outcome,FOUR,four to reach 50/100,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",milestone + four combo,FOUR! {batter} {runs}({balls}).,four,entered,Stained glass,stack,2
+TK027,A Ball outcome,FOUR,four to win,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",winning-boundary,FOUR! {batter} {runs}({balls}).,four,entered,Origami,radar,2
+TK028,A Ball outcome,SIX,normal six,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",ball arc + confetti,SIX! {batter} {runs}({balls}).,six,entered,Embroidery,ripple,2
+TK029,A Ball outcome,SIX,back-to-back sixes,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",double-six combo,SIX! {batter} {runs}({balls}).,six,entered,Clay pottery,shutter,2
+TK030,A Ball outcome,SIX,3 sixes in the over,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",over-of-sixes banner,SIX! {batter} {runs}({balls}).,six,entered,Sand art,magnet,2
+TK031,A Ball outcome,SIX,6 sixes in the over,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",six-sixer special,SIX! {batter} {runs}({balls}).,six,entered,Ice crystal,slide,2
+TK032,A Ball outcome,SIX,out of the ground / roof,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",giant-six tag (distance entered),SIX! {batter} {runs}({balls}).,six,entered,Volcano,flip,2
+TK033,A Ball outcome,SIX,first six of innings,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",first-six stamp,SIX! {batter} {runs}({balls}).,six,entered,Thunder,unroll,2
+TK034,A Ball outcome,SIX,six to reach 50/100,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",milestone + six combo,SIX! {batter} {runs}({balls}).,six,entered,Fireflies,drop,2
+TK035,A Ball outcome,SIX,last-ball six to win,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",last-ball hero,SIX! {batter} {runs}({balls}).,six,entered,Comet,spin,2
+TK036,A Ball outcome,SIX,six off the first ball,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",statement six,SIX! {batter} {runs}({balls}).,six,entered,Chess board,stack,2
+TK037,A Ball outcome,SIX,10th six of the innings,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",team sixes counter,SIX! {batter} {runs}({balls}).,six,entered,Carrom,radar,2
+TK038,A Ball outcome,Five runs / penalty,5 penalty runs awarded,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",penalty-runs notice,{text},extras,entered,Kabaddi mat,ripple,2
+TK039,A Ball outcome,Bye,keeper beaten,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",bye tag,{text},extras,entered,Hockey turf,shutter,2
+TK040,A Ball outcome,Leg bye,off the pad,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",leg-bye tag,{text},extras,entered,Cricket scoreboard board (old),magnet,2
+TK041,A Ball outcome,Wide,plain wide,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",wide + extra ball,{text},extras,entered,Newspaper,slide,2
+TK042,A Ball outcome,Wide,wide that runs to boundary (5),"T20,ODI,Test,T10,Hundred,6-a-side,Gully",wide-four combo,{text},extras,entered,Typewriter,flip,2
+TK043,A Ball outcome,No-ball,front-foot no-ball,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",no-ball siren (safe flash),{text},extras,entered,Radio dial,unroll,2
+TK044,A Ball outcome,No-ball,no-ball + free hit next,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",free-hit shield,{text},extras,entered,Film noir,drop,2
+TK045,A Ball outcome,No-ball,waist-high / dangerous (beamer),"T20,ODI,Test,T10,Hundred,6-a-side,Gully",beamer warning,{text},extras,entered,Graffiti wall,spin,2
+TK046,A Ball outcome,Free hit,dot ball,"T20,ODI,T10,Hundred,6-a-side,Gully",free-hit wasted,{text},extras,entered,Wooden signboard,stack,2
+TK047,A Ball outcome,Free hit,boundary,"T20,ODI,T10,Hundred,6-a-side,Gully",free-hit boundary,{text},extras,entered,Metro map,radar,2
+TK048,A Ball outcome,Free hit,run-out only dismissal,"T20,ODI,T10,Hundred,6-a-side,Gully",free-hit run-out,{text},extras,entered,Postage stamp,ripple,2
+TK049,A Ball outcome,Dead ball,dead ball called,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",dead-ball tag,{text},extras,entered,Passport stamp,shutter,2
+TK050,A Ball outcome,Short run,1+ run deducted,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",short-run notice,{text},extras,entered,Trophy cabinet,magnet,2
+TK051,A Ball outcome,Overthrow,extra runs via overthrow,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",overthrow tag,{text},extras,entered,Monsoon,flip,2
+TK052,A Ball outcome,Wide + no-ball in same over (3rd extra),extras piling up,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",extras counter,{text},extras,entered,Temple bell,unroll,2
+TK053,A Ball outcome,Extras total 20+,team extras milestone,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",extras bar,{text},extras,entered,Railway board,drop,2
+TK054,B Dismissal,Bowled,plain,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",stumps cartwheel,OUT! {batter} {how}.,out,entered,Matchbox,spin,1
+TK055,B Dismissal,Bowled,first ball (golden duck),"T20,ODI,Test,T10,Hundred,6-a-side,Gully",stumps cartwheel,OUT! {batter} {how}.,out,entered,Ink and paper,stack,1
+TK056,B Dismissal,Bowled,set batter (50+) out,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",stumps cartwheel,OUT! {batter} {how}.,out,entered,Circuit board,radar,1
+TK057,B Dismissal,Bowled,first wicket of the innings,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",stumps cartwheel,OUT! {batter} {how}.,out,entered,Desert dune,ripple,1
+TK058,B Dismissal,Caught,plain,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",arc into glove,OUT! {batter} {how}.,out,entered,Ocean wave,shutter,1
+TK059,B Dismissal,Caught,first ball (golden duck),"T20,ODI,Test,T10,Hundred,6-a-side,Gully",arc into glove,OUT! {batter} {how}.,out,entered,Forge and anvil,magnet,1
+TK060,B Dismissal,Caught,set batter (50+) out,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",arc into glove,OUT! {batter} {how}.,out,entered,Kite festival,slide,1
+TK061,B Dismissal,Caught,first wicket of the innings,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",arc into glove,OUT! {batter} {how}.,out,entered,Neon bazaar,flip,1
+TK062,B Dismissal,Caught behind,plain,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",edge + glove,OUT! {batter} {how}.,out,entered,Jungle vine,unroll,1
+TK063,B Dismissal,Caught behind,first ball (golden duck),"T20,ODI,Test,T10,Hundred,6-a-side,Gully",edge + glove,OUT! {batter} {how}.,out,entered,Space dock,drop,1
+TK064,B Dismissal,Caught behind,set batter (50+) out,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",edge + glove,OUT! {batter} {how}.,out,entered,Chalkboard,spin,1
+TK065,B Dismissal,Caught behind,first wicket of the innings,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",edge + glove,OUT! {batter} {how}.,out,entered,Glass aquarium,stack,1
+TK066,B Dismissal,Caught and bowled,plain,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",bowler catch,OUT! {batter} {how}.,out,entered,Lantern,radar,1
+TK067,B Dismissal,Caught and bowled,first ball (golden duck),"T20,ODI,Test,T10,Hundred,6-a-side,Gully",bowler catch,OUT! {batter} {how}.,out,entered,Mosaic tile,ripple,1
+TK068,B Dismissal,Caught and bowled,set batter (50+) out,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",bowler catch,OUT! {batter} {how}.,out,entered,Rangoli,shutter,1
+TK069,B Dismissal,Caught and bowled,first wicket of the innings,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",bowler catch,OUT! {batter} {how}.,out,entered,Cassette tape,magnet,1
+TK070,B Dismissal,LBW,plain,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",laser line to stumps,OUT! {batter} {how}.,out,entered,Pinball,slide,1
+TK071,B Dismissal,LBW,first ball (golden duck),"T20,ODI,Test,T10,Hundred,6-a-side,Gully",laser line to stumps,OUT! {batter} {how}.,out,entered,Bollywood poster,flip,1
+TK072,B Dismissal,LBW,set batter (50+) out,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",laser line to stumps,OUT! {batter} {how}.,out,entered,Tabla beat,unroll,1
+TK073,B Dismissal,LBW,first wicket of the innings,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",laser line to stumps,OUT! {batter} {how}.,out,entered,Spice market,drop,1
+TK074,B Dismissal,LBW after DRS,plain,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",review verdict,OUT! {batter} {how}.,out,entered,Cinema reel,spin,1
+TK075,B Dismissal,LBW after DRS,first ball (golden duck),"T20,ODI,Test,T10,Hundred,6-a-side,Gully",review verdict,OUT! {batter} {how}.,out,entered,Lighthouse,stack,1
+TK076,B Dismissal,LBW after DRS,set batter (50+) out,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",review verdict,OUT! {batter} {how}.,out,entered,Stained glass,radar,1
+TK077,B Dismissal,LBW after DRS,first wicket of the innings,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",review verdict,OUT! {batter} {how}.,out,entered,Origami,ripple,1
+TK078,B Dismissal,Run out (direct hit),plain,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",throw line,OUT! {batter} {how}.,out,entered,Embroidery,shutter,1
+TK079,B Dismissal,Run out (direct hit),first ball (golden duck),"T20,ODI,Test,T10,Hundred,6-a-side,Gully",throw line,OUT! {batter} {how}.,out,entered,Clay pottery,magnet,1
+TK080,B Dismissal,Run out (direct hit),set batter (50+) out,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",throw line,OUT! {batter} {how}.,out,entered,Sand art,slide,1
+TK081,B Dismissal,Run out (direct hit),first wicket of the innings,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",throw line,OUT! {batter} {how}.,out,entered,Ice crystal,flip,1
+TK082,B Dismissal,Run out (non-striker),plain,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",backing-up line,OUT! {batter} {how}.,out,entered,Volcano,unroll,1
+TK083,B Dismissal,Run out (non-striker),first ball (golden duck),"T20,ODI,Test,T10,Hundred,6-a-side,Gully",backing-up line,OUT! {batter} {how}.,out,entered,Thunder,drop,1
+TK084,B Dismissal,Run out (non-striker),set batter (50+) out,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",backing-up line,OUT! {batter} {how}.,out,entered,Fireflies,spin,1
+TK085,B Dismissal,Run out (non-striker),first wicket of the innings,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",backing-up line,OUT! {batter} {how}.,out,entered,Comet,stack,1
+TK086,B Dismissal,Stumped,plain,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",keeper whip,OUT! {batter} {how}.,out,entered,Chess board,radar,1
+TK087,B Dismissal,Stumped,first ball (golden duck),"T20,ODI,Test,T10,Hundred,6-a-side,Gully",keeper whip,OUT! {batter} {how}.,out,entered,Carrom,ripple,1
+TK088,B Dismissal,Stumped,set batter (50+) out,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",keeper whip,OUT! {batter} {how}.,out,entered,Kabaddi mat,shutter,1
+TK089,B Dismissal,Stumped,first wicket of the innings,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",keeper whip,OUT! {batter} {how}.,out,entered,Hockey turf,magnet,1
+TK090,B Dismissal,Hit wicket,plain,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",bat-to-stumps,OUT! {batter} {how}.,out,entered,Cricket scoreboard board (old),slide,1
+TK091,B Dismissal,Hit wicket,first ball (golden duck),"T20,ODI,Test,T10,Hundred,6-a-side,Gully",bat-to-stumps,OUT! {batter} {how}.,out,entered,Newspaper,flip,1
+TK092,B Dismissal,Hit wicket,set batter (50+) out,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",bat-to-stumps,OUT! {batter} {how}.,out,entered,Typewriter,unroll,1
+TK093,B Dismissal,Hit wicket,first wicket of the innings,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",bat-to-stumps,OUT! {batter} {how}.,out,entered,Radio dial,drop,1
+TK094,B Dismissal,Handled the ball,plain,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",hands-off,OUT! {batter} {how}.,out,entered,Film noir,spin,1
+TK095,B Dismissal,Handled the ball,first ball (golden duck),"T20,ODI,Test,T10,Hundred,6-a-side,Gully",hands-off,OUT! {batter} {how}.,out,entered,Graffiti wall,stack,1
+TK096,B Dismissal,Handled the ball,set batter (50+) out,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",hands-off,OUT! {batter} {how}.,out,entered,Wooden signboard,radar,1
+TK097,B Dismissal,Handled the ball,first wicket of the innings,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",hands-off,OUT! {batter} {how}.,out,entered,Metro map,ripple,1
+TK098,B Dismissal,Obstructing the field,plain,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",obstruction tag,OUT! {batter} {how}.,out,entered,Postage stamp,shutter,1
+TK099,B Dismissal,Obstructing the field,first ball (golden duck),"T20,ODI,Test,T10,Hundred,6-a-side,Gully",obstruction tag,OUT! {batter} {how}.,out,entered,Passport stamp,magnet,1
+TK100,B Dismissal,Obstructing the field,set batter (50+) out,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",obstruction tag,OUT! {batter} {how}.,out,entered,Trophy cabinet,slide,1
+TK101,B Dismissal,Obstructing the field,first wicket of the innings,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",obstruction tag,OUT! {batter} {how}.,out,entered,Monsoon,unroll,1
+TK102,B Dismissal,Hit the ball twice,plain,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",double-hit tag,OUT! {batter} {how}.,out,entered,Temple bell,drop,1
+TK103,B Dismissal,Hit the ball twice,first ball (golden duck),"T20,ODI,Test,T10,Hundred,6-a-side,Gully",double-hit tag,OUT! {batter} {how}.,out,entered,Railway board,spin,1
+TK104,B Dismissal,Hit the ball twice,set batter (50+) out,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",double-hit tag,OUT! {batter} {how}.,out,entered,Matchbox,stack,1
+TK105,B Dismissal,Hit the ball twice,first wicket of the innings,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",double-hit tag,OUT! {batter} {how}.,out,entered,Ink and paper,radar,1
+TK106,B Dismissal,Timed out,plain,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",clock tag,OUT! {batter} {how}.,out,entered,Circuit board,ripple,1
+TK107,B Dismissal,Timed out,first ball (golden duck),"T20,ODI,Test,T10,Hundred,6-a-side,Gully",clock tag,OUT! {batter} {how}.,out,entered,Desert dune,shutter,1
+TK108,B Dismissal,Timed out,set batter (50+) out,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",clock tag,OUT! {batter} {how}.,out,entered,Ocean wave,magnet,1
+TK109,B Dismissal,Timed out,first wicket of the innings,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",clock tag,OUT! {batter} {how}.,out,entered,Forge and anvil,slide,1
+TK110,B Dismissal,Retired out,plain,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",retire tag,OUT! {batter} {how}.,out,entered,Kite festival,flip,1
+TK111,B Dismissal,Retired out,first ball (golden duck),"T20,ODI,Test,T10,Hundred,6-a-side,Gully",retire tag,OUT! {batter} {how}.,out,entered,Neon bazaar,unroll,1
+TK112,B Dismissal,Retired out,set batter (50+) out,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",retire tag,OUT! {batter} {how}.,out,entered,Jungle vine,drop,1
+TK113,B Dismissal,Retired out,first wicket of the innings,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",retire tag,OUT! {batter} {how}.,out,entered,Space dock,spin,1
+TK114,B Dismissal,Retired hurt,plain,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",injury tag,OUT! {batter} {how}.,out,entered,Chalkboard,stack,1
+TK115,B Dismissal,Retired hurt,first ball (golden duck),"T20,ODI,Test,T10,Hundred,6-a-side,Gully",injury tag,OUT! {batter} {how}.,out,entered,Glass aquarium,radar,1
+TK116,B Dismissal,Retired hurt,set batter (50+) out,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",injury tag,OUT! {batter} {how}.,out,entered,Lantern,ripple,1
+TK117,B Dismissal,Retired hurt,first wicket of the innings,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",injury tag,OUT! {batter} {how}.,out,entered,Mosaic tile,shutter,1
+TK118,B Dismissal,Wicket,opening stand broken,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",dismissal card + context,{text},out,entered,Rangoli,magnet,1
+TK119,B Dismissal,Wicket,nightwatchman out,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",dismissal card + context,{text},out,entered,Cassette tape,slide,1
+TK120,B Dismissal,Wicket,last wicket (innings over),"T20,ODI,Test,T10,Hundred,6-a-side,Gully",dismissal card + context,{text},out,entered,Pinball,flip,1
+TK121,B Dismissal,Wicket,wicket in the last over,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",dismissal card + context,{text},out,entered,Bollywood poster,unroll,1
+TK122,B Dismissal,Wicket,wicket on 49/99 (so close),"T20,ODI,Test,T10,Hundred,6-a-side,Gully",dismissal card + context,{text},out,entered,Tabla beat,drop,1
+TK123,B Dismissal,Wicket,top-order collapse (3 in 10 balls),"T20,ODI,Test,T10,Hundred,6-a-side,Gully",dismissal card + context,{text},out,entered,Spice market,spin,1
+TK124,B Dismissal,Wicket,tail partnership broken,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",dismissal card + context,{text},out,entered,Cinema reel,stack,1
+TK125,B Dismissal,Wicket,double wicket in an over,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",dismissal card + context,{text},out,entered,Lighthouse,radar,1
+TK126,B Dismissal,Wicket,wicket maiden,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",dismissal card + context,{text},out,entered,Stained glass,ripple,1
+TK127,B Dismissal,Wicket,bowler's 3rd wicket,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",dismissal card + context,{text},out,entered,Origami,shutter,1
+TK128,B Dismissal,Wicket,bowler's 4th wicket,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",dismissal card + context,{text},out,entered,Embroidery,magnet,1
+TK129,B Dismissal,Wicket,bowler's 5-wicket haul,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",dismissal card + context,{text},out,entered,Clay pottery,slide,1
+TK130,B Dismissal,Wicket,10-wicket match haul (Test),"T20,ODI,Test,T10,Hundred,6-a-side,Gully",dismissal card + context,{text},out,entered,Sand art,flip,1
+TK131,B Dismissal,Wicket,hat-trick ball,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",dismissal card + context,{text},out,entered,Ice crystal,unroll,1
+TK132,B Dismissal,Wicket,hat-trick taken,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",dismissal card + context,{text},out,entered,Volcano,drop,1
+TK133,B Dismissal,Wicket,2nd wicket on consecutive balls,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",dismissal card + context,{text},out,entered,Thunder,spin,1
+TK134,B Dismissal,Wicket,keeper 3rd dismissal,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",dismissal card + context,{text},out,entered,Fireflies,stack,1
+TK135,B Dismissal,Wicket,fielder 3rd catch,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",dismissal card + context,{text},out,entered,Comet,radar,1
+TK136,B Dismissal,Wicket,run-out chaos (2 in over),"T20,ODI,Test,T10,Hundred,6-a-side,Gully",dismissal card + context,{text},out,entered,Chess board,ripple,1
+TK137,B Dismissal,Wicket,captain dismissed,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",dismissal card + context,{text},out,entered,Carrom,shutter,1
+TK138,C Milestone / record,Batter 25,individual milestone,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",badge 25 + SR + balls,{batter} reaches {v}.,fifty/hundred,derived,Kabaddi mat,magnet,2
+TK139,C Milestone / record,Batter 50,individual milestone,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",badge 50 + SR + balls,{batter} reaches {v}.,fifty/hundred,derived,Hockey turf,slide,2
+TK140,C Milestone / record,Batter 75,individual milestone,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",badge 75 + SR + balls,{batter} reaches {v}.,fifty/hundred,derived,Cricket scoreboard board (old),flip,2
+TK141,C Milestone / record,Batter 100,individual milestone,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",badge 100 + SR + balls,{batter} reaches {v}.,fifty/hundred,derived,Newspaper,unroll,2
+TK142,C Milestone / record,Batter 125,individual milestone,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",badge 125 + SR + balls,{batter} reaches {v}.,fifty/hundred,derived,Typewriter,drop,2
+TK143,C Milestone / record,Batter 150,individual milestone,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",badge 150 + SR + balls,{batter} reaches {v}.,fifty/hundred,derived,Radio dial,spin,2
+TK144,C Milestone / record,Batter 175,individual milestone,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",badge 175 + SR + balls,{batter} reaches {v}.,fifty/hundred,derived,Film noir,stack,2
+TK145,C Milestone / record,Batter 200,individual milestone,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",badge 200 + SR + balls,{batter} reaches {v}.,fifty/hundred,derived,Graffiti wall,radar,2
+TK146,C Milestone / record,Batter 250,individual milestone,"Test,ODI",badge 250 + SR + balls,{batter} reaches {v}.,fifty/hundred,derived,Wooden signboard,ripple,2
+TK147,C Milestone / record,Batter 300,individual milestone,"Test,ODI",badge 300 + SR + balls,{batter} reaches {v}.,fifty/hundred,derived,Metro map,shutter,2
+TK148,C Milestone / record,Batter 400,individual milestone,"Test,ODI",badge 400 + SR + balls,{batter} reaches {v}.,fifty/hundred,derived,Postage stamp,magnet,2
+TK149,C Milestone / record,Batter record,fastest 50 of the match,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",record banner (needs record data),{batter}: {ctx}.,record,entered/derived,Passport stamp,slide,2
+TK150,C Milestone / record,Batter record,fastest 100 of the tournament,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",record banner (needs record data),{batter}: {ctx}.,record,entered/derived,Trophy cabinet,flip,2
+TK151,C Milestone / record,Batter record,century on debut,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",record banner (needs record data),{batter}: {ctx}.,record,entered/derived,Monsoon,drop,2
+TK152,C Milestone / record,Batter record,maiden international 50/100,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",record banner (needs record data),{batter}: {ctx}.,record,entered/derived,Temple bell,spin,2
+TK153,C Milestone / record,Batter record,50 in under 20 balls,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",record banner (needs record data),{batter}: {ctx}.,record,entered/derived,Railway board,stack,2
+TK154,C Milestone / record,Batter record,strike-rate > 200 (min 20 balls),"T20,ODI,Test,T10,Hundred,6-a-side,Gully",record banner (needs record data),{batter}: {ctx}.,record,entered/derived,Matchbox,radar,2
+TK155,C Milestone / record,Batter record,batter carrying the bat,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",record banner (needs record data),{batter}: {ctx}.,record,entered/derived,Ink and paper,ripple,2
+TK156,C Milestone / record,Batter record,not out at innings end,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",record banner (needs record data),{batter}: {ctx}.,record,entered/derived,Circuit board,shutter,2
+TK157,C Milestone / record,Batter record,career-best score,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",record banner (needs record data),{batter}: {ctx}.,record,entered/derived,Desert dune,magnet,2
+TK158,C Milestone / record,Batter record,ground record score,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",record banner (needs record data),{batter}: {ctx}.,record,entered/derived,Ocean wave,slide,2
+TK159,C Milestone / record,Team 50,team total milestone,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",team 50 counter + RR,{team} 50 up.,team total,derived,Forge and anvil,flip,2
+TK160,C Milestone / record,Team 100,team total milestone,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",team 100 counter + RR,{team} 100 up.,team total,derived,Kite festival,unroll,2
+TK161,C Milestone / record,Team 150,team total milestone,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",team 150 counter + RR,{team} 150 up.,team total,derived,Neon bazaar,drop,2
+TK162,C Milestone / record,Team 200,team total milestone,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",team 200 counter + RR,{team} 200 up.,team total,derived,Jungle vine,spin,2
+TK163,C Milestone / record,Team 250,team total milestone,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",team 250 counter + RR,{team} 250 up.,team total,derived,Space dock,stack,2
+TK164,C Milestone / record,Team 300,team total milestone,"ODI,Test",team 300 counter + RR,{team} 300 up.,team total,derived,Chalkboard,radar,2
+TK165,C Milestone / record,Team 350,team total milestone,"ODI,Test",team 350 counter + RR,{team} 350 up.,team total,derived,Glass aquarium,ripple,2
+TK166,C Milestone / record,Team 400,team total milestone,"ODI,Test",team 400 counter + RR,{team} 400 up.,team total,derived,Lantern,shutter,2
+TK167,C Milestone / record,Team 450,team total milestone,"ODI,Test",team 450 counter + RR,{team} 450 up.,team total,derived,Mosaic tile,magnet,2
+TK168,C Milestone / record,Team 500,team total milestone,"ODI,Test",team 500 counter + RR,{team} 500 up.,team total,derived,Rangoli,slide,2
+TK169,C Milestone / record,Team 600,team total milestone,"ODI,Test",team 600 counter + RR,{team} 600 up.,team total,derived,Cassette tape,flip,2
+TK170,C Milestone / record,Partnership 25,stand milestone,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",partnership bar 25,{a} & {b}: {v}-run stand.,partnership,derived,Pinball,unroll,2
+TK171,C Milestone / record,Partnership 50,stand milestone,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",partnership bar 50,{a} & {b}: {v}-run stand.,partnership,derived,Bollywood poster,drop,2
+TK172,C Milestone / record,Partnership 75,stand milestone,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",partnership bar 75,{a} & {b}: {v}-run stand.,partnership,derived,Tabla beat,spin,2
+TK173,C Milestone / record,Partnership 100,stand milestone,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",partnership bar 100,{a} & {b}: {v}-run stand.,partnership,derived,Spice market,stack,2
+TK174,C Milestone / record,Partnership 150,stand milestone,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",partnership bar 150,{a} & {b}: {v}-run stand.,partnership,derived,Cinema reel,radar,2
+TK175,C Milestone / record,Partnership 200,stand milestone,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",partnership bar 200,{a} & {b}: {v}-run stand.,partnership,derived,Lighthouse,ripple,2
+TK176,C Milestone / record,Partnership 250,stand milestone,"ODI,Test",partnership bar 250,{a} & {b}: {v}-run stand.,partnership,derived,Stained glass,shutter,2
+TK177,C Milestone / record,Partnership 300,stand milestone,"ODI,Test",partnership bar 300,{a} & {b}: {v}-run stand.,partnership,derived,Origami,magnet,2
+TK178,C Milestone / record,Partnership record,record partnership for the wicket,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",record banner,{text},record,derived,Embroidery,slide,2
+TK179,C Milestone / record,Partnership record,highest 1st-wicket stand of the tournament,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",record banner,{text},record,derived,Clay pottery,flip,2
+TK180,C Milestone / record,Partnership record,unbroken stand at innings end,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",record banner,{text},record,derived,Sand art,unroll,2
+TK181,C Milestone / record,Partnership record,stand worth more than the target left,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",record banner,{text},record,derived,Ice crystal,drop,2
+TK182,C Milestone / record,Bowler 3 wickets,bowler achievement,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",bowler card + figures,{bowler}: {text}.,bowler card,derived,Volcano,spin,2
+TK183,C Milestone / record,Bowler 4 wickets,bowler achievement,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",bowler card + figures,{bowler}: {text}.,bowler card,derived,Thunder,stack,2
+TK184,C Milestone / record,Bowler 5 wickets,bowler achievement,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",bowler card + figures,{bowler}: {text}.,bowler card,derived,Fireflies,radar,2
+TK185,C Milestone / record,Bowler 6+ wickets,bowler achievement,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",bowler card + figures,{bowler}: {text}.,bowler card,derived,Comet,ripple,2
+TK186,C Milestone / record,Bowler best figures of the match,bowler achievement,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",bowler card + figures,{bowler}: {text}.,bowler card,derived,Chess board,shutter,2
+TK187,C Milestone / record,Bowler economy under 4 (min 4 ov),bowler achievement,"T20,ODI,T10,Hundred,6-a-side",bowler card + figures,{bowler}: {text}.,bowler card,derived,Carrom,magnet,2
+TK188,C Milestone / record,Bowler maiden,bowler achievement,"T20,ODI,T10,Hundred,6-a-side",bowler card + figures,{bowler}: {text}.,bowler card,derived,Kabaddi mat,slide,2
+TK189,C Milestone / record,2 maidens in a spell,bowler achievement,"T20,ODI,T10,Hundred,6-a-side",bowler card + figures,{bowler}: {text}.,bowler card,derived,Hockey turf,flip,2
+TK190,C Milestone / record,Bowler 4-over spell complete,bowler achievement,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",bowler card + figures,{bowler}: {text}.,bowler card,derived,Cricket scoreboard board (old),unroll,2
+TK191,C Milestone / record,Bowler most dots (20+),bowler achievement,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",bowler card + figures,{bowler}: {text}.,bowler card,derived,Newspaper,drop,2
+TK192,C Milestone / record,Bowler spell 4-0-10-3,bowler achievement,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",bowler card + figures,{bowler}: {text}.,bowler card,derived,Typewriter,spin,2
+TK193,C Milestone / record,Bowler hat-trick,bowler achievement,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",bowler card + figures,{bowler}: {text}.,bowler card,derived,Radio dial,stack,2
+TK194,C Milestone / record,Bowler 10th wicket of tournament,bowler achievement,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",bowler card + figures,{bowler}: {text}.,bowler card,derived,Film noir,radar,2
+TK195,C Milestone / record,Bowler purple cap change,bowler achievement,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",bowler card + figures,{bowler}: {text}.,bowler card,derived,Graffiti wall,ripple,2
+TK196,C Milestone / record,Keeper 3 dismissals,fielding highlight,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",fielder card,{text},fielder,entered,Wooden signboard,shutter,2
+TK197,C Milestone / record,Fielder 3 catches,fielding highlight,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",fielder card,{text},fielder,entered,Metro map,magnet,2
+TK198,C Milestone / record,Direct-hit run out,fielding highlight,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",fielder card,{text},fielder,entered,Postage stamp,slide,2
+TK199,C Milestone / record,Catch of the match candidate,fielding highlight,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",fielder card,{text},fielder,entered,Passport stamp,flip,2
+TK200,C Milestone / record,Fielding position (slip cordon),fielding highlight,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",fielder card,{text},fielder,entered,Trophy cabinet,unroll,2
+TK201,C Milestone / record,Team/match record,highest team total at venue,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",record banner (record data),{text},record,entered/derived,Monsoon,spin,2
+TK202,C Milestone / record,Team/match record,lowest team total,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",record banner (record data),{text},record,entered/derived,Temple bell,stack,2
+TK203,C Milestone / record,Team/match record,highest chase ever at venue,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",record banner (record data),{text},record,entered/derived,Railway board,radar,2
+TK204,C Milestone / record,Team/match record,smallest margin win,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",record banner (record data),{text},record,entered/derived,Matchbox,ripple,2
+TK205,C Milestone / record,Team/match record,largest margin win,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",record banner (record data),{text},record,entered/derived,Ink and paper,shutter,2
+TK206,C Milestone / record,Team/match record,longest six of the tournament (distance entered),"T20,ODI,Test,T10,Hundred,6-a-side,Gully",record banner (record data),{text},record,entered/derived,Circuit board,magnet,2
+TK207,C Milestone / record,Team/match record,most sixes in a match,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",record banner (record data),{text},record,entered/derived,Desert dune,slide,2
+TK208,C Milestone / record,Team/match record,most runs in an over (record),"T20,ODI,Test,T10,Hundred,6-a-side,Gully",record banner (record data),{text},record,entered/derived,Ocean wave,flip,2
+TK209,C Milestone / record,Team/match record,most wickets in a match,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",record banner (record data),{text},record,entered/derived,Forge and anvil,unroll,2
+TK210,C Milestone / record,Team/match record,fastest team 50,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",record banner (record data),{text},record,entered/derived,Kite festival,drop,2
+TK211,D Match phase / situation,Toss,coin result,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",situational ticker,{text},phase,entered/derived,Neon bazaar,spin,2
+TK212,D Match phase / situation,Toss,decision announced (bat/field),"T20,ODI,Test,T10,Hundred,6-a-side,Gully",situational ticker,{text},phase,entered/derived,Jungle vine,stack,2
+TK213,D Match phase / situation,Playing XI,XI reveal team A,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",situational ticker,{text},phase,entered/derived,Space dock,radar,2
+TK214,D Match phase / situation,Playing XI,XI reveal team B,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",situational ticker,{text},phase,entered/derived,Chalkboard,ripple,2
+TK215,D Match phase / situation,Playing XI,impact/super sub named,T20,situational ticker,{text},phase,entered/derived,Glass aquarium,shutter,2
+TK216,D Match phase / situation,Match preview,head-to-head strip,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",situational ticker,{text},phase,entered/derived,Lantern,magnet,2
+TK217,D Match phase / situation,Match preview,pitch + weather report,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",situational ticker,{text},phase,entered/derived,Mosaic tile,slide,2
+TK218,D Match phase / situation,Innings start,1st innings begins,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",situational ticker,{text},phase,entered/derived,Rangoli,flip,2
+TK219,D Match phase / situation,Innings start,chase begins with target,LIM,situational ticker,{text},phase,entered/derived,Cassette tape,unroll,2
+TK220,D Match phase / situation,Powerplay,powerplay 1 starts (1-6 T20),"T20,T10,Hundred",situational ticker,{text},phase,entered/derived,Pinball,drop,2
+TK221,D Match phase / situation,Powerplay,powerplay ends + score in PP,"T20,T10,Hundred",situational ticker,{text},phase,entered/derived,Bollywood poster,spin,2
+TK222,D Match phase / situation,Powerplay,ODI PP2/PP3 start,ODI,situational ticker,{text},phase,entered/derived,Tabla beat,stack,2
+TK223,D Match phase / situation,Powerplay,reduced-overs PP (rounded to ball),"T20,ODI",situational ticker,{text},phase,entered/derived,Spice market,radar,2
+TK224,D Match phase / situation,Break,drinks break,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",situational ticker,{text},phase,entered/derived,Cinema reel,ripple,2
+TK225,D Match phase / situation,Break,strategic timeout,"T20,T10",situational ticker,{text},phase,entered/derived,Lighthouse,shutter,2
+TK226,D Match phase / situation,Break,innings break summary,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",situational ticker,{text},phase,entered/derived,Stained glass,magnet,2
+TK227,D Match phase / situation,Break,target set card,LIM,situational ticker,{text},phase,entered/derived,Origami,slide,2
+TK228,D Match phase / situation,Chase,equation: need X from Y,LIM,situational ticker,{text},phase,entered/derived,Embroidery,flip,2
+TK229,D Match phase / situation,Chase,required rate above 12,LIM,situational ticker,{text},phase,entered/derived,Clay pottery,unroll,2
+TK230,D Match phase / situation,Chase,required rate drops below 6,LIM,situational ticker,{text},phase,entered/derived,Sand art,drop,2
+TK231,D Match phase / situation,Chase,last 5 overs: 40 needed,LIM,situational ticker,{text},phase,entered/derived,Ice crystal,spin,2
+TK232,D Match phase / situation,Chase,last over: runs needed,LIM,situational ticker,{text},phase,entered/derived,Volcano,stack,2
+TK233,D Match phase / situation,Chase,last ball: need 2 / 3 / 4,LIM,situational ticker,{text},phase,entered/derived,Thunder,radar,2
+TK234,D Match phase / situation,Chase,scores level (tie in sight),LIM,situational ticker,{text},phase,entered/derived,Fireflies,ripple,2
+TK235,D Match phase / situation,Chase,win probability swing > 15%,LIM,situational ticker,{text},phase,entered/derived,Comet,shutter,2
+TK236,D Match phase / situation,Defence,defending: bowling side needs wickets,LIM,situational ticker,{text},phase,entered/derived,Chess board,magnet,2
+TK237,D Match phase / situation,Death overs,death overs begin (T20 16-20),T20,situational ticker,{text},phase,entered/derived,Carrom,slide,2
+TK238,D Match phase / situation,Death overs,slog overs ODI (41-50),ODI,situational ticker,{text},phase,entered/derived,Kabaddi mat,flip,2
+TK239,D Match phase / situation,Over end,"over summary (runs, wkts, balls)","T20,ODI,Test,T10,Hundred,6-a-side,Gully",situational ticker,{text},phase,entered/derived,Hockey turf,unroll,2
+TK240,D Match phase / situation,Over end,last 6 balls strip,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",situational ticker,{text},phase,entered/derived,Cricket scoreboard board (old),drop,2
+TK241,D Match phase / situation,Over end,run-rate vs required,LIM,situational ticker,{text},phase,entered/derived,Newspaper,spin,2
+TK242,D Match phase / situation,Over end,maiden over,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",situational ticker,{text},phase,entered/derived,Typewriter,stack,2
+TK243,D Match phase / situation,Over end,most expensive over (20+),"T20,ODI,Test,T10,Hundred,6-a-side,Gully",situational ticker,{text},phase,entered/derived,Radio dial,radar,2
+TK244,D Match phase / situation,Super over,super over begins,"T20,ODI,T10",situational ticker,{text},phase,entered/derived,Film noir,ripple,2
+TK245,D Match phase / situation,Super over,super over target,"T20,ODI,T10",situational ticker,{text},phase,entered/derived,Graffiti wall,shutter,2
+TK246,D Match phase / situation,Super over,boundary-count / tie-break note,"T20,ODI,T10",situational ticker,{text},phase,entered/derived,Wooden signboard,magnet,2
+TK247,D Match phase / situation,Rain,play stopped by rain,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",situational ticker,{text},phase,entered/derived,Metro map,slide,2
+TK248,D Match phase / situation,Rain,covers on / off,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",situational ticker,{text},phase,entered/derived,Postage stamp,flip,2
+TK249,D Match phase / situation,Rain,play resumes,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",situational ticker,{text},phase,entered/derived,Passport stamp,unroll,2
+TK250,D Match phase / situation,Rain,DLS revised target,LIM,situational ticker,{text},phase,entered/derived,Trophy cabinet,drop,2
+TK251,D Match phase / situation,Rain,overs reduced,LIM,situational ticker,{text},phase,entered/derived,Monsoon,stack,2
+TK252,D Match phase / situation,Light,bad light,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",situational ticker,{text},phase,entered/derived,Temple bell,radar,2
+TK253,D Match phase / situation,Light,floodlight failure,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",situational ticker,{text},phase,entered/derived,Railway board,ripple,2
+TK254,D Match phase / situation,Pitch,wet outfield inspection,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",situational ticker,{text},phase,entered/derived,Matchbox,shutter,2
+TK255,D Match phase / situation,Pitch,pitch inspection,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",situational ticker,{text},phase,entered/derived,Ink and paper,magnet,2
+TK256,D Match phase / situation,Pitch,ball change,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",situational ticker,{text},phase,entered/derived,Circuit board,slide,2
+TK257,D Match phase / situation,Pitch,new ball taken,"Test,ODI",situational ticker,{text},phase,entered/derived,Desert dune,flip,2
+TK258,D Match phase / situation,Penalty,slow over-rate penalty (extra fielder / 5 runs),"T20,ODI,Test,T10,Hundred,6-a-side,Gully",situational ticker,{text},phase,entered/derived,Ocean wave,unroll,2
+TK259,D Match phase / situation,Penalty,5 penalty runs (ball tampering/damage to pitch),"T20,ODI,Test,T10,Hundred,6-a-side,Gully",situational ticker,{text},phase,entered/derived,Forge and anvil,drop,2
+TK260,D Match phase / situation,Injury,concussion substitute,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",situational ticker,{text},phase,entered/derived,Kite festival,spin,2
+TK261,D Match phase / situation,Injury,injury stoppage,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",situational ticker,{text},phase,entered/derived,Neon bazaar,stack,2
+TK262,D Match phase / situation,Injury,retired hurt returns,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",situational ticker,{text},phase,entered/derived,Jungle vine,radar,2
+TK263,D Match phase / situation,Review,DRS review taken (reviews left),"T20,ODI,Test,T10,Hundred,6-a-side,Gully",situational ticker,{text},phase,entered/derived,Space dock,ripple,2
+TK264,D Match phase / situation,Review,umpire's call,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",situational ticker,{text},phase,entered/derived,Chalkboard,shutter,2
+TK265,D Match phase / situation,Review,decision overturned,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",situational ticker,{text},phase,entered/derived,Glass aquarium,magnet,2
+TK266,D Match phase / situation,Review,review lost,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",situational ticker,{text},phase,entered/derived,Lantern,slide,2
+TK267,D Match phase / situation,Review,no-ball check (front foot),"T20,ODI,Test,T10,Hundred,6-a-side,Gully",situational ticker,{text},phase,entered/derived,Mosaic tile,flip,2
+TK268,D Match phase / situation,Review,run-out / stumping line,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",situational ticker,{text},phase,entered/derived,Rangoli,unroll,2
+TK269,D Match phase / situation,Result,win by runs,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",situational ticker,{text},phase,entered/derived,Cassette tape,drop,2
+TK270,D Match phase / situation,Result,win by wickets,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",situational ticker,{text},phase,entered/derived,Pinball,spin,2
+TK271,D Match phase / situation,Result,win by DLS,LIM,situational ticker,{text},phase,entered/derived,Bollywood poster,stack,2
+TK272,D Match phase / situation,Result,tie,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",situational ticker,{text},phase,entered/derived,Tabla beat,radar,2
+TK273,D Match phase / situation,Result,super-over win,LIM,situational ticker,{text},phase,entered/derived,Spice market,ripple,2
+TK274,D Match phase / situation,Result,no result / abandoned,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",situational ticker,{text},phase,entered/derived,Cinema reel,shutter,2
+TK275,D Match phase / situation,Result,Player of the match,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",situational ticker,{text},phase,entered/derived,Lighthouse,magnet,2
+TK276,D Match phase / situation,Result,player of the series,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",situational ticker,{text},phase,entered/derived,Stained glass,slide,2
+TK277,D Match phase / situation,Result,trophy lift,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",situational ticker,{text},phase,entered/derived,Origami,flip,2
+TK278,E Long-form (Test / 2-day / first-class),Day,day starts (session 1),Test,long-form ticker,{text},long-form,entered/derived,Embroidery,unroll,2
+TK279,E Long-form (Test / 2-day / first-class),Day,lunch,Test,long-form ticker,{text},long-form,entered/derived,Clay pottery,drop,2
+TK280,E Long-form (Test / 2-day / first-class),Day,tea,Test,long-form ticker,{text},long-form,entered/derived,Sand art,spin,2
+TK281,E Long-form (Test / 2-day / first-class),Day,stumps (day summary),Test,long-form ticker,{text},long-form,entered/derived,Ice crystal,stack,2
+TK282,E Long-form (Test / 2-day / first-class),Day,day 5 last hour (draw vs win),Test,long-form ticker,{text},long-form,entered/derived,Volcano,radar,2
+TK283,E Long-form (Test / 2-day / first-class),Session,session summary (runs/wkts),Test,long-form ticker,{text},long-form,entered/derived,Thunder,ripple,2
+TK284,E Long-form (Test / 2-day / first-class),Session,session won by bowlers,Test,long-form ticker,{text},long-form,entered/derived,Fireflies,shutter,2
+TK285,E Long-form (Test / 2-day / first-class),Lead,lead / trail by X,Test,long-form ticker,{text},long-form,entered/derived,Comet,magnet,2
+TK286,E Long-form (Test / 2-day / first-class),Lead,lead of 300+ (declaration zone),Test,long-form ticker,{text},long-form,entered/derived,Chess board,slide,2
+TK287,E Long-form (Test / 2-day / first-class),Lead,trail within 50,Test,long-form ticker,{text},long-form,entered/derived,Carrom,flip,2
+TK288,E Long-form (Test / 2-day / first-class),Follow-on,follow-on enforced,Test,long-form ticker,{text},long-form,entered/derived,Kabaddi mat,unroll,2
+TK289,E Long-form (Test / 2-day / first-class),Follow-on,follow-on avoided,Test,long-form ticker,{text},long-form,entered/derived,Hockey turf,drop,2
+TK290,E Long-form (Test / 2-day / first-class),Declaration,innings declared,Test,long-form ticker,{text},long-form,entered/derived,Cricket scoreboard board (old),spin,2
+TK291,E Long-form (Test / 2-day / first-class),Declaration,declaration target,Test,long-form ticker,{text},long-form,entered/derived,Newspaper,stack,2
+TK292,E Long-form (Test / 2-day / first-class),New ball,new ball due (80 overs),Test,long-form ticker,{text},long-form,entered/derived,Typewriter,radar,2
+TK293,E Long-form (Test / 2-day / first-class),New ball,new ball taken,Test,long-form ticker,{text},long-form,entered/derived,Radio dial,ripple,2
+TK294,E Long-form (Test / 2-day / first-class),Milestone,team 100 in the session,Test,long-form ticker,{text},long-form,entered/derived,Film noir,shutter,2
+TK295,E Long-form (Test / 2-day / first-class),Milestone,batter 1000th Test run (career),Test,long-form ticker,{text},long-form,entered/derived,Graffiti wall,magnet,2
+TK296,E Long-form (Test / 2-day / first-class),Milestone,bowler 100th wicket (career),Test,long-form ticker,{text},long-form,entered/derived,Wooden signboard,slide,2
+TK297,E Long-form (Test / 2-day / first-class),Milestone,debutant introduced,Test,long-form ticker,{text},long-form,entered/derived,Metro map,flip,2
+TK298,E Long-form (Test / 2-day / first-class),Milestone,last Test of a player,Test,long-form ticker,{text},long-form,entered/derived,Postage stamp,unroll,2
+TK299,E Long-form (Test / 2-day / first-class),Result,innings defeat,Test,long-form ticker,{text},long-form,entered/derived,Passport stamp,drop,2
+TK300,E Long-form (Test / 2-day / first-class),Result,draw,Test,long-form ticker,{text},long-form,entered/derived,Trophy cabinet,spin,2
+TK301,E Long-form (Test / 2-day / first-class),Result,tie (Test),Test,long-form ticker,{text},long-form,entered/derived,Monsoon,radar,2
+TK302,E Long-form (Test / 2-day / first-class),Result,series result,Test,long-form ticker,{text},long-form,entered/derived,Temple bell,ripple,2
+TK303,E Long-form (Test / 2-day / first-class),Result,WTC points impact,Test,long-form ticker,{text},long-form,entered/derived,Railway board,shutter,2
+TK304,E Long-form (Test / 2-day / first-class),Weather,day lost to rain,Test,long-form ticker,{text},long-form,entered/derived,Matchbox,magnet,2
+TK305,E Long-form (Test / 2-day / first-class),Weather,stumps early (light),Test,long-form ticker,{text},long-form,entered/derived,Ink and paper,slide,2
+TK306,E Long-form (Test / 2-day / first-class),Time,overs left in the day,Test,long-form ticker,{text},long-form,entered/derived,Circuit board,flip,2
+TK307,E Long-form (Test / 2-day / first-class),Time,extra half-hour claimed,Test,long-form ticker,{text},long-form,entered/derived,Desert dune,unroll,2
+TK308,E Long-form (Test / 2-day / first-class),Time,last hour starts,Test,long-form ticker,{text},long-form,entered/derived,Ocean wave,drop,2
+TK309,E Long-form (Test / 2-day / first-class),Stat,balls per dismissal (bowler),Test,long-form ticker,{text},long-form,entered/derived,Forge and anvil,spin,2
+TK310,E Long-form (Test / 2-day / first-class),Stat,session scoring rate,Test,long-form ticker,{text},long-form,entered/derived,Kite festival,stack,2
+TK311,E Long-form (Test / 2-day / first-class),Stat,partnership balls faced (grind),Test,long-form ticker,{text},long-form,entered/derived,Neon bazaar,radar,2
+TK312,E Long-form (Test / 2-day / first-class),Stat,longest innings of the match (balls),Test,long-form ticker,{text},long-form,entered/derived,Jungle vine,ripple,2
+TK313,E Long-form (Test / 2-day / first-class),Stat,maidens in the session,Test,long-form ticker,{text},long-form,entered/derived,Space dock,shutter,2
+TK314,E Long-form (Test / 2-day / first-class),Stat,bowler 20 overs without a wicket,Test,long-form ticker,{text},long-form,entered/derived,Chalkboard,magnet,2
+TK315,E Long-form (Test / 2-day / first-class),Stat,bowler workload (overs in the day),Test,long-form ticker,{text},long-form,entered/derived,Glass aquarium,slide,2
+TK316,F Tournament,Points table (top 4),tournament feed,"T20,ODI,T10,Hundred,6-a-side,Gully,Test",standings/leaderboard ticker,{text},tournament,derived,Lantern,flip,3
+TK317,F Tournament,Points table update after result,tournament feed,"T20,ODI,T10,Hundred,6-a-side,Gully,Test",standings/leaderboard ticker,{text},tournament,derived,Mosaic tile,unroll,3
+TK318,F Tournament,Qualification: team qualified,tournament feed,"T20,ODI,T10,Hundred,6-a-side,Gully,Test",standings/leaderboard ticker,{text},tournament,derived,Rangoli,drop,3
+TK319,F Tournament,Qualification: team eliminated,tournament feed,"T20,ODI,T10,Hundred,6-a-side,Gully,Test",standings/leaderboard ticker,{text},tournament,derived,Cassette tape,spin,3
+TK320,F Tournament,Qualification: NRR needed to qualify,tournament feed,"T20,ODI,T10,Hundred,6-a-side,Gully,Test",standings/leaderboard ticker,{text},tournament,derived,Pinball,stack,3
+TK321,F Tournament,Qualification: must-win scenario,tournament feed,"T20,ODI,T10,Hundred,6-a-side,Gully,Test",standings/leaderboard ticker,{text},tournament,derived,Bollywood poster,radar,3
+TK322,F Tournament,Qualification: 4 teams for 1 spot,tournament feed,"T20,ODI,T10,Hundred,6-a-side,Gully,Test",standings/leaderboard ticker,{text},tournament,derived,Tabla beat,ripple,3
+TK323,F Tournament,Next fixture,tournament feed,"T20,ODI,T10,Hundred,6-a-side,Gully,Test",standings/leaderboard ticker,{text},tournament,derived,Spice market,shutter,3
+TK324,F Tournament,Today's fixtures,tournament feed,"T20,ODI,T10,Hundred,6-a-side,Gully,Test",standings/leaderboard ticker,{text},tournament,derived,Cinema reel,magnet,3
+TK325,F Tournament,Tomorrow's fixtures,tournament feed,"T20,ODI,T10,Hundred,6-a-side,Gully,Test",standings/leaderboard ticker,{text},tournament,derived,Lighthouse,slide,3
+TK326,F Tournament,Group standings,tournament feed,"T20,ODI,T10,Hundred,6-a-side,Gully,Test",standings/leaderboard ticker,{text},tournament,derived,Stained glass,flip,3
+TK327,F Tournament,Knockout bracket,tournament feed,"T20,ODI,T10,Hundred,6-a-side,Gully,Test",standings/leaderboard ticker,{text},tournament,derived,Origami,unroll,3
+TK328,F Tournament,Quarter-final line-up,tournament feed,"T20,ODI,T10,Hundred,6-a-side,Gully,Test",standings/leaderboard ticker,{text},tournament,derived,Embroidery,drop,3
+TK329,F Tournament,Semi-final line-up,tournament feed,"T20,ODI,T10,Hundred,6-a-side,Gully,Test",standings/leaderboard ticker,{text},tournament,derived,Clay pottery,spin,3
+TK330,F Tournament,Final line-up,tournament feed,"T20,ODI,T10,Hundred,6-a-side,Gully,Test",standings/leaderboard ticker,{text},tournament,derived,Sand art,stack,3
+TK331,F Tournament,Orange cap (top run-scorer) update,tournament feed,"T20,ODI,T10,Hundred,6-a-side,Gully,Test",standings/leaderboard ticker,{text},tournament,derived,Ice crystal,radar,3
+TK332,F Tournament,Purple cap (top wicket-taker) update,tournament feed,"T20,ODI,T10,Hundred,6-a-side,Gully,Test",standings/leaderboard ticker,{text},tournament,derived,Volcano,ripple,3
+TK333,F Tournament,Most sixes leaderboard,tournament feed,"T20,ODI,T10,Hundred,6-a-side,Gully,Test",standings/leaderboard ticker,{text},tournament,derived,Thunder,shutter,3
+TK334,F Tournament,Most fours leaderboard,tournament feed,"T20,ODI,T10,Hundred,6-a-side,Gully,Test",standings/leaderboard ticker,{text},tournament,derived,Fireflies,magnet,3
+TK335,F Tournament,Best strike-rate leaderboard,tournament feed,"T20,ODI,T10,Hundred,6-a-side,Gully,Test",standings/leaderboard ticker,{text},tournament,derived,Comet,slide,3
+TK336,F Tournament,Best economy leaderboard,tournament feed,"T20,ODI,T10,Hundred,6-a-side,Gully,Test",standings/leaderboard ticker,{text},tournament,derived,Chess board,flip,3
+TK337,F Tournament,Emerging player leaderboard,tournament feed,"T20,ODI,T10,Hundred,6-a-side,Gully,Test",standings/leaderboard ticker,{text},tournament,derived,Carrom,unroll,3
+TK338,F Tournament,Catches leaderboard,tournament feed,"T20,ODI,T10,Hundred,6-a-side,Gully,Test",standings/leaderboard ticker,{text},tournament,derived,Kabaddi mat,drop,3
+TK339,F Tournament,Fantasy points leaderboard (free points only),tournament feed,"T20,ODI,T10,Hundred,6-a-side,Gully,Test",standings/leaderboard ticker,{text},tournament,derived,Hockey turf,spin,3
+TK340,F Tournament,Man of the series race,tournament feed,"T20,ODI,T10,Hundred,6-a-side,Gully,Test",standings/leaderboard ticker,{text},tournament,derived,Cricket scoreboard board (old),stack,3
+TK341,F Tournament,Team of the tournament,tournament feed,"T20,ODI,T10,Hundred,6-a-side,Gully,Test",standings/leaderboard ticker,{text},tournament,derived,Newspaper,radar,3
+TK342,F Tournament,Winner celebration,tournament feed,"T20,ODI,T10,Hundred,6-a-side,Gully,Test",standings/leaderboard ticker,{text},tournament,derived,Typewriter,ripple,3
+TK343,F Tournament,Runner-up note,tournament feed,"T20,ODI,T10,Hundred,6-a-side,Gully,Test",standings/leaderboard ticker,{text},tournament,derived,Radio dial,shutter,3
+TK344,F Tournament,Prize / award presentation,tournament feed,"T20,ODI,T10,Hundred,6-a-side,Gully,Test",standings/leaderboard ticker,{text},tournament,derived,Film noir,magnet,3
+TK345,F Tournament,Tournament highlights reel link,tournament feed,"T20,ODI,T10,Hundred,6-a-side,Gully,Test",standings/leaderboard ticker,{text},tournament,derived,Graffiti wall,slide,3
+TK346,G Audience / info / sponsor,Welcome / match intro,info lane,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",scroll-lane ticker,{text},info,entered,Wooden signboard,flip,4
+TK347,G Audience / info / sponsor,Pitch report,info lane,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",scroll-lane ticker,{text},info,entered,Metro map,unroll,4
+TK348,G Audience / info / sponsor,Weather now,info lane,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",scroll-lane ticker,{text},info,entered,Postage stamp,drop,4
+TK349,G Audience / info / sponsor,Crowd counter (entered),info lane,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",scroll-lane ticker,{text},info,entered,Passport stamp,spin,4
+TK350,G Audience / info / sponsor,Birthday today (player),info lane,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",scroll-lane ticker,{text},info,entered,Trophy cabinet,stack,4
+TK351,G Audience / info / sponsor,Anniversary today,info lane,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",scroll-lane ticker,{text},info,entered,Monsoon,ripple,4
+TK352,G Audience / info / sponsor,Milestone fact (on this day),info lane,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",scroll-lane ticker,{text},info,entered,Temple bell,shutter,4
+TK353,G Audience / info / sponsor,Poll question live,info lane,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",scroll-lane ticker,{text},info,entered,Railway board,magnet,4
+TK354,G Audience / info / sponsor,Poll result,info lane,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",scroll-lane ticker,{text},info,entered,Matchbox,slide,4
+TK355,G Audience / info / sponsor,Fan shout-out (moderated),info lane,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",scroll-lane ticker,{text},info,entered,Ink and paper,flip,4
+TK356,G Audience / info / sponsor,"Prediction question (free, points only)",info lane,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",scroll-lane ticker,{text},info,entered,Circuit board,unroll,4
+TK357,G Audience / info / sponsor,Fantasy XI reminder (Heroes 11),info lane,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",scroll-lane ticker,{text},info,entered,Desert dune,drop,4
+TK358,G Audience / info / sponsor,Fantasy points live (free points only),info lane,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",scroll-lane ticker,{text},info,entered,Ocean wave,spin,4
+TK359,G Audience / info / sponsor,Sponsor ad (labelled Sponsored),info lane,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",scroll-lane ticker,{text},info,entered,Forge and anvil,stack,4
+TK360,G Audience / info / sponsor,Sponsor thanks,info lane,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",scroll-lane ticker,{text},info,entered,Kite festival,radar,4
+TK361,G Audience / info / sponsor,Organiser announcement,info lane,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",scroll-lane ticker,{text},info,entered,Neon bazaar,ripple,4
+TK362,G Audience / info / sponsor,Safety notice (stadium),info lane,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",scroll-lane ticker,{text},info,entered,Jungle vine,shutter,4
+TK363,G Audience / info / sponsor,Lost & found,info lane,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",scroll-lane ticker,{text},info,entered,Space dock,magnet,4
+TK364,G Audience / info / sponsor,Food / stalls notice,info lane,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",scroll-lane ticker,{text},info,entered,Chalkboard,slide,4
+TK365,G Audience / info / sponsor,Parking / transport info,info lane,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",scroll-lane ticker,{text},info,entered,Glass aquarium,flip,4
+TK366,G Audience / info / sponsor,Next match promo,info lane,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",scroll-lane ticker,{text},info,entered,Lantern,unroll,4
+TK367,G Audience / info / sponsor,App download / QR,info lane,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",scroll-lane ticker,{text},info,entered,Mosaic tile,drop,4
+TK368,G Audience / info / sponsor,Social wall (moderated),info lane,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",scroll-lane ticker,{text},info,entered,Rangoli,spin,4
+TK369,G Audience / info / sponsor,Streaming schedule,info lane,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",scroll-lane ticker,{text},info,entered,Cassette tape,stack,4
+TK370,G Audience / info / sponsor,Replay / highlights link,info lane,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",scroll-lane ticker,{text},info,entered,Pinball,radar,4
+TK371,G Audience / info / sponsor,Language switch notice,info lane,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",scroll-lane ticker,{text},info,entered,Bollywood poster,ripple,4
+TK372,G Audience / info / sponsor,Scorer credit,info lane,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",scroll-lane ticker,{text},info,entered,Tabla beat,shutter,4
+TK373,G Audience / info / sponsor,Umpires introduced,info lane,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",scroll-lane ticker,{text},info,entered,Spice market,magnet,4
+TK374,G Audience / info / sponsor,Commentators introduced,info lane,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",scroll-lane ticker,{text},info,entered,Cinema reel,slide,4
+TK375,G Audience / info / sponsor,Live viewers count,info lane,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",scroll-lane ticker,{text},info,entered,Lighthouse,flip,4
+TK376,G Audience / info / sponsor,Donation / charity notice (no cash prizes),info lane,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",scroll-lane ticker,{text},info,entered,Stained glass,unroll,4
+TK377,G Audience / info / sponsor,Ground rules reminder,info lane,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",scroll-lane ticker,{text},info,entered,Origami,drop,4
+TK378,G Audience / info / sponsor,Tournament rules note,info lane,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",scroll-lane ticker,{text},info,entered,Embroidery,spin,4
+TK379,G Audience / info / sponsor,Rain forecast notice,info lane,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",scroll-lane ticker,{text},info,entered,Clay pottery,stack,4
+TK380,G Audience / info / sponsor,Match delayed notice,info lane,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",scroll-lane ticker,{text},info,entered,Sand art,radar,4
+TK381,H Format-specific rule,10-over innings clock,T10,T10,rule reminder ticker,{text},format,entered,Ice crystal,ripple,3
+TK382,H Format-specific rule,bowler limit 2 overs,T10,T10,rule reminder ticker,{text},format,entered,Volcano,shutter,3
+TK383,H Format-specific rule,powerplay 1-3,T10,T10,rule reminder ticker,{text},format,entered,Thunder,magnet,3
+TK384,H Format-specific rule,fast-paced run-rate meter,T10,T10,rule reminder ticker,{text},format,entered,Fireflies,slide,3
+TK385,H Format-specific rule,100-ball counter,The Hundred,The Hundred,rule reminder ticker,{text},format,entered,Comet,flip,3
+TK386,H Format-specific rule,5-ball set / 10-ball bowling change,The Hundred,The Hundred,rule reminder ticker,{text},format,entered,Chess board,unroll,3
+TK387,H Format-specific rule,powerplay first 25 balls,The Hundred,The Hundred,rule reminder ticker,{text},format,entered,Carrom,drop,3
+TK388,H Format-specific rule,strategic timeout 2:30,The Hundred,The Hundred,rule reminder ticker,{text},format,entered,Kabaddi mat,spin,3
+TK389,H Format-specific rule,wildcard / draft info,The Hundred,The Hundred,rule reminder ticker,{text},format,entered,Hockey turf,stack,3
+TK390,H Format-specific rule,5-over innings,6-a-side,6-a-side,rule reminder ticker,{text},format,entered,Cricket scoreboard board (old),radar,3
+TK391,H Format-specific rule,each bowler 1 over,6-a-side,6-a-side,rule reminder ticker,{text},format,entered,Newspaper,ripple,3
+TK392,H Format-specific rule,retire at 30/31,6-a-side,6-a-side,rule reminder ticker,{text},format,entered,Typewriter,shutter,3
+TK393,H Format-specific rule,wide/no-ball 2 runs,6-a-side,6-a-side,rule reminder ticker,{text},format,entered,Radio dial,magnet,3
+TK394,H Format-specific rule,last batter continues,6-a-side,6-a-side,rule reminder ticker,{text},format,entered,Film noir,slide,3
+TK395,H Format-specific rule,tippy-tap rule note,Gully,Gully,rule reminder ticker,{text},format,entered,Graffiti wall,flip,3
+TK396,H Format-specific rule,one-pitch-catch rule,Gully,Gully,rule reminder ticker,{text},format,entered,Wooden signboard,unroll,3
+TK397,H Format-specific rule,lost-ball rule,Gully,Gully,rule reminder ticker,{text},format,entered,Metro map,drop,3
+TK398,H Format-specific rule,boundary-by-wall rule,Gully,Gully,rule reminder ticker,{text},format,entered,Postage stamp,spin,3
+TK399,H Format-specific rule,overs per bowler,Gully,Gully,rule reminder ticker,{text},format,entered,Passport stamp,stack,3
+TK400,H Format-specific rule,local rule banner,Gully,Gully,rule reminder ticker,{text},format,entered,Trophy cabinet,radar,3
+TK401,H Format-specific rule,tennis-ball scoring (6 over fence),Gully,Gully,rule reminder ticker,{text},format,entered,Monsoon,shutter,3
+TK402,H Format-specific rule,auto-out on first bounce catch,Gully,Gully,rule reminder ticker,{text},format,entered,Temple bell,magnet,3
+TK403,H Format-specific rule,mankad allowed note,Gully,Gully,rule reminder ticker,{text},format,entered,Railway board,slide,3
+TK404,H Format-specific rule,society / locality banner,Gully,Gully,rule reminder ticker,{text},format,entered,Matchbox,flip,3
+TK405,H Format-specific rule,powerplay phases bar,ODI,ODI,rule reminder ticker,{text},format,entered,Ink and paper,unroll,3
+TK406,H Format-specific rule,2 new balls note,ODI,ODI,rule reminder ticker,{text},format,entered,Circuit board,drop,3
+TK407,H Format-specific rule,one bouncer per over,ODI,ODI,rule reminder ticker,{text},format,entered,Desert dune,spin,3
+TK408,H Format-specific rule,fielders outside circle (4/5),ODI,ODI,rule reminder ticker,{text},format,entered,Ocean wave,stack,3
+TK409,H Format-specific rule,bowler 10-over limit,ODI,ODI,rule reminder ticker,{text},format,entered,Forge and anvil,radar,3
+TK410,H Format-specific rule,free hit after no-ball,ODI,ODI,rule reminder ticker,{text},format,entered,Kite festival,ripple,3
+TK411,H Format-specific rule,DRS reviews 2 per innings,ODI,ODI,rule reminder ticker,{text},format,entered,Neon bazaar,shutter,3
+TK412,H Format-specific rule,bowler 4-over limit,T20,T20,rule reminder ticker,{text},format,entered,Jungle vine,magnet,3
+TK413,H Format-specific rule,powerplay 6 overs (2 out),T20,T20,rule reminder ticker,{text},format,entered,Space dock,slide,3
+TK414,H Format-specific rule,free hit after no-ball,T20,T20,rule reminder ticker,{text},format,entered,Chalkboard,flip,3
+TK415,H Format-specific rule,strategic timeout,T20,T20,rule reminder ticker,{text},format,entered,Glass aquarium,unroll,3
+TK416,H Format-specific rule,impact player (league rule),T20,T20,rule reminder ticker,{text},format,entered,Lantern,drop,3
+TK417,H Format-specific rule,super over,T20,T20,rule reminder ticker,{text},format,entered,Mosaic tile,spin,3
+TK418,H Format-specific rule,slow over-rate: extra fielder inside,T20,T20,rule reminder ticker,{text},format,entered,Rangoli,stack,3
+TK419,H Format-specific rule,1 bouncer per over,T20,T20,rule reminder ticker,{text},format,entered,Cassette tape,radar,3
+TK420,H Format-specific rule,wide ball tracking (league),T20,T20,rule reminder ticker,{text},format,entered,Pinball,ripple,3
+TK421,H Format-specific rule,90 overs / day,Test,Test,rule reminder ticker,{text},format,entered,Bollywood poster,shutter,3
+TK422,H Format-specific rule,new ball 80 overs,Test,Test,rule reminder ticker,{text},format,entered,Tabla beat,magnet,3
+TK423,H Format-specific rule,2 bouncers per over,Test,Test,rule reminder ticker,{text},format,entered,Spice market,slide,3
+TK424,H Format-specific rule,follow-on 200,Test,Test,rule reminder ticker,{text},format,entered,Cinema reel,flip,3
+TK425,H Format-specific rule,DRS 2 unsuccessful reviews (infinite),Test,Test,rule reminder ticker,{text},format,entered,Lighthouse,unroll,3
+TK426,H Format-specific rule,minimum 98 overs rule day 5,Test,Test,rule reminder ticker,{text},format,entered,Stained glass,drop,3
+TK427,I Scorer / system,Undo last ball,system,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",small system ticker,{text},system,entered,Origami,spin,4
+TK428,I Scorer / system,Score correction,system,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",small system ticker,{text},system,entered,Embroidery,stack,4
+TK429,I Scorer / system,Scorer note,system,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",small system ticker,{text},system,entered,Clay pottery,radar,4
+TK430,I Scorer / system,Offline: saved on device,system,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",small system ticker,{text},system,entered,Sand art,ripple,4
+TK431,I Scorer / system,Back online: synced,system,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",small system ticker,{text},system,entered,Ice crystal,shutter,4
+TK432,I Scorer / system,Second scorer joined,system,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",small system ticker,{text},system,entered,Volcano,magnet,4
+TK433,I Scorer / system,Scorer changed,system,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",small system ticker,{text},system,entered,Thunder,slide,4
+TK434,I Scorer / system,Match paused by scorer,system,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",small system ticker,{text},system,entered,Fireflies,flip,4
+TK435,I Scorer / system,Match resumed,system,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",small system ticker,{text},system,entered,Comet,unroll,4
+TK436,I Scorer / system,Result edited,system,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",small system ticker,{text},system,entered,Chess board,drop,4
+TK437,I Scorer / system,Manual override (organiser),system,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",small system ticker,{text},system,entered,Carrom,spin,4
+TK438,I Scorer / system,Duplicate ball detected,system,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",small system ticker,{text},system,entered,Kabaddi mat,stack,4
+TK439,I Scorer / system,Overs mismatch warning,system,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",small system ticker,{text},system,entered,Hockey turf,radar,4
+TK440,I Scorer / system,Player substituted,system,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",small system ticker,{text},system,entered,Cricket scoreboard board (old),ripple,4
+TK441,I Scorer / system,Batting order changed,system,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",small system ticker,{text},system,entered,Newspaper,shutter,4
+TK442,I Scorer / system,Bowler changed mid-over,system,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",small system ticker,{text},system,entered,Typewriter,magnet,4
+TK443,I Scorer / system,Wicketkeeper changed,system,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",small system ticker,{text},system,entered,Radio dial,slide,4
+TK444,I Scorer / system,Captain changed,system,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",small system ticker,{text},system,entered,Film noir,flip,4
+TK445,I Scorer / system,Impact player used,system,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",small system ticker,{text},system,entered,Graffiti wall,unroll,4
+TK446,I Scorer / system,Tournament round change,system,"T20,ODI,Test,T10,Hundred,6-a-side,Gully",small system ticker,{text},system,entered,Wooden signboard,drop,4
