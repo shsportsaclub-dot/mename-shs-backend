@@ -15483,6 +15483,91 @@ if(window.shTk){
  window.shBp={SC,EV};
 }
 
+
+/* ---------------- BROADCAST PACK 2: ?scene=pcard (player card with photo), tstat (tournament fours/sixes), rrgraph (run rate graph), welcome (welcome screen), review (replay + DRS result). Original designs. ---------------- */
+{
+ const E=s=>esc(String(s==null?'':s));
+ const q=k=>{try{return new URLSearchParams(location.search).get(k)}catch(e){return null}};
+ const SC=['pcard','tstat','rrgraph','welcome','review'];
+ const sceneNow=()=>{try{if(location.hash==='#overlay')return q('scene')||'';if(UI.view==='stream'&&UI.ovScene)return UI.ovScene}catch(e){}return''};
+ const rn=(id,css)=>css.replace(/\.([a-zA-Z_][\w-]*)/g,(m,c)=>c===id?m:'.'+id+'-'+c);
+ const rh=(id,h)=>h.replace(/class="([^"]*)"/g,(m,c)=>'class="'+c.split(/\s+/).filter(Boolean).map(t=>t===id?t:id+'-'+t).join(' ')+'"');
+ const fmt=n=>{try{return fmtOv(n)}catch(e){return String(n)}};
+ const lgo=(t,z)=>{try{return logo(t,z||128)}catch(e){return ''}};
+ const NM=id=>{try{return nm(id)}catch(e){return ''}};
+ /* player card */
+ const pcCSS=rn('pc',`.pc{position:absolute;right:4cqw;bottom:14cqh;width:34cqw;font-family:'Arial Narrow',Arial,sans-serif;text-transform:uppercase;color:#fff;filter:drop-shadow(0 2cqh 3cqh #000a);animation:pcIn .7s cubic-bezier(.2,1,.3,1) both;animation-delay:calc(0s - var(--e,0s))}@keyframes pcIn{from{opacity:0;transform:translateX(12cqw)}}
+.ph{height:30cqh;display:flex;align-items:flex-end;justify-content:center;background:linear-gradient(160deg,var(--c,#7c3aed),#0b1533);border-radius:1.4cqh 1.4cqh 0 0;position:relative;overflow:hidden}.ph::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(115deg,transparent 0 2.4cqw,#ffffff14 2.4cqw 3.4cqw);animation:pcS 3s linear infinite;animation-delay:calc(0s - var(--e,0s))}@keyframes pcS{to{background-position:7cqw 0}}
+.ph>*{position:relative;max-height:100%}.ph img,.ph svg{height:28cqh;width:auto;max-width:100%}.ph .av{width:20cqh;height:20cqh;margin-bottom:2cqh}
+.tg{position:absolute;left:1.2cqw;top:1.4cqh;background:#ff8a1f;color:#fff;font:900 1.3cqw Arial;padding:.4cqh 1cqw;letter-spacing:.14em;border-radius:.4cqw;z-index:2}
+.nm{background:linear-gradient(90deg,#fff,#dbe6fb);color:#10224a;padding:1cqh 1.6cqw;display:flex;justify-content:space-between;align-items:baseline}.nm b{font-size:2.5cqw;font-weight:900}.nm small{font-size:1.2cqw;color:#c2410c;font-weight:800;letter-spacing:.1em}
+.st{display:grid;grid-template-columns:repeat(5,1fr);background:linear-gradient(#18274d,#0d1630);border-radius:0 0 1.4cqh 1.4cqh;padding:1.2cqh 0}.st div{text-align:center;border-right:.12cqw solid #8aa3d433}.st div:last-child{border:0}.st b{display:block;font-size:2.6cqw;font-weight:900;line-height:1.1;animation:pcP .5s ease-out both;animation-delay:calc(.3s + var(--i)*.08s - var(--e,0s))}@keyframes pcP{from{opacity:0;transform:translateY(1.6cqh)}}.st small{font-size:1cqw;color:#9fb6e6;letter-spacing:.12em}`);
+ const pcHTML=(m,s,which,o)=>{const k=s.k,cur=s.inn.cur||{};let id=which==='bowler'?(cur.bl||null):which==='non'?cur.n:(which&&which.length>3&&which!=='striker'?which:cur.s);if(!id)id=cur.s||cur.n||cur.bl;if(!id)return '';
+  const bowl=which==='bowler'||(id===cur.bl),t=bowl?T(s.inn.bowl):T(s.inn.bat);let cells,tag;
+  if(bowl){const b=k.bowl[id]||{w:0,r:0,b:0};cells=[[b.w+'-'+b.r,'FIGURES'],[fmt(b.b),'OVERS'],[b.b?(b.r*BPO/b.b).toFixed(1):'0.0','ECON'],[m.innings[s.i].ev.filter(e=>e.bl===id&&!e.x&&e.r===0).length,'DOTS'],[m.innings[s.i].ev.filter(e=>e.bl===id&&e.w).length,'WKTS']];tag='BOWLER'}
+  else{const b=k.bat[id]||{r:0,b:0,f4:0,f6:0};cells=[[b.r,'RUNS'],[b.b,'BALLS'],[b.f4,'FOURS'],[b.f6,'SIXES'],[b.b?(b.r*100/b.b).toFixed(0):'0','SR']];tag=id===cur.s?'ON STRIKE':'BATTER'}
+  let photo='';try{photo=av(P(id))}catch(e){}
+  return `<div class="pc" style="--c:${E(t.color||'#7c3aed')};--e:${o}s"><div class="ph"><span class="tg">${tag}</span>${photo}</div><div class="nm"><b>${E(NM(id))}</b><small>${E(t.short||t.name)}</small></div><div class="st">${cells.map((c,i)=>`<div style="--i:${i}"><b>${c[0]}</b><small>${c[1]}</small></div>`).join('')}</div></div>`};
+ /* tournament fours / sixes lower third */
+ const tsCSS=rn('ts',`.ts{position:absolute;left:3cqw;bottom:13cqh;width:46cqw;font-family:'Arial Narrow',Arial,sans-serif;text-transform:uppercase;color:#fff;filter:drop-shadow(0 1.4cqh 2cqh #000a);animation:tsIn .7s cubic-bezier(.2,1,.3,1) both;animation-delay:calc(0s - var(--e,0s))}@keyframes tsIn{from{opacity:0;transform:translateX(-14cqw)}}
+.hd{display:flex;align-items:center;justify-content:space-between;background:linear-gradient(90deg,#ff8a1f,#c2410c);padding:.9cqh 1.6cqw;clip-path:polygon(0 0,100% 0,97% 100%,0 100%);font-weight:900;font-size:1.7cqw;letter-spacing:.12em}.hd small{font-size:1.1cqw;opacity:.85}
+.rw{display:grid;grid-template-columns:3cqw 1fr 6cqw;gap:1cqw;align-items:center;height:5.4cqh;padding:0 1.6cqw;background:linear-gradient(90deg,#17264b,#0d1630);border-bottom:.12cqw solid #8aa3d426;font-size:1.7cqw;font-weight:800;animation:tsR .5s ease-out both;animation-delay:calc(.2s + var(--i)*.1s - var(--e,0s))}@keyframes tsR{from{opacity:0;transform:translateX(-4cqw)}}.rw i{font-style:normal;color:#ff9a3d}.rw b{text-align:right;font-size:2.3cqw;color:#fff}.rw.me{background:linear-gradient(90deg,#ff8a1f,#9a3412)}.rw.me i{color:#fff}.rw small{color:#cfe0ff;font-size:1.1cqw;margin-left:.8cqw}`);
+ const tsHTML=(m,s,kind,o)=>{const f=kind==='sixes'?'f6':'f4',agg={};const list=(S.matches||[]).filter(x=>m.tid?x.tid===m.tid:true);
+  list.forEach(x=>{(x.innings||[]).forEach((_,i)=>{try{const k=calc(x,i);Object.keys(k.bat||{}).forEach(id=>{agg[id]=(agg[id]||0)+(k.bat[id][f]||0)})}catch(e){}})});
+  const L=Object.keys(agg).map(id=>({id,v:agg[id]})).filter(x=>x.v>0).sort((a,b)=>b.v-a.v),me=(s.inn.cur||{}).s,top=L.slice(0,4);if(me&&!top.some(x=>x.id===me)&&agg[me])top.push({id:me,v:agg[me]});
+  const tr=m.tid&&typeof trObj==='function'?trObj(m.tid):null;
+  return `<div class="ts" style="--e:${o}s"><div class="hd"><span>TOURNAMENT ${kind==='sixes'?'SIXES':'FOURS'}</span><small>${E((tr&&tr.name)||m.name||'')}</small></div>${top.map((x,j)=>`<div class="rw${x.id===me?' me':''}" style="--i:${j}"><i>${L.findIndex(y=>y.id===x.id)+1}</i><span>${E(NM(x.id))}${x.id===me?'<small>BATTING</small>':''}</span><b>${x.v}</b></div>`).join('')||'<div class="rw"><span></span><span>NO DATA YET</span></div>'}</div>`};
+ /* run rate graph */
+ const rgCSS=rn('rg',`.rg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:62cqw;font-family:'Arial Narrow',Arial,sans-serif;text-transform:uppercase;color:#fff;filter:drop-shadow(0 2cqh 3cqh #000a);animation:rgIn .6s cubic-bezier(.2,1,.3,1) both;animation-delay:calc(0s - var(--e,0s))}@keyframes rgIn{from{opacity:0;transform:translate(-50%,-46%)}}
+.hd{display:flex;align-items:center;gap:1.4cqw;padding:1.4cqh 2cqw;background:linear-gradient(90deg,var(--c,#1d4ed8),#0b1533);border-radius:1.2cqh 1.2cqh 0 0}.hd b{font-size:2.4cqw;font-weight:900}.hd small{font-size:1.2cqw;color:#bcd0f5;letter-spacing:.1em}
+.bd{background:linear-gradient(#18274d,#0d1630);padding:1.4cqh 2cqw}.bd svg{width:100%;height:34cqh;display:block}.ln{stroke-dasharray:var(--l);stroke-dashoffset:var(--l);animation:rgD 1.6s ease-out forwards;animation-delay:calc(.2s - var(--e,0s))}@keyframes rgD{to{stroke-dashoffset:0}}
+.lg{display:flex;gap:2cqw;padding:1cqh 2cqw 1.4cqh;background:#0b1430;border-radius:0 0 1.2cqh 1.2cqh;font-size:1.3cqw;font-weight:800;letter-spacing:.1em}.lg i{display:inline-block;width:2cqw;height:.5cqh;margin-right:.7cqw;vertical-align:middle;border-radius:1cqh}.lg b{color:#ffd24a;margin-left:.5cqw}`);
+ const rgHTML=(m,s,o)=>{const i=s.i,pts=a=>{const L=overList(m,a);let r=0,lg=0;const P=[];L.forEach(x=>{r+=x.t;lg++;P.push([lg,r/lg])});return P},cur=pts(i),prev=i===1?pts(0):null,k=s.k,chase=i===1&&m.target>0;
+  const N=Math.max(m.overs||10,cur.length),W=1000,H=300,mxY=Math.max(8,...cur.map(p=>p[1]),...(prev||[]).map(p=>p[1]))*1.15,X=v=>60+(v/N)*(W-80),Y=v=>H-30-(v/mxY)*(H-50);
+  const path=P=>P.map((p,j)=>(j?'L':'M')+X(p[0]).toFixed(1)+' '+Y(p[1]).toFixed(1)).join(' ');
+  const len=P=>{let t=0;for(let j=1;j<P.length;j++)t+=Math.hypot(X(P[j][0])-X(P[j-1][0]),Y(P[j][1])-Y(P[j-1][1]));return Math.ceil(t)+4};
+  const grid=[0,.25,.5,.75,1].map(g=>`<line x1="60" x2="${W-20}" y1="${Y(mxY/1.15*g)}" y2="${Y(mxY/1.15*g)}" stroke="#8aa3d433" stroke-dasharray="4 6"/><text x="52" y="${Y(mxY/1.15*g)+4}" fill="#9fb6e6" font-size="14" text-anchor="end">${(mxY/1.15*g).toFixed(0)}</text>`).join('');
+  const xt=Array.from({length:N},(_,j)=>`<text x="${X(j+1)}" y="${H-8}" fill="#9fb6e6" font-size="13" text-anchor="middle">${j+1}</text>`).join('');
+  const rrr=chase&&m.target?`<line x1="60" x2="${W-20}" y1="${Y(m.target/(m.overs||N))}" y2="${Y(m.target/(m.overs||N))}" stroke="#ff8a1f" stroke-width="2.5" stroke-dasharray="10 6"/>`:'';
+  const dots=cur.map(p=>`<circle cx="${X(p[0])}" cy="${Y(p[1])}" r="5" fill="#fff"/>`).join('');
+  const T0=T(s.inn.bat),crr=k.lg?k.runs*BPO/k.lg:0;
+  return `<div class="rg" style="--c:${E(T0.color||'#1d4ed8')};--e:${o}s"><div class="hd"><b>${E(T0.name)}</b><small>RUN RATE · ${E(m.name||'')}</small></div><div class="bd"><svg viewBox="0 0 ${W} ${H}">${grid}${xt}${rrr}${prev&&prev.length?`<path class="ln" style="--l:${len(prev)}" d="${path(prev)}" fill="none" stroke="#8aa3d4" stroke-width="3" stroke-dasharray="3 7"/>`:''}${cur.length?`<path class="ln" style="--l:${len(cur)}" d="${path(cur)}" fill="none" stroke="#38bdf8" stroke-width="4.5" stroke-linejoin="round"/>`:''}${dots}</svg></div><div class="lg"><span><i style="background:#38bdf8"></i>CRR<b>${crr.toFixed(2)}</b></span>${prev?'<span><i style="background:#8aa3d4"></i>1ST INNINGS</span>':''}${chase?`<span><i style="background:#ff8a1f"></i>REQUIRED RATE<b>${(m.target/(m.overs||N)).toFixed(2)}</b></span>`:''}</div></div>`};
+ /* welcome screen */
+ const wcCSS=rn('wc',`.wc{position:absolute;inset:0;font-family:'Arial Narrow',Arial,sans-serif;text-transform:uppercase;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2.4cqh;background:radial-gradient(ellipse at 50% 40%,#1c3d8f 0%,#0a1535 60%,#050a1c 100%);overflow:hidden}
+.wc::before{content:'';position:absolute;inset:-50%;background:conic-gradient(from 0deg,transparent 0 80deg,#ffffff0f 90deg,transparent 100deg 260deg,#ffffff0f 270deg,transparent 280deg);animation:wcR 14s linear infinite;animation-delay:calc(0s - var(--e,0s))}@keyframes wcR{to{transform:rotate(360deg)}}
+.wc>*{position:relative}.wl{font-size:2.2cqw;letter-spacing:.7em;color:#ffb347;font-weight:800;animation:wcU .8s ease-out both;animation-delay:calc(.1s - var(--e,0s))}@keyframes wcU{from{opacity:0;transform:translateY(3cqh)}}
+.ti{font:900 6.4cqw Impact,Arial Black,sans-serif;letter-spacing:.04em;text-align:center;line-height:1;max-width:84cqw;text-shadow:.3cqw .4cqh 0 #000a;animation:wcZ .9s cubic-bezier(.2,1.4,.3,1) both;animation-delay:calc(.3s - var(--e,0s))}@keyframes wcZ{from{opacity:0;transform:scale(.6)}}
+.vs{display:flex;align-items:center;gap:5cqw;margin-top:1cqh}.tm{display:flex;flex-direction:column;align-items:center;gap:1.2cqh;font-size:2.6cqw;font-weight:900;letter-spacing:.06em;animation:wcT .9s cubic-bezier(.2,1,.3,1) both;animation-delay:calc(.7s - var(--e,0s))}.tm.r{animation-name:wcT2}@keyframes wcT{from{opacity:0;transform:translateX(-14cqw)}}@keyframes wcT2{from{opacity:0;transform:translateX(14cqw)}}
+.tm .cr{width:16cqh;height:16cqh;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 1cqh 2cqh #000a)}.tm .cr svg,.tm .cr img{width:100%;height:100%}.vv{font:900 5cqw Impact,Arial;color:#ffb347;animation:wcV 1.6s ease-in-out infinite;animation-delay:calc(0s - var(--e,0s))}@keyframes wcV{50%{transform:scale(1.15)}}
+.fo{display:flex;gap:2.4cqw;font-size:1.7cqw;font-weight:800;letter-spacing:.12em;color:#cfe0ff;animation:wcU .8s ease-out both;animation-delay:calc(1.3s - var(--e,0s))}.fo span{padding:.7cqh 1.6cqw;border:.15cqw solid #ffffff44;border-radius:5cqw}`);
+ const wcHTML=(m,o)=>{const A=T(m.a),B=T(m.b),tr=m.tid&&typeof trObj==='function'?trObj(m.tid):null,title=(tr&&tr.name)||m.name||'LIVE CRICKET';
+  return `<div class="wc" style="--e:${o}s"><div class="wl">WELCOME TO</div><div class="ti">${E(title)}</div><div class="vs"><div class="tm"><div class="cr">${lgo(A)}</div>${E(A.name)}</div><div class="vv">VS</div><div class="tm r"><div class="cr">${lgo(B)}</div>${E(B.name)}</div></div><div class="fo">${m.venue?`<span>${E(m.venue)}</span>`:''}${m.date?`<span>${E(m.date)}</span>`:''}<span>${m.overs||20} OVERS</span></div></div>`};
+ /* review + replay */
+ const rvCSS=rn('rv',`.rv{position:absolute;inset:0;font-family:Impact,'Arial Black',sans-serif;text-transform:uppercase;color:#fff}
+.fr{position:absolute;inset:1.4cqh 1.2cqw;border:.5cqw solid #ff2d55;border-radius:1cqh;box-shadow:inset 0 0 6cqw #ff2d5555;animation:rvF 1.2s ease-in-out infinite;animation-delay:calc(0s - var(--e,0s))}@keyframes rvF{50%{opacity:.45}}
+.bg{position:absolute;left:4cqw;top:5cqh;display:flex;align-items:center;gap:1.2cqw;background:#ff2d55;padding:.8cqh 1.8cqw;font-size:3cqw;letter-spacing:.14em;clip-path:polygon(0 0,100% 0,95% 100%,0 100%);animation:rvB .5s ease-out both;animation-delay:calc(0s - var(--e,0s))}@keyframes rvB{from{transform:translateX(-14cqw)}}.bg i{font-style:normal;animation:rvP .8s steps(2) infinite;animation-delay:calc(0s - var(--e,0s))}@keyframes rvP{50%{opacity:.2}}
+.pn{position:absolute;left:50%;bottom:15cqh;transform:translateX(-50%);min-width:44cqw;text-align:center;background:linear-gradient(#10224a,#0a1230);border:.3cqw solid #ffffff55;border-radius:1.2cqh;padding:1.6cqh 3cqw;filter:drop-shadow(0 1.6cqh 2.4cqh #000a);animation:rvU .6s cubic-bezier(.2,1,.3,1) both;animation-delay:calc(.2s - var(--e,0s))}@keyframes rvU{from{opacity:0;transform:translateX(-50%) translateY(8cqh)}}
+.pn small{display:block;font:800 1.5cqw Arial;letter-spacing:.2em;color:#9fb6e6}.pn b{display:block;font-size:6cqw;line-height:1.05;letter-spacing:.06em}.pn.o b{color:#ff4d6d}.pn.n b{color:#34d399}.pn.u b{color:#fbbf24}.pn.p b{color:#fff;animation:rvD 1.2s steps(4) infinite}@keyframes rvD{50%{opacity:.4}}`);
+ const RV={pending:['p','DECISION PENDING','REVIEW…'],out:['o','THIRD UMPIRE','OUT'],notout:['n','THIRD UMPIRE','NOT OUT'],um:['u','THIRD UMPIRE','UMPIRE\'S CALL']};
+ const rvHTML=(r,who,o)=>{const x=RV[r]||RV.pending;return `<div class="rv" style="--e:${o}s"><div class="fr"></div><div class="bg"><i>●</i>REPLAY</div><div class="pn ${x[0]}"><small>${E(who?who+' · ':'')}DRS ${x[1]}</small><b>${x[2]}</b></div></div>`};
+ const sty=document.createElement('style');sty.textContent=pcCSS+tsCSS+rgCSS+wcCSS+rvCSS+'.b2r{position:absolute;inset:0;container-type:size;pointer-events:none;overflow:hidden}@media (prefers-reduced-motion:reduce){.b2r *{animation-duration:.01s!important;animation-iteration-count:1!important}}';document.head.appendChild(sty);
+ const o0=overlayHTML;overlayHTML=function(){const sc=sceneNow();if(SC.indexOf(sc)<0)return o0.apply(this,arguments);
+  try{UI.b2=UI.b2||{t0:Date.now()};const e=((Date.now()-UI.b2.t0)/1000).toFixed(2),w=h=>`<div class="ovroot ov" data-t="sh"><div class="b2r">${h}</div></div>`;
+   const m=ovMatch();if(!m)return w('');
+   if(sc==='welcome')return w(rh('wc',wcHTML(m,e)));
+   const s=st(m);if(!s&&sc!=='review')return w('');
+   if(sc==='review'){let who='';try{const c=s&&s.inn.cur;who=c&&c.s?NM(c.s):''}catch(x){}return w(rh('rv',rvHTML(q('r')||'pending',who,e)))}
+   if(sc==='pcard')return w(rh('pc',pcHTML(m,s,q('who')||'striker',e)));
+   if(sc==='tstat')return w(rh('ts',tsHTML(m,s,q('kind')==='sixes'?'sixes':'fours',e)));
+   return w(rh('rg',rgHTML(m,s,e)))}catch(err){return o0.apply(this,arguments)}};
+ {Object.assign(A,{b2Copy(d){const u=location.href.split('#')[0].split('?')[0]+'?scene='+d.v+(d.x||'')+'#overlay';try{navigator.clipboard.writeText(u);toast('URL copied')}catch(x){toast(u,6000)}}});
+  const vs=vStream;vStream=function(){let h=vs.apply(this,arguments);if(!can())return h;
+   const L=[['pcard','Player card (photo + match stats)','&who=striker','who= striker, non (non-striker), bowler'],['tstat','Tournament fours','&kind=fours',''],['tstat','Tournament sixes','&kind=sixes',''],['rrgraph','Run rate graph','',''],['welcome','Welcome screen','',''],['review','Review / replay (DRS)','&r=pending','r= pending, out, notout, um']];
+   const bx=`<div class="card"><h3>More broadcast scenes (6)</h3><div class="mu sm" style="margin-bottom:6px">OBS Browser Sources. Add the options shown after the scene name.</div>${L.map(x=>`<div class="item" style="flex-wrap:wrap;gap:6px"><div style="flex:1;min-width:150px"><b>${x[1]}</b><div class="mu sm">${x[3]}</div></div><button class="btn sm ghost" data-a="ovPrev" data-v="${x[0]}">Preview</button><button class="btn sm" data-a="b2Copy" data-v="${x[0]}" data-x="${x[2]}">Copy OBS URL</button></div>`).join('')}</div>`;
+   const i=h.indexOf('<div class="g2"><div class="card"><h3>Overlay settings</h3>');return i<0?h+bx:h.slice(0,i)+bx+h.slice(i)}}
+ window.shB2={SC};
+}
+
 </script>
 </body>
 </html>
