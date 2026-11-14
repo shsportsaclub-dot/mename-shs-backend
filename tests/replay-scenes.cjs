@@ -1,0 +1,12 @@
+// Wagon wheel, select bowler/batter, 260-scene library
+const {chromium}=require('playwright');const fs=require('fs');
+(async()=>{const b=await chromium.launch(),p=await b.newPage({viewport:{width:1280,height:720}}),errs=[];p.on('pageerror',e=>errs.push(e.message));
+const ok=(c,m)=>{if(!c){console.log('FAIL',m);process.exitCode=1}};
+await p.addInitScript(()=>{window.fetch=()=>new Promise(()=>{})});
+const base='file://'+'/home/claude/mename-shs-backend/app-index.html';
+await p.goto(base+'?scene=wagon#overlay');await p.waitForTimeout(400);
+await p.evaluate(()=>{S.matches=[];const nmz=['Aarav Sharma','Omarzai','Hasan','Rao','Iqbal','Shah','Nair','Dar','Ali','Khan','Roy','Razzaq','Malik','Zaidi','Lone','Bose','Sen','Gill','Vaz','Pir','Tej','Mir'];S.players=nmz.map((n,i)=>({id:'p'+i,name:n,role:i>=11&&i<16?'BOWL':'BAT',team:i<11?'a':'b',bowl:i%2?'Right-arm fast':'Left-arm orthodox spin',bat:'Right-hand',jersey:i+1}));S.teams=[{id:'a',name:'Sky High Kings',short:'SHK',color:'#1d4ed8',players:S.players.slice(0,11).map(p=>p.id)},{id:'b',name:'Hapur Hawks',short:'HAH',color:'#9d174d',players:S.players.slice(11).map(p=>p.id)}];const m=newMatch({a:'a',b:'b',overs:20,toss:'a',dec:'bat',xiA:S.teams[0].players,xiB:S.teams[1].players,venue:'Royal Shield Stadium'});m.name='ROYAL SHIELD';startInnings(m,0,'p0','p1','p11');m.status='live';const inn=m.innings[0];inn.cur.bl='p11';let n=0;
+ [1,4,6,0,2,1,3,4,6,1,6,4,1,0,2,4,1,6].forEach((x,i)=>{if(!inn.cur.bl)inn.cur.bl='p'+(11+(n++%4));ball(m,{r:x});const e=inn.ev[inn.ev.length-1];if(x>0)e.ang={a:(i*0.73+0.4)%6.28,d:x>=4?1:.3+(i%5)*.12}});S.stream.mid=m.id;save()});
+for(const sc of ['ppsum','hl']){await p.goto(base+`?scene=${sc}&t=4#overlay`);await p.waitForTimeout(500);
+const x=await p.evaluate(()=>{const r=document.querySelector('.ppr,.hlr');return r?r.innerText.replace(/\n+/g,' '):'NONE'});console.log(sc,x.slice(0,120));ok(sc==='ppsum'?/POWERPLAY REPLAY/.test(x)&&/TOP BATTER/.test(x):/INNINGS HIGHLIGHTS/.test(x)&&/SIX/.test(x),sc+' content');ok(await p.evaluate(()=>!!document.querySelector('.rb.rb-tv,.rb-hub2,[class*=rb-]')),sc+' bar');await p.screenshot({path:`/tmp/claude-0/mod/${sc}.png`})}
+ok(!errs.length,errs.join(';'));if(!process.exitCode)console.log('PASS: replay scenes');await b.close()})();

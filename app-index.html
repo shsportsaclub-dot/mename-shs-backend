@@ -16117,6 +16117,75 @@ if(window.shTk){
  window.shS4={drsHTML,bndHTML};
 }
 
+/* ---------------- POWERPLAY REPLAY + INNINGS HIGHLIGHTS scenes: ?scene=ppsum, ?scene=hl (&i=0|1) ---------------- */
+{
+ const E=s=>esc(String(s==null?'':s));
+ const q=k=>{try{return new URLSearchParams(location.search).get(k)}catch(e){return null}};
+ const sceneNow=()=>{try{if(location.hash==='#overlay')return q('scene')||'';if(UI.view==='stream'&&UI.ovScene)return UI.ovScene}catch(e){}return''};
+ const rn=(id,css)=>css.replace(/\.([a-zA-Z_][\w-]*)/g,(m,c)=>c===id?m:'.'+id+'-'+c);
+ const rh=(id,h)=>h.replace(/class="([^"]*)"/g,(m,c)=>'class="'+c.split(/\s+/).filter(Boolean).map(t=>t===id?t:id+'-'+t).join(' ')+'"');
+ const NM=id=>{try{return nm(id)}catch(e){return ''}};
+ const fmt=n=>{try{return fmtOv(n)}catch(e){return String(n)}};
+ const age=()=>{UI.ppT=UI.ppT||Date.now();return((Date.now()-UI.ppT)/1000).toFixed(2)};
+ const COL={0:'#5b6577',1:'#ffffff',2:'#3b9bff',3:'#c084fc',4:'#ff8a1f',6:'#22d36b',W:'#ef2b4b'};
+ const rc=b=>b.w?'W':COL[b.r>=6?6:b.r]?(b.r>=6?6:b.r):1;
+ const colOf=b=>COL[rc(b)];
+ const lab=b=>b.w?'W':(b.x==='wd'?'wd':b.x==='nb'?'nb':String(b.tot));
+ /* walk an innings into legal-ball records */
+ const walk=(m,i)=>{const inn=m.innings[i],o=[];let lg=0,run=0,wk=0;const nbp=typeof NBP!=='undefined'?NBP:1;
+  (inn.ev||[]).forEach(e=>{const pen=e.x==='wd'?1:e.x==='nb'?nbp:0,tot=(e.r||0)+pen,legal=!pen;run+=tot;const isW=!!e.w&&e.w!==''&&e.w!==false;if(isW)wk++;
+   o.push({ov:Math.floor(lg/6),bl:legal?(lg%6)+1:(lg%6),lg:legal?lg+1:lg,legal,r:e.r||0,tot,x:e.x||'',w:isW?(e.w===true?'out':e.w):'',bt:e.bt,bw:e.bl,out:e.out,run,wk,four:e.r===4&&!e.ot&&e.x!=='b'&&e.x!=='lb',six:e.r===6,ang:e.ang});if(legal)lg++});
+  return o};
+ const ppBalls=(m,i)=>{try{const p=m.rules&&m.rules.ppb!=null?+m.rules.ppb:shFieldingState(m,i,0).powerplayBalls;if(p>0)return p}catch(e){}return (+m.overs>20?60:36)};
+ const bestOf=(list,key)=>{const a={};list.forEach(b=>{if(!b[key]&&b[key]!==0)return;a[b[key]]=a[b[key]]||{id:b[key],r:0,n:0,f4:0,f6:0,w:0,rc:0,bn:0};});return a};
+ const sumry=bl=>{const bat={},bow={};let r=0,w=0,f4=0,f6=0,dots=0,legal=0;
+  bl.forEach(b=>{r+=b.tot;if(b.w)w++;if(b.four)f4++;if(b.six)f6++;if(b.legal){legal++;if(b.tot===0)dots++}
+   const bt=bat[b.bt]=bat[b.bt]||{id:b.bt,r:0,n:0,f4:0,f6:0};if(b.x!=='wd'&&b.x!=='b'&&b.x!=='lb'){bt.r+=b.r;if(b.legal)bt.n++}if(b.four)bt.f4++;if(b.six)bt.f6++;
+   const bw=bow[b.bw]=bow[b.bw]||{id:b.bw,r:0,w:0,n:0};if(b.x!=='b'&&b.x!=='lb')bw.r+=b.tot;if(b.legal)bw.n++;if(b.w&&b.w!=='Run out')bw.w++});
+  const tb=Object.values(bat).sort((a,b)=>b.r-a.r)[0],tw=Object.values(bow).sort((a,b)=>b.w-a.w||a.r-b.r)[0];
+  return{r,w,f4,f6,dots,legal,tb,tw,rr:legal?(r*6/legal).toFixed(2):'0.00'}};
+ const hdr=(m,i,title,sub)=>{const inn=m.innings[i],T0=inn&&T(inn.bat);return `<div class="top"><i class="cr"></i><b>SCORING HEROES</b><small>${E(m.name||'LIVE MATCH')}${T0?' · '+E(T0.name):''}</small></div><h1 class="ttl">${E(title)}</h1><div class="sub">${E(sub)}</div>`};
+ const ppHTML=(m,e)=>{const i=q('i')!=null?+q('i'):(m.cur||0),all=walk(m,i),pb=ppBalls(m,i),bl=all.filter(b=>b.lg<=pb&&(b.legal||b.lg<=pb)),sm=sumry(bl),done=all.filter(b=>b.legal).length>=pb;
+  const overs=[];bl.forEach(b=>{(overs[b.ov]=overs[b.ov]||[]).push(b)});let k=0;
+  const rows=overs.map((ob,oi)=>`<div class="ov"><span class="on">OV ${oi+1}</span>${ob.map(b=>{const d=(.5+(k++)*.16).toFixed(2);return `<span class="bb" style="--c:${colOf(b)};--d:${d}s">${E(lab(b))}</span>`}).join('')}<span class="os">${ob[ob.length-1].run}/${ob[ob.length-1].wk}</span></div>`).join('');
+  const tbn=sm.tb?NM(sm.tb.id):'-',twn=sm.tw?NM(sm.tw.id):'-';
+  return `<div class="ppr" style="--e:${e}s;--bs:${overs.length>6?2.5:3.6}cqw">${hdr(m,i,'POWERPLAY REPLAY',(done?'OVERS 1-':'OVERS 1-')+Math.ceil(pb/6)+(done?' · COMPLETE':' · IN PROGRESS'))}<div class="rp"><i></i>REPLAY</div>
+  <div class="kp"><div class="big"><b>${sm.r}/${sm.w}</b><small>${fmt(Math.min(sm.legal,pb))} OV</small></div><div class="st"><div><b>${sm.rr}</b><small>RUN RATE</small></div><div class="f4"><b>${sm.f4}</b><small>FOURS</small></div><div class="f6"><b>${sm.f6}</b><small>SIXES</small></div><div><b>${sm.dots}</b><small>DOTS</small></div></div></div>
+  <div class="tl">${rows||'<div class="none">NO BALLS YET</div>'}</div>
+  <div class="tp"><div class="c"><small>TOP BATTER</small><b>${E(tbn)}</b><em>${sm.tb?sm.tb.r+' ('+sm.tb.n+')':''}</em></div><div class="c"><small>TOP BOWLER</small><b>${E(twn)}</b><em>${sm.tw?sm.tw.w+'-'+sm.tw.r+' ('+fmt(sm.tw.n)+')':''}</em></div></div>
+  <div class="lg">${[['0','DOT'],['1','1'],['2','2'],['4','4'],['6','6'],['W','WKT']].map(l=>`<span><i style="background:${COL[l[0]==='0'?0:l[0]==='W'?'W':+l[0]]}"></i>${l[1]}</span>`).join('')}</div></div>`};
+ const hlEvents=(m,i)=>{const all=walk(m,i),k={},o=[];all.forEach(b=>{const id=b.bt;k[id]=k[id]||{r:0};if(b.x!=='wd'&&b.x!=='b'&&b.x!=='lb')k[id].r+=b.r;
+   if(b.w)o.push({t:'W',b,txt:'WICKET',who:NM(b.out||b.bt),sub:(b.w&&b.w!=='out'?String(b.w).toUpperCase()+' · ':'')+'B '+NM(b.bw)});
+   else if(b.six)o.push({t:6,b,txt:'SIX',who:NM(b.bt),sub:'OFF '+NM(b.bw)});
+   else if(b.four)o.push({t:4,b,txt:'FOUR',who:NM(b.bt),sub:'OFF '+NM(b.bw)});
+   if(!b.w&&b.r>0&&b.x!=='wd'&&b.x!=='b'&&b.x!=='lb'){const a=k[id].r-b.r,z=k[id].r;[[50,'FIFTY'],[100,'HUNDRED']].forEach(([n,t])=>{if(a<n&&z>=n)o.push({t:'M',b,txt:t,who:NM(id),sub:n+' RUNS'})})}});
+  return o};
+ const hlHTML=(m,e)=>{const i=q('i')!=null?+q('i'):Math.max(0,(m.cur||0)),all=walk(m,i),sm=sumry(all),ev=hlEvents(m,i),show=ev.filter(x=>x.t!=='4').length>10?ev.filter(x=>x.t!==4):ev,list=(show.length>5?show.filter(x=>x.t!==4):show).slice(-5),inn=m.innings[i],last=all[all.length-1]||{run:0,wk:0,lg:0};
+  const tbn=sm.tb?NM(sm.tb.id):'-',twn=sm.tw?NM(sm.tw.id):'-';
+  return `<div class="hlr" style="--e:${e}s">${hdr(m,i,'INNINGS HIGHLIGHTS',E(T(inn.bat)?T(inn.bat).short||T(inn.bat).name:'')+' '+last.run+'/'+last.wk+' · '+fmt(last.lg)+' OV')}
+  <div class="kp"><div class="big"><b>${last.run}/${last.wk}</b><small>${fmt(last.lg)} OV</small></div><div class="st"><div class="f4"><b>${sm.f4}</b><small>FOURS</small></div><div class="f6"><b>${sm.f6}</b><small>SIXES</small></div><div><b>${sm.rr}</b><small>RUN RATE</small></div><div><b>${sm.dots}</b><small>DOTS</small></div></div></div>
+  <div class="tl">${list.length?list.map((x,n)=>`<div class="hv" style="--c:${x.t==='W'?COL.W:x.t===6?COL[6]:x.t===4?COL[4]:'#ffd24a'};--d:${(.4+n*.32).toFixed(2)}s"><b class="no">${x.t==='M'?'★':x.t}</b><span class="ov">${x.b.ov+1}.${x.b.bl}</span><span class="tx"><b>${E(x.txt)} · ${E(x.who)}</b><small>${E(x.sub)}</small></span><span class="sc">${x.b.run}/${x.b.wk}</span></div>`).join(''):'<div class="none">NO HIGHLIGHT MOMENTS YET</div>'}</div>
+  <div class="tp"><div class="c"><small>TOP BATTER</small><b>${E(tbn)}</b><em>${sm.tb?sm.tb.r+' ('+sm.tb.n+')':''}</em></div><div class="c"><small>TOP BOWLER</small><b>${E(twn)}</b><em>${sm.tw?sm.tw.w+'-'+sm.tw.r+' ('+fmt(sm.tw.n)+')':''}</em></div></div></div>`};
+ const CSS=rn('ppr',`.ppr,.hlr{position:absolute;inset:0;container-type:size;overflow:hidden;font-family:"Arial Narrow",Arial,sans-serif;color:#fff;text-transform:uppercase;background:linear-gradient(160deg,#050b22,#12214f 55%,#0a1a3a)}`)+rn('hlr',`.hlr{position:absolute;inset:0;container-type:size;overflow:hidden;font-family:"Arial Narrow",Arial,sans-serif;color:#fff;text-transform:uppercase;background:linear-gradient(160deg,#1a0b22,#3a1450 55%,#1a0a2e)}`);
+ const SH=`.top{position:absolute;left:0;right:0;top:2cqh;display:flex;gap:1.4cqw;align-items:baseline;justify-content:center;border-bottom:.2cqh solid #ffffff30;padding-bottom:1.4cqh}.top b{font:900 italic 2.6cqw Georgia,serif;letter-spacing:.1em}.top small{font:800 1.3cqw Arial;letter-spacing:.2em;color:#ffd24a}.top i{display:none}.ttl{position:absolute;left:0;right:0;top:9cqh;margin:0;text-align:center;font:900 italic 5.6cqw/1 Impact,'Arial Black',sans-serif;letter-spacing:.04em;background:linear-gradient(#fff,#ffd24a);-webkit-background-clip:text;color:transparent;animation:pptI .8s cubic-bezier(.2,1,.3,1) both;animation-delay:calc(0s - var(--e,0s))}.sub{position:absolute;left:0;right:0;top:19cqh;text-align:center;font:800 1.5cqw Arial;letter-spacing:.3em;color:#9fb6e6}@keyframes pptI{from{opacity:0;transform:scale(1.6)}}
+.kp{position:absolute;left:3cqw;top:25cqh;width:20cqw;background:#0b1a3ccc;border-top:.5cqh solid #ffd24a;border-radius:1cqw;padding:1.5cqh 1.4cqw;animation:ppsI .6s both;animation-delay:calc(.2s - var(--e,0s))}@keyframes ppsI{from{opacity:0;transform:translateX(-4cqw)}}.kp .big b{display:block;font:900 6.4cqw/1 Impact,Arial;color:#ffd24a}.kp .big small{font:800 1.6cqw Arial;letter-spacing:.2em;color:#9fb6e6}.kp .st{display:grid;grid-template-columns:1fr 1fr;gap:.8cqh .8cqw;margin-top:1.4cqh}.kp .st div{background:#ffffff10;border-radius:.6cqw;padding:.6cqh 0;text-align:center}.kp .st b{display:block;font:900 2.8cqw/1 Impact,Arial}.kp .st small{font:700 1cqw Arial;letter-spacing:.14em;color:#9fb6e6}.kp .f4 b{color:#ff8a1f}.kp .f6 b{color:#22d36b}
+.tl{position:absolute;left:25.5cqw;right:3cqw;top:25cqh;bottom:31cqh;display:flex;flex-direction:column;gap:.9cqh;overflow:hidden}.none{font:800 2cqw Arial;color:#9fb6e6;text-align:center;margin-top:8cqh}
+.tp{position:absolute;left:3cqw;right:3cqw;bottom:18.5cqh;display:flex;gap:1.4cqw}.tp .c{flex:1;background:#0b1a3ccc;border-left:.5cqw solid #ffd24a;border-radius:.8cqw;padding:.8cqh 1.4cqw;display:flex;align-items:baseline;gap:1.2cqw;animation:ppsI .6s both;animation-delay:calc(.5s - var(--e,0s))}.tp small{font:800 1.1cqw Arial;letter-spacing:.2em;color:#ffd24a}.tp b{font:900 2.2cqw Arial}.tp em{font:800 normal 1.8cqw Arial;font-style:normal;color:#cfe0ff;margin-left:auto}`;
+ const PPC=rn('ppr',SH+`.rp{position:absolute;right:3cqw;top:3.5cqh;font:900 1.6cqw Arial;letter-spacing:.2em;color:#ef2b4b;display:flex;gap:.6cqw;align-items:center;animation:ppbk 1s steps(2) infinite}.rp i{width:1.2cqw;height:1.2cqw;border-radius:50%;background:#ef2b4b}@keyframes ppbk{50%{opacity:.25}}.ov{display:flex;align-items:center;gap:.9cqw}.ov .on{width:6cqw;font:900 1.4cqw Arial;color:#9fb6e6;letter-spacing:.1em}.ov .os{margin-left:1cqw;font:900 2cqw Arial;color:#ffd24a}.bb{width:var(--bs,3.6cqw);height:var(--bs,3.6cqw);border-radius:50%;background:var(--c);color:#06102a;display:flex;align-items:center;justify-content:center;font:900 calc(var(--bs,3.6cqw)*.45) Arial;box-shadow:0 0 1.6cqw var(--c);animation:ppbp .5s cubic-bezier(.2,1.6,.4,1) both;animation-delay:calc(var(--d) - var(--e,0s))}@keyframes ppbp{from{opacity:0;transform:scale(0) rotate(-90deg)}}.lg{position:absolute;left:3cqw;right:3cqw;bottom:26cqh;display:flex;gap:2cqw;justify-content:center;font:800 1.1cqw Arial;letter-spacing:.14em;color:#cfe0ff}.lg i{display:inline-block;width:1.2cqw;height:1.2cqw;border-radius:50%;margin-right:.5cqw;vertical-align:middle}`.replace(/\.(ov|bb)\b/g,'.$1'));
+ const HLC=rn('hlr',SH+`.hv{display:flex;align-items:center;gap:1.2cqw;background:linear-gradient(90deg,color-mix(in srgb,var(--c) 38%,#0b1a3c),#0b1a3ccc);border-left:.6cqw solid var(--c);border-radius:.8cqw;padding:.5cqh 1.4cqw;animation:pphI .55s cubic-bezier(.2,1,.3,1) both;animation-delay:calc(var(--d) - var(--e,0s))}@keyframes pphI{from{opacity:0;transform:translateX(8cqw)}}.hv .no{font:900 3.2cqw/1 Impact,Arial;width:5cqw;text-align:center;color:var(--c);text-shadow:0 0 1.4cqw var(--c)}.hv .ov{font:800 1.3cqw Arial;color:#9fb6e6;width:4cqw}.hv .tx{flex:1}.hv .tx b{display:block;font:900 2cqw Arial}.hv .tx small{font:700 1.2cqw Arial;color:#cfe0ff;letter-spacing:.1em}.hv .sc{font:900 2cqw Arial;color:#ffd24a}`);
+ const sty=document.createElement('style');sty.textContent=CSS+PPC+HLC;document.head.appendChild(sty);
+ const wrap=(h,m)=>{let b='';try{if(q('bar')!=='0'&&window.shRb&&m)b=shRb.bar(m,'')||''}catch(e){}return `<div class="ovroot ov" data-t="sh">${h}${b}</div>`};
+ const o2=overlayHTML;overlayHTML=function(){const sc=sceneNow();
+  if(sc==='ppsum'||sc==='hl'){try{const m=ovMatch();if(!m||!m.innings||!m.innings.length)return `<div class="ovroot ov" data-t="sh"></div>`;const e=q('t')!=null?parseFloat(q('t')):age();
+   const h=sc==='ppsum'?rh('ppr',ppHTML(m,e)):rh('hlr',hlHTML(m,e));
+   return wrap(h+(q('t')!=null?'<style>.ppr-ppr *,.hlr-hlr *{animation-play-state:paused!important}</style>':''),m)}catch(er){return o2.apply(this,arguments)}}
+  return o2.apply(this,arguments)};
+ const vs2=vStream;vStream=function(){let h=vs2.apply(this,arguments);const cur=UI.ovScene||'bug';
+  const bx=`<div class="card"><h3>Replay scenes</h3><div class="mu sm" style="margin-bottom:6px">Run these right after the powerplay ends and after each innings. The live score bar stays at the bottom.</div>${[['ppsum','Powerplay replay','Ball-by-ball powerplay replay, run rate, 4s, 6s, top batter and bowler'],['hl','Innings highlights','4s, 6s, wickets and milestones timeline with top performers']].map(([k,l,d])=>`<div class="item" style="flex-wrap:wrap;gap:6px"><div style="flex:1;min-width:150px"><b>${l}</b>${cur===k?' <span class="mu sm">(previewing)</span>':''}<div class="mu sm">${d}</div></div><button class="btn sm ghost" data-a="ovPrev" data-v="${k}">Preview</button><button class="btn sm ghost" data-a="ovCopy" data-v="${k}">Copy URL</button></div>`).join('')}</div>`;
+  const i=h.indexOf('<div class="g2"><div class="card"><h3>Overlay settings</h3>');return i<0?h+bx:h.slice(0,i)+bx+h.slice(i)};
+ window.shReplay={walk,sumry,ppBalls,hlEvents};
+}
+
 </script>
 </body>
 </html>
