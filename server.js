@@ -2694,6 +2694,10 @@ http.createServer(async (req, res) => {
     try { const body = fs.readFileSync(new URL('./public' + path, import.meta.url)); res.writeHead(200, { 'content-type': 'image/webp', 'cache-control': 'public, max-age=604800', 'access-control-allow-origin': '*', 'x-content-type-options': 'nosniff' }); return res.end(body); }
     catch { return out(404, { ok: false, error: 'Coin unavailable' }); }
   }
+  if (req.method === 'GET' && /^\/mascots\/(four|six|wicket|drs)\.webp$/.test(path)) {   // cricket mascot poses
+    try { const body = fs.readFileSync(new URL('./public' + path, import.meta.url)); res.writeHead(200, { 'content-type': 'image/webp', 'cache-control': 'public, max-age=604800', 'access-control-allow-origin': '*' }); return res.end(body); }
+    catch { return out(404, { ok: false, error: 'Mascot unavailable' }); }
+  }
   if (req.method === 'GET' && /^\/themes\/[a-z0-9-]{3,48}\.html$/.test(path)) {   // Theme Factory screens (original broadcast graphics)
     try {
       const body = fs.readFileSync(new URL('./public' + path, import.meta.url));

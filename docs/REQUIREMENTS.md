@@ -54,3 +54,8 @@ Tables and brackets: PARTIAL | Awards, trophy, sponsors, credits: TODO | Other s
 - Cricket completion batch: `?scene=auto` director (toss captains before the first ball, powerplay strip then replay at powerplay end, innings highlights then innings break, player of the match / champions / credits after the result), `?scene=mini` transparent mini stats table, left-hand batter mirroring in wagon wheel zones, fielder name on dismissal pictures, points table + NRR verified against hand-computed values (tests/points-table.cjs).
 - STILL TODO (cricket): real video replays (needs a video source), DLS (official table only). Everything else for cricket is built.
 - STILL TODO (other): all other sports (baseball, football, hockey, kabaddi, basketball, volleyball, badminton, rugby), mini stats / scenes for them, verify scenes on real match data from the field.
+
+## Mascots (14 Nov, 14:30)
+- Cartoon character per event (FOUR, SIX, OUT, DRS; 50/100/hat-trick/free hit/no ball/wide reuse the nearest pose) with speech bubble, popping above the player panel: DONE. Poses cut from the owner's reference sheet (public/mascots/*.webp). Owner can upload own pictures per event in the Stream tab; tiger + parrot built-in style kept as an option. `&mascot=0` hides, `&voice=1` speaks the word (browser speech, cannot be verified audibly).
+- 4 / 6 / OUT numerals now metallic silver / gold / red 3D-style flashing digits.
+- TODO: proper animated (moving) character, more poses (maiden, wide, no ball specific), characters for other sports.
