@@ -31,3 +31,18 @@ Status: DONE / PARTIAL / TODO (updated 14 Nov, build after ee14401)
 
 ## Older open items
 Player records, Players status, Records, Tournament top players, Weather and Pitch (manual), Tomorrow strip, mini stats table, all other sports, verify Points table on real data.
+
+## Added 14 Nov (afternoon)
+- Score card detail strip under every skin (striker lit dot, runner, bowler name + overs-runs-wkts, ball-by-ball over timeline): DONE (`&strip=0` hides)
+- Players status (`?scene=status`: batting / at crease / out / yet to bat; bowling figures): DONE
+- Tournament records (`?scene=records`: most runs, wickets, sixes, fours): DONE
+- DRS mapping (`?scene=drsmap`, manual inputs in the Stream tab): DONE | Boundary graphic (`?scene=boundary`, last four/six path, estimated six distance, innings and tournament 4s/6s of the batter): DONE
+- Innings break, bats/bowl cards, result card, stats, pcard scenes already existed: PARTIAL (need review against the reference sheets)
+
+## Reference catalogue categories (the 300-scene sheet) — status
+Fixtures: today / tomorrow / upcoming / calendar: TODO | Venue: aerial, dimensions, history, records: TODO | Weather, dew, wind, pitch report (manual inputs): TODO
+Toss and squads: DONE | Player intros, form, gallery: PARTIAL | Scorebars and lower thirds: DONE | Event flashes: DONE
+Batting / bowling stats, partnership, run-rate, Manhattan, worm, pressure meter: PARTIAL (library) | Pitch map, field placement, catching map: PARTIAL
+Win probability and predictions: PARTIAL (library) | DRS: DONE | Replays (boundary, wicket, ball flight, camera orbit): TODO (needs video)
+Breaks (drinks, timeout, rain, super over): PARTIAL | Scorecards and summaries: PARTIAL | Milestones and records: PARTIAL
+Tables and brackets: PARTIAL | Awards, trophy, sponsors, credits: TODO | Other sports (baseball, football, hockey, kabaddi, basketball, volleyball, badminton, rugby): TODO

@@ -1,0 +1,15 @@
+// DRS mapping + boundary graphics scenes
+const {chromium}=require('playwright');(async()=>{const b=await chromium.launch(),p=await b.newPage({viewport:{width:1280,height:720}}),errs=[];p.on('pageerror',e=>errs.push(e.message));
+const ok=(c,m)=>{if(!c){console.log('FAIL',m);process.exitCode=1}};
+await p.addInitScript(()=>{window.fetch=()=>new Promise(()=>{})});
+const base='file://'+require('path').resolve(__dirname,'../app-index.html');
+await p.goto(base+'?scene=card#overlay');await p.waitForTimeout(400);
+await p.evaluate(()=>{S.matches=[];const nmz=['Aarav Rao','Omarzai','Hasan Ali','Raj Iqbal','Shah Nair','Dar','Ali Khan','Roy','Raz','Mal','Zaid','Lone','Bose','Sen','Gill','Vaz','Pir','Tej','Mir','Kohli','Das','Nag'];S.players=nmz.map((n,i)=>({id:'p'+i,name:n,role:'BAT',team:i<11?'a':'b'}));S.teams=[{id:'a',name:'Sky High Kings',short:'SHK',color:'#1d4ed8',players:S.players.slice(0,11).map(p=>p.id)},{id:'b',name:'Hapur Hawks',short:'HAH',color:'#16a34a',players:S.players.slice(11).map(p=>p.id)}];const m=newMatch({a:'a',b:'b',overs:20,toss:'a',dec:'bat',xiA:S.teams[0].players,xiB:S.teams[1].players});startInnings(m,0,'p0','p1','p11');m.status='live';ball(m,{r:4,ang:{a:-2.2,d:1}});ball(m,{r:1,ang:{a:0.4,d:.4}});ball(m,{r:6,ang:{a:-0.7,d:1.05}});ball(m,{r:4,ang:{a:2.6,d:1}});S.stream.mid=m.id;S.stream.colors={mode:'team',target:'bat'};save()});
+await p.waitForTimeout(500);
+const flows=[['lbw','&wk=hit&pit=in&imp=in&ofd=notout','OUT',9],['lbw','&wk=miss','NOT OUT',9],['lbw','&wk=uc&ofd=out','STANDS',9],['lbw','&wk=hit&pit=leg','NOT OUT',9],['lbw','&nb=no','NO BALL',4],['edge','&ue=edge','OUT',5],['edge','&ue=none','NOT OUT',5],['runout','&ro=out','OUT',4],['stump','&ro=notout','NOT OUT',4]];
+for(const [ty,q,exp,n] of flows){await p.goto(base+`?scene=drsmap&type=${ty}${q}&t=30#overlay`);await p.waitForTimeout(500);const r=await p.evaluate(()=>({v:document.querySelector('.drm-vd')?.innerText.replace(/\s+/g,' '),act:[...document.querySelectorAll('.drm-cp:not(.drm-sk)')].length}));console.log(ty,q,'->',r.v,'steps',r.act);ok(r.v&&(exp==='STANDS'?/STANDS/.test(r.v):exp==='NO BALL'?/NO BALL/.test(r.v):exp==='OUT'?/^OUT/.test(r.v):/^NOT OUT/.test(r.v)),'verdict '+ty+q);ok(r.act===n,'steps '+ty+q+' '+r.act+' vs '+n)}
+for(const t of [.8,2.4,4.2,6,8.5,10.2,12,15]){await p.goto(base+`?scene=drsmap&type=lbw&wk=hit&pit=in&imp=in&t=${t}#overlay`);await p.waitForTimeout(350);await p.screenshot({path:'/tmp/claude-0/mod/drsF'+t+'.png'})}
+await p.goto(base+'?scene=boundary&t=4#overlay');await p.waitForTimeout(500);await p.screenshot({path:'/tmp/claude-0/mod/bnd1.png'});
+const bt=await p.evaluate(()=>document.querySelector('.bnd-pl')?.innerText.replace(/\s+/g,' '));console.log('boundary:',bt);ok(bt&&/FOURS/.test(bt)&&/OMARZAI|AARAV|HASAN/i.test(bt),'boundary panel');
+await p.goto(base+'?scene=boundary&ev=2&t=4#overlay');await p.waitForTimeout(500);await p.screenshot({path:'/tmp/claude-0/mod/bnd2.png'});ok(/SIX/.test(await p.evaluate(()=>document.querySelector('.bnd-bn')?.innerText||'')),'six banner');
+ok(!errs.length,errs.slice(0,3).join(';'));await b.close();if(!process.exitCode)console.log('PASS: drs-boundary')})();
