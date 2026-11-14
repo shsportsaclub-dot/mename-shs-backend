@@ -59,3 +59,8 @@ Tables and brackets: PARTIAL | Awards, trophy, sponsors, credits: TODO | Other s
 - Cartoon character per event (FOUR, SIX, OUT, DRS; 50/100/hat-trick/free hit/no ball/wide reuse the nearest pose) with speech bubble, popping above the player panel: DONE. Poses cut from the owner's reference sheet (public/mascots/*.webp). Owner can upload own pictures per event in the Stream tab; tiger + parrot built-in style kept as an option. `&mascot=0` hides, `&voice=1` speaks the word (browser speech, cannot be verified audibly).
 - 4 / 6 / OUT numerals now metallic silver / gold / red 3D-style flashing digits.
 - TODO: proper animated (moving) character, more poses (maiden, wide, no ball specific), characters for other sports.
+
+## SH Tiger Hero mascot (user's own animated GIF, Nov 14)
+- Source: user's own GIF (6 frames, SH tiger in navy/gold armour). Cut out frames 0-4 (frame 5 has baked "SIX" art, unused) -> public/mascots/sh.webp sprite sheet (5 frames).
+- Default mascot style is now 'sh'; per-event frame sequences (six/hundred, four/fifty, wicket/hattrick, drs/freehit/noball/wide) via CSS steps; Ganesha and Tiger+Parrot remain selectable in Stream tab.
+- TODO: more GIFs/poses per event (maiden, wide, no ball), same character for other sports.
