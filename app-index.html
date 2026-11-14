@@ -15776,10 +15776,10 @@ if(window.shTk){
  const zoneOf=a=>{const th=Math.atan2(Math.cos(a),-Math.sin(a))*180/Math.PI;let k=Math.round(th/45);if(k<-3)k+=8;if(k>4)k-=8;return k};
  const zoneRuns=sh=>{const z={};Object.keys(ZN).forEach(k=>z[k]={r:0,n:0});sh.forEach(e=>{const k=zoneOf(e.ang.a);z[k].r+=e.r;z[k].n++});return z};
  const wgData=(m,who)=>{const s=st(m),inn=s.inn,cu=inn.cur||{};const ids=who==='all'?null:(cu.s||null);
-  const sh=inn.ev.filter(e=>e.ang&&e.r>0&&e.x!=='b'&&e.x!=='lb'&&(!ids||e.bt===ids));
+  let mir=0;const sh=inn.ev.filter(e=>e.ang&&e.r>0&&e.x!=='b'&&e.x!=='lb'&&(!ids||e.bt===ids)).map(e=>{if(window.shBatHand&&shBatHand(e.bt)==='L'){mir++;return Object.assign({},e,{ang:{a:Math.PI-e.ang.a,d:e.ang.d}})}return e});
   const cnt={six:0,four:0,three:0,two:0,one:0};sh.forEach(e=>{cnt[e.r>=6?'six':e.r>=4?'four':e.r===3?'three':e.r===2?'two':'one']++});
   const bid=ids||(inn.ev.length?inn.ev[inn.ev.length-1].bt:null),b=s.k.bat[bid]||{r:0,b:0,f4:0,f6:0};
-  return{s,sh,cnt,bid,b}};
+  return{s,sh,cnt,bid,b,mir}};
  const zn=sh=>{if(!sh.length)return '';const z=zoneRuns(sh),cx=500,cy=300,rx=410,ry=235;let g='';const mx=Math.max(1,...Object.values(z).map(v=>v.r));
   Object.keys(ZN).forEach(k=>{const th=(+k)*Math.PI/4,t0=th-Math.PI/8,t1=th+Math.PI/8,P=(t,f)=>[cx+Math.sin(t)*rx*f,cy-Math.cos(t)*ry*f],a=P(t0,1),b=P(t1,1),c=P(th,.66),op=(.06+.34*z[k].r/mx).toFixed(2);
    g+=`<path d="M${cx},${cy} L${a[0].toFixed(0)},${a[1].toFixed(0)} A${rx},${ry} 0 0 1 ${b[0].toFixed(0)},${b[1].toFixed(0)} Z" fill="#fff" fill-opacity="${op}" stroke="#fff" stroke-opacity=".45" stroke-width="2"/><text x="${c[0].toFixed(0)}" y="${(c[1]-4).toFixed(0)}" text-anchor="middle" font-size="40" font-weight="900" fill="#fff" stroke="#0007" stroke-width="6" paint-order="stroke" font-family="Arial Black,Arial">${z[k].r}</text><text x="${c[0].toFixed(0)}" y="${(c[1]+22).toFixed(0)}" text-anchor="middle" font-size="17" font-weight="800" fill="#fff" stroke="#0007" stroke-width="4" paint-order="stroke" font-family="Arial">${ZN[k]}</text>`});return `<g class="zn">${g}</g>`};
@@ -15799,7 +15799,7 @@ if(window.shTk){
  const wgHTML=(m,e)=>{const who=(q('who')==='all'||q('who')==='team')?'all':'striker',d=wgData(m,who),{s,sh,cnt,b}=d,tot=sh.length,P0=d.bid&&P(d.bid),sr=b.b?(b.r*100/b.b).toFixed(1):'0.0';
   const lab=[['six','SIX'],['four','FOUR'],['three','THREE'],['two','TWO'],['one','SINGLE']];
   const stad=q('bg')!=='0'?`<div class="sky"></div><div class="fl a"></div><div class="fl b"></div><div class="fl c"></div><div class="fl d"></div><div class="crowd"></div>`:'';
-  return `<div class="wgr" style="--e:${e}s">${stad}<div class="top"><i class="cr"></i><b>SCORING HEROES</b><small>${E(m.name||'LIVE MATCH')} · ${who==='all'?'ALL BATTERS':'ON STRIKE'}</small></div><h1 class="ttl">WAGON WHEEL</h1>
+  return `<div class="wgr" style="--e:${e}s">${stad}<div class="top"><i class="cr"></i><b>SCORING HEROES</b><small>${E(m.name||'LIVE MATCH')} · ${who==='all'?'ALL BATTERS':'ON STRIKE'}${d.mir?' · LEFT-HANDERS MIRRORED':''}</small></div><h1 class="ttl">WAGON WHEEL</h1>
   <div class="bp"><div class="av">${P0?av(P0):''}</div><div class="nm">${E(NM(d.bid)||'BATTER')}</div><div class="rn"><b>${b.r}</b><small>(${b.b})</small></div><div class="ln2">4s ${b.f4||0} | 6s ${b.f6||0}</div><div class="ln2">SR ${sr}</div></div>
   ${tot?wgSVG(sh):wgSVG([])+`<div class="none">NO SHOT DIRECTIONS RECORDED YET</div>`}
   <div class="sm"><h2>SHOT MAP</h2>${lab.map((l,i)=>`<div class="row" style="--i:${i}"><span class="dd" style="background:${WG_COL[l[0]]}"></span><span>${l[1]}</span><b>${cnt[l[0]]}</b></div>`).join('')}<div class="dw">${donut(cnt,tot)}<div class="pc">${lab.map(l=>`<div><span class="dd" style="background:${WG_COL[l[0]]}"></span>${tot?Math.round(cnt[l[0]]*100/tot):0}%</div>`).join('')}</div></div></div></div>`};
@@ -16121,7 +16121,7 @@ if(window.shTk){
 {
  const E=s=>esc(String(s==null?'':s));
  const q=k=>{try{return new URLSearchParams(location.search).get(k)}catch(e){return null}};
- const sceneNow=()=>{try{if(location.hash==='#overlay')return q('scene')||'';if(UI.view==='stream'&&UI.ovScene)return UI.ovScene}catch(e){}return''};
+ const sceneNow=()=>{try{if(window.__scn)return window.__scn;if(location.hash==='#overlay')return q('scene')||'';if(UI.view==='stream'&&UI.ovScene)return UI.ovScene}catch(e){}return''};
  const rn=(id,css)=>css.replace(/\.([a-zA-Z_][\w-]*)/g,(m,c)=>c===id?m:'.'+id+'-'+c);
  const rh=(id,h)=>h.replace(/class="([^"]*)"/g,(m,c)=>'class="'+c.split(/\s+/).filter(Boolean).map(t=>t===id?t:id+'-'+t).join(' ')+'"');
  const NM=id=>{try{return nm(id)}catch(e){return ''}};
@@ -16190,7 +16190,7 @@ if(window.shTk){
 {
  const E=s=>esc(String(s==null?'':s));
  const q=k=>{try{return new URLSearchParams(location.search).get(k)}catch(e){return null}};
- const sceneNow=()=>{try{if(location.hash==='#overlay')return q('scene')||'';if(UI.view==='stream'&&UI.ovScene)return UI.ovScene}catch(e){}return''};
+ const sceneNow=()=>{try{if(window.__scn)return window.__scn;if(location.hash==='#overlay')return q('scene')||'';if(UI.view==='stream'&&UI.ovScene)return UI.ovScene}catch(e){}return''};
  const fmt=n=>{try{return fmtOv(n)}catch(e){return String(n)}};
  const age=()=>{UI.pbT=UI.pbT||Date.now();return((Date.now()-UI.pbT)/1000).toFixed(2)};
  const CSS=`.pbr{position:absolute;inset:0;container-type:size;overflow:hidden;font-family:"Arial Narrow",Arial,sans-serif;text-transform:uppercase;pointer-events:none}.pbs{position:absolute;left:3cqw;bottom:6cqh;display:flex;align-items:stretch;height:6.4cqh;min-height:34px;filter:drop-shadow(0 .5cqh 1cqh #0009);animation:pbIn .7s cubic-bezier(.2,1,.3,1) both;animation-delay:calc(0s - var(--e,0s))}@keyframes pbIn{from{opacity:0;transform:translateX(-12cqw)}}.pbs .l{background:linear-gradient(180deg,color-mix(in srgb,var(--c) 90%,#fff),var(--c));color:#fff;font:900 2.1cqh/1 Arial;letter-spacing:.14em;display:flex;align-items:center;padding:0 1.8cqw 0 1.4cqw;clip-path:polygon(0 0,100% 0,calc(100% - 1.2cqh) 100%,0 100%);text-shadow:0 1px 2px #0008}.pbs .o{background:#0c1530;color:#cfe0ff;font:800 1.9cqh Arial;letter-spacing:.1em;display:flex;align-items:center;padding:0 1.4cqw 0 1cqw;margin-left:-1.1cqh;clip-path:polygon(1.2cqh 0,100% 0,100% 100%,0 100%);padding-left:2.2cqh}.pbs .s{background:#fff;color:#0a1230;font:900 2.8cqh Arial;display:flex;align-items:center;padding:0 1.6cqw;position:relative;overflow:hidden}.pbs .s:after{content:"";position:absolute;top:0;bottom:0;width:30%;left:-40%;background:linear-gradient(90deg,transparent,#fff9,transparent);animation:pbSh 2.6s ease-in-out infinite;animation-delay:calc(1s - var(--e,0s))}@keyframes pbSh{60%,100%{left:130%}}`;
@@ -16212,7 +16212,7 @@ if(window.shTk){
 {
  const E=s=>esc(String(s==null?'':s));
  const q=k=>{try{return new URLSearchParams(location.search).get(k)}catch(e){return null}};
- const sceneNow=()=>{try{if(location.hash==='#overlay')return q('scene')||'';if(UI.view==='stream'&&UI.ovScene)return UI.ovScene}catch(e){}return''};
+ const sceneNow=()=>{try{if(window.__scn)return window.__scn;if(location.hash==='#overlay')return q('scene')||'';if(UI.view==='stream'&&UI.ovScene)return UI.ovScene}catch(e){}return''};
  const rn=(id,css)=>css.replace(/\.([a-zA-Z_][\w-]*)/g,(m,c)=>c===id?m:'.'+id+'-'+c);
  const rh=(id,h)=>h.replace(/class="([^"]*)"/g,(m,c)=>'class="'+c.split(/\s+/).filter(Boolean).map(t=>t===id?t:id+'-'+t).join(' ')+'"');
  const NM=id=>{try{return nm(id)}catch(e){return ''}};
@@ -16264,8 +16264,8 @@ if(window.shTk){
  const BAILS=(fly)=>`<g stroke="#ffd24a" stroke-width="5" stroke-linecap="round"><line class="bl1" x1="472" y1="256" x2="497" y2="256" ${fly?'style="animation:rsB1 1s calc(.9s - var(--e,0s)) both"':''}/><line class="bl2" x1="503" y1="256" x2="528" y2="256" ${fly?'style="animation:rsB2 1s calc(.9s - var(--e,0s)) both"':''}/></g>`;
  const DIS={bowled:['BOWLED','LAW 32','The ball hits the stumps and the bails come off',`<path d="M500 40 L500 250" stroke="#ef2b4b" stroke-width="4" stroke-dasharray="10 8" style="animation:rsD 1s calc(0s - var(--e,0s)) both"/><circle cx="500" cy="250" r="12" fill="#ef2b4b" style="animation:rsBall 1s calc(0s - var(--e,0s)) both"/>`,true],lbw:['LBW','LAW 36','Ball strikes the pad in line and would have hit the stumps',`<path d="M500 40 L440 200 L500 250" fill="none" stroke="#ef2b4b" stroke-width="4" stroke-dasharray="10 8" style="animation:rsD 1.2s calc(0s - var(--e,0s)) both"/><rect x="420" y="190" width="40" height="80" rx="10" fill="#fff" opacity=".85"/><circle cx="440" cy="200" r="9" fill="#ef2b4b"/><path d="M440 200 L500 250" stroke="#3b9bff" stroke-width="3" stroke-dasharray="4 5"/>`,false],caught:['CAUGHT','LAW 33','The ball is taken by a fielder before it bounces',`<path d="M500 280 Q640 80 780 160" fill="none" stroke="#ef2b4b" stroke-width="4" stroke-dasharray="10 8" style="animation:rsD 1.4s calc(0s - var(--e,0s)) both"/><circle cx="780" cy="160" r="26" fill="none" stroke="#22d36b" stroke-width="5"/><circle cx="780" cy="160" r="9" fill="#ef2b4b"/>`,false],runout:['RUN OUT','LAW 38','The wicket is broken while the batter is short of the crease',`<line x1="360" y1="330" x2="640" y2="330" stroke="#fff" stroke-width="4"/><circle cx="420" cy="360" r="9" fill="#ffd24a"/><text x="420" y="395" text-anchor="middle" fill="#fff" font-size="20" font-weight="800" font-family="Arial">SHORT</text><path d="M760 120 L520 260" stroke="#ef2b4b" stroke-width="4" stroke-dasharray="10 8" style="animation:rsD 1s calc(0s - var(--e,0s)) both"/>`,true],stump:['STUMPED','LAW 39','The keeper breaks the wicket while the batter is out of the crease',`<line x1="360" y1="330" x2="640" y2="330" stroke="#fff" stroke-width="4"/><circle cx="440" cy="300" r="9" fill="#ffd24a"/><rect x="540" y="230" width="46" height="60" rx="14" fill="#22d36b" opacity=".9"/><text x="440" y="285" text-anchor="end" fill="#fff" font-size="20" font-weight="800" font-family="Arial">OUT OF CREASE</text>`,true],hitwicket:['HIT WICKET','LAW 35','The batter breaks the wicket with bat or body',`<line x1="360" y1="330" x2="640" y2="330" stroke="#fff" stroke-width="4"/><path d="M380 180 L480 275" stroke="#c7ced9" stroke-width="12" stroke-linecap="round" style="animation:rsD 1s calc(0s - var(--e,0s)) both"/>`,true]};
  const dkey=(m)=>{let w='';sf(()=>{const s=st(m);const ev=s.inn.ev.filter(x=>x.w);w=String(ev.length?ev[ev.length-1].w:'').toLowerCase()});return /lbw/.test(w)?'lbw':/caught|ct/.test(w)?'caught':/run/.test(w)?'runout':/stump/.test(w)?'stump':/hit wicket/.test(w)?'hitwicket':'bowled'};
- const dismiss=(m,e)=>{const k=q('k')||dkey(m),D=DIS[k]||DIS.bowled;let who='',bw='';sf(()=>{const s=st(m),ev=s.inn.ev.filter(x=>x.w),l=ev[ev.length-1];if(l){who=NM(l.out||l.bt);bw=NM(l.bl)}});
-  return hdr(m,D[0],D[1]+' · '+D[2])+`<div class="bd"><svg viewBox="0 0 1000 440" style="width:100%;height:100%"><ellipse cx="500" cy="300" rx="480" ry="130" fill="#1f8a43" opacity=".9"/>${STUMP}${BAILS(D[4])}${D[3]}</svg>${who?`<div class="pn" style="position:absolute;left:2cqw;bottom:1cqh;--d:.8s;display:flex;gap:2cqw;align-items:center"><b style="font:900 2.4cqw Arial">${E(who)}</b><em style="font:800 normal 1.5cqw Arial;font-style:normal;color:#9fb6e6">B ${E(bw)}</em></div>`:''}</div>`};
+ const dismiss=(m,e)=>{const k=q('k')||dkey(m),D=DIS[k]||DIS.bowled;let who='',bw='',how='';sf(()=>{const s=st(m),ev=s.inn.ev.filter(x=>x.w),l=ev[ev.length-1];if(l){who=NM(l.out||l.bt);bw=NM(l.bl);how=howOut(l)}});
+  return hdr(m,D[0],D[1]+' · '+D[2])+`<div class="bd"><svg viewBox="0 0 1000 440" style="width:100%;height:100%"><ellipse cx="500" cy="300" rx="480" ry="130" fill="#1f8a43" opacity=".9"/>${STUMP}${BAILS(D[4])}${D[3]}</svg>${who?`<div class="pn" style="position:absolute;left:2cqw;bottom:1cqh;--d:.8s;display:flex;gap:2cqw;align-items:center"><b style="font:900 2.4cqw Arial">${E(who)}</b><em style="font:800 normal 1.5cqw Arial;font-style:normal;color:#9fb6e6">${E(how||'B '+bw)}</em></div>`:''}</div>`};
  /* ---- awards, trophy, sponsors, credits ---- */
  const best=(m)=>{const sc={};[0,1].forEach(i=>{const k=bat0(m,i);if(!k)return;Object.entries(k.bat).forEach(([id,b])=>{sc[id]=sc[id]||{id,r:0,b:0,w:0,rc:0,pts:0};sc[id].r+=b.r;sc[id].b+=b.b;sc[id].pts+=b.r});Object.entries(k.bowl).forEach(([id,w])=>{sc[id]=sc[id]||{id,r:0,b:0,w:0,rc:0,pts:0};sc[id].w+=w.w;sc[id].rc+=w.r;sc[id].pts+=w.w*25})});return Object.values(sc).sort((a,b)=>b.pts-a.pts)[0]};
  const potm=(m,e)=>{const b=best(m);if(!b)return hdr(m,'PLAYER OF THE MATCH','')+'<div class="bd"><div class="none">NO DATA YET</div></div>';
@@ -16297,6 +16297,51 @@ if(window.shTk){
   const i=h.indexOf('<div class="g2"><div class="card"><h3>Overlay settings</h3>');return i<0?h+bx:h.slice(0,i)+bx+h.slice(i)};
  Object.assign(F,{ovWx(fd){const o={};['temp','hum','wind','dew','cond','pitch','note'].forEach(k=>o[k]=String(fd.get(k)||'').slice(0,120));S.stream.wx=o;commit();toast('Saved')}});
  window.shRest={SC:Object.keys(SC),POS,SIG,RULES};
+}
+
+/* ---------------- MINI STATS + AUTO SCENE DIRECTOR: ?scene=mini (transparent corner table), ?scene=auto (switches scenes by itself) ---------------- */
+{
+ const E=s=>esc(String(s==null?'':s));
+ const q=k=>{try{return new URLSearchParams(location.search).get(k)}catch(e){return null}};
+ const rawScene=()=>{try{if(location.hash==='#overlay')return q('scene')||'';if(UI.view==='stream'&&UI.ovScene)return UI.ovScene}catch(e){}return''};
+ const NM=id=>{try{return nm(id)}catch(e){return ''}};
+ const fmt=n=>{try{return fmtOv(n)}catch(e){return String(n)}};
+ const sf=(f,d)=>{try{const v=f();return v==null?d:v}catch(e){return d}};
+ const rn=(id,css)=>css.replace(/\.([a-zA-Z_][\w-]*)/g,(m,c)=>c===id?m:'.'+id+'-'+c);
+ const rh=(id,h)=>h.replace(/class="([^"]*)"/g,(m,c)=>'class="'+c.split(/\s+/).filter(Boolean).map(t=>t===id?t:id+'-'+t).join(' ')+'"');
+ const age=()=>{UI.mnT=UI.mnT||Date.now();return((Date.now()-UI.mnT)/1000).toFixed(2)};
+ const CSS=rn('mn',`.mn{position:absolute;inset:0;container-type:size;overflow:hidden;font-family:"Arial Narrow",Arial,sans-serif;text-transform:uppercase;color:#fff;pointer-events:none}.bx{position:absolute;left:3cqw;bottom:14cqh;min-width:34cqw;background:#0b1530ee;border-top:.5cqh solid var(--c,#ffd24a);border-radius:.8cqw;padding:1cqh 1.2cqw;filter:drop-shadow(0 .6cqh 1.2cqh #0009);animation:mnI .6s cubic-bezier(.2,1,.3,1) both;animation-delay:calc(0s - var(--e,0s))}@keyframes mnI{from{opacity:0;transform:translateY(5cqh)}}.h{display:grid;grid-template-columns:1fr 4.5cqw 4.5cqw 3.5cqw 3.5cqw 5cqw;font:800 1.1cqw Arial;letter-spacing:.14em;color:#9fb6e6;padding-bottom:.4cqh;border-bottom:.15cqh solid #ffffff30}.r{display:grid;grid-template-columns:1fr 4.5cqw 4.5cqw 3.5cqw 3.5cqw 5cqw;font:900 1.7cqw Arial;padding:.5cqh 0;align-items:center}.r b{font-weight:900;color:#ffd24a}.r span,.h span{text-align:right}.r span:first-child,.h span:first-child{text-align:left}.on{color:#ffd24a}.bw{margin-top:.6cqh;border-top:.15cqh solid #ffffff30;padding-top:.6cqh;display:flex;gap:1.2cqw;align-items:baseline;font:900 1.7cqw Arial}.bw em{font:800 normal 1.2cqw Arial;font-style:normal;color:#9fb6e6;letter-spacing:.12em}`);
+ const sty=document.createElement('style');sty.textContent=CSS;document.head.appendChild(sty);
+ const miniHTML=(m,e)=>{const s=sf(()=>st(m),null);if(!s)return '';const k=s.k,c=s.inn.cur||{},bt=T(s.inn.bat),col=(bt&&bt.color)||'#ffd24a';
+  const row=id=>{const b=k.bat[id]||{r:0,b:0,f4:0,f6:0};return `<div class="r"><span class="${id===c.s?'on':''}">${E(NM(id))}${id===c.s?' *':''}</span><span><b>${b.r}</b></span><span>${b.b}</span><span>${b.f4||0}</span><span>${b.f6||0}</span><span>${b.b?(b.r*100/b.b).toFixed(0):0}</span></div>`};
+  const w=k.bowl[c.bl]||{b:0,r:0,w:0,m:0};
+  return `<div class="mn" style="--e:${e}s"><div class="bx" style="--c:${E(col)}"><div class="h"><span>BATTER</span><span>R</span><span>B</span><span>4s</span><span>6s</span><span>SR</span></div>${[c.s,c.n].filter(x=>x!=null).map(row).join('')}<div class="bw"><em>BOWLER</em>${E(NM(c.bl))}<b>${w.w}-${w.r}</b><em>${fmt(w.b)} OV</em><em style="margin-left:auto">RR ${k.lg?(k.runs*6/k.lg).toFixed(2):'0.00'}</em></div></div></div>`};
+ /* ---- director ---- */
+ const lastLegal=(m,i)=>sf(()=>calc(m,i),null);
+ const done=(m,i)=>{const k=lastLegal(m,i);if(!k)return false;const cap=sf(()=>maxWk(m,i),10);return k.lg>=(+m.overs||20)*6||k.wk>=cap||m.innings.length>i+1};
+ const decide=(m)=>{const A=UI.au=UI.au&&UI.au.mid===m.id?UI.au:{mid:m.id,pp:{},end:{},tl:null,t0:0},now=Date.now()/1000;UI.au=A;
+  if(m.status==='done'){const t0=A.dn=A.dn||now,L=['potm','trophy','credits'],n=Math.floor((now-t0)/10)%L.length;return L[n]}
+  const R=window.shReplay;
+  if(!m.innings.length||(m.innings[0].ev||[]).length===0&&m.innings.length<2)return 'tossphoto';
+  const i=m.cur||0;
+  if(!A.tl){
+   if(done(m,i)&&!A.end[i]){A.end[i]=1;A.tl={t0:now,seq:i===0?[['hl',12]]:[['hl',12]],i}}
+   else if(R&&!A.pp[i]&&!done(m,i)){const k=lastLegal(m,i),pb=R.ppBalls(m,i);if(k&&k.lg>=pb&&k.lg<=pb+2){A.pp[i]=1;A.tl={t0:now,seq:[['ppbar',8],['ppsum',12]],i}}}
+  }
+  if(A.tl){let t=now-A.tl.t0;for(const [sc,d] of A.tl.seq){if(t<d){A.i=A.tl.i;return sc}t-=d}A.tl=null}
+  /* between innings: hold the innings-break card until the chase starts */
+  if(m.innings.length>=1&&done(m,0)&&(m.innings[1]?(m.innings[1].ev||[]).length===0:true))return 'innbreak';
+  return ''};
+ const o3=overlayHTML;overlayHTML=function(){const sc=rawScene();
+  if(sc==='mini'){try{const m=ovMatch();if(!m)return o3.apply(this,arguments);const e=q('t')!=null?parseFloat(q('t')):age();return `<div class="ovroot ov" data-t="sh">${rh('mn',miniHTML(m,e))}</div>`}catch(er){return o3.apply(this,arguments)}}
+  if(sc==='auto'){let tgt='';try{const m=ovMatch();if(m)tgt=decide(m)}catch(er){}
+   if(UI.auLast!==tgt){UI.auLast=tgt;UI.ppT=UI.pbT=UI.rsT=UI.lbT=UI.mnT=null}
+   window.__scn=tgt||'';try{const r=o3.apply(this,arguments);return r}finally{window.__scn=''}}
+  return o3.apply(this,arguments)};
+ const vs5=vStream;vStream=function(){let h=vs5.apply(this,arguments);const cur=UI.ovScene||'bug';
+  const bx=`<div class="card"><h3>Auto scene director</h3><div class="mu sm" style="margin-bottom:6px">One OBS source that switches by itself: toss captains before the first ball, powerplay strip + replay when the powerplay ends, innings highlights then innings break, and player of the match / champions / credits after the result. Otherwise it shows the normal score bar.</div>${[['auto','Auto director'],['mini','Mini stats table (transparent, over video)']].map(([k,l])=>`<div class="item" style="flex-wrap:wrap;gap:6px"><div style="flex:1;min-width:150px"><b>${l}</b>${cur===k?' <span class="mu sm">(previewing)</span>':''}</div><button class="btn sm ghost" data-a="ovPrev" data-v="${k}">Preview</button><button class="btn sm ghost" data-a="ovCopy" data-v="${k}">Copy URL</button></div>`).join('')}</div>`;
+  const i=h.indexOf('<div class="g2"><div class="card"><h3>Overlay settings</h3>');return i<0?h+bx:h.slice(0,i)+bx+h.slice(i)};
+ window.shAuto={decide};
 }
 
 </script>

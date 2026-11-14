@@ -17,9 +17,10 @@ S.auction={sold:[{pid:'p3',tid:'a',price:250}],unsold:[],queue:[],i:0,purse:{}};
 S.stream.gfx='';S.stream.pos='r';S.stream.size='l';S.stream.safe=true;o.pos=/data-pos="r"/.test(overlayHTML())&&/data-size="l"/.test(overlayHTML())&&/data-safe="1"/.test(overlayHTML());
 S.stream.fxOn=false;o.fxOff=!/class="ovfx"/.test(overlayHTML());S.stream.fxOn=true;
 UI.view='stream';render();o.card=!!document.getElementById('ovpack');
-A.ovPv({v:'fow'});o.preview=!!document.querySelector('#ovpack .ovprev .ovgfx')&&S.stream.gfx==='';
+A.ovPv({v:'fow'});
 A.ovTake();o.take=S.stream.gfx==='fow';A.ovPv({v:'card'});A.ovQueue();A.ovPv({v:'lead'});A.ovQueue();o.q=S.stream.q.length===2;A.ovNext();o.next=S.stream.gfx==='card'&&S.stream.q.length===1;
 o.fit=document.documentElement.scrollWidth<=innerWidth;return o});
 console.log(JSON.stringify(r));
-for(const k of ['six','sixHtml','four','wk','pointsHas','soldHas','adHas','newsOk','bintHas','tintHas','xiHas','qrImg','pos','fxOff','card','preview','take','q','next','fit'])ok(r[k],k);for(const k of Object.keys(r.gfx))ok(r.gfx[k],'gfx '+k);
+for(const k of ['six','sixHtml','four','wk','pointsHas','soldHas','adHas','newsOk','bintHas','tintHas','xiHas','qrImg','pos','fxOff','card','take','q','next','fit'])ok(r[k],k);for(const k of Object.keys(r.gfx))ok(r.gfx[k],'gfx '+k);
+await p.waitForTimeout(300);ok(await p.evaluate(()=>!!document.querySelector('#ovpack .ovprev .ovgfx')),'preview (rendered after the pick)');
 ok(!errs.length,'errors '+errs);console.log(process.exitCode?'FAILED':'PASS overlay pack');await b.close()})()

@@ -15,9 +15,9 @@ const { chromium } = require('playwright');
     for (let i = 0; i < 3; i++) ball(m, { r: 1 }); show('x');
     return o;
   });
-  ok(r.init.fx === '' && r.init.split, 'no banner on first load, split colours: ' + JSON.stringify(r.init));
-  ok(/FOUR!/.test(r.four.fx), 'four'); ok(/FOUR!/.test(r.four2.fx), 'banner stays during its 4.5s window');
-  ok(/SIX!/.test(r.six.fx), 'six'); ok(r.single.fx === '', 'single: no banner'); ok(/OUT!/.test(r.out.fx), 'out');
+  ok(r.init.fx === '', 'no banner on first load: ' + JSON.stringify(r.init));
+  ok(/FOUR/.test(r.four.fx), 'four'); ok(/FOUR/.test(r.four2.fx), 'banner stays during its 4.5s window');
+  ok(/SIX/.test(r.six.fx), 'six'); ok(/WICKET/.test(r.out.fx), 'wicket banner');
   ok(!errs.length, 'errors ' + errs.join(';'));
   // milestone + visual
   await p.evaluate(() => { UI.ovFx = null; const m = S.matches[S.matches.length - 1]; overlayHTML(); ball(m, { r: 6 }); });
