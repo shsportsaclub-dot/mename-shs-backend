@@ -2694,7 +2694,7 @@ http.createServer(async (req, res) => {
     try { const body = fs.readFileSync(new URL('./public' + path, import.meta.url)); res.writeHead(200, { 'content-type': 'image/webp', 'cache-control': 'public, max-age=604800', 'access-control-allow-origin': '*', 'x-content-type-options': 'nosniff' }); return res.end(body); }
     catch { return out(404, { ok: false, error: 'Coin unavailable' }); }
   }
-  if (req.method === 'GET' && /^\/mascots\/(four|six|wicket|drs|sh)\.webp$/.test(path)) {   // cricket mascot poses
+  if (req.method === 'GET' && /^\/mascots\/(four|six|wicket|drs|sh|shwkt|shsix|shfour|shump|shout)\.webp$/.test(path)) {   // cricket mascot poses
     try { const body = fs.readFileSync(new URL('./public' + path, import.meta.url)); res.writeHead(200, { 'content-type': 'image/webp', 'cache-control': 'public, max-age=604800', 'access-control-allow-origin': '*' }); return res.end(body); }
     catch { return out(404, { ok: false, error: 'Mascot unavailable' }); }
   }

@@ -13,7 +13,7 @@ await p.goto(base+'?scene=anim&id=3_four&t=2&mascot=0#overlay');await p.waitForT
 await p.evaluate(()=>{S.stream.mascotStyle='tiger';save()});await p.waitForTimeout(900);await p.goto(base+'?scene=anim&id=3_six&t=2#overlay');await p.waitForTimeout(250);ok(await p.evaluate(()=>document.querySelectorAll('.al-mch svg').length===2),'tiger+parrot style still available');
 await p.evaluate(()=>{S.stream.mascotStyle='sh';save()});await p.waitForTimeout(900);
 for(const [e,w] of [['four','FOUR!'],['six','SIX!'],['wicket','OUT!'],['hundred','HUNDRED!'],['drs','']])for(const f of [1,7,13,20]){await p.goto(base+`?scene=anim&id=${f}_${e}&t=1.0#overlay`);await p.waitForTimeout(200);
- const a=await p.evaluate(()=>{const s=document.querySelector('.al-shs');return s?{bg:getComputedStyle(s).backgroundPosition,im:getComputedStyle(s).backgroundImage.indexOf('sh.webp')>0,w:s.getBoundingClientRect().width,t:(document.querySelector('.al-mbb')||{}).innerText}:null});
+ const a=await p.evaluate(()=>{const s=document.querySelector('.al-shs');return s?{bg:getComputedStyle(s).backgroundPosition,im:getComputedStyle(s).backgroundImage.indexOf('/sh')>0,w:s.getBoundingClientRect().width,t:(document.querySelector('.al-mbb')||{}).innerText}:null});
  await p.goto(base+`?scene=anim&id=${f}_${e}&t=2.1#overlay`);await p.waitForTimeout(200);
  let c=null;for(const tt of [0.2,0.5,1.3]){await p.goto(base+`?scene=anim&id=${f}_${e}&t=${tt}#overlay`);await p.waitForTimeout(120);const q=await p.evaluate(()=>{const s=document.querySelector('.al-shs');return s?getComputedStyle(s).backgroundPosition:null});if(q!==a.bg)c=q}
  ok(a&&a.im&&a.w>100,`SH sprite ${f}_${e}`);if(e!=='drs')ok(a&&a.t===w,`SH bubble ${f}_${e}: ${a&&a.t}`);ok(a&&c,`SH frames animate ${f}_${e}: ${a&&a.bg} vs ${c}`)}

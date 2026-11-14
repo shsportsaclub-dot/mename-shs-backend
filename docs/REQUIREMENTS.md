@@ -64,3 +64,4 @@ Tables and brackets: PARTIAL | Awards, trophy, sponsors, credits: TODO | Other s
 - Source: user's own GIF (6 frames, SH tiger in navy/gold armour). Cut out frames 0-4 (frame 5 has baked "SIX" art, unused) -> public/mascots/sh.webp sprite sheet (5 frames).
 - Default mascot style is now 'sh'; per-event frame sequences (six/hundred, four/fifty, wicket/hattrick, drs/freehit/noball/wide) via CSS steps; Ganesha and Tiger+Parrot remain selectable in Stream tab.
 - TODO: more GIFs/poses per event (maiden, wide, no ball), same character for other sports.
+- Nov 14 pack from user's 6 GIFs: six=jump (shsix), four=slide (shfour), wicket=stump smash (shwkt), hattrick=out-signal tiger (shout), drs/noball/wide/freehit/maiden=umpire tiger (shump), hundred=navy celebration (sh). Frames cut with rembg; baked words/effect frames excluded.
