@@ -46,3 +46,9 @@ Batting / bowling stats, partnership, run-rate, Manhattan, worm, pressure meter:
 Win probability and predictions: PARTIAL (library) | DRS: DONE | Replays (boundary, wicket, ball flight, camera orbit): TODO (needs video)
 Breaks (drinks, timeout, rain, super over): PARTIAL | Scorecards and summaries: PARTIAL | Milestones and records: PARTIAL
 Tables and brackets: PARTIAL | Awards, trophy, sponsors, credits: TODO | Other sports (baseball, football, hockey, kabaddi, basketball, volleyball, badminton, rugby): TODO
+
+## Added 14 Nov (evening) — all DONE unless noted
+- Tickers: big animated 4 / 6 / OUT, player panel, bottom-right tournament 4s/6s panel. Wagon wheel colours (white 1, blue 2, orange 4, green 6) + team zone map (`?scene=wagon&who=team`).
+- `?scene=ppsum` powerplay replay, `?scene=hl` innings highlights, `ppbar` / `hlbar` transparent corner strips.
+- `innbreak`, `runtype` (&who=team), `fixtures`, `fieldpos` (&hand=left), `umpire`, `rules` (&r=...), `dismiss` (&k=...), `potm`, `trophy`, `sponsors`, `credits`, `venue`, `weather` + `pitch` (typed in Stream tab), `tossphoto`.
+- STILL TODO: real video replays (needs video source), DLS (official table only), other sports, left-hand mirror for wagon zones, auto-trigger of scenes, fielder name on dismissal pictures, mini stats table, verify Points table on real data.

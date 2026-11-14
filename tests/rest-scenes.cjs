@@ -1,0 +1,15 @@
+// Wagon wheel, select bowler/batter, 260-scene library
+const {chromium}=require('playwright');const fs=require('fs');
+(async()=>{const b=await chromium.launch(),p=await b.newPage({viewport:{width:1280,height:720}}),errs=[];p.on('pageerror',e=>errs.push(e.message));
+const ok=(c,m)=>{if(!c){console.log('FAIL',m);process.exitCode=1}};
+await p.addInitScript(()=>{window.fetch=()=>new Promise(()=>{})});
+const base='file://'+'/home/claude/mename-shs-backend/app-index.html';
+await p.goto(base+'?scene=wagon#overlay');await p.waitForTimeout(400);
+await p.evaluate(()=>{S.matches=[];const nmz=['Aarav Sharma','Omarzai','Hasan','Rao','Iqbal','Shah','Nair','Dar','Ali','Khan','Roy','Razzaq','Malik','Zaidi','Lone','Bose','Sen','Gill','Vaz','Pir','Tej','Mir'];S.players=nmz.map((n,i)=>({id:'p'+i,name:n,role:i>=11&&i<16?'BOWL':'BAT',team:i<11?'a':'b',bowl:i%2?'Right-arm fast':'Left-arm orthodox spin',bat:'Right-hand',jersey:i+1}));S.teams=[{id:'a',name:'Sky High Kings',short:'SHK',color:'#1d4ed8',players:S.players.slice(0,11).map(p=>p.id)},{id:'b',name:'Hapur Hawks',short:'HAH',color:'#9d174d',players:S.players.slice(11).map(p=>p.id)}];const m=newMatch({a:'a',b:'b',overs:20,toss:'a',dec:'bat',xiA:S.teams[0].players,xiB:S.teams[1].players,venue:'Royal Shield Stadium'});m.name='ROYAL SHIELD';startInnings(m,0,'p0','p1','p11');m.status='live';const inn=m.innings[0];inn.cur.bl='p11';let n=0;
+ [1,4,6,0,2,1,3,4,6,1,6,4,1,0,2,4,1,6].forEach((x,i)=>{if(!inn.cur.bl)inn.cur.bl='p'+(11+(n++%4));ball(m,{r:x});const e=inn.ev[inn.ev.length-1];if(x>0)e.ang={a:(i*0.73+0.4)%6.28,d:x>=4?1:.3+(i%5)*.12}});S.stream.mid=m.id;save()});
+const L=[['innbreak','','INNINGS BREAK'],['runtype','','RUNS BY TYPE'],['runtype','&who=team','RUNS BY TYPE'],['fixtures','','FIXTURES'],['fieldpos','','FIELD POSITIONS'],['fieldpos','&hand=left','LEFT-HAND'],['umpire','','UMPIRE SIGNALS'],['rules','&r=noball','NO BALL'],['rules','&r=lbw','LBW'],['rules','&r=pp','POWERPLAY'],['rules','&r=superover','SUPER OVER'],['dismiss','&k=bowled','BOWLED'],['dismiss','&k=lbw','LBW'],['dismiss','&k=caught','CAUGHT'],['dismiss','&k=runout','RUN OUT'],['dismiss','&k=stump','STUMPED'],['potm','','PLAYER OF THE MATCH'],['trophy','','CHAMPIONS'],['sponsors','','OUR PARTNERS'],['credits','','MATCH CREDITS'],['venue','','VENUE'],['weather','&temp=31&hum=62&wind=14%20SW&dew=LOW&cond=CLEAR','31'],['pitch','&pitch=DRY%20TRACK%2C%20HELPS%20SPIN','DRY TRACK'],['tossphoto','','THE TOSS']];
+let n=0;for(const [sc,x,exp] of L){await p.goto(base+`?scene=${sc}${x}&t=4#overlay`);await p.waitForTimeout(350);
+ const r=await p.evaluate(()=>{const r=document.querySelector('.rs');return r?{t:r.innerText.replace(/\n+/g,' '),bar:!!document.querySelector('[class*=rb-]'),ov:document.documentElement.scrollWidth>innerWidth}:null});
+ ok(r&&r.t.includes(exp),sc+x+' content '+(r?r.t.slice(0,80):'none'));ok(r&&r.bar,sc+x+' bar');ok(r&&!r.ov,sc+x+' overflow');n++;
+ await p.screenshot({path:`/tmp/claude-0/mod/rs_${sc}${x.replace(/[^a-z]/gi,'')}.png`})}
+console.log('scenes',n);ok(!errs.length,errs.join(';'));if(!process.exitCode)console.log('PASS: rest scenes');await b.close()})();
