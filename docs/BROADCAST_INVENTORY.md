@@ -28,3 +28,19 @@ Status: DONE / PARTIAL / TODO. Update on every push.
 - Tournament points table, top players — PARTIAL
 - Records, Players status — TODO
 - All other sports — TODO
+
+## Added 14 Nov (from the "Scoring Heroes Cricket Laws & Umpiring" reference sheets) — all TODO, original drawings only
+Rule-explainer scenes (full screen, score bar at bottom, same colour selection):
+- Umpire signals: Out, Four, Six, Wide, No Ball, Dead Ball, Leg Bye, Bye, Short Run (original pictogram umpire, shown automatically on the matching event)
+- No Ball (Law 21): foot behind / beyond crease
+- Wide (Law 22): inside / outside batting reach
+- LBW (Law 36): pitching, impact, wickets hitting, Umpire's Call
+- Run Out (Law 38), Stumping (Law 39), Catch (Law 33)
+- All 13 dismissal types card
+- DRS: ball tracking, UltraEdge, Hawk-Eye, review flow (Umpire decision, Review, Final decision)
+- Fielding Placements complete map (named positions, off/leg side)
+- Powerplay fielding restrictions (30-yard circle, max 2 outside in first 6 overs of a T20)
+- Super Over procedure card
+- DLS result card (only with an official table; never invented numbers)
+- Match formats card (Test, ODI, T20, T10, The Hundred, Six-a-side, Super 6)
+- Ball / Equipment / Ground and Pitch (22 yards, popping crease) info cards
