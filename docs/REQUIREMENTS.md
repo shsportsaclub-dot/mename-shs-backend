@@ -1,0 +1,33 @@
+# Everything the owner has asked for (recap — check before every push)
+Status: DONE / PARTIAL / TODO (updated 14 Nov, build after ee14401)
+
+## Standing rules
+1. Reply in Telugu; app content English. 2. Free options only. 3. Original designs, never copies of Star/Sony.
+4. Research real rules and global broadcast practice first. 5. Test, verify, fix, retest, then preview (no preview before tests pass).
+6. Build in bulk, one push; after EVERY push give the Render link and the build sha.
+7. Whatever is on the main screen, the live score board stays at the bottom. 8. Ticker/score-card animation looks identical on the main display.
+9. Everything built for cricket must work for every sport (TODO, cricket only so far).
+10. 200+ animations, think big. 11. One ticker = one animation style for every event (DONE: one family per match).
+12. Colours constant within a selection; selectable: team jersey, presets, custom; score bar colours too, for every graphic (DONE for tickers, library, toss, score bar hub; panels custom).
+13. Realistic, cinematic, current-generation: flashes, zoom, sound, ball physics (PARTIAL, see below).
+14. Keep this checklist and build strictly from it.
+
+## Events (ticker, one family look, own physical scene)
+- Four: DONE (bounces to boards) | Six: DONE (arc into crowd, camera flashes, phones, taps)
+- Wicket: DONE (ball hits stumps, stumps and bails fly, dust, red flash)
+- Hat-trick: DONE (3 stump sets in sequence) | Wide: DONE (wide lines, ball outside) | No ball: DONE (foot over crease, red flash)
+- Free hit: DONE (pulsing ball, rings) | Maiden: DONE (six balls fill) | Fifty / Hundred: DONE (bat raised, rays, confetti) | DRS: DONE (track, pitching/impact/hitting, edge wave)
+- Dismissal variants (caught, LBW, run out, stumped) with their own pictures: TODO
+- Sounds for all events: DONE (WebAudio, off by default); cannot be heard by the builder.
+
+## Toss and squads
+- Toss: supplied Heads/Tails coins (gold, red, silver), flies up and lands: DONE. Squads (Playing XI both teams, Captain/Keeper) after the toss: DONE.
+- Toss photo style with captains and referee: TODO
+
+## Data
+- Tournament 4s/6s per player: counting DONE, display on player cards/wagon/ticker TODO.
+
+## Reference sheets (14 Nov): fielding map, umpire signals, no ball/wide/LBW/run out/stumping/catch/DRS rule scenes, powerplay circle, super over, DLS (official table only), formats, equipment: TODO (see BROADCAST_INVENTORY.md)
+
+## Older open items
+Player records, Players status, Records, Tournament top players, Weather and Pitch (manual), Tomorrow strip, mini stats table, all other sports, verify Points table on real data.
