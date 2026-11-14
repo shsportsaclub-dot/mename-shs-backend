@@ -16186,6 +16186,28 @@ if(window.shTk){
  window.shReplay={walk,sumry,ppBalls,hlEvents};
 }
 
+/* ---------------- REPLAY CORNER STRIP: ?scene=ppbar (POWERPLAY 1-6 OVERS 47-1) and ?scene=hlbar, transparent, for laying over replay video ---------------- */
+{
+ const E=s=>esc(String(s==null?'':s));
+ const q=k=>{try{return new URLSearchParams(location.search).get(k)}catch(e){return null}};
+ const sceneNow=()=>{try{if(location.hash==='#overlay')return q('scene')||'';if(UI.view==='stream'&&UI.ovScene)return UI.ovScene}catch(e){}return''};
+ const fmt=n=>{try{return fmtOv(n)}catch(e){return String(n)}};
+ const age=()=>{UI.pbT=UI.pbT||Date.now();return((Date.now()-UI.pbT)/1000).toFixed(2)};
+ const CSS=`.pbr{position:absolute;inset:0;container-type:size;overflow:hidden;font-family:"Arial Narrow",Arial,sans-serif;text-transform:uppercase;pointer-events:none}.pbs{position:absolute;left:3cqw;bottom:6cqh;display:flex;align-items:stretch;height:6.4cqh;min-height:34px;filter:drop-shadow(0 .5cqh 1cqh #0009);animation:pbIn .7s cubic-bezier(.2,1,.3,1) both;animation-delay:calc(0s - var(--e,0s))}@keyframes pbIn{from{opacity:0;transform:translateX(-12cqw)}}.pbs .l{background:linear-gradient(180deg,color-mix(in srgb,var(--c) 90%,#fff),var(--c));color:#fff;font:900 2.1cqh/1 Arial;letter-spacing:.14em;display:flex;align-items:center;padding:0 1.8cqw 0 1.4cqw;clip-path:polygon(0 0,100% 0,calc(100% - 1.2cqh) 100%,0 100%);text-shadow:0 1px 2px #0008}.pbs .o{background:#0c1530;color:#cfe0ff;font:800 1.9cqh Arial;letter-spacing:.1em;display:flex;align-items:center;padding:0 1.4cqw 0 1cqw;margin-left:-1.1cqh;clip-path:polygon(1.2cqh 0,100% 0,100% 100%,0 100%);padding-left:2.2cqh}.pbs .s{background:#fff;color:#0a1230;font:900 2.8cqh Arial;display:flex;align-items:center;padding:0 1.6cqw;position:relative;overflow:hidden}.pbs .s:after{content:"";position:absolute;top:0;bottom:0;width:30%;left:-40%;background:linear-gradient(90deg,transparent,#fff9,transparent);animation:pbSh 2.6s ease-in-out infinite;animation-delay:calc(1s - var(--e,0s))}@keyframes pbSh{60%,100%{left:130%}}`;
+ const sty=document.createElement('style');sty.textContent=CSS;document.head.appendChild(sty);
+ const o2=overlayHTML;overlayHTML=function(){const sc=sceneNow();
+  if(sc==='ppbar'||sc==='hlbar'){try{const m=ovMatch(),R=window.shReplay;if(!m||!m.innings||!m.innings.length||!R)return `<div class="ovroot ov" data-t="sh"></div>`;
+   const i=q('i')!=null?+q('i'):(m.cur||0),all=R.walk(m,i),e=q('t')!=null?parseFloat(q('t')):age();let lbl,ov,sc2;
+   if(sc==='ppbar'){const pb=R.ppBalls(m,i),part=all.filter(b=>b.lg<=pb),last=part[part.length-1]||{run:0,wk:0};lbl='POWERPLAY';ov='1-'+Math.ceil(pb/6)+' OVERS';sc2=last.run+'-'+last.wk}
+   else{const last=all[all.length-1]||{run:0,wk:0,lg:0};lbl='HIGHLIGHTS';ov='INNINGS '+(i+1)+' · '+fmt(last.lg)+' OV';sc2=last.run+'-'+last.wk}
+   const inn=m.innings[i],t=inn&&T(inn.bat),col=(t&&t.color)||'#1d4ed8',bar=(q('bar')==='1'&&window.shRb)?(shRb.bar(m,'')||''):'';
+   return `<div class="ovroot ov" data-t="sh"><div class="pbr"><div class="pbs" style="--e:${e}s;--c:${E(col)}"><span class="l">${lbl}</span><span class="o">${E(ov)}</span><span class="s">${E(sc2)}</span></div></div>${bar}${q('t')!=null?'<style>.pbs,.pbs *{animation-play-state:paused!important}</style>':''}</div>`}catch(er){return o2.apply(this,arguments)}}
+  return o2.apply(this,arguments)};
+ const vs3=vStream;vStream=function(){let h=vs3.apply(this,arguments);const cur=UI.ovScene||'bug';
+  const bx=`<div class="card"><h3>Replay corner strip</h3><div class="mu sm" style="margin-bottom:6px">Transparent strip (e.g. POWERPLAY 1-6 OVERS 47-1) to place over your replay video in OBS. Add &amp;bar=1 to also show the full score bar.</div>${[['ppbar','Powerplay strip'],['hlbar','Highlights strip']].map(([k,l])=>`<div class="item" style="flex-wrap:wrap;gap:6px"><div style="flex:1;min-width:150px"><b>${l}</b>${cur===k?' <span class="mu sm">(previewing)</span>':''}</div><button class="btn sm ghost" data-a="ovPrev" data-v="${k}">Preview</button><button class="btn sm ghost" data-a="ovCopy" data-v="${k}">Copy URL</button></div>`).join('')}</div>`;
+  const i=h.indexOf('<div class="g2"><div class="card"><h3>Overlay settings</h3>');return i<0?h+bx:h.slice(0,i)+bx+h.slice(i)};
+}
+
 </script>
 </body>
 </html>
