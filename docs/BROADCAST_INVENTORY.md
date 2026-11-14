@@ -44,3 +44,17 @@ Rule-explainer scenes (full screen, score bar at bottom, same colour selection):
 - DLS result card (only with an official table; never invented numbers)
 - Match formats card (Test, ODI, T20, T10, The Hundred, Six-a-side, Super 6)
 - Ball / Equipment / Ground and Pitch (22 yards, popping crease) info cards
+
+## BROADCAST SPEC (rules every graphic follows; built from the global-broadcast research)
+Layout: one lower-third ticker lane + one centre banner lane + permanent score bar at the bottom of EVERY screen.
+Per ticker (one family per match, never mixed): 1 centre banner, 3 live-data chips (primary + 1 rotating + toss), 1 entrance style, 1 chip style, 1 font.
+| Event | Banner | Effects (all one family look) | Sound | Hold |
+|---|---|---|---|---|
+| Four | FOUR + batter 24(11) | camera push-in, low-bounce ball to boards, board flash | whoosh + 4 taps + thud | ~2.5 s |
+| Six | SIX + batter | push-in + shake, ball arc into stands, crowd camera flashes, phone lights, bounces down seats | riser + whoosh + impact + taps + crowd | ~3.5 s |
+| Wicket | WICKET + dismissal + bowler | white flash, shake, light sweep, sparks | impact + crack + crowd gasp | ~3.5 s |
+| 50 / 100 | milestone + balls faced + 4s/6s | light sweep, sparks | riser + shimmer + crowd | ~3.5 s |
+| Hat-trick | HAT-TRICK + 3 victims | 3 impacts, flash, sparks | 3 hits + riser + shimmer | ~4 s |
+| Free hit / No ball / Wide / Maiden / DRS | short banner | tint, light sweep | beep / whoosh / shimmer | ~1.8 s |
+Colours: ONE set for every graphic: team jersey colour, preset or custom; score bar follows the same set by default or its own custom colours.
+Toss: coin tossed high on a gravity arc, flips, lands with a small bounce, result card; coin chip in every ticker.
