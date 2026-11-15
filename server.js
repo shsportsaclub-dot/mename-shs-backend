@@ -1871,7 +1871,12 @@ routes['GET /api/fb/match'] = async (req, body, ip) => {
   catch (e) { const stale = fbCache.get('m' + id); if (stale) return [200, { ok: true, match: stale.d, stale: true }]; return [502, { ok: false, error: String(e.message || 'Football feed error').slice(0, 160) }]; }
 };
 // Home page extras: sponsor banners (Ads), channel links and a real YouTube latest-videos feed. Admin sets them in the app; everyone can read them.
-const homeCfg = () => (db.shared.homeCfg = db.shared.homeCfg || { ads: [], links: {}, yt: '', pins: [] });
+const SH_YT_ID = 'UCEZj3e0XMZJmOQ7VteUM7Vg';   // SH Sports Club (@SHSPORTSCLUB), the app's own channel
+const homeCfg = () => { const c = (db.shared.homeCfg = db.shared.homeCfg || { ads: [], links: {}, yt: '', pins: [] }); if (!c.yt && !c.ytTouched) c.yt = SH_YT_ID; return c; };
+/* channel id from a pasted link: handles ?si= tracking, m./music., no https, trailing dots in handles, /channel/UC... */
+const ytParse = raw => { let r = String(raw || '').trim(); const id = (/(UC[\w-]{22})/.exec(r) || [])[1]; if (id) return { id, handle: '' };
+  r = r.replace(/[?#].*$/, '').replace(/^https?:\/\//i, '').replace(/^(www\.|m\.|music\.)/i, '').replace(/^youtube\.com\//i, '').replace(/\/+$/, '');
+  return /^@[\w.-]{2,60}$/.test(r) ? { id: '', handle: r } : { id: '', handle: '' }; };
 const okLink = v => /^https:\/\/[^\s]{3,300}$/i.test(String(v || '')) ? String(v) : '';
 routes['GET /api/home-config'] = async () => { const c = homeCfg(); return [200, { ok: true, ads: c.ads, links: c.links, pins: c.pins, youtube: !!c.yt }]; };
 routes['POST /api/admin/home-config'] = async (req, body) => {
@@ -1886,10 +1891,11 @@ routes['POST /api/admin/home-config'] = async (req, body) => {
   } else if (act === 'rmAd') c.ads = c.ads.filter(a => a.id !== String(body.id));
   else if (act === 'links') { const L = {}; for (const k of ['youtube', 'instagram', 'facebook', 'whatsapp', 'x', 'telegram']) { const v = okLink(body[k]); if (v) L[k] = v; } c.links = L; }
   else if (act === 'yt') {   // channel id (UC...), channel URL, or @handle URL
-    const raw = String(body.yt || '').trim(); let id = (/(UC[\w-]{22})/.exec(raw) || [])[1] || '';
-    if (!id && /^(https:\/\/(www\.)?youtube\.com\/)?@[\w.-]{2,60}\/?$/i.test(raw)) { try { const h = raw.replace(/^https:\/\/(www\.)?youtube\.com\//i, '').replace(/\/$/, ''), r = await fetch('https://www.youtube.com/' + h, { signal: AbortSignal.timeout(10000), headers: { 'accept-language': 'en' } }), t = await r.text(); id = (/"channelId":"(UC[\w-]{22})"/.exec(t) || /channel_id=(UC[\w-]{22})/.exec(t) || [])[1] || ''; } catch { /* handled below */ } }
+    const raw = String(body.yt || '').trim(); const pz = ytParse(raw); let id = pz.id;
+    if (!id && pz.handle) { try { const r = await fetch('https://www.youtube.com/' + pz.handle, { signal: AbortSignal.timeout(10000), headers: { 'accept-language': 'en' } }), t = await r.text(); id = (/"channelId":"(UC[\w-]{22})"/.exec(t) || /channel_id=(UC[\w-]{22})/.exec(t) || [])[1] || ''; } catch { /* handled below */ }
+      if (!id && pz.handle.toLowerCase().replace(/[^a-z0-9]/g, '') === '@shsportsclub'.replace(/[^a-z0-9]/g, '')) id = SH_YT_ID; }
     if (raw && !id) return [400, { ok: false, error: 'Could not find that YouTube channel. Paste the channel link or the id that starts with UC' }];
-    c.yt = id; socCache.clear();
+    c.yt = id; c.ytTouched = 1; socCache.clear();
   } else if (act === 'addPin') { const link = okLink(body.link), title = String(body.title || '').trim().slice(0, 120); if (!link || !title) return [400, { ok: false, error: 'Add a title and an https link' }]; if (c.pins.length >= 10) return [400, { ok: false, error: 'Up to 10 pinned posts' }]; c.pins.unshift({ id: crypto.randomUUID().slice(0, 8), title, link, note: String(body.note || '').slice(0, 160) }); }
   else if (act === 'rmPin') c.pins = c.pins.filter(x => x.id !== String(body.id));
   else return [400, { ok: false, error: 'Unknown action' }];
