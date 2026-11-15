@@ -190,7 +190,7 @@ Open flags: first registered user becomes admin; PIN login does not prove number
 - Test: tests/auction-fm.cjs.
 
 ## Default YouTube channel + demo auction
-- Default stream/channel is SH Sports Club (UCEZj3e0XMZJmOQ7VteUM7Vg, https://www.youtube.com/@SHSPORTSCLUB) unless the organiser sets their own; matches without a stream show the channel link/live embed. Tests: default-channel.cjs, master-gap-browser.cjs.
+- Default stream/channel is SH Sports Club (UCEZj3e0XMZJmOQ7VteUM7Vg, https://www.youtube.com/channel/UCEZj3e0XMZJmOQ7VteUM7Vg (handle is @SHSPORTSCLUB. with a trailing dot)) unless the organiser sets their own; matches without a stream show the channel link/live embed. Tests: default-channel.cjs, master-gap-browser.cjs.
 - Demo auction "Hero Champions League" auto-seeded (8 franchises named after IPL teams, no IPL/BCCI logos, user-supplied HCL logo, 48 demo players); deletable and does not re-seed after delete. Test: auction-demo.cjs.
 
 ## Light theme contrast + menu icons

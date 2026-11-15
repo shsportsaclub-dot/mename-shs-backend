@@ -12746,7 +12746,7 @@ const SH_ICON='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALAAAACwCAYAAACvt+R
 
 /* ---------------- 123 DEFAULT YOUTUBE CHANNEL: SH Sports Club. Any match without its own stream falls back to the channel's live stream; the admin can still replace or remove it in Settings ---------------- */
 {
- const ID='UCEZj3e0XMZJmOQ7VteUM7Vg',PAGE='https://www.youtube.com/@SHSPORTSCLUB',LIVE='https://www.youtube.com/embed/live_stream?channel='+ID;
+ const ID='UCEZj3e0XMZJmOQ7VteUM7Vg',PAGE='https://www.youtube.com/channel/UCEZj3e0XMZJmOQ7VteUM7Vg',LIVE='https://www.youtube.com/embed/live_stream?channel='+ID;
  window.SH_YT={id:ID,page:PAGE,live:LIVE};
  const ensure=()=>{try{if(S.settings&&!S.settings.channelUrl&&!S.settings.chanTouched)S.settings.channelUrl=LIVE}catch(e){}};
  ensure();
@@ -12756,7 +12756,7 @@ const SH_ICON='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALAAAACwCAYAAACvt+R
  const e0=embedHTML;embedHTML=function(u){u=String(u||'').trim();
   /* a pasted channel link (/channel/UC..., or our own @handle, with ?si= tracking or a trailing dot) opens the channel's live stream, never some other video */
   {const x=u.replace(/[?#].*$/,'').replace(/\/+$/,''),c=/^https?:\/\/(?:www\.|m\.)?youtube\.com\/channel\/(UC[\w-]{22})$/i.exec(x),h=/^https?:\/\/(?:www\.|m\.)?youtube\.com\/@([\w.-]+)$/i.exec(x);
-   if(c)u='https://www.youtube.com/embed/live_stream?channel='+c[1];else if(h&&h[1].toLowerCase().replace(/[^a-z0-9]/g,'')==='shsportsclub')u=LIVE}
+   if(c)u='https://www.youtube.com/embed/live_stream?channel='+c[1];else if(h&&h[1].toLowerCase()==='shsportsclub.')u=LIVE}
   const m=/^https:\/\/www\.youtube\.com\/embed\/live_stream\?channel=(UC[\w-]{22})/.exec(u);
   if(m)return swBox(`<iframe src="https://www.youtube.com/embed/live_stream?channel=${m[1]}&autoplay=1&mute=1&playsinline=1&rel=0" allow="autoplay; fullscreen; picture-in-picture; encrypted-media" allowfullscreen></iframe>`);
   return e0.apply(this,arguments)};
@@ -13115,7 +13115,7 @@ if(window.SH_HELP){SH_HELP.sched=['Schedule','Upcoming matches in your time, day
 /* ---- 129 Videos landing page (was blank without reels) + Series list from world feed ---- */
 {
 const E=x=>esc(x==null?'':String(x));
-const CH='https://www.youtube.com/@SHSPORTSCLUB';
+const CH='https://www.youtube.com/channel/UCEZj3e0XMZJmOQ7VteUM7Vg'; /* our handle is @SHSPORTSCLUB. WITH a trailing dot; @SHSPORTSCLUB without it is a different channel, so link by id */
 const st=document.createElement('style');st.id='sh-vid-css';st.textContent='.vd{padding:10px 14px 96px}.vd h2{font-family:var(--dsp);margin:6px 0 8px}.vdc{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;margin-bottom:10px;color:var(--tx)}.vdc h3{margin:0 0 4px;font-size:16px}.vdc p{margin:0 0 10px;font-size:13px;line-height:1.45;color:var(--mu)}.vdc .row{gap:8px;flex-wrap:wrap}.vdc a.btn{text-decoration:none;display:inline-block}';document.head.appendChild(st);
 const orig=XV.reels||vReels;
 XV.reels=function(){const R=(typeof reelItems==='function')?reelItems():[];if(R.length&&UI.reelsOpen)return orig.apply(this,arguments);
