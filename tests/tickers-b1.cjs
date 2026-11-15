@@ -3,7 +3,7 @@ const {chromium}=require('playwright');
 (async()=>{const b=await chromium.launch(),p=await b.newPage({viewport:{width:1280,height:720}}),errs=[];p.on('pageerror',e=>errs.push(e.message));
 const ok=(c,m)=>{if(!c){console.log('FAIL',m);process.exitCode=1}};
 await p.addInitScript(()=>{window.fetch=()=>new Promise(()=>{})});
-await p.goto('file://'+require('path').resolve(__dirname,'../app-index.html')+'#overlay');await p.waitForTimeout(500);
+await p.goto('file://'+require('path').resolve(__dirname,'../app-index.html')+'#overlay');await p.waitForTimeout(500);await p.evaluate(()=>{S.stream.tkPack='classic'});
 const U=await p.evaluate(()=>{const ids=shTk.ids,out={n:ids.length,kf:{},pal:{},paths:{},roots:{}};const sample={batter:'A',bowler:'B',runs:2,score1:'1 (1)',how:'c C b B',dotsOver:2,dotsRow:4,sixCtx:'x'};
  ids.forEach(id=>{const t=shTk.T[id];out.kf[id]=(t.css.match(/@keyframes ([\w-]+)/g)||[]).map(x=>x.slice(11));out.pal[id]=[...new Set((t.css+t.html(sample)).match(/#[0-9a-fA-F]{6}\b|#[0-9a-fA-F]{3}\b/g)||[])].map(x=>x.toLowerCase());out.paths[id]=(t.html(sample).match(/ d="[^"]+"/g)||[]);out.roots[id]=(t.html(sample).match(/^<div class="([^" ]+)/)||[])[1]});return out});
 ok(U.n===14,'14 tickers '+U.n);

@@ -15755,7 +15755,7 @@ if(window.shTk){
   const rows=ids.slice(0,8).map((id,j)=>{const b=k.bat[id];return `<div class="rw${id===(inn.cur||{}).s?' me':''}" style="--i:${j}"><span>${E(NM(id))}${b.out?'':' *'}</span><div><div class="br" style="--w:${Math.max(3,b.r/mxr*100).toFixed(0)}"></div></div><span class="o">${E(b.outw||'NOT OUT')}</span><span class="sm"><b>${b.r}</b> <small>${b.b}</small></span></div>`}).join('');
   const dnb=(T0.players||[]).filter(id=>!k.bat[id]).slice(0,6).map(NM).join(' · ');
   return `<div class="bt" style="--c:${E(T0.color||'#d4572a')};--e:${o}s"><div class="hd"><b>${E(T0.name)}</b><small>${E(m.name||'')}</small></div><div class="bd">${rows}</div>${dnb?`<div class="dn"><b>DID NOT BAT</b> ${E(dnb)}</div>`:''}<div class="ft"><div>EXTRAS <b>${ex}</b></div><div class="c"><b>${k.runs}-${k.wk}</b></div><div>OVERS <b>${fmt(k.lg)}</b></div></div></div>`};
- const sty=document.createElement('style');sty.textContent=CSS+ptCSS+btCSS+'.al-on #shtk{display:none!important}.al-bb .zn,.al-bb .ts,.al-bb .pc,.al-bb .es{bottom:19cqh!important}.al-bb .pt,.al-bb .bt,.al-bb .mh,.al-bb .bc,.al-bb .rg{top:46%!important}.alr,.alp{position:absolute;inset:0;container-type:size;pointer-events:none;overflow:hidden}@media (prefers-reduced-motion:reduce){.alr *,.alp *{animation-duration:.01s!important;animation-iteration-count:1!important}}';document.head.appendChild(sty);
+ const sty=document.createElement('style');sty.textContent=CSS+ptCSS+btCSS+'.al-on #shtk .tkw:is([data-tk=tk4],[data-tk=tk5],[data-tk=tk6],[data-tk=tk7],[data-tk=tk8],[data-tk=tk9],[data-tk=tk10],[data-tk=tk11],[data-tk=tk12],[data-tk=tk13],[data-tk=tk14],[data-tk=tk22],[data-tk=tk32]){display:none!important}.al-bb .zn,.al-bb .ts,.al-bb .pc,.al-bb .es{bottom:19cqh!important}.al-bb .pt,.al-bb .bt,.al-bb .mh,.al-bb .bc,.al-bb .rg{top:46%!important}.alr,.alp{position:absolute;inset:0;container-type:size;pointer-events:none;overflow:hidden}@media (prefers-reduced-motion:reduce){.alr *,.alp *{animation-duration:.01s!important;animation-iteration-count:1!important}}';document.head.appendChild(sty);
  const o0=overlayHTML;overlayHTML=function(){const sc=sceneNow();let out;
   if(sc==='anim'){try{const id=q('id')||'1_four',[f,ev]=id.split('_'),fi=Math.max(0,Math.min(FN-1,(parseInt(f,10)||1)-1)),ei=Math.max(0,EVS.findIndex(x=>x[0]===ev));UI.alp=UI.alp||{t0:Date.now()};const fr=q('t');let e=fr!=null?parseFloat(fr):((Date.now()-UI.alp.t0)/1000)%(T_ALL+1.2);
     return `<div class="ovroot ov" data-t="sh"><div class="alr"${fr!=null?' style="--pz:1"':''}>${rh('al',mk(fi,ei,q('sub')||'OMARZAI · 24 (11)',e.toFixed(2),(()=>{try{const m=ovMatch(),z=m&&st(m);return z&&q('live')!=='0'?MDL(m,Math.min(z.i,m.innings.length-1)):null}catch(x){return null}})()))}</div>${fr!=null?'<style>.alr *{animation-play-state:paused!important}</style>':''}${(()=>{try{const m=ovMatch();return q('bar')!=='0'&&window.shRb&&m?(shRb.bar(m,'')||''):''}catch(x){return ''}})()}</div>`}catch(er){return o0.apply(this,arguments)}}
@@ -15763,11 +15763,14 @@ if(window.shTk){
   out=o0.apply(this,arguments);
   if(ALSCENES.indexOf(sc)>=0&&typeof out==='string'){try{const m=ovMatch();if(m){const l=layer(m);if(l){const j=out.lastIndexOf('</div>');out=out.slice(0,j)+l+out.slice(j)}}}catch(e){}}
   return out};
- {Object.assign(A,{alMode(d){S.stream.alMode=d.v;save();render()},alCopy(d){const u=location.href.split('#')[0].split('?')[0]+'?scene='+d.v+'#overlay';try{navigator.clipboard.writeText(u);toast('URL copied')}catch(x){toast(u,6000)}},alTest(d){S.stream.alMode=S.stream.alMode&&S.stream.alMode!=='off'?S.stream.alMode:'variety';UI.al=UI.al||{};UI.al.t=Date.now();UI.al.v={t:d.v||'six',s:'OMARZAI · 24 (11)'};UI.al.f=UI.al.f||0;UI.al.key=UI.al.key||'';save();toast('Sent')}});
+ {Object.assign(A,{alMode(d){S.stream.alMode=d.v;save();render()},alCopy(d){const u=location.href.split('#')[0].split('?')[0]+'?scene='+d.v+'#overlay';try{navigator.clipboard.writeText(u);toast('URL copied')}catch(x){toast(u,6000)}},alPv(d){UI.alPv=UI.alPv||{f:0,e:'six'};if(d.d!=null)UI.alPv.f=(UI.alPv.f+(+d.d)+FN)%FN;if(d.e)UI.alPv.e=d.e;render()},alUse(d){S.stream.alMode='fam:'+((+d.v)+1);save();toast('Design '+((+d.v)+1)+' selected for every match');render()},alTest(d){S.stream.alMode=S.stream.alMode&&S.stream.alMode!=='off'?S.stream.alMode:'variety';UI.al=UI.al||{};UI.al.t=Date.now();UI.al.v={t:d.v||'six',s:'OMARZAI · 24 (11)'};UI.al.f=UI.al.f||0;UI.al.key=UI.al.key||'';save();toast('Sent')}});
   const vs=vStream;vStream=function(){let h=vs.apply(this,arguments);if(!can())return h;const md=mode();
    const opts=[['off','Off'],['variety','Auto (one design per match, same for every event)']].concat(FAM.map((f,i)=>['fam:'+(i+1),(i+1)+'. '+f[0]]));
+   UI.alPv=UI.alPv||{f:md.indexOf('fam:')===0?Math.max(0,(parseInt(md.slice(4),10)||1)-1):0,e:'six'};
+   const pv=UI.alPv,pu=location.href.split('#')[0].split('?')[0]+'?scene=anim&id='+(pv.f+1)+'_'+pv.e+'#overlay',cur=md.indexOf('fam:')===0&&parseInt(md.slice(4),10)===pv.f+1;
+   const pk=`<!--tkd--><div class="card"><h3>Ticker design</h3><div class="mu sm" style="margin-bottom:6px">${FN} different designs. Pick one: it is used for every four, six, wicket, 50, 100, hat-trick, wide, no ball, maiden and DRS of the match. Choose Auto below to give each match its own design.</div><div style="position:relative;width:100%;aspect-ratio:16/9;background:#101010;border-radius:10px;overflow:hidden"><iframe src="${E(pu)}" style="position:absolute;inset:0;width:100%;height:100%;border:0" loading="lazy" title="preview"></iframe></div><div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap;align-items:center"><button class="btn sm ghost" data-a="alPv" data-d="-1">\u25C0</button><b style="flex:1;text-align:center">${pv.f+1} / ${FN} \u00b7 ${E(FAM[pv.f][0])}</b><button class="btn sm ghost" data-a="alPv" data-d="1">\u25B6</button></div><div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap">${EVS.map(x=>`<button class="btn sm ${pv.e===x[0]?'':'ghost'}" data-a="alPv" data-e="${x[0]}">${E(x[0])}</button>`).join('')}</div><button class="btn" style="width:100%;margin-top:8px" data-a="alUse" data-v="${pv.f}">${cur?'\u2713 This design is in use':'Use this design for every match'}</button></div><!--/tkd-->`;
    const bx=`<div class="card"><h3>Animation Lab (${FN*EVS.length} designs)</h3><div class="mu sm" style="margin-bottom:6px">${FN} animation families x ${EVS.length} events. The chosen animation plays on every scene (score bar, Match Centre, tickers, boards) exactly the same. Preview URL: <code>?scene=anim&amp;id=3_six</code></div><select data-a="alMode" onchange="A.alMode({v:this.value})" style="width:100%;padding:8px;border-radius:8px">${opts.map(o=>`<option value="${o[0]}"${md===o[0]?' selected':''}>${E(o[1])}</option>`).join('')}</select><div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap"><button class="btn sm" data-a="alCopy" data-v="points">Copy Points table URL</button><button class="btn sm" data-a="alCopy" data-v="bats">Copy Batting card URL</button><button class="btn sm ghost" data-a="alCopy" data-v="animlib">Copy library URL</button></div></div>`;
-   const i=h.indexOf('<div class="g2"><div class="card"><h3>Overlay settings</h3>');return i<0?h+bx:h.slice(0,i)+bx+h.slice(i)}}
+   const i=h.indexOf('<div class="g2"><div class="card"><h3>Overlay settings</h3>');h=i<0?h+bx:h.slice(0,i)+bx+h.slice(i);const f0=h.indexOf('<div class="card"');return f0<0?h+pk:h.slice(0,f0)+pk+h.slice(f0)}}
 
  const BB=['manhattan','bowlcard','pcard','rrgraph','tstat','points','bats','review','strip','zone'];
  const bbOn=()=>{try{return !(S.stream&&S.stream.baseBar==='off')}catch(e){return true}};
@@ -16387,6 +16390,103 @@ if(window.shTk){
  ['four','six','wicket','drs','a','b'].forEach(k=>{C['mascot_'+k]=up(k)});
 }
 
+
+/* ---- Ticker design card always first on the Stream tab ---- */
+{const vs9=vStream;vStream=function(){let h=vs9.apply(this,arguments);try{const m=/<!--tkd-->[\s\S]*?<!--\/tkd-->/.exec(h);if(m){h=h.replace(m[0],'');let k=h.indexOf('</h2></div>');k=k<0?0:k+11;h=h.slice(0,k)+m[0]+h.slice(k)}}catch(e){}return h}}
+
+/* ================= SH PRIME TICKER PACK: all 37 situation tickers in ONE animation language ================= */
+{
+ const T=window.shTk&&shTk.T;
+ if(T){
+ const E=x=>esc(String(x==null?'':x)),U=x=>E(String(x==null?'':x).toUpperCase());
+ const on=()=>{try{return !(S.stream&&S.stream.tkPack==='classic')}catch(e){return true}};
+ const pal=()=>{try{return window.shColors?shColors.resolve():['#e11d48','#ff7a8f','#4a0716']}catch(e){return['#e11d48','#ff7a8f','#4a0716']}};
+ const nm=x=>x==null?'':x;
+ const PK={
+  tk1:d=>({g:'•',k:'DOT BALL',h:d.bowler,l:'No run · '+nm(d.dotsOver)+' dot'+(d.dotsOver==1?'':'s')+' this over'}),
+  tk2:d=>({g:nm(d.dotsRow),k:'DOT BALLS IN A ROW',h:d.bowler,l:'Pressure is building'}),
+  tk3:d=>({g:nm(d.runs),k:d.runs==1?'SINGLE':d.runs==2?'TWO RUNS':'THREE RUNS',h:d.batter,l:d.score1}),
+  tk4:d=>({g:'4',k:'FOUR',h:d.batter,l:d.score1}),
+  tk5:d=>({g:'4',k:'SECOND FOUR IN THE OVER',h:d.batter,l:nm(d.score1)+' · off '+nm(d.bowler)}),
+  tk6:d=>({g:'6',k:'SIX',h:d.batter,l:d.sixCtx||d.score1}),
+  tk7:d=>({g:'WD',k:'WIDE',h:d.bowler,l:'+1 run · bowl again'}),
+  tk8:d=>({g:'NB',k:'NO BALL',h:d.bowler,l:'+1 run · FREE HIT next ball'}),
+  tk9:d=>({g:'W',k:'BOWLED',h:d.batter,l:nm(d.how)+' · '+nm(d.score1)}),
+  tk10:d=>({g:'W',k:'CAUGHT',h:d.batter,l:nm(d.how)+' · '+nm(d.score1)}),
+  tk11:d=>({g:'W',k:'LBW',h:d.batter,l:nm(d.how)+' · '+nm(d.score1)}),
+  tk12:d=>({g:'W',k:'RUN OUT',h:d.batter,l:nm(d.how)+' · '+nm(d.score1)}),
+  tk13:d=>({g:'0',k:'GOLDEN DUCK',h:d.batter,l:'Out first ball · '+nm(d.how)}),
+  tk14:d=>({g:'3W',k:'HAT-TRICK',h:d.bowler,l:'Three wickets in three balls'}),
+  tk15:d=>({g:'T',k:'TOSS',h:nm(d.win)+' won the toss',l:'Elected to '+(d.dec==='bat'?'bat':'bowl')+' first'}),
+  tk16:d=>({g:'XI',k:'PLAYING XI',h:nm(d.a&&d.a.name)+' v '+nm(d.b&&d.b.name),l:nm(d.a&&d.a.name)+': '+((d.a&&d.a.players)||[]).join(' · '),l2:nm(d.b&&d.b.name)+': '+((d.b&&d.b.players)||[]).join(' · ')}),
+  tk17:d=>({g:nm(d.target),k:'TARGET',h:nm(d.bat)+' need '+nm(d.need),l:'in '+nm(d.overs)+' overs'}),
+  tk18:d=>({g:'IB',k:'INNINGS BREAK',h:nm(d.team)+' '+nm(d.score),l:'Top: '+nm(d.top)+' · Bowl: '+nm(d.bowl),c:['TARGET '+nm(d.target)]}),
+  tk19:d=>({g:'PP',k:'POWERPLAY',h:'Powerplay starts',l:d.rule}),
+  tk20:d=>({g:'PP',k:'POWERPLAY OVER',h:nm(d.runs)+'/'+nm(d.wk)+' in '+nm(d.overs)+' overs',l:'Fielding restrictions end'}),
+  tk21:d=>({g:nm(d.over),k:'END OF OVER '+nm(d.over),h:nm(d.bowler)+' · '+nm(d.runs)+' runs',l:d.score,c:(d.balls||[]).map(b=>b.lab)}),
+  tk22:d=>({g:'M',k:'MAIDEN OVER',h:d.bowler,l:'Over '+nm(d.over)+' · no runs conceded'}),
+  tk23:d=>({g:nm(d.need),k:'CHASE',h:'Need '+nm(d.need)+' from '+nm(d.left)+' balls',l:'RRR '+nm(d.rrr)+' · CRR '+nm(d.crr)+' · '+nm(d.score)}),
+  tk24:d=>({g:'25',k:'TWENTY-FIVE',h:d.batter,l:nm(d.r)+' ('+nm(d.b)+')'}),
+  tk25:d=>({g:'75',k:'SEVENTY-FIVE',h:d.batter,l:nm(d.r)+' ('+nm(d.b)+')'}),
+  tk26:d=>({g:nm(d.n),k:nm(d.n)+' UP',h:d.batter,l:nm(d.r)+' ('+nm(d.b)+')'}),
+  tk27:d=>({g:nm(d.runs),k:'PARTNERSHIP',h:nm(d.a)+' & '+nm(d.b),l:nm(d.ra)+' + '+nm(d.rb)+' · '+nm(d.balls)+' balls'}),
+  tk28:d=>({g:'3W',k:'THREE WICKETS',h:d.bowler,l:d.fig}),
+  tk29:d=>({g:'5W',k:'FIVE-WICKET HAUL',h:d.bowler,l:d.fig}),
+  tk30:d=>({g:nm(d.n),k:'WICKET '+nm(d.n),h:nm(d.out),l:nm(d.fig)+' · '+nm(d.score)}),
+  tk31:d=>({g:'B',k:nm(d.kind),h:'+'+nm(d.runs)+' runs',l:'Extras'}),
+  tk32:d=>({g:'FH',k:'FREE HIT',h:'Free hit next ball',l:'Only a run out can dismiss the batter'}),
+  tk33:d=>({g:'DR',k:'DRINKS BREAK',h:'Play paused',l:d.score}),
+  tk34:d=>({g:'RN',k:'RAIN STOPPED PLAY',h:'Covers are on',l:d.score}),
+  tk35:d=>({g:'TO',k:'STRATEGIC TIMEOUT',h:'Two and a half minutes',l:d.score}),
+  tk36:d=>({g:'SO',k:'SUPER OVER',h:'One over each decides it',l:d.text}),
+  tk37:d=>({g:'✓',k:'RESULT',h:d.text,l:d.score})
+ };
+ const KEYS=Object.keys(PK);
+ const sz=g=>{g=String(g);return g.length>2?'.62':g.length>1?'.8':'1'};
+ const html=(id,d,e)=>{const o=PK[id](d||{}),c=pal();const ch=(o.c||[]).map((x,i)=>`<i class="pkcp" style="--i:${i}">${U(x)}</i>`).join('');
+  return `<div class="pkp" style="--a:${E(c[0])};--b:${E(c[1])};--d:${E(c[2])};--e:${e||0}s"><i class="pks"></i><div class="pkg"><b style="font-size:calc(7cqh*${sz(o.g)})">${E(o.g)}</b></div><div class="pkt"><small class="pkk">${U(o.k)}</small><b class="pkh"><span>${U(o.h)}</span></b><span class="pkl">${E(o.l)}</span>${o.l2?`<span class="pkl pkl2">${E(o.l2)}</span>`:''}</div>${ch?`<div class="pkc">${ch}</div>`:''}</div>`};
+ const CSS=`.pkp{position:relative;display:flex;align-items:stretch;min-width:44cqw;max-width:80cqw;font-family:'Arial Narrow','Arial',sans-serif;color:#fff;filter:drop-shadow(0 1.2cqh 2.4cqh #000b)}
+ .pkp *{box-sizing:border-box}
+ .pks{position:absolute;inset:0;background:linear-gradient(100deg,var(--d),color-mix(in srgb,var(--d) 55%,#0b0f1a) 70%,#0b0f1a);border-radius:.8cqh 2.4cqh 2.4cqh .8cqh;clip-path:inset(0 100% 0 0);animation:pkS .5s cubic-bezier(.7,0,.2,1) calc(0s - var(--e,0s)) forwards}
+ .pks::after{content:'';position:absolute;inset:0;background:linear-gradient(100deg,transparent 40%,#ffffff55 50%,transparent 60%);transform:translateX(-120%);animation:pkW .9s ease-in-out calc(1.1s - var(--e,0s)) forwards}
+ .pkg{position:relative;flex:0 0 auto;min-width:13cqh;display:flex;align-items:center;justify-content:center;background:linear-gradient(160deg,var(--b),var(--a));border-radius:.8cqh 0 0 .8cqh;transform:scale(.2) rotate(-10deg);opacity:0;animation:pkG .5s cubic-bezier(.34,1.7,.5,1) calc(.18s - var(--e,0s)) forwards;box-shadow:inset 0 0 0 .3cqh #ffffff55}
+ .pkg b{font-family:Impact,'Arial Black',sans-serif;font-style:italic;color:#fff;text-shadow:0 .5cqh 0 #0006;line-height:1;padding:0 1.2cqh}
+ .pkt{position:relative;display:flex;flex-direction:column;justify-content:center;gap:.2cqh;padding:1.6cqh 3.4cqw 1.6cqh 1.8cqw;min-width:0}
+ .pkk{font-size:2.5cqh;letter-spacing:.32em;font-weight:700;color:var(--b);opacity:0;animation:pkF .4s ease-out calc(.4s - var(--e,0s)) forwards}
+ .pkh{display:block;overflow:hidden;font-size:5.4cqh;line-height:1.08;font-weight:900;font-style:italic;letter-spacing:.01em}
+ .pkh span{display:block;transform:translateY(105%);animation:pkH .45s cubic-bezier(.2,1,.3,1) calc(.45s - var(--e,0s)) forwards}
+ .pkl{font-size:2.9cqh;font-weight:600;color:#e6ecf5;opacity:0;animation:pkF .45s ease-out calc(.7s - var(--e,0s)) forwards}
+ .pkl2{animation-delay:calc(.8s - var(--e,0s))}
+ .pkc{position:relative;display:flex;align-items:center;gap:.8cqh;padding:0 2.4cqw 0 0}
+ .pkcp{font-style:normal;font-weight:800;font-size:2.9cqh;padding:.6cqh 1.2cqh;border-radius:1cqh;background:#ffffff1f;box-shadow:inset 0 0 0 .2cqh #ffffff55;opacity:0;transform:translateY(1.4cqh);animation:pkF .35s ease-out calc(.9s + var(--i)*.09s - var(--e,0s)) forwards}
+ @keyframes pkS{to{clip-path:inset(0 0 0 0)}}@keyframes pkG{to{transform:none;opacity:1}}@keyframes pkH{to{transform:none}}@keyframes pkF{to{opacity:1;transform:none}}@keyframes pkW{to{transform:translateX(120%)}}
+ .pkw0{position:absolute;left:0;right:0;top:4cqh;display:flex;justify-content:center}.pkw0.pkx{animation:pkX .5s ease-in calc(var(--T) - .5s - var(--e,0s)) both}@keyframes pkX{to{opacity:0;transform:translateY(-6cqh)}}
+ .pkh0{position:absolute;inset:0;container-type:size;overflow:hidden;pointer-events:none}
+ .pkp[data-n="tk16"] .pkl{font-size:2.2cqh;white-space:normal}`;
+ const st=document.createElement('style');st.textContent=CSS;document.head.appendChild(st);
+ KEYS.forEach(id=>{const t=T[id];if(!t)return;const h0=t.html;t.html=d=>on()?html(id,d,0).replace('class="pkp"','class="pkp" data-n="'+id+'"'):h0(d)});
+ window.shPrime={ids:KEYS,html,on,PK};
+ /* preview scenes: ?scene=tpack&n=4[&t=1.5]  |  ?scene=tpackall (plays all 37 one after another) */
+ const q=k=>new URLSearchParams(location.search).get(k);
+ const SAMP={tk1:{batter:'Omarzai',bowler:'Hasan',runs:0,score1:'12 (9)',how:'',dotsOver:3,dotsRow:2,sixCtx:''},tk15:{win:'United Tigers',dec:'bat'}};
+ const D0={batter:'Omarzai',bowler:'R. Hasan',runs:2,score1:'42 (28)',how:'c Clarke b R. Hasan',dotsOver:3,dotsRow:4,sixCtx:'Over long-on, 92 m'};
+ const SMP={tk15:{win:'United Tigers',dec:'bat'},tk16:{a:{name:'United Tigers',players:['Clarke','Omarzai','Hasan','Rao','Iqbal','Shah','Nair','Dar','Ali','Khan','Roy']},b:{name:'Emirates Eagles',players:['Razzaq','Malik','Zaidi','Lone','Bose','Sen','Gill','Vaz','Pir','Tej','Mir']}},tk17:{target:168,bat:'Emirates Eagles',need:168,overs:20},tk18:{team:'United Tigers',score:'167/6 (20.0)',top:'Omarzai 71 (44)',bowl:'Razzaq 3/24',target:168},tk19:{rule:'Two fielders may stand outside the circle'},tk20:{runs:54,wk:1,overs:6},tk21:{over:7,bowler:'R. Hasan',runs:11,score:'68/1',balls:[{lab:'1'},{lab:'4'},{lab:'0'},{lab:'W'},{lab:'6'},{lab:'Wd'}]},tk22:{bowler:'R. Hasan',over:9},tk23:{need:32,left:20,rrr:'9.60',crr:'8.20',score:'136/4'},tk24:{batter:'Omarzai',r:25,b:16},tk25:{batter:'Omarzai',r:75,b:48},tk26:{batter:'Omarzai',n:150,r:151,b:98},tk27:{a:'Omarzai',ra:36,b:'Clarke',rb:14,runs:50,balls:31},tk28:{bowler:'R. Hasan',fig:'3/21 (3.0)'},tk29:{bowler:'R. Hasan',fig:'5/27 (4.0)'},tk30:{n:4,out:'Iqbal',fig:'28 (19)',score:'98/4'},tk31:{kind:'BYES',runs:2},tk32:{},tk33:{score:'88/2 (10.0)'},tk34:{score:'101/3 (12.2)'},tk35:{score:'61/1 (6.0)'},tk36:{text:'Scores level. One over each decides it.'},tk37:{text:'United Tigers won by 31 runs',score:'United Tigers 167/6 · Emirates Eagles 136/9'}};
+ const o9=overlayHTML;overlayHTML=function(){const sc=(()=>{try{return location.hash==='#overlay'?q('scene'):''}catch(e){return''}})();
+  if(sc==='tpack'||sc==='tpackall'){try{let id,e,dur;
+    if(sc==='tpack'){id='tk'+(parseInt(q('n'),10)||4);if(!PK[id])id='tk4';const fr=q('t');dur=(T[id]&&T[id].dur)||4;e=fr!=null?parseFloat(fr):((Date.now()-(UI.pk0=UI.pk0||Date.now()))/1000)%(dur+1)}
+    else{UI.pk0=UI.pk0||Date.now();let t=(Date.now()-UI.pk0)/1000;const L=KEYS.map(k=>(T[k]&&T[k].dur||4)+.7),tot=L.reduce((a,b)=>a+b,0);t=t%tot;let i=0;while(t>=L[i]){t-=L[i];i++}id=KEYS[i];e=t;dur=L[i]-.7}
+    const d=Object.assign({},D0,SMP[id]||{});
+    const m=(()=>{try{return ovMatch()}catch(x){return null}})();
+    return `<div class="ovroot ov" data-t="sh"><div class="pkh0"><div class="pkw0" style="--T:${dur}s;--e:${e.toFixed(2)}s;opacity:${(e>dur-.5?Math.max(0,1-(e-(dur-.5))/.5):1).toFixed(2)}">${html(id,d,e.toFixed(2)).replace('class="pkp"','class="pkp" data-n="'+id+'"')}</div></div>${q('t')!=null?'<style>.pkp *,.pkw0{animation-play-state:paused!important}</style>':''}${(()=>{try{return q('bar')!=='0'&&window.shRb&&m?(shRb.bar(m,'')||''):''}catch(x){return ''}})()}</div>`}catch(er){return o9.apply(this,arguments)}}
+  return o9.apply(this,arguments)};
+ /* Stream tab: pack switch + preview, first on the page */
+ Object.assign(A,{tkPack(d){S.stream.tkPack=d.v;save();render()}});
+ const v9=vStream;vStream=function(){let h=v9.apply(this,arguments);if(!can())return h;
+  try{const base=location.href.split('#')[0].split('?')[0],on1=on();
+   const c=`<div class="card"><h3>Ticker pack: SH Prime</h3><div class="mu sm" style="margin-bottom:6px">One complete pack. All ${KEYS.length} match tickers (dot ball to result) use the same animation, type and colours. Colours follow your colour selection.</div><div style="position:relative;width:100%;aspect-ratio:16/9;background:#101010;border-radius:10px;overflow:hidden"><iframe src="${E(base)}?scene=tpackall&amp;bar=0#overlay" style="position:absolute;inset:0;width:100%;height:100%;border:0" title="SH Prime preview"></iframe></div><div class="row" style="gap:6px;margin-top:8px"><button class="btn ${on1?'':'ghost'}" data-a="tkPack" data-v="prime" style="flex:1">${on1?'✓ ':''}SH Prime (one animation)</button><button class="btn ${on1?'ghost':''}" data-a="tkPack" data-v="classic" style="flex:1">${on1?'':'✓ '}Classic (mixed)</button></div></div>`;
+   let k=h.indexOf('</h2></div>');k=k<0?0:k+11;h=h.slice(0,k)+c+h.slice(k)}catch(e){}return h};
+ }
+}
 </script>
 </body>
 </html>

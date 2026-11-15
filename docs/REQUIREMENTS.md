@@ -65,3 +65,8 @@ Tables and brackets: PARTIAL | Awards, trophy, sponsors, credits: TODO | Other s
 - Default mascot style is now 'sh'; per-event frame sequences (six/hundred, four/fifty, wicket/hattrick, drs/freehit/noball/wide) via CSS steps; Ganesha and Tiger+Parrot remain selectable in Stream tab.
 - TODO: more GIFs/poses per event (maiden, wide, no ball), same character for other sports.
 - Nov 14 pack from user's 6 GIFs: six=jump (shsix), four=slide (shfour), wicket=stump smash (shwkt), hattrick=out-signal tiger (shout), drs/noball/wide/freehit/maiden=umpire tiger (shump), hundred=navy celebration (sh). Frames cut with rembg; baked words/effect frames excluded.
+
+## SH Prime ticker pack (Nov 16) - one complete ticker module
+- All 37 situation tickers (dot ball .. result) in ONE animation language (slab wipe, glyph pop, headline mask-slide, detail fade, chips), one font, colours from the user's colour selection. Default ON; "Classic (mixed)" stays available (Stream tab, first card). Preview: ?scene=tpackall / ?scene=tpack&n=4&t=2.
+- Animation Lab (20 designs for 11 events) is a separate picker card at the top of the Stream tab (off by default).
+- NOT yet verified/finished: cricket as a whole is NOT complete (see TODO lists above); do not call cricket done.

@@ -3,7 +3,7 @@ const {chromium}=require('playwright');
 (async()=>{const b=await chromium.launch(),p=await b.newPage({viewport:{width:1280,height:720}}),errs=[];p.on('pageerror',e=>errs.push(e.message));
 const ok=(c,m)=>{if(!c){console.log('FAIL',m);process.exitCode=1}};
 await p.addInitScript(()=>{window.fetch=()=>new Promise(()=>{})});
-await p.goto('file://'+require('path').resolve(__dirname,'../app-index.html')+'#overlay');await p.waitForTimeout(500);
+await p.goto('file://'+require('path').resolve(__dirname,'../app-index.html')+'#overlay');await p.waitForTimeout(500);await p.evaluate(()=>{S.stream.tkPack='classic'});
 const U=await p.evaluate(()=>{const ids=shTk.ids2,out={n:ids.length,kf:{},pal:{},roots:{},ns:true,blank:[],len:{}};
  ids.forEach(id=>{const t=shTk.T[id],h=t.html(shTk.sample2[id]);out.kf[id]=(t.css.match(/@keyframes ([\w-]+)/g)||[]).map(x=>x.slice(11));out.pal[id]=[...new Set((t.css+h).match(/#[0-9a-fA-F]{6}\b|#[0-9a-fA-F]{3}\b/g)||[])].map(x=>x.toLowerCase());out.roots[id]=(h.match(/^<div class="([^" ]+)/)||[])[1];
   if(![...h.matchAll(/class="([^"]+)"/g)].every(m=>m[1].split(/\s+/).every(c=>c.startsWith(id))))out.ns=false;
