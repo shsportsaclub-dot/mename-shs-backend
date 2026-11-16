@@ -13,8 +13,8 @@ ok(r.ang.six[0]>150&&r.ang.six[2]<-150,'six = both arms up');
 for(const e of ['wide','noball','freehit','drs','maiden','wicket'])ok(r[e].dress==='u',e+' umpire dress');
 for(const e of ['four','six','fifty','hundred','hattrick'])ok(r[e].dress==='p',e+' player kit');
 // default tiger never raises the OUT finger for wide/no-ball/free-hit/review/maiden: it uses the neutral kit pose
-for(const e of ['wide','noball','freehit','drs','maiden']){await p.evaluate(e=>{history.pushState(null,'','?scene=anim&id=21_'+e+'&t=2.4#overlay');render()},e);await p.waitForTimeout(1700);
- const st=await p.evaluate(()=>{const s=document.querySelector('.al-shs');return s?getComputedStyle(s).backgroundImage:''});ok(/shkit/.test(st),e+' neutral kit pose, got '+st)}
+for(const [e,sh] of [['wide','shwide'],['noball','shnoball'],['freehit','shfree'],['drs','shkit'],['maiden','shkit']]){await p.evaluate(e=>{history.pushState(null,'','?scene=anim&id=21_'+e+'&t=2.4#overlay');render()},e);await p.waitForTimeout(1700);
+ const st=await p.evaluate(()=>{const s=document.querySelector('.al-shs');return s?getComputedStyle(s).backgroundImage:''});ok(st.indexOf('/'+sh+'.webp')>0,e+' uses '+sh+', got '+st)}
 // rig style gives the real signals
 await p.evaluate(()=>{A.mascotStyle({v:'rig'})});await p.waitForTimeout(1500);
 for(const e of ['wide','drs']){await p.evaluate(e=>{history.pushState(null,'','?scene=anim&id=21_'+e+'&t=2.4#overlay');render()},e);await p.waitForTimeout(1700);ok(await p.evaluate(()=>!!document.querySelector('.al-rgm')),e+' rig')}
