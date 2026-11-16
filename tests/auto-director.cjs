@@ -22,7 +22,7 @@ await build(120,true,100);t=await txt();console.log('done:',t.slice(0,80));ok(/P
 await build(40);await p.waitForTimeout(900);await p.goto(base+'?scene=mini#overlay');await p.waitForTimeout(400);t=await p.evaluate(()=>document.querySelector('.mn').innerText.replace(/\n+/g,' '));console.log('mini:',t.slice(0,100));ok(/BATTER/.test(t)&&/BOWLER/.test(t)&&/RR/.test(t),'mini table');
 /* dismissal with fielder */
 await p.evaluate(()=>{const m=S.matches[0],inn=m.innings[0];ball(m,{w:'Caught',out:inn.cur.s,fld:'Omarzai',r:0});save()});await p.waitForTimeout(900);await p.goto(base+'?scene=dismiss#overlay');await p.waitForTimeout(400);
-t=await p.evaluate(()=>document.querySelector('.rs').innerText.replace(/\n+/g,' '));console.log('dismiss:',t.slice(0,140));ok(/CAUGHT/.test(t)&&/C OMARZAI B/.test(t),'caught picture names fielder');
+t=await p.evaluate(()=>document.querySelector('.rs-box').innerText.replace(/\n+/g,' '));console.log('dismiss:',t.slice(0,140));ok(/CAUGHT/.test(t)&&/C OMARZAI B/.test(t),'caught picture names fielder');
 /* left-hand mirror */
 await build(12,false,0,true);await p.waitForTimeout(900);await p.goto(base+'?scene=wagon&who=team&t=3#overlay');await p.waitForTimeout(400);t=await p.evaluate(()=>document.querySelector('.wg-wgr').innerText.replace(/\n+/g,' '));ok(/LEFT-HANDERS MIRRORED/.test(t),'left-hander mirrored note');
 ok(!errs.length,errs.slice(0,3).join(';'));if(!process.exitCode)console.log('PASS: auto director');await b.close()})();

@@ -317,6 +317,7 @@ details.card summary{cursor:pointer;color:var(--ac2)}</style>
 <style id="qs-steps-css">.qs-steps{display:flex;gap:6px;margin:6px 0 10px}.qs-steps span{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:6px 2px;border-radius:18px;border:1px solid var(--bd);font-size:11px;color:var(--mu)}.qs-steps span b{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;background:var(--bd);color:var(--fg);font-size:10px}.qs-steps span.on{border-color:var(--ac);color:var(--fg)}.qs-steps span.on b{background:var(--ac);color:#000}.qs-steps span.done b{background:#22a559;color:#fff}</style></head>
 <body>
 <div id="app"></div><div id="modal"></div><div id="toast"></div>
+<script>/* module root classes (bt, pt, bc, rg, ...) are global names: the scene CSS for them must only apply on overlay pages, never inside the app (it broke scorecards and the Live tab) */window.SHRT=['bt','bc','rg','pt','mh','es','zn','pc','ts','wc','mn'];</script>
 <script>
 /* ==================================================   CricArena  |  single-file cricket scoring platform
    Sections: 1 State  2 Seed  3 Engine  4 Views  5 Actions  6 Overlay  7 Boot
@@ -15041,7 +15042,7 @@ if(window.shTk){
  def('tk37',{ctx:'Result',dur:7,css:`.tk37{position:relative;display:flex;align-items:center;gap:2.4cqw;padding:1.6cqh 5cqw 1.6cqh 3cqw;background:linear-gradient(120deg,#0a1a3a,#1a3a7a);color:#fff4d0;border:.4cqw solid #e6b84a;border-radius:2cqh;box-shadow:0 0 5cqh #e6b84a55,0 1cqh 3cqh #000a;overflow:hidden;animation:tk37In .5s ease-out both}@keyframes tk37In{from{opacity:0;transform:scale(.9)}}.tk37 svg{width:10cqh;height:12cqh;animation:tk37T 1.2s cubic-bezier(.2,1,.3,1) both}@keyframes tk37T{from{transform:translateY(14cqh) scale(.5)}}.tk37 .cf{position:absolute;inset:0;pointer-events:none}.tk37 .cf i{position:absolute;top:-4cqh;width:1cqw;height:1.6cqh;background:var(--c);animation:tk37F 2.6s linear both;animation-delay:var(--d);left:var(--x)}@keyframes tk37F{to{transform:translateY(24cqh) rotate(540deg);opacity:0}}.tk37 .tx{position:relative}.tk37 small{display:block;font:800 2.2cqh system-ui;letter-spacing:.25em;color:#e6b84a}.tk37 b{font:900 4.4cqh Georgia,serif}.tk37 span{display:block;font:600 2.4cqh system-ui;color:#cfe0ff}`,
   html:d=>{const cs=['#ffd45a','#5cc2ff','#ff7a7a','#7dffb0','#fff'];const cf=Array.from({length:22},(_,i)=>`<i style="--x:${(i*4.7)%100}%;--d:${(i%7)*.18+.3}s;--c:${cs[i%5]}"></i>`).join('');return `<div class="tk37"><div class="cf">${cf}</div><svg viewBox="0 0 40 48"><path d="M8 2h24v14a12 12 0 0 1-24 0z" fill="#ffd45a"/><path d="M8 6H1c0 9 4 13 9 13M32 6h7c0 9-4 13-9 13" fill="none" stroke="#ffd45a" stroke-width="3"/><rect x="17" y="28" width="6" height="9" fill="#d9a21b"/><rect x="11" y="37" width="18" height="6" rx="1" fill="#ffd45a"/></svg><div class="stx"><small>RESULT</small><b>${E(d.text)}</b>${d.score?`<span>${E(d.score)}</span>`:''}</div></div>`}});
  /* ---- runtime: unique class names per ticker ---- */
- const rn=(id,css)=>css.replace(/\.([a-zA-Z_][\w-]*)/g,(m,c)=>c===id?m:'.'+id+'-'+c);
+ const rn=(id,css)=>css.replace(/\.([a-zA-Z_][\w-]*)/g,(m,c)=>c===id?(window.SHRT&&SHRT.indexOf(id)>=0?':where(body.ovpage) '+m:m):'.'+id+'-'+c);
  const rh=(id,h)=>h.replace(/class="([^"]*)"/g,(m,c)=>'class="'+c.split(/\s+/).filter(Boolean).map(t=>t===id?t:id+'-'+t).join(' ')+'"');
  const st2=document.createElement('style');
  Object.keys(D).forEach(id=>{const o=D[id],h=o.html;o.css=rn(id,o.css);o.html=d=>rh(id,h(d));B.T[id]=o;B.PRI[id]=id==='tk37'?1:id==='tk18'||id==='tk17'?2:5});
@@ -15293,7 +15294,7 @@ if(window.shTk){
  def('sk12','Magenta Slabs',{css:`.sk12{${BOX}display:flex;align-items:center;gap:1.2cqw;font-family:Impact,sans-serif;text-transform:uppercase;color:#fff}.sk12 .sl{flex:1;height:7.4cqh;background:linear-gradient(100deg,#f40b52,#c8063f);display:flex;align-items:center;justify-content:space-between;padding:0 4cqw;font-size:2.1cqw;clip-path:polygon(0 12%,100% 0,95% 100%,3% 100%);position:relative;gap:1cqw;animation:sk12L .8s cubic-bezier(.2,1,.3,1) both}.sk12 .sl.r{clip-path:polygon(5% 0,100% 12%,97% 100%,0 100%);flex-direction:row-reverse;animation-name:sk12R}@keyframes sk12L{from{transform:translateX(-20cqw) skewX(-20deg);opacity:0}}@keyframes sk12R{from{transform:translateX(20cqw) skewX(20deg);opacity:0}}.sk12 .sl::after{content:'';position:absolute;right:0;top:0;bottom:0;width:6cqw;background:linear-gradient(110deg,transparent 40%,#0006 41%);}.sk12 .vs{width:10cqw;height:10cqh;background:#4a0420;color:#ffe600;clip-path:polygon(10% 0,90% 0,100% 100%,0 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;animation:sk12V 1.6s ease-in-out infinite}@keyframes sk12V{50%{transform:translateY(-.6cqh)}}.sk12 .vs b{font-size:2.4cqw;line-height:1}.sk12 .vs small{font-size:1cqw;color:#fff;line-height:1.2}.sk12 .sl b{font-size:3.2cqw;color:#ffe600;flex:none}`,
   html:d=>`<div class="sk12"><div class="sl"><span>${E(d.L.name)}</span><b>${E(d.L.score)}</b></div><div class="vs"><b>VS</b><small>${E(d.mid)}</small></div><div class="sl r"><span>${E(d.R.name)}</span><b>${E(d.R.score)}</b></div></div>`});
  /* ---- namespacing ---- */
- const rn=(id,css)=>css.replace(/\.([a-zA-Z_][\w-]*)/g,(m,c)=>c===id?m:'.'+id+'-'+c);
+ const rn=(id,css)=>css.replace(/\.([a-zA-Z_][\w-]*)/g,(m,c)=>c===id?(window.SHRT&&SHRT.indexOf(id)>=0?':where(body.ovpage) '+m:m):'.'+id+'-'+c);
  const rh=(id,h)=>h.replace(/class="([^"]*)"/g,(m,c)=>'class="'+c.split(/\s+/).filter(Boolean).map(t=>t===id?t:id+'-'+t).join(' ')+'"');
  const st2=document.createElement('style');
  Object.keys(D).forEach(id=>{const o=D[id],h=o.html;o.css=rn(id,o.css);o.html=d=>rh(id,h(d))});
@@ -15339,7 +15340,7 @@ if(window.shTk){
  const E=s=>esc(String(s==null?'':s));
  const q=k=>{try{return new URLSearchParams(location.search).get(k)}catch(e){return null}};
  const sceneNow=()=>{try{if(location.hash==='#overlay')return q('scene')||'';if(UI.view==='stream'&&UI.ovScene)return UI.ovScene}catch(e){}return''};
- const rn=(id,css)=>css.replace(/\.([a-zA-Z_][\w-]*)/g,(m,c)=>c===id?m:'.'+id+'-'+c);
+ const rn=(id,css)=>css.replace(/\.([a-zA-Z_][\w-]*)/g,(m,c)=>c===id?(window.SHRT&&SHRT.indexOf(id)>=0?':where(body.ovpage) '+m:m):'.'+id+'-'+c);
  const rh=(id,h)=>h.replace(/class="([^"]*)"/g,(m,c)=>'class="'+c.split(/\s+/).filter(Boolean).map(t=>t===id?t:id+'-'+t).join(' ')+'"');
  const CSS=rn('rb',`
 .rb{position:relative;width:88cqw;font-family:'Arial Narrow',Arial,sans-serif;text-transform:uppercase;color:#eaf2ff;filter:drop-shadow(0 1.2cqh 1.6cqh #0009);animation:rbIn .7s cubic-bezier(.2,1,.3,1) both;animation-delay:calc(0s - var(--e,0s))}
@@ -15426,7 +15427,7 @@ if(window.shTk){
  const q=k=>{try{return new URLSearchParams(location.search).get(k)}catch(e){return null}};
  const SC=['manhattan','bowlcard','strip','zone'];
  const sceneNow=()=>{try{if(location.hash==='#overlay')return q('scene')||'';if(UI.view==='stream'&&UI.ovScene)return UI.ovScene}catch(e){}return''};
- const rn=(id,css)=>css.replace(/\.([a-zA-Z_][\w-]*)/g,(m,c)=>c===id?m:'.'+id+'-'+c);
+ const rn=(id,css)=>css.replace(/\.([a-zA-Z_][\w-]*)/g,(m,c)=>c===id?(window.SHRT&&SHRT.indexOf(id)>=0?':where(body.ovpage) '+m:m):'.'+id+'-'+c);
  const rh=(id,h)=>h.replace(/class="([^"]*)"/g,(m,c)=>'class="'+c.split(/\s+/).filter(Boolean).map(t=>t===id?t:id+'-'+t).join(' ')+'"');
  const fmt=n=>{try{return fmtOv(n)}catch(e){return String(n)}};
  const sh=id=>{try{const n=String(nm(id)||'').trim().split(/\s+/);return (n.length>1?n[0][0]+' '+n[n.length-1]:n[0]).toUpperCase()}catch(e){return ''}};
@@ -15495,7 +15496,7 @@ if(window.shTk){
  const q=k=>{try{return new URLSearchParams(location.search).get(k)}catch(e){return null}};
  const SC=['pcard','tstat','rrgraph','welcome','review'];
  const sceneNow=()=>{try{if(location.hash==='#overlay')return q('scene')||'';if(UI.view==='stream'&&UI.ovScene)return UI.ovScene}catch(e){}return''};
- const rn=(id,css)=>css.replace(/\.([a-zA-Z_][\w-]*)/g,(m,c)=>c===id?m:'.'+id+'-'+c);
+ const rn=(id,css)=>css.replace(/\.([a-zA-Z_][\w-]*)/g,(m,c)=>c===id?(window.SHRT&&SHRT.indexOf(id)>=0?':where(body.ovpage) '+m:m):'.'+id+'-'+c);
  const rh=(id,h)=>h.replace(/class="([^"]*)"/g,(m,c)=>'class="'+c.split(/\s+/).filter(Boolean).map(t=>t===id?t:id+'-'+t).join(' ')+'"');
  const fmt=n=>{try{return fmtOv(n)}catch(e){return String(n)}};
  const lgo=(t,z)=>{try{return logo(t,z||128)}catch(e){return ''}};
@@ -15579,7 +15580,7 @@ if(window.shTk){
  const E=s=>esc(String(s==null?'':s));
  const q=k=>{try{return new URLSearchParams(location.search).get(k)}catch(e){return null}};
  const sceneNow=()=>{try{if(location.hash==='#overlay')return q('scene')||'';if(UI.view==='stream'&&UI.ovScene)return UI.ovScene}catch(e){}return''};
- const rn=(id,css)=>css.replace(/\.([a-zA-Z_][\w-]*)/g,(m,c)=>c===id?m:'.'+id+'-'+c);
+ const rn=(id,css)=>css.replace(/\.([a-zA-Z_][\w-]*)/g,(m,c)=>c===id?(window.SHRT&&SHRT.indexOf(id)>=0?':where(body.ovpage) '+m:m):'.'+id+'-'+c);
  const rh=(id,h)=>h.replace(/class="([^"]*)"/g,(m,c)=>'class="'+c.split(/\s+/).filter(Boolean).map(t=>t===id?t:id+'-'+t).join(' ')+'"');
  const fmt=n=>{try{return fmtOv(n)}catch(e){return String(n)}};
  const NM=id=>{try{return nm(id)}catch(e){return ''}};
@@ -15813,7 +15814,7 @@ if(window.shTk){
  const E=s=>esc(String(s==null?'':s));
  const q=k=>{try{return new URLSearchParams(location.search).get(k)}catch(e){return null}};
  const sceneNow=()=>{try{if(location.hash==='#overlay')return q('scene')||'';if(UI.view==='stream'&&UI.ovScene)return UI.ovScene}catch(e){}return''};
- const rn=(id,css)=>css.replace(/\.([a-zA-Z_][\w-]*)/g,(m,c)=>c===id?m:'.'+id+'-'+c);
+ const rn=(id,css)=>css.replace(/\.([a-zA-Z_][\w-]*)/g,(m,c)=>c===id?(window.SHRT&&SHRT.indexOf(id)>=0?':where(body.ovpage) '+m:m):'.'+id+'-'+c);
  const rh=(id,h)=>h.replace(/class="([^"]*)"/g,(m,c)=>'class="'+c.split(/\s+/).filter(Boolean).map(t=>t===id?t:id+'-'+t).join(' ')+'"');
  const NM=id=>{try{return nm(id)}catch(e){return ''}};
  const lgo=(t,z)=>{try{return logo(t,z||64)}catch(e){return ''}};
@@ -15956,7 +15957,7 @@ if(window.shTk){
  const E=s=>esc(String(s==null?'':s));
  const q=k=>{try{return new URLSearchParams(location.search).get(k)}catch(e){return null}};
  const sceneNow=()=>{try{if(location.hash==='#overlay')return q('scene')||'';if(UI.view==='stream'&&UI.ovScene)return UI.ovScene}catch(e){}return''};
- const rn=(id,css)=>css.replace(/\.([a-zA-Z_][\w-]*)/g,(m,c)=>c===id?m:'.'+id+'-'+c);
+ const rn=(id,css)=>css.replace(/\.([a-zA-Z_][\w-]*)/g,(m,c)=>c===id?(window.SHRT&&SHRT.indexOf(id)>=0?':where(body.ovpage) '+m:m):'.'+id+'-'+c);
  const rh=(id,h)=>h.replace(/class="([^"]*)"/g,(m,c)=>'class="'+c.split(/\s+/).filter(Boolean).map(t=>t===id?t:id+'-'+t).join(' ')+'"');
  const hs=s=>{let h=2166136261;for(const c of String(s)){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return h>>>0};
  const lgo=(t,z)=>{try{return logo(t,z||64)}catch(e){return ''}};
@@ -16063,7 +16064,7 @@ if(window.shTk){
 
 /* ---------------- SCORE CARD DETAIL STRIP (striker light, runner, bowler figures, ball-by-ball over timeline), PLAYERS STATUS (?scene=status), TOURNAMENT RECORDS (?scene=records) ---------------- */
 {
- const rn=(id,css)=>css.replace(/\.([a-zA-Z_][\w-]*)/g,(m,c)=>c===id?m:'.'+id+'-'+c),rh=(id,h)=>h.replace(/class="([^"]*)"/g,(m,c)=>'class="'+c.split(/\s+/).filter(Boolean).map(t=>t===id?t:id+'-'+t).join(' ')+'"');
+ const rn=(id,css)=>css.replace(/\.([a-zA-Z_][\w-]*)/g,(m,c)=>c===id?(window.SHRT&&SHRT.indexOf(id)>=0?':where(body.ovpage) '+m:m):'.'+id+'-'+c),rh=(id,h)=>h.replace(/class="([^"]*)"/g,(m,c)=>'class="'+c.split(/\s+/).filter(Boolean).map(t=>t===id?t:id+'-'+t).join(' ')+'"');
  const E=s=>esc(String(s==null?'':s)),q=k=>{try{return new URLSearchParams(location.search).get(k)}catch(e){return null}};
  const sceneNow=()=>{try{if(location.hash==='#overlay')return q('scene')||'';if(UI.view==='stream'&&UI.ovScene)return UI.ovScene}catch(e){}return''};
  const short=(id,n)=>{const s=String(nm(id)||'').trim();return n&&s.length>n?s.slice(0,n-1)+'…':s};
@@ -16104,7 +16105,7 @@ if(window.shTk){
 
 /* ---------------- DRS MAPPING (?scene=drsmap) and BOUNDARY GRAPHICS (?scene=boundary) ---------------- */
 {
- const rn=(id,css)=>css.replace(/\.([a-zA-Z_][\w-]*)/g,(m,c)=>c===id?m:'.'+id+'-'+c),rh=(id,h)=>h.replace(/class="([^"]*)"/g,(m,c)=>'class="'+c.split(/\s+/).filter(Boolean).map(t=>t===id?t:id+'-'+t).join(' ')+'"');
+ const rn=(id,css)=>css.replace(/\.([a-zA-Z_][\w-]*)/g,(m,c)=>c===id?(window.SHRT&&SHRT.indexOf(id)>=0?':where(body.ovpage) '+m:m):'.'+id+'-'+c),rh=(id,h)=>h.replace(/class="([^"]*)"/g,(m,c)=>'class="'+c.split(/\s+/).filter(Boolean).map(t=>t===id?t:id+'-'+t).join(' ')+'"');
  const E=s=>esc(String(s==null?'':s)),q=k=>{try{return new URLSearchParams(location.search).get(k)}catch(e){return null}};
  const sceneNow=()=>{try{if(location.hash==='#overlay')return q('scene')||'';if(UI.view==='stream'&&UI.ovScene)return UI.ovScene}catch(e){}return''};
  const pal=m=>{try{return shColors.resolve(m)}catch(e){return['#2563eb','#a9c8ff','#0b1b55']}};
@@ -16176,7 +16177,7 @@ if(window.shTk){
  const E=s=>esc(String(s==null?'':s));
  const q=k=>{try{return new URLSearchParams(location.search).get(k)}catch(e){return null}};
  const sceneNow=()=>{try{if(window.__scn)return window.__scn;if(location.hash==='#overlay')return q('scene')||'';if(UI.view==='stream'&&UI.ovScene)return UI.ovScene}catch(e){}return''};
- const rn=(id,css)=>css.replace(/\.([a-zA-Z_][\w-]*)/g,(m,c)=>c===id?m:'.'+id+'-'+c);
+ const rn=(id,css)=>css.replace(/\.([a-zA-Z_][\w-]*)/g,(m,c)=>c===id?(window.SHRT&&SHRT.indexOf(id)>=0?':where(body.ovpage) '+m:m):'.'+id+'-'+c);
  const rh=(id,h)=>h.replace(/class="([^"]*)"/g,(m,c)=>'class="'+c.split(/\s+/).filter(Boolean).map(t=>t===id?t:id+'-'+t).join(' ')+'"');
  const NM=id=>{try{return nm(id)}catch(e){return ''}};
  const fmt=n=>{try{return fmtOv(n)}catch(e){return String(n)}};
@@ -16267,7 +16268,7 @@ if(window.shTk){
  const E=s=>esc(String(s==null?'':s));
  const q=k=>{try{return new URLSearchParams(location.search).get(k)}catch(e){return null}};
  const sceneNow=()=>{try{if(window.__scn)return window.__scn;if(location.hash==='#overlay')return q('scene')||'';if(UI.view==='stream'&&UI.ovScene)return UI.ovScene}catch(e){}return''};
- const rn=(id,css)=>css.replace(/\.([a-zA-Z_][\w-]*)/g,(m,c)=>c===id?m:'.'+id+'-'+c);
+ const rn=(id,css)=>css.replace(/\.([a-zA-Z_][\w-]*)/g,(m,c)=>c===id?(window.SHRT&&SHRT.indexOf(id)>=0?':where(body.ovpage) '+m:m):'.'+id+'-'+c);
  const rh=(id,h)=>h.replace(/class="([^"]*)"/g,(m,c)=>'class="'+c.split(/\s+/).filter(Boolean).map(t=>t===id?t:id+'-'+t).join(' ')+'"');
  const NM=id=>{try{return nm(id)}catch(e){return ''}};
  const fmt=n=>{try{return fmtOv(n)}catch(e){return String(n)}};
@@ -16276,7 +16277,7 @@ if(window.shTk){
  const AV=id=>sf(()=>av(P(id)),'');
  const LG=(id,z)=>sf(()=>logo(T(id),z||64),'');
  const COL={1:'#ffffff',2:'#3b9bff',3:'#c084fc',4:'#ff8a1f',6:'#22d36b'};
- const BASE=`.rs{position:absolute;inset:0;container-type:size;overflow:hidden;font-family:"Arial Narrow",Arial,sans-serif;color:#fff;text-transform:uppercase;background:linear-gradient(160deg,var(--b1,#050b22),var(--b2,#12214f) 55%,var(--b3,#0a1a3a))}.top{position:absolute;left:0;right:0;top:2cqh;display:flex;gap:1.4cqw;align-items:baseline;justify-content:center;border-bottom:.2cqh solid #ffffff30;padding-bottom:1.4cqh}.top b{font:900 italic 2.6cqw Georgia,serif;letter-spacing:.1em}.top small{font:800 1.3cqw Arial;letter-spacing:.2em;color:var(--ac,#ffd24a)}.ttl{position:absolute;left:0;right:0;top:8.5cqh;margin:0;text-align:center;font:900 italic 5cqw/1 Impact,'Arial Black',sans-serif;letter-spacing:.04em;background:linear-gradient(#fff,var(--ac,#ffd24a));-webkit-background-clip:text;color:transparent;animation:rsT .8s cubic-bezier(.2,1,.3,1) both;animation-delay:calc(0s - var(--e,0s))}.sub{position:absolute;left:0;right:0;top:17.5cqh;text-align:center;font:800 1.4cqw Arial;letter-spacing:.3em;color:#9fb6e6}.bd{position:absolute;left:3cqw;right:3cqw;top:22cqh;bottom:17cqh}@keyframes rsT{from{opacity:0;transform:scale(1.5)}}@keyframes rsI{from{opacity:0;transform:translateY(4cqh)}}@keyframes rsL{from{opacity:0;transform:translateX(-6cqw)}}@keyframes rsG{from{width:0}}.pn{background:#0b1a3ccc;border-top:.5cqh solid var(--ac,#ffd24a);border-radius:1cqw;padding:1.4cqh 1.4cqw;animation:rsI .6s both;animation-delay:calc(var(--d,.3s) - var(--e,0s))}.pn h4{margin:0 0 1cqh;font:900 1.5cqw Arial;letter-spacing:.2em;color:var(--ac,#ffd24a)}.rw{display:flex;align-items:center;gap:1cqw;font:900 1.9cqw Arial;padding:.5cqh 0;border-bottom:.15cqh solid #ffffff18}.rw span{flex:1;white-space:nowrap}.rw em{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:14cqw}.rw em{font:800 normal 1.5cqw Arial;font-style:normal;color:#9fb6e6}.rw b{font:900 2.3cqw Arial;color:#ffd24a}.g2{display:grid;grid-template-columns:1fr 1fr;gap:1.6cqw;height:100%}.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.4cqw;height:100%}.none{font:800 2cqw Arial;color:#9fb6e6;text-align:center;margin-top:10cqh}.big{font:900 7cqw/1 Impact,Arial;color:#ffd24a}.ph{border-radius:50%;overflow:hidden;border:.5cqh solid var(--ac,#ffd24a);background:#1b2a4a;flex:none}.ph svg,.ph img{width:100%;height:100%;object-fit:cover}`;
+ const BASE=`.box{position:absolute;inset:0;container-type:size;overflow:hidden;font-family:"Arial Narrow",Arial,sans-serif;color:#fff;text-transform:uppercase;background:linear-gradient(160deg,var(--b1,#050b22),var(--b2,#12214f) 55%,var(--b3,#0a1a3a))}.top{position:absolute;left:0;right:0;top:2cqh;display:flex;gap:1.4cqw;align-items:baseline;justify-content:center;border-bottom:.2cqh solid #ffffff30;padding-bottom:1.4cqh}.top b{font:900 italic 2.6cqw Georgia,serif;letter-spacing:.1em}.top small{font:800 1.3cqw Arial;letter-spacing:.2em;color:var(--ac,#ffd24a)}.ttl{position:absolute;left:0;right:0;top:8.5cqh;margin:0;text-align:center;font:900 italic 5cqw/1 Impact,'Arial Black',sans-serif;letter-spacing:.04em;background:linear-gradient(#fff,var(--ac,#ffd24a));-webkit-background-clip:text;color:transparent;animation:rsT .8s cubic-bezier(.2,1,.3,1) both;animation-delay:calc(0s - var(--e,0s))}.sub{position:absolute;left:0;right:0;top:17.5cqh;text-align:center;font:800 1.4cqw Arial;letter-spacing:.3em;color:#9fb6e6}.bd{position:absolute;left:3cqw;right:3cqw;top:22cqh;bottom:17cqh}@keyframes rsT{from{opacity:0;transform:scale(1.5)}}@keyframes rsI{from{opacity:0;transform:translateY(4cqh)}}@keyframes rsL{from{opacity:0;transform:translateX(-6cqw)}}@keyframes rsG{from{width:0}}.pn{background:#0b1a3ccc;border-top:.5cqh solid var(--ac,#ffd24a);border-radius:1cqw;padding:1.4cqh 1.4cqw;animation:rsI .6s both;animation-delay:calc(var(--d,.3s) - var(--e,0s))}.pn h4{margin:0 0 1cqh;font:900 1.5cqw Arial;letter-spacing:.2em;color:var(--ac,#ffd24a)}.rw{display:flex;align-items:center;gap:1cqw;font:900 1.9cqw Arial;padding:.5cqh 0;border-bottom:.15cqh solid #ffffff18}.rw span{flex:1;white-space:nowrap}.rw em{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:14cqw}.rw em{font:800 normal 1.5cqw Arial;font-style:normal;color:#9fb6e6}.rw b{font:900 2.3cqw Arial;color:#ffd24a}.g2{display:grid;grid-template-columns:1fr 1fr;gap:1.6cqw;height:100%}.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.4cqw;height:100%}.none{font:800 2cqw Arial;color:#9fb6e6;text-align:center;margin-top:10cqh}.big{font:900 7cqw/1 Impact,Arial;color:#ffd24a}.ph{border-radius:50%;overflow:hidden;border:.5cqh solid var(--ac,#ffd24a);background:#1b2a4a;flex:none}.ph svg,.ph img{width:100%;height:100%;object-fit:cover}`;
  const hdr=(m,t,s)=>`<div class="top"><b>SCORING HEROES</b><small>${E(m&&m.name||'LIVE MATCH')}</small></div><h1 class="ttl">${E(t)}</h1><div class="sub">${E(s||'')}</div>`;
  const R_=window.shReplay;
  const bat0=(m,i)=>sf(()=>calc(m,i),null);
@@ -16342,7 +16343,7 @@ if(window.shTk){
  const wrap=(h,m)=>{let b='';try{if(q('bar')!=='0'&&window.shRb&&m)b=shRb.bar(m,'')||''}catch(e){}return `<div class="ovroot ov" data-t="sh">${h}${b}</div>`};
  const o2=overlayHTML;overlayHTML=function(){const sc=sceneNow();
   if(SC[sc]){try{const m=ovMatch();if(!m)return `<div class="ovroot ov" data-t="sh"></div>`;const e=q('t')!=null?parseFloat(q('t')):age();
-   const h=rh('rs','<div class="rs" style="--e:'+e+'s">'+SC[sc](m,e)+'</div>');return wrap(h+(q('t')!=null?'<style>.rs,.rs *{animation-play-state:paused!important}</style>':''),m)}catch(er){return o2.apply(this,arguments)}}
+   const h=rh('rs','<div class="box" style="--e:'+e+'s">'+SC[sc](m,e)+'</div>');return wrap(h+(q('t')!=null?'<style>.rs-box,.rs-box *{animation-play-state:paused!important}</style>':''),m)}catch(er){return o2.apply(this,arguments)}}
   return o2.apply(this,arguments)};
  const LIST=[['innbreak','Innings break (target, top performers)'],['runtype','Runs by type — batter (&who=team for the team)'],['fixtures','Fixtures today / tomorrow / upcoming'],['fieldpos','Field positions (&hand=left)'],['umpire','Umpire signals'],['rules','Rule card (&r=noball|wide|lbw|runout|stump|catch|freehit|pp|superover)'],['dismiss','Dismissal picture (&k=bowled|lbw|caught|runout|stump|hitwicket)'],['potm','Player of the match'],['trophy','Champions / trophy'],['sponsors','Sponsors'],['credits','Credits'],['venue','Venue'],['weather','Weather (manual)'],['pitch','Pitch report (manual)'],['tossphoto','Toss: captains']];
  const vs4=vStream;vStream=function(){let h=vs4.apply(this,arguments);const cur=UI.ovScene||'bug',z=(S.stream&&S.stream.wx)||{};
@@ -16361,7 +16362,7 @@ if(window.shTk){
  const NM=id=>{try{return nm(id)}catch(e){return ''}};
  const fmt=n=>{try{return fmtOv(n)}catch(e){return String(n)}};
  const sf=(f,d)=>{try{const v=f();return v==null?d:v}catch(e){return d}};
- const rn=(id,css)=>css.replace(/\.([a-zA-Z_][\w-]*)/g,(m,c)=>c===id?m:'.'+id+'-'+c);
+ const rn=(id,css)=>css.replace(/\.([a-zA-Z_][\w-]*)/g,(m,c)=>c===id?(window.SHRT&&SHRT.indexOf(id)>=0?':where(body.ovpage) '+m:m):'.'+id+'-'+c);
  const rh=(id,h)=>h.replace(/class="([^"]*)"/g,(m,c)=>'class="'+c.split(/\s+/).filter(Boolean).map(t=>t===id?t:id+'-'+t).join(' ')+'"');
  const age=()=>{UI.mnT=UI.mnT||Date.now();return((Date.now()-UI.mnT)/1000).toFixed(2)};
  const CSS=rn('mn',`.mn{position:absolute;inset:0;container-type:size;overflow:hidden;font-family:"Arial Narrow",Arial,sans-serif;text-transform:uppercase;color:#fff;pointer-events:none}.bx{position:absolute;left:3cqw;bottom:14cqh;min-width:34cqw;background:#0b1530ee;border-top:.5cqh solid var(--c,#ffd24a);border-radius:.8cqw;padding:1cqh 1.2cqw;filter:drop-shadow(0 .6cqh 1.2cqh #0009);animation:mnI .6s cubic-bezier(.2,1,.3,1) both;animation-delay:calc(0s - var(--e,0s))}@keyframes mnI{from{opacity:0;transform:translateY(5cqh)}}.h{display:grid;grid-template-columns:1fr 4.5cqw 4.5cqw 3.5cqw 3.5cqw 5cqw;font:800 1.1cqw Arial;letter-spacing:.14em;color:#9fb6e6;padding-bottom:.4cqh;border-bottom:.15cqh solid #ffffff30}.r{display:grid;grid-template-columns:1fr 4.5cqw 4.5cqw 3.5cqw 3.5cqw 5cqw;font:900 1.7cqw Arial;padding:.5cqh 0;align-items:center}.r b{font-weight:900;color:#ffd24a}.r span,.h span{text-align:right}.r span:first-child,.h span:first-child{text-align:left}.on{color:#ffd24a}.bw{margin-top:.6cqh;border-top:.15cqh solid #ffffff30;padding-top:.6cqh;display:flex;gap:1.2cqw;align-items:baseline;font:900 1.7cqw Arial}.bw em{font:800 normal 1.2cqw Arial;font-style:normal;color:#9fb6e6;letter-spacing:.12em}`);
