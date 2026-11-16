@@ -2725,6 +2725,10 @@ http.createServer(async (req, res) => {
       return res.end(html);
     } catch { return out(404, { ok: false, error: 'Broadcast demo unavailable' }); }
   }
+  if (req.method === 'GET' && (path === '/demo-harness' || path === '/demo-harness.html')) {   // vertical demo screen: broadcast on top, real scorer below
+    try { const html = fs.readFileSync(new URL('./public/demo-harness.html', import.meta.url)); res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' }); return res.end(html); }
+    catch { res.writeHead(404); return res.end('not found'); }
+  }
   if (req.method === 'GET' && (path === '/install' || path === '/install.html')) {   // install guide: iPhone (Add to Home Screen) and Android (APK)
     try { const html = fs.readFileSync(new URL('./public/install.html', import.meta.url)); res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache' }); return res.end(html); }
     catch { return out(404, { ok: false, error: 'Install page not available' }); }

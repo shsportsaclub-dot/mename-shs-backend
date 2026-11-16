@@ -1,0 +1,39 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Scoring Heroes demo</title>
+<style>
+html,body{margin:0;background:#050a18;overflow:hidden}
+#stage{position:absolute;left:0;top:0;width:360px;height:640px;transform-origin:0 0;background:#050a18;font-family:Inter,Arial,sans-serif;color:#fff}
+.bc{position:absolute;left:0;top:0;width:360px;height:372px;overflow:hidden;background:#000}
+.bc iframe{position:absolute;left:0;top:0;border:0;width:360px;height:372px;background:transparent}
+#ov{pointer-events:none}
+.sc{position:absolute;left:0;top:372px;width:360px;height:268px;overflow:hidden;background:#071027;border-top:2px solid #ff2d55;z-index:4;transition:top .5s ease,height .5s ease}.sc.big{top:0;height:640px;z-index:12}
+.sc iframe{position:absolute;left:0;top:0;border:0;width:360px;height:640px}
+#tag{position:absolute;left:8px;top:378px;z-index:5;font-size:9px;font-weight:800;letter-spacing:.08em;background:#ff2d55;color:#fff;padding:2px 6px;border-radius:3px}
+#cap{position:absolute;left:8px;right:8px;top:8px;z-index:6;text-align:center;font-weight:800;font-size:12px;line-height:1.25;color:#fff;background:#0b1530ee;border:1px solid #ffd24a;border-radius:8px;padding:6px 8px;opacity:0;transition:opacity .4s;pointer-events:none}
+#cap.on{opacity:1}
+#tap{position:absolute;z-index:8;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;border:3px solid #ffd24a;background:#ffd24a33;box-shadow:0 0 14px #ffd24a;opacity:0;pointer-events:none;transition:opacity .15s}
+#tap.on{opacity:1;animation:tp .5s ease-out}
+@keyframes tp{0%{transform:scale(1.9);opacity:.2}100%{transform:scale(1);opacity:1}}
+#chip{position:absolute;right:8px;top:378px;z-index:5;font-size:11px;font-weight:900;color:#0b1530;background:#ffd24a;border-radius:4px;padding:2px 8px;opacity:0;transition:opacity .2s}
+#chip.on{opacity:1}
+#title{position:absolute;inset:0;z-index:20;background:radial-gradient(circle at 50% 30%,#1b2e66,#050a18);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;transition:opacity .6s}
+#title h1{font-size:30px;margin:0 0 8px;letter-spacing:.04em}#title p{font-size:14px;color:#9fb3e6;margin:4px 0}
+#title.off{opacity:0;pointer-events:none}
+</style></head><body><div id="stage">
+<div class="bc"><iframe id="cc"></iframe><iframe id="ov"></iframe></div>
+<div id="tag">SCORER</div><div id="chip"></div><div id="cap"></div>
+<div class="sc" id="scp"><iframe id="sc"></iframe></div><div id="tap"></div>
+<div id="title"><div style="font-size:54px">&#127951;</div><h1>SCORING HEROES</h1><p>Live scoring with a TV broadcast, from your phone</p><p style="margin-top:14px;color:#ffd24a;font-weight:800">DEMO MATCH &middot; 5 OVERS A SIDE</p></div>
+</div>
+<script>
+const q=new URLSearchParams(location.search),mid=q.get('mid'),Z=+q.get('z')||2;
+const st=document.getElementById('stage');st.style.transform='scale('+Z+')';
+const base='/';
+document.getElementById('cc').src=base+'?scene=ccast&mid='+mid+'#overlay';
+document.getElementById('ov').src=base+'?scene='+(q.get('ov')||'auto')+'&mid='+mid+'#overlay';
+document.getElementById('sc').src=base+'?demoscorer='+mid;
+window.H={cap(t,ms){const c=document.getElementById('cap');if(t){c.textContent=t;c.classList.add('on');if(ms)setTimeout(()=>c.classList.remove('on'),ms)}else c.classList.remove('on')},
+ chip(t){const c=document.getElementById('chip');if(t){c.textContent=t;c.classList.add('on')}else c.classList.remove('on')},
+ tapAt(x,y){const t=document.getElementById('tap');t.style.left=x+'px';t.style.top=y+'px';t.classList.remove('on');void t.offsetWidth;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),600)},
+ big(on){document.getElementById('scp').classList.toggle('big',on)},
+ title(on){document.getElementById('title').classList.toggle('off',!on)}};
+</script></body></html>
