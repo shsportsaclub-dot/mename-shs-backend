@@ -27,10 +27,11 @@ html,body{margin:0;background:#050a18;overflow:hidden}
 <script>
 const q=new URLSearchParams(location.search),mid=q.get('mid'),Z=+q.get('z')||2;
 const st=document.getElementById('stage');st.style.transform='scale('+Z+')';
+if(q.get('only')==='bc'){st.style.height='372px';['scp','tag','chip','tap'].forEach(i=>{const e=document.getElementById(i);if(e)e.style.display='none'})}
 const base='/';
 document.getElementById('cc').src=base+'?scene=ccast&mid='+mid+'#overlay';
 document.getElementById('ov').src=base+'?scene='+(q.get('ov')||'auto')+'&mid='+mid+'#overlay';
-document.getElementById('sc').src=base+'?demoscorer='+mid;
+if(q.get('only')!=='bc')document.getElementById('sc').src=base+'?demoscorer='+mid;
 window.H={cap(t,ms){const c=document.getElementById('cap');if(t){c.textContent=t;c.classList.add('on');if(ms)setTimeout(()=>c.classList.remove('on'),ms)}else c.classList.remove('on')},
  chip(t){const c=document.getElementById('chip');if(t){c.textContent=t;c.classList.add('on')}else c.classList.remove('on')},
  tapAt(x,y){const t=document.getElementById('tap');t.style.left=x+'px';t.style.top=y+'px';t.classList.remove('on');void t.offsetWidth;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),600)},
