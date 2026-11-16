@@ -5,7 +5,7 @@ const FAST=process.argv.includes('fast'),Z=1.5,OUT='/tmp/claude-0/ec/dm/scorer';
 (async()=>{
  fs.rmSync(OUT,{recursive:true,force:true});fs.mkdirSync(OUT,{recursive:true});
  const id=await prep('/tmp/claude-0/ec/dm/state.json');
- const b=await chromium.launch(),opt={viewport:{width:360,height:640},deviceScaleFactor:1.5,storageState:'/tmp/claude-0/ec/dm/state.json'};
+ const b=await chromium.launch(),opt={viewport:{width:540,height:960},deviceScaleFactor:1,storageState:'/tmp/claude-0/ec/dm/state.json'};
  if(!FAST)opt.recordVideo={dir:OUT,size:{width:540,height:960}};
  const ctx=await b.newContext(opt),p=await ctx.newPage();ctx.setDefaultTimeout(15000);p.on('pageerror',e=>console.log('ERR',e.message));
  await ctx.route(/onrender\.com|\/api\//,r=>r.fulfill({contentType:'application/json',body:'{"ok":false}'}));

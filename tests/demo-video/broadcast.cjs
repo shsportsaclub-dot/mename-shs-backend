@@ -10,8 +10,8 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
  ctx.setDefaultTimeout(30000);const p=await ctx.newPage();p.on('pageerror',e=>console.log('ERR',e.message));
  await ctx.route(/onrender\.com|\/api\//,r=>r.fulfill({contentType:'application/json',body:'{"ok":false}'}));
  const tp=Date.now(),now=()=>(Date.now()-tp)/1000;
- await p.goto('http://localhost:8765/demo-harness.html?only=bc&z='+Z+'&mid='+mid);await sleep(4000);
- const ov=p.frames().find(f=>/scene=auto/.test(f.url()));
+ await p.goto('http://localhost:8765/demo-harness.html?only=bc&z='+Z+'&ov=bar&mid='+mid);await sleep(4000);
+ const ov=p.frames().find(f=>/scene=bar/.test(f.url()));
  const bc={m0:null};
  await sleep(3000);await p.evaluate(()=>H.title(false));
  // wait until the broadcast clock reaches the scorer clock start
