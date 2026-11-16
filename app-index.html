@@ -16399,7 +16399,7 @@ if(window.shTk){
  const T=window.shTk&&shTk.T;
  if(T){
  const E=x=>esc(String(x==null?'':x)),U=x=>E(String(x==null?'':x).toUpperCase());
- const on=()=>{try{return !(S.stream&&S.stream.tkPack==='classic')}catch(e){return true}};
+ const on=()=>{try{return !!(S.stream&&S.stream.tkPack==='prime')}catch(e){return false}};
  const pal=()=>{try{return window.shColors?shColors.resolve():['#e11d48','#ff7a8f','#4a0716']}catch(e){return['#e11d48','#ff7a8f','#4a0716']}};
  const nm=x=>x==null?'':x;
  const PK={

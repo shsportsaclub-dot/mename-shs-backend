@@ -15,7 +15,7 @@ for(let n=1;n<=37;n++){await p.goto(base+`?scene=tpack&n=${n}&t=2.6&bar=0#overla
 ok(fonts.size===1,'one font for the whole pack: '+[...fonts].join(' / '));
 ok(sets.size<=2,'one animation language across 37 tickers: '+[...sets].join(' / '));
 // live: pack is the default and classic still available
-await p.goto(base+'#overlay');await p.waitForTimeout(500);
+await p.goto(base+'#overlay');await p.waitForTimeout(500);await p.evaluate(()=>{S.stream.tkPack='prime'});
 const live=await p.evaluate(()=>{const o={};for(const id of shTk.ids){const h=shTk.T[id].html({batter:'A',bowler:'B',a:{name:'X',players:[]},b:{name:'Y',players:[]},balls:[]});o[id]=/class="pkp"/.test(h)}S.stream.tkPack='classic';const h2=shTk.T.tk4.html({batter:'A'});o.classic=!/pkp/.test(h2);S.stream.tkPack='prime';return o});
 ok(Object.keys(live).filter(k=>k!=='classic').every(k=>live[k]),'all situation tickers go through the pack when live');ok(live.classic,'classic mode still gives the old tickers');
 ok(!errs.length,errs.slice(0,3).join(';'));await b.close();console.log(bad?'FAILED':'PASS: SH Prime pack (37 tickers, one animation)');process.exit(bad?1:0)})();
