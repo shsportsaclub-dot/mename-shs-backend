@@ -477,6 +477,17 @@ function demoMatch(){
   if(m.status==='break'){const s2=m.xi[m.innings[0].bowl],b2=m.xi[m.innings[0].bat];
     startInnings(m,1,s2[0],s2[1],b2.find(id=>['BOWL','AR'].includes(P(id).role)));autoPlay(m,80)}
   S.stream.mid=m.id;UI.mid=m.id;UI.sid=m.id;return m}
+/* the stream demo: one complete 5-over-a-side match (both innings), kept in the app and replayed ball by ball in the 3D stream for anybody */
+function demoShow(){
+  const ex=S.matches.find(x=>x.demo===2);if(ex)return ex;
+  const [a,b]=demoTeams();
+  const m=newMatch({a:a.id,b:b.id,overs:5,venue:'Newlands, Cape Town',toss:b.id,dec:'bat',xiA:a.players.slice(0,11),xiB:b.players.slice(0,11),umpires:'Demo umpires'});m.demo=2;
+  const f=m.firstBat,sx=f===a.id?m.xi[a.id]:m.xi[b.id],bx=f===a.id?m.xi[b.id]:m.xi[a.id];
+  startInnings(m,0,sx[0],sx[1],bx.find(id=>['BOWL','AR'].includes(P(id).role)));
+  autoPlay(m,200);
+  if(m.status==='break'){const s2=m.xi[m.innings[0].bowl],b2=m.xi[m.innings[0].bat];
+    startInnings(m,1,s2[0],s2[1],b2.find(id=>['BOWL','AR'].includes(P(id).role)));autoPlay(m,200)}
+  return m}
 const curM=()=>S.matches.find(x=>x.id===UI.mid)||S.matches[S.matches.length-1];
 function st(m){
   const i=m.cur,inn=m.innings[i];if(!inn)return null;
@@ -696,7 +707,7 @@ function logo(t,sz){if(!t)return'';sz=sz||40;if(!t.logo){const e=embOf(t);if(e)r
 const opt=(arr,sel)=>arr.map(([v,l])=>`<option value="${esc(v)}" ${v===sel?'selected':''}>${esc(l)}</option>`).join('');
 function vMatches(){
   const ms=S.matches.slice().reverse();
-  return `<div class="bar"><h2>Matches</h2><div class="grow"></div>${can()?'<button class="btn" data-a="newMatch">+ New match</button>':''}<button class="btn ghost" data-a="demo">Load demo match</button></div>`+
+  return `<div class="bar"><h2>Matches</h2><div class="grow"></div>${can()?'<button class="btn" data-a="newMatch">+ New match</button>':''}<button class="btn ghost" data-a="demo">Load demo match</button><button class="btn" data-a="demoWatch">&#9654; Watch demo match</button></div>`+
   (ms.length?ms.map(mcard).join(''):'<div class="empty">No matches yet. Create a match, or load the demo match to see every screen working.</div>')}
 function mcard(m){
   const A=T(m.a),B=T(m.b);
@@ -13759,9 +13770,21 @@ async function play(k){const e=k.e,m=CC.m;layout();startLoop();{const w=e.w?'WIC
 async function pump(){if(CC.playing)return;CC.playing=1;try{while(CC.queue.length){const k=CC.queue.shift();if(CC.queue.length>4){say(text(CC.m,k));paint();continue}await play(k)}}finally{CC.playing=0}}
 /* mid=auto (or no mid): follow whichever match is live right now; switches by itself when a match ends or another starts */
 async function resolveAuto(){const n=Date.now();if(CC.rt&&n-CC.rt<8000)return;CC.rt=n;try{const j=await (await fetch(apiBase()+'/api/shared/matches')).json();const L=((j&&j.items)||[]).filter(x=>x&&x.data&&x.data.m&&x.data.m.status==='live'&&!x.data.m.rm).sort((a,b)=>(b.updated||0)-(a.updated||0));const cur=L.find(x=>x.id===CC.id),pick=cur||L[0];if(pick&&pick.id!==CC.id){CC.id=pick.id;CC.m=null;CC.d=null;CC.shown=null;CC.queue=[];CC.playing=0;render()}}catch(e){}}
-async function poll(){if(!sceneNow()||CC.busy)return;if(CC.auto)await resolveAuto();if(!CC.id)return;CC.busy=1;try{const j=await (await fetch(apiBase()+'/api/shared/matches/'+encodeURIComponent(CC.id))).json();if(!j.ok||!j.item||!j.item.data||!j.item.data.m)return;const d=j.item.data;CC.d=d;inject(d);CC.m=d.m;
- const all=flat(d.m);if(CC.shown==null){CC.shown=all.length;render();setTimeout(()=>{if(all.length){const k=all[all.length-1];G.names.bat=nm(k.e.bt)||'';G.names.bowl=nm(k.e.bl)||'';say(text(CC.m,k));layout();paint();startLoop()}},60);return}
- if(all.length>CC.shown){CC.queue.push(...all.slice(CC.shown));CC.shown=all.length;pump()}else if(all.length<CC.shown){CC.shown=all.length;CC.queue=[]}}catch(e){}finally{CC.busy=0}}
+/* a match that lives only in this app (the demo match, or a match that is not published yet) is played from the local data: no server needed */
+const localM=()=>(S.matches||[]).find(x=>x&&x.id===CC.id);
+function cutM(full,n){const m=JSON.parse(JSON.stringify(full));let left=n,last=-1;m.innings=(m.innings||[]).map((inn,i)=>{const t=Math.max(0,Math.min(left,(inn.ev||[]).length));left-=t;if(t>0)last=i;const c=Object.assign({},inn,{ev:(inn.ev||[]).slice(0,t)});if(t<(inn.ev||[]).length){c.done=false;const e=c.ev[t-1];if(e){c.cur=Object.assign({},inn.cur||{},{s:e.bt,bl:e.bl})}}return c}).filter((inn,i)=>i===0||inn.ev.length>0);
+ m.cur=Math.max(0,Math.min(m.innings.length-1,last));const done=n>=flat(full).length;if(!done){m.status='live';delete m.win;delete m.result}if(m.cur===0)delete m.target;return m}
+function feed(d){CC.d=d;inject(d);CC.m=d.m;const all=flat(d.m);
+ if(CC.shown==null){CC.shown=all.length;render();setTimeout(()=>{if(all.length){const k=all[all.length-1];G.names.bat=nm(k.e.bt)||'';G.names.bowl=nm(k.e.bl)||'';say(text(CC.m,k));layout();paint();startLoop()}else{layout();paint();startLoop()}},60);return}
+ if(all.length>CC.shown){CC.queue.push(...all.slice(CC.shown));CC.shown=all.length;pump()}else if(all.length<CC.shown){CC.shown=all.length;CC.queue=[]}}
+/* demo replay: plays the stored demo match ball by ball, then waits and starts again, so anybody can watch a full match any time */
+function replayTick(full){const tot=flat(full).length;CC.rp=CC.rp||{n:0,hold:0};
+ if(!CC.playing&&!CC.queue.length){if(CC.rp.n>=tot){if(++CC.rp.hold>=4){CC.rp.n=0;CC.rp.hold=0}}else CC.rp.n=Math.min(tot,CC.rp.n+1)}
+ feed({m:cutM(full,CC.rp.n),teams:{},players:{}})}
+async function poll(){if(!sceneNow()||CC.busy)return;if(CC.auto)await resolveAuto();if(!CC.id)return;CC.busy=1;try{
+ const lm=localM();if(lm&&lm.demo===2){replayTick(lm);return}
+ let d=null;try{const j=await (await fetch(apiBase()+'/api/shared/matches/'+encodeURIComponent(CC.id))).json();if(j.ok&&j.item&&j.item.data&&j.item.data.m)d=j.item.data}catch(e){}
+ if(!d&&lm)d={m:lm,teams:{},players:{}};if(!d)return;feed(d)}catch(e){}finally{CC.busy=0}}
 setInterval(poll,2000);
 window.shGamePlay=play;window.shSpeak=speakLine;window.shSfx=sfx;window.shSndOn=sndOn;window.shSndIs=()=>!!G.snd;
 const o0=overlayHTML;overlayHTML=function(prev){if(!sceneNow())return o0.apply(this,arguments);
@@ -14315,22 +14338,22 @@ Object.assign(F,{fxGrant(fd){if(!isAdmin())return;const p=String(fd.get('ph')||'
 
 /* 141 3D LIVE inside the app: any live match can be watched as the 3D avatar stream (the same scene OBS uses), like a live channel */
 (function(){
-const live=()=>(S.matches||[]).filter(m=>m&&m.status==='live'&&!(typeof isDemo==='function'&&isDemo(m)&&false)).slice().reverse();
+const live=()=>(S.matches||[]).filter(m=>m&&(m.status==='live'||m.demo===2)).slice().reverse();
 const title=m=>`${esc((T(m.a)||{}).name||'Team A')} v ${esc((T(m.b)||{}).name||'Team B')}`;
 const src=id=>location.href.split('#')[0].split('?')[0]+'?scene=ccast&mid='+encodeURIComponent(id)+'#overlay';
 UI.l3=UI.l3||{id:''};
 const strip=()=>{const L=live();if(!L.length)return'';return `<div class="card" style="border-left:4px solid #ff2d55"><div class="row" style="justify-content:space-between;align-items:center"><b>&#128308; 3D Live</b><span class="mu sm">${L.length} live now</span></div>${L.map(m=>`<div class="item" data-a="live3d" data-id="${esc(m.id)}" style="cursor:pointer"><div style="flex:1"><b>${title(m)}</b><div class="mu sm">Watch as a 3D game stream with commentary</div></div><button class="btn sm" data-a="live3d" data-id="${esc(m.id)}">Watch</button></div>`).join('')}</div>`};
 XV.live3d=function(){const m=S.matches.find(x=>x.id===UI.l3.id);
  if(!m)return `<div class="bar"><h2>3D Live</h2></div><div class="empty">Pick a live match.</div>${strip()}`;
- const on=m.status==='live';
+ const on=m.status==='live'||m.demo===2;
  return `<div class="bar"><button class="btn sm ghost" data-a="go" data-v="matches">&larr;</button><h2 style="flex:1">${title(m)}</h2><span class="mcst ${on?'LIVE':'RESULT'}">${on?'LIVE':'ENDED'}</span></div>
  <div style="position:relative;width:100%;aspect-ratio:16/9;background:#0a1a3a;border-radius:12px;overflow:hidden"><iframe id="l3f" src="${esc(src(m.id))}" style="position:absolute;inset:0;width:100%;height:100%;border:0" allow="autoplay;fullscreen" allowfullscreen></iframe></div>
  <div class="row" style="gap:6px;margin:8px 0"><button class="btn sm ghost" data-a="l3Full">Full screen</button><button class="btn sm ghost" data-a="open" data-id="${esc(m.id)}">Scorecard</button></div>
- <div class="mu sm">Tap the screen once to turn the sound on. The stream follows the scorer ball by ball. If the match is not published online yet, it stays on "Connecting".</div>`};
-Object.assign(A,{live3d(d){UI.l3={id:d.id};UI.view='live3d';UI.drawer=false;render();window.scrollTo&&window.scrollTo(0,0)},
+ <div class="mu sm">Tap the screen once to turn the sound on. The stream follows the scorer ball by ball. The demo match replays a full 5-over match, ball by ball, and starts again when it ends.</div>`};
+Object.assign(A,{demoWatch(){const m=demoShow();commit();A.live3d({id:m.id})},live3d(d){UI.l3={id:d.id};UI.view='live3d';UI.drawer=false;render();window.scrollTo&&window.scrollTo(0,0)},
  l3Full(){const f=document.getElementById('l3f');try{(f.requestFullscreen||f.webkitRequestFullscreen).call(f)}catch(e){toast('Full screen is not available here')}}});
 const wrap=(k)=>{const x0=XV[k];if(!x0)return;XV[k]=function(){const o=x0.apply(this,arguments);if(typeof o!=='string'||o.includes('3D Live'))return o;const b=strip();if(!b)return o;
-  if(k==='match'){const m=curM();return m&&m.status==='live'?`<div class="card" style="border-left:4px solid #ff2d55"><div class="row" style="justify-content:space-between;align-items:center"><b>&#128308; Watch in 3D</b><button class="btn sm" data-a="live3d" data-id="${esc(m.id)}">3D Live</button></div></div>`+o:o}
+  if(k==='match'){const m=curM();return m&&(m.status==='live'||m.demo===2)?`<div class="card" style="border-left:4px solid #ff2d55"><div class="row" style="justify-content:space-between;align-items:center"><b>&#128308; Watch in 3D</b><button class="btn sm" data-a="live3d" data-id="${esc(m.id)}">3D Live</button></div></div>`+o:o}
   const i=o.indexOf('</div>');return o.replace(/(<div class="bar">[\s\S]*?<\/div>)/,'$1'+b)}};
 wrap('matches');wrap('match');wrap('streamhub');
 try{MENU2[0][1].splice(2,0,['live3d','\u{1F3AE}','3D Live stream'])}catch(e){}
