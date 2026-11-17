@@ -462,7 +462,7 @@ function autoPlay(m,limit){
     if(s.r>0&&!s.x)s.ang={a:Math.random()*Math.PI*2,d:s.r>=4?1.02:.3+Math.random()*.5};
     ball(m,s);n++}}
 /* demo player portraits (original illustrations, public/players/<surname>.webp); more are added as they are made */
-const DEMO_PH=new Set(['bavuma','bedingham','bosch','brevis','head','jansen','khawaja','maharaj','markram','mulder','ngidi','rabada','rickelton','stubbs','verreynne']);
+const DEMO_PH=new Set(['bavuma','bedingham','boland','bosch','brevis','carey','cummins','green','hazlewood','head','inglis','jansen','khawaja','labuschagne','lyon','maharaj','markram','marsh','mulder','ngidi','rabada','rickelton','smith','starc','stubbs','verreynne']);
 function demoPhoto(n){const k=String(n||'').trim().split(/\s+/).pop().toLowerCase();return DEMO_PH.has(k)?(/^(localhost|127\.0\.0\.1)$/.test(location.hostname)?'':((typeof apiBase==='function'&&apiBase())||''))+'/players/'+k+'.webp':null}
 function demoTeams(){
   const ok=S.teams.filter(t=>(t.players||[]).length>=11);if(ok.length>=2)return ok.slice(0,2);
