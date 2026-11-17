@@ -5,8 +5,8 @@ const TL=JSON.parse(fs.readFileSync('/tmp/claude-0/ec/dm/scorer/timeline.json','
 const L=4,sv=glob('/tmp/claude-0/ec/dm/scorer'),bv=glob('/tmp/claude-0/ec/dm/bc'),out=process.argv[2]||'/tmp/claude-0/ec/dm/scoring-heroes-demo.mp4';
 const win=[];let on=null;for(const w of TL.wk){if(w.on)on=w.t;else if(on!=null){win.push([on+L-.2,w.t+L+.4]);on=null}}
 const en=win.length?win.map(([a,b])=>`between(t\\,${a.toFixed(2)}\\,${b.toFixed(2)})`).join('+'):'0';
-const dur=TL.end+L;
-const f=`[0:v]scale=1080:1116,setsar=1[top];[1:v]split=2[s1][s2];[s1]crop=540:402:0:0,scale=1080:804,setsar=1[bot];[top][bot]vstack=inputs=2[base];[s2]scale=1080:1920,setsar=1[full];[base][full]overlay=0:0:enable='${en}'[v]`;
+const dur=TL.end+L+22;
+const f=`[0:v]scale=1080:1116,setsar=1[top];[1:v]tpad=stop_mode=clone:stop_duration=25,split=2[s1][s2];[s1]crop=540:402:0:0,scale=1080:804,setsar=1[bot];[top][bot]vstack=inputs=2[base];[s2]scale=1080:1920,setsar=1[full];[base][full]overlay=0:0:enable='${en}'[v]`;
 const args=['-y','-ss',(BC.m0-L).toFixed(2),'-i',bv,'-ss',(TL.m0-L).toFixed(2),'-i',sv,'-t',dur.toFixed(1),'-filter_complex',f,'-map','[v]','-r','25','-c:v','libx264','-preset','medium','-crf','21','-pix_fmt','yuv420p','-movflags','+faststart',out];
 console.log('wicket windows',win.length,'duration',dur.toFixed(0)+'s');
 cp.execFileSync('ffmpeg',args,{stdio:'inherit'});console.log('wrote',out);
