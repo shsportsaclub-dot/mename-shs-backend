@@ -29,9 +29,9 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
  await sleep(3000);await p.evaluate(()=>H.title(false));try{await p.frames().find(f=>f!==p.mainFrame()&&/scene=bar/.test(f.url())).evaluate(()=>{S.stream.tkPack='prime';save()})}catch(e){console.log('pack',e.message)}
 
  // ---- PRE-MATCH BROADCAST (before ball 1): squads, leadership, toss with handshake and coin, venue, weather, pitch, playing XI + super sub, openers and bowler
- const PRE=[['squad','TEAM SQUADS: every player with C, VC, WK and super sub tags',7],['leaders','LEADERSHIP: captain, vice-captain and wicket-keeper',7],['tossphoto','THE TOSS: both captains shake hands',8],['toss','THE COIN: toss result and decision',7],['venue','VENUE: stadium capacity and average scores at this ground',7],['weather','WEATHER REPORT',5],['pitch','PITCH REPORT',6],['xisub','PLAYING XI with the super sub',8],['pickbat','OPENING BATTERS go out to bat',6],['pick','OPENING BOWLER takes the ball',6]];
+ const PRE=[['squad','TEAM SQUADS: every player with C, VC, WK and super sub tags',7],['leaders','LEADERSHIP: captain, vice-captain and wicket-keeper',7],['tossphoto','THE TOSS: both captains shake hands',8],['toss','THE COIN: toss result and decision',7.2],['venue','VENUE: stadium capacity and average scores at this ground',7],['weather','WEATHER REPORT',5],['pitch','PITCH REPORT',6],['xisub','PLAYING XI with the super sub',8],['pickbat','OPENING BATTERS go out to bat',6],['pick','OPENING BOWLER takes the ball',6]];
  const t0pre=now();
- for(let i=0;i<PRE.length;i++){const [sc,cap,d]=PRE[i],id='pre'+i;if(i===0)await pre(sc,id);await sleep(i===0?2500:0);if(PRE[i+1])await pre(PRE[i+1][0],'pre'+(i+1));await p.evaluate(t=>H.cap(t,4500),cap);await showB(id);await sleep(d*1000);await dropB(id)}
+ const FRESH=new Set(['toss']);for(let i=0;i<PRE.length;i++){const [sc,cap,d]=PRE[i],id='pre'+i;if(i===0)await pre(sc,id);await sleep(i===0?2500:0);if(PRE[i+1]&&!FRESH.has(PRE[i+1][0]))await pre(PRE[i+1][0],'pre'+(i+1));await p.evaluate(t=>H.cap(t,4500),cap);await showB(id);await sleep(d*1000);if(PRE[i+1]&&FRESH.has(PRE[i+1][0])){await pre(PRE[i+1][0],'pre'+(i+1));await sleep(1800)}await dropB(id)}
  bc.pre=now()-t0pre;
  // wait until the broadcast clock reaches the scorer clock start
  bc.m0=now();

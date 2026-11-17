@@ -2645,6 +2645,7 @@ http.createServer(async (req, res) => {
     } catch (e) { return out(500, { ok: false, error: 'Poster failed' }); }
   }
   const STATIC = { '/manifest.webmanifest': 'application/manifest+json', '/sw.js': 'application/javascript', '/icon-192.png': 'image/png', '/icon-512.png': 'image/png', '/icon-maskable.png': 'image/png', '/apple-touch-icon.png': 'image/png' };
+  if (req.method === 'GET' && /^\/players\/[a-z0-9_]+\.webp$/.test(path)) { try { const f = fs.readFileSync(new URL('./public' + path, import.meta.url)); res.writeHead(200, { 'content-type': 'image/webp', 'cache-control': 'public, max-age=604800', 'access-control-allow-origin': '*' }); return res.end(f); } catch { /* fall through */ } }
   if (req.method === 'GET' && /^\/balls\/[a-z0-9_]+\.webp$/.test(path)) { try { const f = fs.readFileSync(new URL('./public' + path, import.meta.url)); res.writeHead(200, { 'content-type': 'image/webp', 'cache-control': 'public, max-age=604800', 'access-control-allow-origin': '*' }); return res.end(f); } catch { /* fall through */ } }
   if (req.method === 'GET' && /^\/posters\/[a-z0-9-]+\.webp$/.test(path)) { try { const f = fs.readFileSync(new URL('./public' + path, import.meta.url)); res.writeHead(200, { 'content-type': 'image/webp', 'cache-control': 'public, max-age=604800', 'access-control-allow-origin': '*' }); return res.end(f); } catch { /* fall through */ } }
   const em = /^\/emblems\/[a-z-]+\.webp$/.exec(path);
