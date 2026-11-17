@@ -25,7 +25,7 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
  plan.sort((a,b)=>a.t-b.t);plan.forEach((x,i)=>x.id='bd'+i);console.log('plan',plan.map(p=>p.sc+'@'+p.t.toFixed(0)).join(' '));
  let bn=0;const pre=async(sc,id)=>{await p.evaluate(([s,mid,id])=>{const f=document.createElement('iframe');f.id=id;f.style.visibility='hidden';f.src='/?scene='+s+'&mid='+mid+'#overlay';document.querySelector('.bc').appendChild(f)},[sc,mid,id])};const showB=id=>p.evaluate(id=>{const f=document.getElementById(id);if(f)f.style.visibility='visible'},id),dropB=id=>p.evaluate(id=>{const f=document.getElementById(id);if(f)f.remove()},id);
  let sq=Promise.resolve();const bc={m0:null};
- await sleep(3000);await p.evaluate(()=>H.title(false));
+ await sleep(3000);await p.evaluate(()=>H.title(false));try{await p.frames().find(f=>f!==p.mainFrame()&&/scene=bar/.test(f.url())).evaluate(()=>{S.stream.tkPack='prime';save()})}catch(e){console.log('pack',e.message)}
  // wait until the broadcast clock reaches the scorer clock start
  bc.m0=now();
  const events=[...TL.balls.map(x=>({t:x.t,k:'m',m:x.m})),...TL.caps.map(x=>({t:x.t,k:'c',text:x.text})),...plan.map(x=>({t:x.t,k:'s',sc:x.sc,cap:x.cap,d:x.d,id:x.id})),...plan.map(x=>({t:Math.max(1,x.t-7),k:'p',sc:x.sc,id:x.id}))].sort((a,b)=>a.t-b.t);
