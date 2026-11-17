@@ -33,7 +33,7 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
   const wait=(bc.m0+e.t)-now();if(wait>0)await sleep(wait*1000);
   if(e.k==='s'){sq=sq.then(async()=>{await p.evaluate(t=>H.cap(t,4500),e.cap);await goScene(e.sc);await sleep(e.d*1000);await goScene('bar')}).catch(er=>console.log('scene err',er.message));continue}
   if(e.k==='c')await p.evaluate(t=>H.cap(t,4500),e.text);
-  else await (getOv()||ov).evaluate(m=>{const o=JSON.parse(m),i=S.matches.findIndex(x=>x.id===o.id);if(i>=0){S.matches[i]=o;commit()}},e.m);
+  else{for(let k=0;k<8;k++){try{await (getOv()||ov).evaluate(m=>{if(typeof S==='undefined')throw new Error('nos');const o=JSON.parse(m),i=S.matches.findIndex(x=>x.id===o.id);if(i>=0){S.matches[i]=o;commit()}},e.m);break}catch(er){await sleep(500)}}}
  }
  await sq;const rest=(bc.m0+TL.end)-now();if(rest>0)await sleep(rest*1000);
  fs.writeFileSync(OUT+'/bc.json',JSON.stringify(bc));
