@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "brand": "Scoring Heroes",
+  "reviewDate": "2026-11-17",
+  "publicationStatus": "editorial_review_only",
+  "items": [
+    {
+      "id": "2026-11-17-pakistan-women-shane-deitz",
+      "sport": "cricket",
+      "headline": "Shane Deitz appointed Pakistan women's head coach",
+      "facts": "Pakistan Cricket Board appointed Shane Deitz ahead of the West Indies series.",
+      "source": "https://www.icc-cricket.com/news/pakistan-appoint-new-head-coach-for-women-s-team",
+      "formatIdeas": [
+        "Original appointment poster",
+        "Women's cricket ePaper analysis"
+      ],
+      "mediaRights": "ICC/Getty image rights not verified; use licensed photography or original artwork",
+      "status": "verified_source_not_published"
+    },
+    {
+      "id": "2026-11-17-jeremiah-fears-triple-double",
+      "sport": "basketball",
+      "headline": "Jeremiah Fears becomes youngest Pelicans player with a triple-double",
+      "facts": "19 points, 10 rebounds, 10 assists; New Orleans Pelicans defeated Golden State Warriors 115-94 on November 16, 2026.",
+      "sources": [
+        "https://www.reuters.com/sports/nba-roundup-jeremiah-fears-becomes-youngest-pelican-log-triple-double--flm-2026-11-17/",
+        "https://www.nba.com/"
+      ],
+      "formatIdeas": [
+        "Original triple-double stats poster",
+        "15-second data-led reel"
+      ],
+      "mediaRights": "Reuters/Imagn photography and NBA footage require separate rights; no media embedded",
+      "status": "verified_source_not_published"
+    }
+  ],
+  "coverageNote": "This is a limited verified editorial batch, not a complete global sports review. No WhatsApp private posts accessed."
+}
