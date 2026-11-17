@@ -11,7 +11,7 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
  await ctx.route(/onrender\.com|\/api\//,r=>r.fulfill({contentType:'application/json',body:'{"ok":false}'}));
  const tp=Date.now(),now=()=>(Date.now()-tp)/1000;
  await p.goto('http://localhost:8765/demo-harness.html?only=bc&z='+Z+'&ov=bar&mid='+mid);await sleep(4000);
- const getOv=()=>p.frames().find(f=>f!==p.mainFrame()&&/scene=(?!ccast)/.test(f.url()));let ov=getOv();
+ const getOv=()=>p.frames().find(f=>f!==p.mainFrame()&&/scene=bar/.test(f.url()));let ov=getOv();
 
  // ---- director: cut to the real full-screen boards like a TV broadcast (over summary, batting card, highlights, innings break, scorecard, stats, result, POTM, records)
  const legal=(m,i)=>!m.innings[i]?0:m.innings[i].ev.filter(e=>e.x!=='wd'&&e.x!=='nb').length;
@@ -22,16 +22,17 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
   if(m.status!==prevS){if(m.status==='done'){plan.push({t:x.t+2.5,sc:'resultcard',cap:'MATCH SUMMARY: both innings and the result',d:7},{t:x.t+10,sc:'stats',cap:'MATCH STATS: side by side',d:6},{t:x.t+17,sc:'potm',cap:'PLAYER OF THE MATCH',d:5},{t:x.t+23,sc:'records',cap:'MATCH RECORDS: most runs, wickets, sixes, fours',d:6})}prevS=m.status}
   if(m.status==='break'&&!plan.find(p=>p.sc==='innbreak'))plan.push({t:x.t+1.5,sc:'innbreak',cap:'INNINGS BREAK: target, top batters, top bowlers',d:7},{t:x.t+10,sc:'stats',cap:'INNINGS 1 STATS',d:5})
   prevL=L}
- plan.sort((a,b)=>a.t-b.t);console.log('plan',plan.map(p=>p.sc+'@'+p.t.toFixed(0)).join(' '));
- const goScene=async sc=>{await p.evaluate(([s,mid])=>{document.getElementById('ov').src='/?scene='+s+'&mid='+mid+'#overlay'},[sc,mid]);await sleep(1800);ov=getOv()};
+ plan.sort((a,b)=>a.t-b.t);plan.forEach((x,i)=>x.id='bd'+i);console.log('plan',plan.map(p=>p.sc+'@'+p.t.toFixed(0)).join(' '));
+ let bn=0;const pre=async(sc,id)=>{await p.evaluate(([s,mid,id])=>{const f=document.createElement('iframe');f.id=id;f.style.visibility='hidden';f.src='/?scene='+s+'&mid='+mid+'#overlay';document.querySelector('.bc').appendChild(f)},[sc,mid,id])};const showB=id=>p.evaluate(id=>{const f=document.getElementById(id);if(f)f.style.visibility='visible'},id),dropB=id=>p.evaluate(id=>{const f=document.getElementById(id);if(f)f.remove()},id);
  let sq=Promise.resolve();const bc={m0:null};
  await sleep(3000);await p.evaluate(()=>H.title(false));
  // wait until the broadcast clock reaches the scorer clock start
  bc.m0=now();
- const events=[...TL.balls.map(x=>({t:x.t,k:'m',m:x.m})),...TL.caps.map(x=>({t:x.t,k:'c',text:x.text})),...plan.map(x=>({t:x.t,k:'s',sc:x.sc,cap:x.cap,d:x.d}))].sort((a,b)=>a.t-b.t);
+ const events=[...TL.balls.map(x=>({t:x.t,k:'m',m:x.m})),...TL.caps.map(x=>({t:x.t,k:'c',text:x.text})),...plan.map(x=>({t:x.t,k:'s',sc:x.sc,cap:x.cap,d:x.d,id:x.id})),...plan.map(x=>({t:Math.max(1,x.t-7),k:'p',sc:x.sc,id:x.id}))].sort((a,b)=>a.t-b.t);
  for(const e of events){
   const wait=(bc.m0+e.t)-now();if(wait>0)await sleep(wait*1000);
-  if(e.k==='s'){sq=sq.then(async()=>{await p.evaluate(t=>H.cap(t,4500),e.cap);await goScene(e.sc);await sleep(e.d*1000);await goScene('bar')}).catch(er=>console.log('scene err',er.message));continue}
+  if(e.k==='p'){pre(e.sc,e.id).catch(()=>{});continue}
+  if(e.k==='s'){sq=sq.then(async()=>{await p.evaluate(t=>H.cap(t,4500),e.cap);await showB(e.id);await sleep(e.d*1000);await dropB(e.id)}).catch(er=>console.log('scene err',er.message));continue}
   if(e.k==='c')await p.evaluate(t=>H.cap(t,4500),e.text);
   else{for(let k=0;k<8;k++){try{await (getOv()||ov).evaluate(m=>{if(typeof S==='undefined')throw new Error('nos');const o=JSON.parse(m),i=S.matches.findIndex(x=>x.id===o.id);if(i>=0){S.matches[i]=o;commit()}},e.m);break}catch(er){await sleep(500)}}}
  }
