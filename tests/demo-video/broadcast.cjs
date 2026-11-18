@@ -22,11 +22,14 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
   if(m.status!==prevS){if(m.status==='done'){plan.push({t:x.t+2.5,sc:'resultcard',cap:'MATCH SUMMARY: both innings and the result',d:7},{t:x.t+10,sc:'stats',cap:'MATCH STATS: side by side',d:6},{t:x.t+17,sc:'potm',cap:'PLAYER OF THE MATCH',d:5},{t:x.t+23,sc:'records',cap:'MATCH RECORDS: most runs, wickets, sixes, fours',d:6})}prevS=m.status}
   if(m.status==='break'&&!plan.find(p=>p.sc==='innbreak'))plan.push({t:x.t+1.5,sc:'innbreak',cap:'INNINGS BREAK: target, top batters, top bowlers',d:7},{t:x.t+10,sc:'stats',cap:'INNINGS 1 STATS',d:5})
   {const inn=m.innings[i],cu=inn&&inn.cur;if(cu){const sn=seenB[i]||(seenB[i]=new Set());if(!sn.size){[cu.s,cu.n].forEach(v=>v&&sn.add(v))}else{[cu.s,cu.n].forEach(v=>{if(v&&!sn.has(v)){sn.add(v);if(x.t<462)plan.push({t:x.t+1.5,sc:'pcard',cap:'NEW BATTER walks in: photo and career stats',d:5})}})}}}
+  if(L[i]!==prevL[i]&&L[i]%6===0&&L[i]===18&&i===0){const c2=m.innings[0].cur;if(c2){plan.push({t:x.t+8.5,sc:'zones&p='+(c2.s||c2.n)+'&i=0',cap:'BATTER SCORING ZONES: where the runs come from',d:6},{t:x.t+15,sc:'pitchmap&p='+(c2.bl||'')+'&i=0',cap:'BOWLER PITCH MAP: length, economy and wickets',d:6})}}
+  if(L[i]!==prevL[i]&&L[i]===12&&i===0){const c2=m.innings[0].cur;if(c2&&c2.bl)plan.push({t:x.t+8.5,sc:'pcard&who=bowler&career=1',cap:'BOWLER CAREER: matches, wickets, economy',d:5})}
+  if(L[i]!==prevL[i]&&L[i]===12&&i===1)plan.push({t:x.t+8.5,sc:'compare',cap:'SCORE COMPARISON: both innings over by over',d:7})
   prevL=L}
  plan.sort((a,b)=>a.t-b.t);plan.forEach((x,i)=>x.id='bd'+i);console.log('plan',plan.map(p=>p.sc+'@'+p.t.toFixed(0)).join(' '));
  let bn=0;const pre=async(sc,id)=>{await p.evaluate(([s,mid,id])=>{const f=document.createElement('iframe');f.id=id;f.style.visibility='hidden';f.src='/?scene='+s+'&mid='+mid+'#overlay';document.querySelector('.bc').appendChild(f)},[sc,mid,id])};const showB=id=>p.evaluate(id=>{const f=document.getElementById(id);if(f)f.style.visibility='visible'},id),dropB=id=>p.evaluate(id=>{const f=document.getElementById(id);if(f)f.remove()},id);
  let sq=Promise.resolve();const bc={m0:null};
- await sleep(3000);await p.evaluate(()=>H.title(false));try{await p.frames().find(f=>f!==p.mainFrame()&&/scene=bar/.test(f.url())).evaluate(()=>{S.stream.tkPack='prime';save()})}catch(e){console.log('pack',e.message)}
+ await sleep(3000);await p.evaluate(()=>H.title(false));try{await p.frames().find(f=>f!==p.mainFrame()&&/scene=bar/.test(f.url())).evaluate(()=>{S.stream.tkPack='marquee';save()})}catch(e){console.log('pack',e.message)}
 
  // ---- PRE-MATCH BROADCAST (before ball 1): squads, leadership, toss with handshake and coin, venue, weather, pitch, playing XI + super sub, openers and bowler
  const PRE=[['squad','TEAM SQUADS: every player with C, VC, WK and super sub tags',7],['leaders','LEADERSHIP: captain, vice-captain and wicket-keeper',7],['tossphoto','THE TOSS: both captains shake hands',8],['toss','THE COIN: toss result and decision',7.2],['venue','VENUE: stadium capacity and average scores at this ground',7],['weather','WEATHER REPORT',5],['pitch','PITCH REPORT',6],['xisub','PLAYING XI with the super sub',8],['pickbat','OPENING BATTERS go out to bat',6],['pick','OPENING BOWLER takes the ball',6]];
@@ -41,7 +44,7 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
   if(e.k==='p'){pre(e.sc,e.id).catch(()=>{});continue}
   if(e.k==='s'){sq=sq.then(async()=>{await p.evaluate(t=>H.cap(t,4500),e.cap);await showB(e.id);await sleep(e.d*1000);await dropB(e.id)}).catch(er=>console.log('scene err',er.message));continue}
   if(e.k==='c')await p.evaluate(t=>H.cap(t,4500),e.text);
-  else{for(let k=0;k<8;k++){try{await (getOv()||ov).evaluate(m=>{if(typeof S==='undefined')throw new Error('nos');const o=JSON.parse(m),i=S.matches.findIndex(x=>x.id===o.id);if(i>=0){S.matches[i]=o;commit()}},e.m);break}catch(er){await sleep(500)}}}
+  else{for(let k=0;k<8;k++){try{await (getOv()||ov).evaluate(m=>{if(typeof S==='undefined')throw new Error('nos');const o=JSON.parse(m);o.innings.forEach((n,ii)=>(n.ev||[]).forEach((e,k)=>{const h=(k*37+ii*11+7)%97/97;if(!e.ang&&e.r>0&&!e.x)e.ang={a:((k*2.399+ii)%6.283),d:.45+h*.55};if(!e.pit&&e.x!=='wd')e.pit={x:.25+((k*53+ii*7)%41)/41*.5,y:Math.min(.99,.08+((k*29+5)%83)/83*.92)}}));const i=S.matches.findIndex(x=>x.id===o.id);if(i>=0){S.matches[i]=o;commit()}},e.m);break}catch(er){await sleep(500)}}}
  }
  await sq;const rest=(bc.m0+TL.end)-now();if(rest>0)await sleep(rest*1000);
  fs.writeFileSync(OUT+'/bc.json',JSON.stringify(bc));

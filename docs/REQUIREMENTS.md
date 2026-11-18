@@ -72,16 +72,16 @@ Tables and brackets: PARTIAL | Awards, trophy, sponsors, credits: TODO | Other s
 - NOT yet verified/finished: cricket as a whole is NOT complete (see TODO lists above); do not call cricket done.
 
 ## Broadcast graphics review (live ODI reference, 2026-11-18) - build ORIGINAL versions, never copy a broadcaster's look
-- [ ] Wicket moment: full-width repeating "WICKET" band + small replay picture-in-picture (one animation style, same as ticker pack)
-- [ ] Boundary band: spaced-letter FOUR / SIX band across the bottom over the crowd shot (one style per ticker pack)
-- [ ] Score bar centre info line that rotates: need/balls, boundaries count (fours/sixes), partnership, run rate
+- [x] Wicket moment: full-width repeating "WICKET" band + small replay picture-in-picture (one animation style, same as ticker pack)
+- [x] Boundary band: spaced-letter FOUR / SIX band across the bottom over the crowd shot (one style per ticker pack)
+- [x] Score bar centre info line that rotates: need/balls, boundaries count (fours/sixes), partnership, run rate
 - [ ] Bar: striker highlighted, bowler figures with over ball dots, target + overs under the team score
-- [ ] Score comparison worm (both innings, wicket dots, "requires N from B balls (RPO)") with run rates in the bar (exists as ar11Worm, needs overlay scene)
+- [x] Score comparison worm (both innings, wicket dots, "requires N from B balls (RPO)") with run rates in the bar (exists as ar11Worm, needs overlay scene)
 - [ ] Bowler profile lower-third (3 scouting bullets) when a bowler comes on
-- [ ] Batter career lower-third on arrival (age, matches, runs, SR, avg, best) - pcard exists, add as lower-third too
-- [ ] Batter scoring-zones mini pitch (hot spots by area, off/on side)
-- [ ] Bowler pitch map vs right/left handers: length zones (yorker/full/good/hard/short) with economy per zone and ball dots (dot/run/wicket/wide/boundary)
+- [x] Batter career lower-third on arrival (age, matches, runs, SR, avg, best) - pcard exists, add as lower-third too
+- [x] Batter scoring-zones mini pitch (hot spots by area, off/on side)
+- [x] Bowler pitch map vs right/left handers: length zones (yorker/full/good/hard/short) with economy per zone and ball dots (dot/run/wicket/wide/boundary)
 - [ ] Shot analysis split screen: bat arc + 3D landing path with distance (needs shot direction + distance data; manual entry optional)
 - [ ] Release analytics (release speed, arm speed) - needs tracking hardware, optional manual speed only
-- [ ] LIVE badge corner mark on every overlay
+- [x] LIVE badge corner mark on every overlay
 - [ ] Every item above must work for all sports, colours selectable and constant
