@@ -4,7 +4,7 @@ const {chromium}=require('playwright'),fs=require('fs');
 const OUT='/tmp/claude-0/ec/dm/wiz',W=540,Hh=402;
 (async()=>{
  fs.rmSync(OUT,{recursive:true,force:true});fs.mkdirSync(OUT,{recursive:true});
- const b=await chromium.launch(),ctx=await b.newContext({viewport:{width:W,height:Hh},deviceScaleFactor:2,recordVideo:{dir:OUT,size:{width:W*2,height:Hh*2}}});
+ const b=await chromium.launch(),ctx=await b.newContext({viewport:{width:W,height:Hh},deviceScaleFactor:1,recordVideo:{dir:OUT,size:{width:W,height:Hh}}});
  ctx.setDefaultTimeout(15000);
  await ctx.route(/onrender\.com|\/api\//,r=>r.fulfill({contentType:'application/json',body:'{"ok":false}'}));
  const p=await ctx.newPage();p.on('pageerror',e=>console.log('ERR',e.message));

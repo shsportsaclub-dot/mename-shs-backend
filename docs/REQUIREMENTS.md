@@ -85,3 +85,9 @@ Tables and brackets: PARTIAL | Awards, trophy, sponsors, credits: TODO | Other s
 - [ ] Release analytics (release speed, arm speed) - needs tracking hardware, optional manual speed only
 - [x] LIVE badge corner mark on every overlay
 - [ ] Every item above must work for all sports, colours selectable and constant
+
+## Demo video: per-ball animation showcase (user request 2026-11-18)
+- [ ] Each ball type has its own visible animation in the 3D stadium: dot, single (runs between wickets), two/three, FOUR, SIX, wicket (bowled, caught, lbw, run out), wide/no-ball
+- [ ] Camera close enough to see: ball landing point on the pitch (pitch marker), ball path/trail to the field, fielder running, collecting, throwing back to keeper/bowler
+- [ ] SIX: ball flies into the stands; FOUR: ball races along the ground to the rope with the fielder chasing
+- [ ] Same event shows the matching ticker (Marquee/Prime) so ticker + 3D + sound agree
